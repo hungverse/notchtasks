@@ -84,12 +84,12 @@ app.whenReady().then(() => {
     state.settings.toastStyle = style;
     state.expanded = false;
     state.toast = {
-      id: 't1', symbol: 'battery.100percent.bolt', tint: '#30D158', title: 'Đang sạc · 64%', subtitle: 'Cắm sạc',
-      compact: kind === 'compact', action: 'Mở', url: 'https://example.com',
+      id: 't1', symbol: 'battery.100percent.bolt', tint: '#30D158', title: 'Charging · 64%', subtitle: 'Plugged in',
+      compact: kind === 'compact', action: 'Open', url: 'https://example.com',
       art: kind === 'charge' ? { kind: 'charge', percent: 64, plugged: true } : kind === 'loading' ? { kind: 'loading' } : null,
       ask: kind === 'ask' ? state.asks[1] : null,
     };
-    if (kind === 'ask') state.toast.title = 'Codex đang hỏi';
+    if (kind === 'ask') state.toast.title = 'Codex is asking';
     push();
     setTimeout(async () => { await shoot(path.join(SHOT, 'toast-' + kind + '.png'), 16); app.quit(); }, 1500);
     return;

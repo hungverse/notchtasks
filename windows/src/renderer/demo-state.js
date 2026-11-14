@@ -8,7 +8,7 @@ const min = 60 * 1000;
 
 function demoState() {
   return {
-    lang: 'vi',
+    lang: 'en',
     expanded: false,
     settings: {
       modules: ['agents', 'ci', 'media', 'calendar', 'timer', 'shelf', 'limits', 'battery', 'devices', 'calls',
@@ -49,14 +49,14 @@ function demoState() {
       {
         item: { id: 'claude', name: 'Claude', kind: 'claude', symbolName: 'sparkles' },
         jobs: [
-          { id: 'c1', title: 'Sửa AgentAsks.swift', detail: '3/5', working: true, progress: 0.6, symbol: 'pencil' },
-          { id: 'c2', title: 'Chạy unit test', detail: 'đang chạy', working: true, symbol: 'checkmark.seal.fill' },
+          { id: 'c1', title: 'Edit AgentAsks.swift', detail: '3/5', working: true, progress: 0.6, symbol: 'pencil' },
+          { id: 'c2', title: 'Run unit tests', detail: 'running', working: true, symbol: 'checkmark.seal.fill' },
         ],
       },
       {
         item: { id: 'codex', name: 'Codex', kind: 'codex', symbolName: 'terminal.fill' },
         jobs: [
-          { id: 'x1', title: 'Viết migration', detail: '1m 20s', working: true, estimated: true, progress: 0.35 },
+          { id: 'x1', title: 'Write migration', detail: '1m 20s', working: true, estimated: true, progress: 0.35 },
         ],
       },
     ],
@@ -73,7 +73,7 @@ function demoState() {
       { id: '4721', name: 'test:unit', project: 'notchtasks', reason: 'Job failed: exit code 1', url: 'https://example.com/job/4721' },
     ],
     nowPlaying: {
-      source: 'com.spotify.client', appName: 'Spotify', title: 'Bài hát mẫu', artist: 'Nghệ sĩ mẫu',
+      source: 'com.spotify.client', appName: 'Spotify', title: 'Sample Song', artist: 'Sample Artist',
       playing: true, position: 72, duration: 215, artwork: null,
       item: { id: 'spotify', name: 'Spotify', kind: 'app' },
     },
@@ -85,11 +85,11 @@ function demoState() {
         questions: [], at: now - 42 * 1000, agent: 'claude',
       },
       {
-        id: 'ask-codex', pid: 2, session: 'Job', tool: 'AskUserQuestion', summary: 'Chọn thư viện và tính năng',
+        id: 'ask-codex', pid: 2, session: 'Job', tool: 'AskUserQuestion', summary: 'Pick a library and features',
         at: now - 9 * 1000, agent: 'codex',
         questions: [
-          { question: 'Dùng thư viện nào?', header: 'Thư viện', options: ['Chart.js', 'D3', 'Không dùng'], multiSelect: false },
-          { question: 'Tính năng cần có?', header: 'Tính năng', options: ['Chế độ tối', 'Xuất PDF', 'Đa ngôn ngữ'], multiSelect: true },
+          { question: 'Which chart library?', header: 'Library', options: ['Chart.js', 'D3', 'None'], multiSelect: false },
+          { question: 'Which features?', header: 'Features', options: ['Dark mode', 'PDF export', 'Translations'], multiSelect: true },
         ],
       },
     ],

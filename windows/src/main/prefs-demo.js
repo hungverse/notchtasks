@@ -31,7 +31,7 @@ let items = watch.presets.slice(0, 3).map((p) => ({ ...p, id: `demo-${p.id}` }))
 const agents = [
   { kind: 'claude', name: 'Claude', present: true, installed: true, tested: true },
   { kind: 'codex', name: 'Codex', present: true, installed: true, tested: true,
-    setup: { missing: 'Chưa Trust trong Codex', button: 'Mở Codex', command: 'codex' } },
+    setup: { missing: 'Not trusted in Codex yet', button: 'Open Codex', command: 'codex' } },
   { kind: 'gemini', name: 'Gemini', present: true, installed: false, tested: false },
   { kind: 'antigravity', name: 'Antigravity', present: false, installed: false, tested: true },
   { kind: 'cursor', name: 'Cursor', present: true, installed: false, tested: true },
@@ -42,7 +42,7 @@ const sampleSync = (phones) => ({
   phones, lan: true, onlyAway: true, direct: phones.length ? 1 : 0,
   proUntil: Date.now() + 30 * 86400000, problem: null, busy: false,
 });
-let sync = sampleSync([{ uid: 'u1', name: 'iPhone của Hưng', pro: true }]);
+let sync = sampleSync([{ uid: 'u1', name: 'My iPhone', pro: true }]);
 let choice = '';
 let report = { busy: false, code: null, problem: null };
 
@@ -51,7 +51,7 @@ function buildState() {
     settings: S.get(), choice, device: l10n.device(), version: '2.2.0', agents, items,
     running: [{ name: 'Visual Studio Code', bundleID: 'Code.exe' }, { name: 'Spotify', bundleID: 'Spotify.exe' }],
     processNames: ['node', 'python', 'java', 'Code'], matches: null, agentError: null,
-    sync, update: { available: true, version: '2.3.0', notes: 'Sửa lỗi ghép nối và thêm biểu tượng động mới.', busy: false, error: null, progress: null },
+    sync, update: { available: true, version: '2.3.0', notes: 'Pairing fixes and new animated icons.', busy: false, error: null, progress: null },
     live: { working: 2, alerts: 1 }, analytics: true, report,
   };
 }
@@ -112,7 +112,7 @@ async function shots() {
   win.webContents.send('prefs:pane', 'phone');
   await wait(700);
   await capture(win, 'pane-phone-unpaired.png');
-  sync = sampleSync([{ uid: 'u1', name: 'iPhone của Hưng', pro: true }]);
+  sync = sampleSync([{ uid: 'u1', name: 'My iPhone', pro: true }]);
   push();
   // editors: the icon editor from a fixed icon, the watch-item editor from the list
   win.webContents.send('prefs:pane', 'badges');
