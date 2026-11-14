@@ -1,0 +1,22 @@
+1031	Ventiladores
+1032	Ventiladores y temperatura
+1033	La temperatura y las velocidades de los ventiladores se leen de este Mac. El control se activa solo después de aceptar la advertencia.
+1034	El control incorrecto de los ventiladores puede dañar el hardware.
+1035	Activar asistente de ventiladores
+1036	El asistente limita las velocidades a los valores del equipo y vuelve a automático al perder conexión o si el Mac se calienta demasiado.
+1037	Sensores
+1038	No se pudieron leer los sensores de temperatura.
+1039	Permite el asistente en Ítems de inicio de sesión de Ajustes del Sistema.
+1040	Este Mac no informa ventiladores por SMC; la lectura de temperatura sigue funcionando.
+1041	Ventilador {0}
+1042	Forzado
+1043	Modo
+1044	Velocidad fija
+1045	Por sensor
+1046	Inicio {0}°C
+1047	Máximo {0}°C
+1048	Los ventiladores volvieron a automático porque el Mac está demasiado caliente
+1049	No se pudo registrar el asistente de ventiladores: {0}
+1050	No se pudo conectar al asistente de ventiladores: {0}
+1051	Mitad
+1052	Máximo

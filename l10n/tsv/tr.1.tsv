@@ -1,0 +1,340 @@
+0	{0} istek sizi bekliyor
+1	Dil
+2	Aygıtla aynı
+3	Komutu çalıştır
+4	Dosyayı düzenle
+5	Dosyayı oku
+6	Web erişimi
+7	 soru soruyor
+8	 onayınızı istiyor
+9	Uygulamayla eşleştir
+10	Mavi
+11	Yeşil
+12	Turuncu
+13	Pembe
+14	Mor
+15	Beyaz
+16	Siyah
+17	Buzlu cam
+18	Parlayan kenar
+19	Ada
+20	Kompakt
+21	Kayan kart
+22	Bildirim bandı
+23	Akıcı
+24	Zıplayan
+25	Hızlı
+26	Minimal
+27	Kilit simgesi
+28	Sabit simgeler
+29	Görevler, müzik, sayaçlar
+30	Pil
+31	Şu An Çalıyor
+32	Takvim
+33	Sayaç
+34	Dosya rafı
+35	Yapay zekâ sınırları
+36	Aygıtlar
+37	Aramalar
+38	Ses ve parlaklık
+39	Ağ
+40	İndirilenler
+41	Bilgisayar durumu
+42	Kamera aynası
+43	Klasik
+44	Cam
+45	Sade
+46	Gün batımı
+47	Okyanus
+48	Dosya veya klasörleri siler
+49	Yönetici yetkisiyle çalışır
+50	git sunucusundaki geçmişin üzerine yazar
+51	Kaydedilmemiş tüm değişiklikleri atar
+52	İzlenmeyen dosyaları siler
+53	Web'den indirilen bir betiği çalıştırır
+54	Doğrudan diske yazar
+55	Herkese dosyalara tam erişim verir
+56	Veritabanındaki verileri siler
+57	Güvenlik denetimlerini atlar
+58	Mola ve su hatırlatıcıları
+59	İş gününde 6 kez ayağa kalkmanızı, su içmenizi ve gözlerinizi dinlendirmenizi hatırlatır. Anahtarla kapatabilirsiniz.
+60	Gün sonu raporu
+61	Her akşam 21.00'de: bugünkü odaklanma süreniz, oturum sayınız ve gün seriniz.
+62	Pomodoro ve 90 dakikalık oturumlar
+63	Kısa odaklanma oturumlarıyla molaları dönüşümlü kullanın (varsayılan olarak 4 × 25 dakika ve 5 dakikalık molalar). 90 dakikalık oturum da vardır.
+64	Çiçek tacı ve atkı
+65	Evcil dostunuz biraz büyür, çiçek tacı ve atkı takar.
+66	Çentikte
+67	Evcil dostunuzu bilgisayarın çentiğine yerleştirin. Bilgisayardaki işe göre poz değiştirir.
+68	Katı odaklanma modu
+69	Oturum başlarken katı modu seçin: süre dolana kadar durdurulamaz.
+70	Taç ve pelerin
+71	Evcil dostunuz taç ve pelerin giyer, çevresinde bir hale belirir.
+72	Normal
+73	Mutlu
+74	Uyuyor
+75	Aç
+76	Üzgün
+77	Odaklanmış
+78	Yorgun
+79	Mışıl mışıl uyuyor… zzz
+80	Uyuyor… zzz
+81	Çok acıktım, beni besle
+82	Çok yoruldum, biraz uyuyayım
+83	Seninle odaklanıyorum
+84	Endişeliyim, bilgisayarın seni bekliyor
+85	Seninle gurur duyuyorum!
+86	Vazgeçtiğin için üzgünüm
+87	Build başarısız olduğu için üzgünüm
+88	Sıkıldım, benimle oyna
+89	Biraz acıktım
+90	Agent'ı destekliyorum
+91	Uykum geliyor
+92	Günaydın!
+93	Neşeli
+94	Besle
+95	Oyna
+96	Uyut
+97	Uyandır
+98	Bilgisayar
+99	Yapay zekâ agent'larının işlerini ve build sonuçlarını burada görmek için bilgisayarınızla eşleyin.
+100	Örnek gör
+101	Bilgisayarı eşleştir
+102	Tür
+103	Evcil dostlar
+104	Mağaza
+105	Mevcut
+106	Evcil dost seçmek için dokunun
+107	, satın alınmadı
+108	Sahip olundu
+109	Seçtiğiniz evcil dost uygulamada, araç takımlarında ve kilit ekranında görünür.
+110	{0} seçildi
+111	Yeni evcil dostunuz ana ekranda, araç takımlarında ve engelleme ekranında görünür.
+112	Satın alınamadı
+113	Bilgisayara bağlanılamadı: {0}
+114	Bu bilgisayar başka bir telefonla eşleşmiş. Daha fazlasını eşleştirmek için Pro gerekir.
+115	Bilgisayar bu telefonla eşleşmeyi kaldırdı. Yeniden eşleştirmek için QR kodunu tekrar tarayın.
+116	Bilgisayarda: NotchTasks → Denetim Masası → Eşleştirme bölümünü açın, Aygıt eşleştir'e tıklayın ve QR kodunu tarayın.
+117	Veya eşleştirme kodu yapıştırın
+118	Eşleştirme kodu yapıştırın
+119	Bilgisayardaki eşleştirme kodu
+120	Eşleştir
+121	Bu bir NotchTasks eşleştirme kodu değil.
+122	Bu kod yalnızca aygıtlarınızda çalışır.
+123	Bilgisayarla eşleştir
+124	İptal
+125	örnek veriler
+126	Sizi bekliyor
+127	Etkinlik
+128	{0} bekleniyor…
+129	bilgisayar
+130	Agent'ları ve soruları burada görmek için bilgisayarınızda NotchTasks'i açın.
+131	Bilgisayardan uzakta · {0} güncellendi
+132	Pro ile agent'ları her yerden görüp yanıtlayın.
+133	Onayınızı bekliyor
+134	Onayınızı bekleyen {0} öğe
+135	 çalışıyor
+136	Bir build başarısız oldu
+137	Hepsi tamam
+138	Bilgisayar boşta
+139	Bilgisayarınızın çentiği avucunuzda
+140	Yapay zekâ agent'larınızın işlerini ve build sonuçlarını, kilit ekranında bile buradan inceleyin.
+141	Örnek verilerle deneyin
+142	Bilgisayarınıza NotchTasks'i yükleyin, **Denetim Masası → Eşleştirme** bölümünü açın ve QR kodunu tarayın.
+143	Yanıtla
+144	Reddet
+145	İzin ver
+146	Bir veya daha fazla seçin
+147	Yanıtı gönder
+148	Bu komuta izin vermek için Face ID gerekir.
+149	Daha sonra bilgisayarda yanıtla
+150	Ayrıntılar
+151	az önce
+152	 önce
+153	Serin
+154	Ilık
+155	Sıcak
+156	Çok sıcak
+157	Sıcaklık
+158	{0} sonra sıfırlanır
+159	birkaç dakika
+160	{0} gün {1} sa.
+161	{0} gün
+162	{0} sa. {1} dk.
+163	{0} saat
+164	{0} dk.
+165	İzin verildi
+166	Reddedildi
+167	Bilgisayara bırak
+168	Seçilen: 
+169	Görüntüleniyor
+170	Örnek veriler
+171	Eşleşmedi
+172	Örnek verilerden çık
+173	Eşleşmeyi kaldır
+174	Aynı Wi‑Fi ağında doğrudan bağlan
+175	Bağlantı
+176	Doğrudan Wi‑Fi üzerinden
+177	Bildirimler
+178	Bağlantı
+179	Aynı Wi‑Fi: anında güncelleme. Uzakta: otomatik olarak internete geçer.
+180	Live Activity önizlemesi
+181	3 örnek istek gösterir. Görmek için telefonunuzu kilitleyin.
+182	Live Activity kapalı: Ayarlar → NotchTasks bölümünden açın.
+183	Riskli komutlar için Face ID
+184	Güvenlik
+185	Verileri silebilecek veya üzerine yazabilecek komutlara izin vermeden önce Face ID iste.
+186	Hakkında
+187	Sürüm
+188	Ayarlar
+189	Pro etkin
+190	Pro etkin (başka bir aygıtta satın alındı)
+191	Mevcut dönem bitişi
+192	Aboneliği yönet
+193	Pro'yu 7 gün ücretsiz deneyin
+194	Satın alımları geri yükle
+195	Her yerden kullanın, bildirimlerden yanıtlayın, agent ve build için Live Activity görüntüleyin, birden çok aygıt eşleştirin.
+196	Aylık ve yıllık planlar otomatik yenilenir. Sonraki dönemden en az 24 saat önce Ayarlar → adınız → Abonelikler bölümünden iptal edin.
+197	Koşullar
+198	Gizlilik
+199	Tamamlanmadı
+200	Yıllık Pro
+201	Aylık Pro
+202	Ömür boyu Pro
+203	 / yıl
+204	 / ay
+205	Sizin
+206	Araç takımı ekleyin: ana ekrana basılı tutun → Düzenle → Araç Takımı Ekle → NotchTasks.
+207	Evcil dostları gör ve değiştir
+208	Seviye {0}!
+209	{0} biraz büyüdü.
+210	Kilidi açıldı: {0}.
+211	Harika
+212	Her şeyin kilidi açıldı. Tamamlanan oturumlar XP kazandırmaya devam eder; vazgeçmek onu üzer.
+213	1 dakika odaklanma = 1 XP. Seviye {0}: {1}.
+214	Odaklanılıyor
+215	Katı
+216	Durdur
+217	Mola
+218	Sıradaki: {0}/{1}. oturum
+219	Şimdi başla
+220	Burada ve bilgisayarın çentiğinde sayar
+221	Kilit ekranında görünür, süre bitince bildirir
+222	Başlat
+223	Katı modu başlat
+224	Katı mod: süre bitene kadar durdurulamaz.
+225	Katı mod açılsın mı?
+226	Katı başlat
+227	{0} oturum boyunca odaklanırken durdurulamaz. Molalar durdurulabilir.
+228	{0} dakika boyunca durdurulamaz. Engellenen uygulamalar süre bitince yeniden açılır.
+229	Pomodoro: {0} oturum × {1} dk.
+230	{0} dakikalık oturum
+231	Kalkıp biraz esneyin!
+232	Bir yudum su için 💧
+233	Gözlerinizi 20 saniye dinlendirip uzağa bakın.
+234	Omuzlarınızı gevşetin, derin nefes alın.
+235	Birkaç adım yürüyün.
+236	Su içtiniz mi? Hatırlatayım dedim 💧
+237	{0} size hatırlatıyor
+238	{0}: bugüne dönüp bakın
+239	Ne kadar odaklandınız, kaç soruyu incelediniz? Görmek için açın.
+240	Mola bitti
+241	{0}, {3} dakikalık {1}/{2}. oturuma hazır. Başlamak için dokunun.
+242	odaklanılan dakika
+243	oturum
+244	incelenen soru
+245	günlük seri
+246	Evcil dostunuzu çentiğe koymak için bilgisayarla eşleştirin.
+247	Seviye {0}
+248	Çentiğe yerleştirmek için dokunun. Bilgisayarın işine göre poz değiştirir.
+249	Çentikteki evcil dostlar
+250	Sola ekle
+251	Sağa ekle
+252	{1} taraftaki {0} simgesini değiştir
+253	sağ
+254	sol
+255	Çentikten kaldır
+256	Aralarda molalar vererek kısa oturumlar hâlinde odaklanın. Mola bittiğinde sonraki oturum kendiliğinden başlar.
+257	Odaklanma: {0} dk.
+258	Mola: {0} dk.
+259	Oturum sayısı: {0}
+260	Her Pomodoro
+261	Toplam {0} dakika odaklanma. Şimdi başlarsanız {1} saatinde biter.
+262	Ana Sayfa'daki Odaklanma kartından başlayın.
+263	Molalarda “Şimdi başla” ve “Durdur” düğmeleri bulunur.
+264	Başlarken katı modu seçebilirsiniz.
+265	Bugün henüz oturum olmadığı için örnek rakamlar gösteriliyor.
+266	Son 7 gün · odaklanılan dakika
+267	Her akşam 21.00'de bakmanız için bir hatırlatıcı gelir.
+268	Seviye 3'te açılır: Bugün kartı ve 21.00 bildirimi.
+269	{0} bütün gün sizi bekledi. Yarın birlikte odaklanalım!
+270	{0}: bugün {1} dakika, iyi bir başlangıç!
+271	{0}: {1} dakika odaklanma, {2} oturum. Aferin!
+272	{0}: {1} dakika! Bugün çok çalıştınız, dinlenmeyi unutmayın.
+273	Tebrikler! 🎉
+274	{0}, seviye {1} oldu ve şunları açtı:
+275	Sizin için açıldı. Evcil Dostlar sayfasından ayarlayın.
+276	Mükemmel
+277	Build başarısız
+278	Live Activity başlatılamadı: {0}
+279	{0}/{1}. oturum tamamlandı
+280	Odaklanma süresi bitti
+281	{0} dakika mola verin, sonra sonraki oturuma geçin.
+282	{0} dakika tamamlandı. Biraz dinlenin.
+283	 🎉 Kilidi açıldı: {0}.
+284	Riskli komuta izin ver: {0}
+285	Veriler nasıl saklansın?
+286	Depolama
+287	SQLite (Önerilen)
+288	MacBook Pro'nuz
+289	NotchView.swift düzenleniyor
+290	Testler çalıştırılıyor
+291	iPhone 17 Pro için build yapılıyor
+292	CI başarısız: deploy
+293	6 dk.
+294	CI başarılı: test
+295	Bilgisayarın çentiği bulunamadı
+296	Bilgisayarınızdaki NotchTasks'i güncelleyin, ardından çentiği buradan özelleştirmek için uygulamayı açın.
+297	Gönderiliyor…
+298	Örnek bilgisayar: özgürce deneyin
+299	{0} ile eşzamanlandı
+300	Tema
+301	Kilit ekranı ayrı simgeler kullanır
+302	Kilit ekranı simgeleri
+303	Seç
+304	Değiştir
+305	Kaldır
+306	Build aracı simgeleri
+307	Araç build yaparken çentikte görünen simge.
+308	Görünüm
+309	Boyut
+310	Büyük
+311	Çentiği açma
+312	Üzerine gelme
+313	Tıklama
+314	Arka plan
+315	Üst renk
+316	Alt renk
+317	Hareket
+318	Uyarı stili
+319	Modüller
+320	{0} açık
+321	Ses ve dokunsal geri bildirim
+322	Ses
+323	İzleme dörtgeni dokunsal geri bildirimi
+324	Sistem bildirimleri
+325	Kilit ekranındaki çentik
+326	Bilgisayar kilit ekranı
+327	Şu süreden uzun çalışanlar bitince bildir
+328	her görev
+329	{0} sn.
+330	Yapay zekâ sınırlarını şu düzeyde uyar
+331	Çentik simgeleri
+332	Taşınacağı yere dokunun. İptal etmek için aynı simgeye tekrar dokunun.
+333	Yer değiştirmek için simgeyi sürükleyin; taşımak, değiştirmek veya silmek için dokunun. Her yanda en fazla {0}{1}
+334	, Pro ile 4.
+335	Taşı
+336	Simgeyi değiştir
+337	Sil
+338	sağ taraf
+339	sol taraf

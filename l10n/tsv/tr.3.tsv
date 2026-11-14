@@ -1,0 +1,312 @@
+700	Kodu gizle
+701	Başka aygıt eşleştir…
+702	Kod oluşturuluyor…
+703	Aygıt eşleştir…
+704	Telefonumu yalnızca bilgisayardan uzaktayken uyar
+705	Wi‑Fi üzerinden {0} aygıt
+706	Aynı Wi‑Fi'de telefonunuz güncellemeleri anında alır; başka ağlarda internet üzerinden alır. Bu bilgisayarı kullanırken telefonunuz sessiz kalır.
+707	Henüz aygıt yok.
+708	Tüm eşleşmeleri kaldır
+709	Eşleşti
+710	Tüm aygıtların bu bilgisayarla bağlantısı kesilir. Yeniden eşleştirmek için yeni kod gerekir.
+711	Verilmedi
+712	Denetlenmedi
+713	Görev bitince veya başarısız olunca uyarır.
+714	Yaklaşan etkinlikleri gösterir.
+715	Tarayıcıdaki müziği kontrol eder.
+716	{0} denetimi
+717	Çalan içeriği okur ve kontrol eder.
+718	{0} içinde müzik
+719	Sekme içinde duraklatın, çalın ve parça atlayın.
+720	Girişte aç
+721	Oturum açtığınızda başlar.
+722	{0} içinde kapat
+723	Aynı öğenin işaretini kaldırın:\n
+724	Komut “{0}” içeriyor
+725	İşlem “{0}”
+726	 · komut “{0}” içeriyor
+727	her satıra bir alt işlem
+728	Uygulama · {0}
+729	Her oturumu izle
+730	Çalışırken göster
+731	Yapay zekâ uygulamaları
+732	Adım {0}/{1}
+733	Atla
+734	Geri
+735	İleri
+736	NotchTasks'e hoş geldiniz
+737	Yapay zekâ ve build'ler
+738	Hangi agent'ın çalıştığını, hangi build'in bittiğini veya başarısız olduğunu öğrenin
+739	Müzik ve aramalar
+740	Müziği kontrol edin, aramalarda mikrofonu hızla kapatın
+741	Düzenli uyarılar
+742	Şarj, kulaklıklar, indirmeler, ağ, sıcaklık
+743	Özel
+744	Her şey bilgisayarınızda çalışır, hiçbir yere gönderilmez
+745	Çentikte gösterilenler
+746	Açmak veya kapatmak için tıklayın. Denetim Masası'ndan istediğiniz zaman değiştirin.
+747	Bilgisayarınızdaki yapay zekâ agent'ları
+748	Bulundu ve açıldı. Daha sonra Denetim Masası'ndan ekleyip kaldırabilirsiniz.
+749	Henüz yapay zekâ agent'ı bulunamadı. Daha sonra İzleme sayfasından ekleyin.
+750	Yapay zekâ agent modülü kapalı.
+751	Yalnızca seçtiğiniz modüllerin gerektirdikleri. Bu adımı atlayabilirsiniz.
+752	Her şey hazır
+753	Hızlı başlamak için birkaç ipucu:
+754	İmleci çentiğin üzerine getirin
+755	Çentik, çalışan her şeyi göstererek açılır. Kapatmak için imleci uzaklaştırın.
+756	Uyarılardaki düğmelere tıklayın
+757	İmleç üzerindeyken uyarılar yerinde kalır; “Klasörde göster” ve “Yer aç” gibi düğmeler vardır.
+758	Dosyaları çentiğe sürükleyin
+759	Dosyaları bir süre rafta tutun, gerektiğinde dışarı sürükleyin.
+760	Çentiği süsleyin
+761	Simge Kitaplığı'ndan animasyonlu karakterler seçin.
+762	Denetim Masası'nı açın
+763	Menü çubuğundaki NotchTasks simgesine veya çentik açıkken ⚙ düğmesine tıklayın.
+764	Çentik açıkken ⚙ düğmesine tıklayın veya NotchTasks'i Spotlight'tan yeniden açın.
+765	Aracı kullan 
+766	Çentikte reddedildi
+767	Codex'te henüz güvenilmiyor
+768	Codex'i aç
+769	Giriş yapılmadı
+770	Giriş yap
+771	1. Safari › Ayarlar › İleri Düzey: “Web geliştiricileri için özellikleri göster”i açın.\n2. Geliştir menüsü › Apple Events'ten JavaScript'e izin ver.
+772	{0} menü çubuğunda: Görünüm (View) › Geliştirici (Developer) › Apple Events'ten JavaScript'e izin ver.
+773	Müzik denetimini aç
+774	Safari ayarlarını aç
+775	Safari › Ayarlar… (⌘,)
+776	Geliştirici özelliklerini göster
+777	İleri Düzey sekmesi: “Show features for web developers”i açın
+778	Apple Events'ten JavaScript'e izin ver
+779	Görünüm menüsünü aç
+780	{0} menü çubuğunda View (Görünüm) öğesine tıklayın
+781	Geliştirici'yi seç
+782	Developer (Geliştirici) üzerine gelin
+783	Allow JavaScript from Apple Events öğesine tıklayın
+784	Son öğe. ✓ işareti görünüyorsa tamamdır
+785	Çentik {0} içindeki müziği kontrol etsin
+786	Bir kez, yaklaşık 10 saniyede kurulur. Sonra çentikten sekmedeki müziği duraklatabilir, çalabilir, ileri sarabilir ve değiştirebilirsiniz.
+787	Açıldı. Çentik artık {0} uygulamasını kontrol edebilir.
+788	Açmanızı bekliyor… bu pencere tamamlandığını otomatik algılar
+789	Daha sonra
+790	{0} aç
+791	Çalışan agent'lar ve yapay zekâ uygulamaları
+792	Build'ler, testler, kurulumlar, işleme, CI
+793	Kontrol düğmeleriyle çalan parça
+794	Agent kullanımı, sınıra yaklaşınca uyarı
+795	Şarj takma ve çıkarma, düşük pil
+796	Toplantı bağlantılarıyla yaklaşan etkinlikler
+797	Geçici tutmak için dosyaları çentiğe sürükleyin
+798	Hızlı sayaç
+799	Kulaklık, klavye, fare ve pilleri
+800	Aramalarda mikrofon kapatma düğmesi (FaceTime, Zoom…)
+801	Uygulama mikrofon veya kamera kullandığında uyarır
+802	Değiştirdiğinizde ses ve parlaklık
+803	Ağ kopması ve geri gelmesi, VPN
+804	İndirme bitince bildirir, klasörü açar
+805	Bilgisayar ısınması, diskin dolması
+806	Toplantıdan önce kamerayı görün
+807	İş
+808	Müzik ve aygıtlar
+809	Aramalar ve gizlilik
+810	Sistem
+811	Uygulama denetimleri
+812	İndirilenler klasörü
+813	Uygulama rengini kullan
+814	Özel seç…
+815	Bu dosya bir NotchTasks ses paketi değil.
+816	Bu dosyada kullanılabilir ses yok.
+817	Runner bekleniyor
+818	çalışıyor
+819	Çalışıyor · {0}
+820	Bitti · {0} önce
+821	Kutu
+822	{0} görev çalışıyor
+823	Günlüğü aç
+824	+{0} görev daha
+825	Uyarıyı gizle
+826	Ses çalınıyor
+827	{0} içinde denetimleri aç
+828	Başka müzik uygulamalarını başlatmadan sekmedeki müziği duraklatmak, çalmak ve parça değiştirmek için
+829	Sarmak için sürükleyin
+830	Görüntülü arama · {0}
+831	Arama sürüyor · {0}
+832	 · Mikrofon kapalı
+833	Mikrofonu aç
+834	Mikrofonu kapat
+835	NotchTasks henüz kamerayı kullanamıyor
+836	Kamera ayarlarını aç
+837	Aynalamayı kapat
+838	Bekleniyor 
+839	{0} içinde yanıtla
+840	Burada atlayın, {0} normal şekilde sorar
+841	Gönder
+842	Lan'ın doğum günü
+843	Aile
+844	İzin
+845	Rapor yaz
+846	Sprint toplantısı
+847	Ekiple öğle yemeği
+848	Müşteriyi ara
+849	 bağlandı
+850	 bağlantısı kesildi
+851	S %100 · Sa %98 · Kutu %62
+852	1 başarısız kilit açma denemesi
+853	{0} başarısız kilit açma denemesi
+854	Sonuncusu bilgisayar kilitliyken {0} saatinde
+855	Ses paketi uygulandı
+856	Denetim Masası…
+857	Kılavuz…
+858	{0} dakikalık sayaç
+859	Sayacı durdur
+860	NotchTasks'ten çık
+861	Oda A / https://us02web.zoom.us/j/123?pwd=x
+862	Hangi renk?
+863	Kırmızı
+864	Renk?
+865	Çentikten aşağı kayar.
+866	Çentiğe tam oturur.
+867	Çentiğin altında kayan kart.
+868	Geniş, büyük yazı.
+869	Otomatik
+870	Sol
+871	Sağ
+872	Yapay zekâ / görev bitti
+873	Agent soruyor, onay gerekli
+874	CI başarılı
+875	CI başarısız
+876	Yapay zekâ sınırı dolmak üzere
+877	Yaklaşan etkinlik
+878	Sayaç bitti
+879	Şarj takıldı
+880	Şarj çıkarıldı
+881	Aygıt bağlandı
+882	Aygıt bağlantısı kesildi
+883	Arama başladı
+884	Arama bitti
+885	Mikrofon veya kamera açık
+886	Başarısız kilit açma
+887	Ağ kesildi
+888	Ağ geri geldi, VPN
+889	İndirme bitti
+890	Bilgisayar sıcak, disk dolu
+891	Çentiği daralt
+892	Varsayılan
+893	Canlı
+894	Sessiz
+895	kopyalama
+896	indirme
+897	sıkıştırma / çıkarma
+898	video işleme
+899	görüntü işleme
+900	yazıya dökme
+901	 · normalden uzun
+902	 daha
+903	işleniyor · %{0} CPU
+904	Kopyalanıyor
+905	Alınıyor
+906	Çıkarılıyor
+907	Dosya aktarılıyor
+908	 · kalan 
+909	Tüm gün
+910	Takvim'de aç
+911	+{0} etkinlik daha
+912	Devam ediyor · {0} kaldı
+913	Yakında · {0} sonra
+914	{0} · Takvim'de aç
+915	devam ediyor
+916	kalan 
+917	Bu etkinliği çentikten gizle
+918	{0}/{1} seçildi
+919	Seçimi kaldır
+920	Tümünü seç
+921	Finder'da göster
+922	Tümünü AirDrop ile gönder
+923	AirDrop ile gönder
+924	Raftakilerin hepsini kaldır (asıl dosyalar kalır)
+925	Raftan kaldır (asıl dosya kalır)
+926	Dosya ekle…
+927	Buraya bırakın
+928	Dosyaları çentiğe sürükleyin veya seçmek için +'ya tıklayın
+929	Seçmek için tıklayın · açmak için çift tıklayın · başka uygulamaya bırakmak için dışarı sürükleyin
+930	Seçili dosyalardan birini sürükleyerek {0} dosyanın tümünü taşıyın
+931	Raftan kaldır
+932	Dosya artık bulunamıyor: {0}
+933	Parmak izi eşleşmiyor
+934	Yanlış parola
+935	Kapalı
+936	1 hata
+937	{0} hata
+938	{0} çalışıyor
+939	{0} bekliyor
+940	Çalışan bir şey yok
+941	Denetim Masası
+942	Ayna
+943	Kamera önizlemesi
+944	Dosyaları sürükleyin veya seçin
+945	Dosyaları çentiğe sürükleyin veya rafa koymak için tıklayıp seçin
+946	Tüm bilgisayarın CPU'su: 
+947	Kullanılan bellek: 
+948	%{0} · Activity Monitor'ı açmak için tıklayın
+949	Metin, emoji
+950	Animasyon
+951	Çalışkan
+952	Sevimli
+953	Dosya indir
+954	Agent'ı yanıtla
+955	Soru
+956	Soru metni
+957	Seçenekler
+958	Sonraki oturuma geç
+959	Odaklanmayı başlat
+960	Dakika
+961	Odaklanmayı durdur
+962	Piksel dostuna bak
+963	Görev
+964	Küçük Turuncu
+965	Işık huzmesi
+966	Terminal bulutu
+967	Roket
+968	Astronot
+969	Mavi yıldız
+970	Küçük robot
+971	Düşünüyor
+972	Madenci
+973	Demir dövüyor
+974	Küçük dişli
+975	Çarkta koşan hamster
+976	Kahve
+977	İlerleme çubuğu
+978	Kamp ateşi
+979	Hata avı
+980	Madeni para
+981	Kedi
+982	Slime
+983	Küçük hayalet
+984	Lastik ördek
+985	Atan kalp
+986	Penguen
+987	Robot
+988	Savaş robotu
+989	Chibi
+990	Anime kedisi
+991	Sevimli bulut
+992	Turuncu ışık huzmesi
+993	Yörünge
+994	Pırıltı
+995	Sinir ağı
+996	Yazıyor…
+997	Dişli
+998	Kum saati
+999	Blok diziyor
+1000	Küçük Yuvarlak
+1001	Neşeli yıldız
+1002	Kurbağa
+1003	Panda
+1004	Tavşan
+1005	Baykuş
+1006	Mac'inizden bir güncelleme var.
+1007	Build tamamlandı
+1008	Görmek için NotchTasks'i açın.
+1009	Build çalışıyor
+1010	Kilit ekranından izleyin.
+1011	İzin vermek veya reddetmek için NotchTasks'i açın.

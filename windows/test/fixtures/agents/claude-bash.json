@@ -1,0 +1,12 @@
+{
+  "session_id": "5f1c2a9e-7b3d-4c8e-9a10-2d6f4e8b1c77",
+  "transcript_path": "C:\\Users\\hung\\.claude\\projects\\C--Users-hung-Projects-notchtasks\\5f1c2a9e-7b3d-4c8e-9a10-2d6f4e8b1c77.jsonl",
+  "cwd": "C:\\Users\\hung\\Projects\\notchtasks",
+  "permission_mode": "default",
+  "hook_event_name": "PermissionRequest",
+  "tool_name": "Bash",
+  "tool_input": {
+    "command": "rm -rf dist",
+    "description": "Remove the build output"
+  }
+}

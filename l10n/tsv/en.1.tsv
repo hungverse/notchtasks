@@ -1,0 +1,340 @@
+0	{0} requests waiting for you
+1	Language
+2	Device
+3	Run command
+4	Edit file
+5	Read file
+6	Web access
+7	 is asking
+8	 needs your approval
+9	Match app
+10	Blue
+11	Green
+12	Orange
+13	Pink
+14	Purple
+15	White
+16	Black
+17	Frosted glass
+18	Glowing edge
+19	Island
+20	Compact
+21	Floating card
+22	Banner
+23	Smooth
+24	Bouncy
+25	Snappy
+26	Minimal
+27	Lock icon
+28	Pinned icons
+29	Tasks, music, timers
+30	Battery
+31	Now Playing
+32	Calendar
+33	Timer
+34	File shelf
+35	AI limits
+36	Devices
+37	Calls
+38	Volume & brightness
+39	Network
+40	Downloads
+41	Computer health
+42	Camera mirror
+43	Classic
+44	Glass
+45	Minimal
+46	Sunset
+47	Ocean
+48	Deletes files or folders
+49	Runs as administrator
+50	Overwrites history on the git server
+51	Discards all unsaved changes
+52	Deletes untracked files
+53	Runs a script downloaded from the web
+54	Writes straight to a disk
+55	Gives everyone full access to files
+56	Deletes data in a database
+57	Skips safety checks
+58	Break & water reminders
+59	Reminds you to stand up, drink water and rest your eyes 6 times a workday. Turn off with the switch.
+60	End-of-day report
+61	Every evening at 9 PM: how long you focused today, how many sessions, your streak.
+62	Pomodoro & 90-minute sessions
+63	Focus in short sessions with breaks (4 × 25 minutes, 5-minute breaks by default). Adds a 90-minute session.
+64	Flower crown & scarf
+65	Your pet grows bigger and wears a flower crown and a scarf.
+66	On the notch
+67	Put your pet on the computer's notch. It changes pose with what the computer is doing.
+68	Strict focus mode
+69	When a session starts, choose strict mode: it can't be stopped until time is up.
+70	Crown & cape
+71	Your pet wears a crown and a cape, with a halo.
+72	Normal
+73	Happy
+74	Sleeping
+75	Hungry
+76	Sad
+77	Focus
+78	Tired
+79	Sleeping tight… zzz
+80	Sleeping… zzz
+81	So hungry, please feed me
+82	So tired, let me nap
+83	Focusing with you
+84	Worried, your computer is waiting for you
+85	So proud of you!
+86	Sad you gave up
+87	Sad the build failed
+88	Bored, play with me
+89	A bit hungry
+90	Cheering on the agent
+91	Getting sleepy
+92	Good morning!
+93	Cheerful
+94	Feed
+95	Play
+96	Sleep
+97	Wake up
+98	Computer
+99	Pair with your computer to review your AI agents' work and see builds right here.
+100	See a sample
+101	Pair computer
+102	Type
+103	Pets
+104	Store
+105	Available
+106	Tap to choose a pet
+107	, not bought
+108	Owned
+109	The pet you choose appears all over the app, widgets and the lock screen.
+110	Chose {0}
+111	Your new pet will appear on the home screen, widgets and the block screen.
+112	Couldn't buy
+113	Couldn't connect to the computer: {0}
+114	This computer is paired with another phone. Pro is needed to pair more.
+115	The computer unpaired this phone. Scan the QR code again to pair.
+116	On your computer: open NotchTasks → Control Panel → Pairing, click Pair device, then scan the QR code.
+117	Or paste a pairing code
+118	Paste a pairing code
+119	Pairing code from the computer
+120	Pair
+121	This isn't a NotchTasks pairing code.
+122	This code only works for your devices.
+123	Pair with computer
+124	Cancel
+125	sample data
+126	Waiting for you
+127	Activity
+128	Waiting for {0}…
+129	computer
+130	Open NotchTasks on your computer to see agents and questions here.
+131	Away from the computer · updated {0}
+132	With Pro: see and answer agents directly from anywhere.
+133	Waiting for your approval
+134	{0} items waiting for approval
+135	 running
+136	A build failed
+137	All done
+138	Computer is idle
+139	Your computer's notch, in your hand
+140	Review your AI agents' work and see builds right here, even on the lock screen.
+141	Try with sample data
+142	Install NotchTasks on your computer, open **Control Panel → Pairing**, then scan the QR code.
+143	Reply
+144	Deny
+145	Allow
+146	Choose one or more
+147	Send answer
+148	Allowing this command needs Face ID.
+149	Answer later on the computer
+150	Details
+151	just now
+152	 ago
+153	Cool
+154	Warm
+155	Hot
+156	Very hot
+157	Temperature
+158	Resets in {0}
+159	a few minutes
+160	{0}d {1}h
+161	{0} days
+162	{0}h {1}m
+163	{0} hours
+164	{0} min
+165	Allowed
+166	Denied
+167	Leave for the computer
+168	Chosen: 
+169	Viewing
+170	Sample data
+171	Not paired
+172	Leave sample data
+173	Unpair
+174	Connect directly on the same Wi‑Fi
+175	Connection
+176	Direct over Wi‑Fi
+177	Notifications
+178	Connection
+179	Same Wi‑Fi: instant updates. Away: switches to the Internet on its own.
+180	Preview Live Activity
+181	Shows 3 sample requests. Lock your phone to see them.
+182	Live Activities are off: turn them on in Settings → NotchTasks.
+183	Face ID for risky commands
+184	Security
+185	Require Face ID before allowing commands that can delete or overwrite data.
+186	About
+187	Version
+188	Settings
+189	Pro active
+190	Pro active (bought on another device)
+191	Current period ends
+192	Manage subscription
+193	Try Pro free for 7 days
+194	Restore purchases
+195	Use anywhere, reply right from notifications, Live Activities for agents and builds, pair several devices.
+196	Monthly and yearly plans renew automatically. Cancel in Settings → your name → Subscriptions, at least 24 hours before the next period.
+197	Terms
+198	Privacy
+199	Not done
+200	Pro yearly
+201	Pro monthly
+202	Pro lifetime
+203	 / year
+204	 / month
+205	Yours
+206	Add a widget: hold the home screen → Edit → Add Widget → NotchTasks.
+207	See and change pets
+208	Level {0}!
+209	{0} grew a little.
+210	Unlocked: {0}.
+211	Great
+212	Everything is unlocked. Finished sessions still earn XP; giving up makes it sad.
+213	1 minute of focus = 1 XP. Level {0}: {1}.
+214	Focusing
+215	Strict
+216	Stop
+217	Break
+218	Next: session {0}/{1}
+219	Start now
+220	Counts here and on the computer's notch
+221	Shows on the lock screen, alerts when time is up
+222	Start
+223	Start strict mode
+224	Strict mode: can't be stopped until time is up.
+225	Turn on strict mode?
+226	Start strict
+227	Can't be stopped while focusing, through all {0} sessions. Breaks can still be stopped.
+228	Can't be stopped for {0} minutes. Blocked apps open again when time is up.
+229	Pomodoro: {0} sessions × {1} min
+230	{0}-minute session
+231	Stand up and stretch a little!
+232	Have a sip of water 💧
+233	Rest your eyes for 20 seconds, look far away.
+234	Relax your shoulders, take a deep breath.
+235	Walk a few steps to loosen up.
+236	Had water yet? Just a reminder 💧
+237	{0} reminds you
+238	{0}: look back at today
+239	How long did you focus, how many questions did you review? Open to see.
+240	Break's over
+241	{0} is ready for session {1}/{2}, {3} minutes. Tap to start.
+242	minutes focused
+243	sessions
+244	questions reviewed
+245	day streak
+246	Pair with your computer to put your pet on the notch.
+247	Level {0}
+248	Tap to put it on the notch. Your pet changes pose with what the computer is doing.
+249	Pets on the notch
+250	Add on the left
+251	Add on the right
+252	Replace {1} icon {0}
+253	right
+254	left
+255	Remove from notch
+256	Focus in short sessions with breaks in between. When a break ends, the next session starts on its own.
+257	Focus: {0} min
+258	Break: {0} min
+259	Sessions: {0}
+260	Each Pomodoro
+261	{0} minutes of focus in total. Starting now ends at {1}.
+262	Start from the Focus card on Home.
+263	Breaks have "Start now" and "Stop" buttons.
+264	You can choose strict mode when starting.
+265	Sample numbers, since there are no sessions today.
+266	Last 7 days · minutes focused
+267	A reminder to look comes every evening at 9 PM.
+268	Unlocks at level 3: the Today card and a 9 PM notification.
+269	{0} waited for you all day. Let's focus together tomorrow!
+270	{0}: {1} minutes today, a good start!
+271	{0}: {1} minutes of focus, {2} sessions. Well done!
+272	{0}: {1} minutes! You worked really hard today, remember to rest.
+273	Congratulations! 🎉
+274	{0} reached level {1} and unlocked:
+275	Turned on for you. Adjust it on the Pets page.
+276	Awesome
+277	Build failed
+278	Couldn't start the Live Activity: {0}
+279	Session {0}/{1} done
+280	Focus time's up
+281	Take a {0}-minute break, then the next session.
+282	{0} minutes done. Take a short break.
+283	 🎉 Unlocked: {0}.
+284	Allow risky command: {0}
+285	How should the data be stored?
+286	Storage
+287	SQLite (Recommended)
+288	Your MacBook Pro
+289	Editing NotchView.swift
+290	Running tests
+291	Building for iPhone 17 Pro
+292	CI failed: deploy
+293	6 min
+294	CI passed: test
+295	No notch found on the computer
+296	Update NotchTasks on your computer to the latest version, then open it to customize the notch from here.
+297	Sending…
+298	Sample computer: try anything
+299	Synced with {0}
+300	Theme
+301	Lock screen uses its own icons
+302	Lock screen icons
+303	Choose
+304	Change
+305	Remove
+306	Build tool icons
+307	The icon shown on the notch while that tool is building.
+308	Appearance
+309	Size
+310	Large
+311	Opening the notch
+312	Hover
+313	Click
+314	Background
+315	Top color
+316	Bottom color
+317	Motion
+318	Alert style
+319	Modules
+320	{0} on
+321	Sound & haptics
+322	Sound
+323	Trackpad haptics
+324	System notifications
+325	Notch on the lock screen
+326	Computer lock screen
+327	Say done when it ran longer than
+328	every task
+329	{0} sec
+330	Warn about AI limits at
+331	Notch icons
+332	Tap where it should go. Tap the same icon again to cancel.
+333	Drag an icon to swap places, tap to move, change or remove it. Up to {0} per side{1}
+334	, Pro gets 4.
+335	Move
+336	Change icon
+337	Remove
+338	right side
+339	left side

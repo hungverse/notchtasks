@@ -1,0 +1,312 @@
+700	Ocultar código
+701	Emparejar otro dispositivo…
+702	Creando código…
+703	Emparejar dispositivo…
+704	Avisar al teléfono solo cuando no esté en el equipo
+705	{0} dispositivos por Wi‑Fi
+706	En la misma Wi‑Fi el teléfono recibe todo al instante; en otra red, por internet. Mientras usas este equipo, el teléfono no suena.
+707	Aún no hay dispositivos.
+708	Desemparejar todos
+709	Emparejados
+710	Todos los dispositivos se desconectarán de este equipo. Al volver a emparejar se usará un código nuevo.
+711	Sin permiso
+712	Sin comprobar
+713	Avisa cuando una tarea termina o falla.
+714	Muestra los próximos eventos.
+715	Controla la música del navegador.
+716	Controlar {0}
+717	Lee y controla lo que suena.
+718	Música en {0}
+719	Pausa, reproduce y salta canciones en la pestaña.
+720	Abrir al iniciar sesión
+721	Se abre al iniciar sesión.
+722	Desactívalo en {0}
+723	Desmarca el mismo elemento:\n
+724	El comando contiene “{0}”
+725	Proceso “{0}”
+726	 · el comando contiene “{0}”
+727	una línea por subproceso
+728	App · {0}
+729	Sigue cada sesión
+730	Se muestra mientras funciona
+731	Apps de IA
+732	Paso {0}/{1}
+733	Omitir
+734	Atrás
+735	Siguiente
+736	Te damos la bienvenida a NotchTasks
+737	IA y compilaciones
+738	Sabe qué agente trabaja y qué compilación terminó o falló
+739	Música, llamadas
+740	Controla la música, silencia rápido en las llamadas
+741	Avisos ordenados
+742	Carga, auriculares, descargas, red, calor
+743	Privado
+744	Todo funciona en tu equipo, nada se envía a ningún sitio
+745	Qué muestra el notch
+746	Haz clic para activar o desactivar. Cámbialo cuando quieras en el Panel de control.
+747	Agentes de IA en tu equipo
+748	Encontrados y activados. Añade o quita más adelante en el Panel de control.
+749	Aún no hay agentes de IA. Añádelos luego en la página Vigilancia.
+750	El módulo de agentes de IA está desactivado.
+751	Solo lo que necesitan los módulos elegidos. Puedes omitirlo.
+752	Todo listo
+753	Unos consejos para ir más rápido:
+754	Pasa el puntero por el notch
+755	El notch se abre con todo lo que está en marcha. Aparta el puntero para plegarlo.
+756	Pulsa los botones de los avisos
+757	Los avisos se quedan quietos con el puntero encima y traen botones como “Mostrar en la carpeta” y “Liberar espacio”.
+758	Arrastra archivos al notch
+759	Guarda archivos un rato en la bandeja y sácalos cuando los necesites.
+760	Decora el notch
+761	Elige personajes animados en la Biblioteca de iconos.
+762	Abrir el Panel de control
+763	Haz clic en el icono de NotchTasks de la barra de menús, o en el botón ⚙ con el notch abierto.
+764	Haz clic en el botón ⚙ con el notch abierto, o vuelve a abrir NotchTasks desde Spotlight.
+765	Usar herramienta 
+766	Rechazado en el notch
+767	Aún no es de confianza en Codex
+768	Abrir Codex
+769	Sin iniciar sesión
+770	Iniciar sesión
+771	1. Safari › Ajustes › Avanzado: activa "Mostrar funciones para desarrolladores web".\n2. Menú Desarrollo › Permitir JavaScript desde Apple Events.
+772	En {0}, en la barra de menús: Visualización (View) › Desarrollador (Developer) › Permitir JavaScript desde Apple Events.
+773	Activar el control de música
+774	Abrir los ajustes de Safari
+775	Safari › Ajustes… (⌘,)
+776	Mostrar funciones de desarrollador
+777	Pestaña Avanzado: activa "Show features for web developers"
+778	Permitir JavaScript desde Apple Events
+779	Abre el menú Visualización
+780	En la barra de menús de {0}, haz clic en View (Visualización)
+781	Elige Desarrollador
+782	Pasa el puntero por Developer (Desarrollador)
+783	Haz clic en Allow JavaScript from Apple Events
+784	Es el último elemento. Con la marca ✓ ya está
+785	Deja que el notch controle la música en {0}
+786	Una sola vez, unos 10 segundos. Luego el notch pausa, reproduce, avanza y salta canciones en la pestaña.
+787	Activado. El notch ya controla {0}.
+788	Esperando a que lo actives… esta ventana lo detecta sola
+789	Más tarde
+790	Abrir {0}
+791	Agentes y apps de IA trabajando
+792	Compilar, probar, instalar, renderizar, CI
+793	Lo que suena, con controles
+794	Uso de los agentes, aviso antes de agotarse
+795	Conectado, desconectado, batería baja
+796	Próximos eventos, con enlaces a reuniones
+797	Suelta archivos en el notch para guardarlos
+798	Temporizadores rápidos
+799	Auriculares, teclados, ratones y su batería
+800	Duración de la llamada, botón de silencio (FaceTime, Zoom…)
+801	Avisa cuando una app usa el micrófono o la cámara
+802	Volumen y brillo al ajustarlos
+803	Sin conexión, conexión recuperada, VPN
+804	Descarga terminada, mostrar en la carpeta
+805	Equipo caliente, disco casi lleno
+806	Mira la cámara antes de entrar a una reunión
+807	Trabajo
+808	Música y dispositivos
+809	Llamadas y privacidad
+810	Sistema
+811	Control de apps
+812	Carpeta Descargas
+813	Según el color de la app
+814	Personalizado…
+815	Este archivo no es un pack de sonidos de NotchTasks.
+816	No hay sonidos utilizables en este archivo.
+817	Esperando un runner
+818	en curso
+819	En curso · {0}
+820	Listo · hace {0}
+821	Estuche
+822	{0} tareas en curso
+823	Abrir registro
+824	+{0} tareas más
+825	Ocultar aviso
+826	Reproduciendo audio
+827	Activar el control en {0}
+828	Para pausar, reproducir y saltar en la pestaña sin que otras apps de música empiecen a sonar
+829	Arrastra para avanzar
+830	Videollamada · {0}
+831	En llamada · {0}
+832	 · Micrófono silenciado
+833	Activar micrófono
+834	Silenciar
+835	NotchTasks aún no puede usar la cámara
+836	Abrir ajustes de Cámara
+837	Cerrar espejo
+838	Esperando 
+839	Responder en {0}
+840	Omitir aquí, {0} preguntará como siempre
+841	Enviar
+842	Cumpleaños de Lan
+843	Familia
+844	Vacaciones
+845	Escribir informe
+846	Reunión de sprint
+847	Comida con el equipo
+848	Llamada con un cliente
+849	 conectado
+850	 desconectado
+851	I 100% · D 98% · Estuche 62%
+852	1 desbloqueo fallido
+853	{0} desbloqueos fallidos
+854	El último a las {0} con el equipo bloqueado
+855	Pack de sonidos aplicado
+856	Panel de control…
+857	Guía…
+858	Temporizador de {0} minutos
+859	Detener temporizador
+860	Salir de NotchTasks
+861	Sala A / https://us02web.zoom.us/j/123?pwd=x
+862	¿Qué color?
+863	Rojo
+864	¿Color?
+865	Baja desde el notch.
+866	Cabe dentro del notch.
+867	Una tarjeta flotante bajo el notch.
+868	Ancho, letra grande.
+869	Automático
+870	Lado izquierdo
+871	Lado derecho
+872	IA / tarea terminada
+873	Un agente pide aprobación
+874	CI correcto
+875	CI falló
+876	Se agota el límite de IA
+877	Próximo evento
+878	Fin del temporizador
+879	Conectado al cargador
+880	Desconectado del cargador
+881	Dispositivo conectado
+882	Dispositivo desconectado
+883	Empieza la llamada
+884	Termina la llamada
+885	Micrófono o cámara activados
+886	Desbloqueo fallido
+887	Sin conexión
+888	Conexión recuperada, VPN
+889	Descarga terminada
+890	Equipo caliente, disco lleno
+891	El notch se pliega
+892	Predeterminado
+893	Animado
+894	Silencio
+895	copiando
+896	descargando
+897	comprimiendo / extrayendo
+898	procesando vídeo
+899	procesando imágenes
+900	transcribiendo
+901	 · más de lo normal
+902	 restante
+903	trabajando · {0}% de CPU
+904	Copiando
+905	Recibiendo
+906	Extrayendo
+907	Transfiriendo archivos
+908	 · quedan 
+909	Todo el día
+910	Abrir en Calendario
+911	+{0} eventos más
+912	En curso · quedan {0}
+913	Próximamente · en {0}
+914	{0} · abrir en Calendario
+915	en curso
+916	en 
+917	Ocultar este evento del notch
+918	{0}/{1} seleccionados
+919	Deseleccionar
+920	Seleccionar todo
+921	Mostrar en el Finder
+922	Enviar todo por AirDrop
+923	Enviar por AirDrop
+924	Quitar todo de la bandeja (los originales se quedan)
+925	Quitar de la bandeja (el original se queda)
+926	Añadir archivos…
+927	Suelta aquí
+928	Arrastra archivos al notch o pulsa + para elegir
+929	Clic para seleccionar · doble clic para abrir · arrastra fuera para soltar en otra app
+930	Arrastra un archivo seleccionado para llevar los {0}
+931	Quitar de la bandeja
+932	Ya no se encuentra el archivo: {0}
+933	La huella no coincide
+934	Contraseña incorrecta
+935	Desactivado
+936	1 error
+937	{0} errores
+938	{0} en curso
+939	{0} esperando
+940	Nada en marcha
+941	Panel de control
+942	Espejo
+943	Vista rápida de la cámara
+944	Arrastra o elige archivos
+945	Arrastra archivos al notch, o haz clic para elegir archivos para la bandeja
+946	CPU de todo el equipo: 
+947	Memoria en uso: 
+948	{0}% · clic para abrir Monitor de Actividad
+949	Texto, emoji
+950	Animación
+951	A tope
+952	Monadas
+953	Descargar
+954	Responder al agente
+955	Pregunta
+956	Texto de la pregunta
+957	Opción
+958	Siguiente sesión
+959	Empezar a concentrarse
+960	Minutos
+961	Detener concentración
+962	Cuidar a tu mascota
+963	Acción
+964	Bolita naranja
+965	Chispa
+966	Nube de comandos
+967	Cohete
+968	Astronauta
+969	Estrella azul
+970	Robotito
+971	Pensando
+972	Minero
+973	Herrero
+974	Engranaje pequeño
+975	Rueda de hámster
+976	Café
+977	Barra de progreso
+978	Fogata
+979	Cazabichos
+980	Moneda
+981	Gato
+982	Slime
+983	Fantasmita
+984	Patito de goma
+985	Latido
+986	Pingüino
+987	Robot
+988	Robot de combate
+989	Chibi
+990	Gato anime
+991	Nube adorable
+992	Chispa naranja
+993	Órbita
+994	Destello
+995	Red neuronal
+996	Escribiendo…
+997	Engranaje
+998	Reloj de arena
+999	Bloques
+1000	Bolita
+1001	Estrella feliz
+1002	Rana
+1003	Panda
+1004	Conejo
+1005	Búho
+1006	Hay novedades de tu equipo.
+1007	Compilación terminada
+1008	Abre NotchTasks para verlo.
+1009	Compilando
+1010	Síguelo en la pantalla bloqueada.
+1011	Abre NotchTasks para permitir o rechazar.

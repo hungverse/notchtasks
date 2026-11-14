@@ -1,0 +1,360 @@
+340	Aggiungi icona a destra
+341	Aggiungi icona a sinistra
+342	Aggiungi icona: serve Pro
+343	La tua animazione
+344	La tua immagine
+345	Simbolo
+346	Tema {0}
+347	Colore di risalto
+348	Personalizzato
+349	Trascina per riordinare.
+350	{0} icone animate · Gratis
+351	Tocca un'icona per metterla sulla tacca.
+352	Scegli icona
+353	Abbina il computer per usare questa icona sulla tacca.
+354	Usa questa icona sulla tacca.
+355	Impossibile raggiungere App Store. Riprova più tardi.
+356	App Store non ha potuto verificare questo acquisto.
+357	Acquisto in attesa di approvazione. Lo riceverai non appena sarà approvato.
+358	Il simulatore non blocca le app reali.
+359	Permesso non concesso. Accedi a iCloud in Impostazioni.
+360	Blocco app non ancora consentito.
+361	Impossibile programmare lo sblocco. Apri l'app dopo la sessione per sbloccare le app.
+362	Blocca altre app durante la concentrazione
+363	Modificabile al termine della sessione.
+364	Si possono aprire solo le app consentite.
+365	Scegli le app consentite
+366	{0} elementi consentiti
+367	Home
+368	Disattivato
+369	Apri per esaminare
+370	Registrazione…
+371	Disattivato: attiva in Impostazioni
+372	Impossibile attivare, riprova più tardi
+373	Attivazione…
+374	Errore: FCM non ha fornito un token
+375	Attivato
+376	{0} XP · mancano {1} XP al livello {2}
+377	Oggi
+378	Tocca per l'anteprima
+379	Non acquistato
+380	, anteprima
+381	Sblocchi per livello
+382	In base al livello più alto: {0}
+383	Informazioni: {0}
+384	Livello {0} · sbloccato
+385	Si sblocca al livello {0}
+386	Anteprima del resoconto
+387	Cucciolo
+388	Livello 5
+389	Livello 10
+390	Livello {0} · {1}
+391	Non acquistato · anteprima
+392	Fase
+393	Selezionato
+394	Scegli {0}
+395	Acquista pacchetto Animaletti · {0}
+396	Connessione remota
+397	Usa ovunque, senza la stessa rete Wi‑Fi
+398	Rispondi dalle notifiche
+399	Consenti o rifiuta subito, senza aprire l'app
+400	Agent e build sulla schermata di blocco e nella Dynamic Island
+401	Avvisi su build e CI
+402	Scopri subito se una build termina o non riesce
+403	Più dispositivi
+404	Abbina più telefoni allo stesso computer
+405	Più icone sulla tacca
+406	Fino a 4 icone per lato
+407	Il tuo computer, ovunque.
+408	Prova gratis per 7 giorni
+409	poi {0}{1}
+410	La stessa rete Wi‑Fi resta gratuita. Acquista una volta e usa su tutti i dispositivi abbinati.
+411	Chiudi
+412	7 giorni gratis
+413	Paga una volta, usa per sempre
+414	Rana, panda, coniglio e gufo
+415	Inattivo
+416	In esecuzione
+417	In attesa di te
+418	Errore
+419	Volpe
+420	Sazio
+421	Energia
+422	{0} {1} percento
+423	Livello {0}, {1} percento al prossimo livello
+424	Anteprima della tacca
+425	{0} attività in esecuzione
+426	Torna alla concentrazione
+427	Riapre alle {0}
+428	Concentrazione in corso
+429	{0}. Completa la sessione e {1} guadagna altri XP (ora al livello {2}).
+430	Il tuo animaletto vive il tuo lavoro con gioia o tristezza.
+431	Inizia una sessione di concentrazione da 25 o 50 minuti.
+432	Prossima: sessione {0}/{1}
+433	Avvia sessione {0}/{1}
+434	Termina
+435	RIGOROSO
+436	Non puoi interrompere
+437	MODALITÀ RIGOROSA
+438	Non puoi interrompere finché il tempo non scade
+439	Fatto!
+440	{0} min di concentrazione · +{1} XP
+441	Rigorosa · non puoi interrompere
+442	Prossima: sessione {0}
+443	Panoramica del computer
+444	Elementi da approvare, agent e build sul computer.
+445	Claude richiede la tua approvazione
+446	e altre {0} domande
+447	in attesa di te
+448	Apri l'app per esaminare
+449	Apri NotchTasks per abbinare un computer
+450	{0} da esaminare
+451	in attesa della tua approvazione
+452	Tutti gli agent sono a riposo
+453	{0} in attesa
+454	Esamina
+455	Build in corso
+456	Un agent ti aspetta
+457	Apri NotchTasks per vedere la richiesta.
+458	Apri l'app per scegliere una risposta
+459	Esamina nell'app
+460	{0} agent in esecuzione
+461	Agent in esecuzione
+462	Cosa monitora la tacca. Mostra solo ciò che sta lavorando.
+463	Modifica
+464	Attivo
+465	 (aggiunto)
+466	App aperte
+467	Scegli un'altra app…
+468	Inserisci un processo…
+469	Aggiungi elemento da monitorare
+470	Scegli un agent, un'app aperta o inserisci il nome di un processo.
+471	Rispondi agli agent sulla tacca
+472	Quando un agent fa una domanda, la tacca mostra i pulsanti per rispondere.
+473	Pronto
+474	Impossibile modificare le impostazioni di {0}: {1}
+475	Avrà effetto al prossimo avvio dell'agent.
+476	Esamina comandi, modifiche ai file e rispondi alle domande
+477	Esamina comandi e modifiche ai file
+478	Rifiuta i comandi. Consente solo quando Cursor li esegue autonomamente
+479	Esamina comandi, modifiche ai file e accesso al web
+480	Elemento monitorato
+481	Nome visualizzato
+482	Mostra in
+483	Cambia icona
+484	Cambia…
+485	{0} è monitorato per sessione di lavoro. Non serve configurare altro.
+486	Nome del processo
+487	La riga di comando contiene
+488	facoltativo, ad es. gemini-cli
+489	Rilevamento
+490	Nome del processo, come in Activity Monitor.
+491	Ogni riga sulla tacca è
+492	Ogni esecuzione
+493	Ogni sottoprocesso (runner, worker)
+494	Attivo quando la CPU supera
+495	Aumenta se appare anche quando è inattivo, diminuisci se perde attività.
+496	L'app non è aperta.
+497	Non trovato. Apri lo strumento, poi fai clic su Ricontrolla.
+498	Corrispondenza: {0}
+499	Ricontrolla
+500	Aggiungi
+501	Salva
+502	Mostra tutti gli strumenti
+503	Nessuna build ancora rilevata. Attiva “Mostra tutti” per impostare le icone in anticipo.
+504	Non serve aggiungere: ogni strumento in esecuzione appare. Fai clic per cambiarne l'icona.
+505	Modificato
+506	Modello in esecuzione sul computer
+507	Di nuovo online
+508	Wi‑Fi connesso
+509	Connesso
+510	Rete disconnessa
+511	Controlla il Wi‑Fi o il cavo di rete
+512	VPN attiva
+513	VPN disattiva
+514	Download completato
+515	Mostra nella cartella
+516	Disco quasi pieno
+517	%.1f GB liberi
+518	Libera spazio
+519	Il computer è molto caldo
+520	Il computer si sta scaldando
+521	{0} sta lavorando intensamente
+522	Valuta di chiudere le app più pesanti
+523	Vedi app
+524	Chiamata in corso
+525	Terminata
+526	Microfono attivo
+527	Fotocamera attiva
+528	Impossibile disattivare il microfono
+529	Usa il pulsante in {0}
+530	Nessun modello caricato
+531	Caricato 
+532	Aggiungi al ripiano
+533	Controlli di {0} attivi
+534	La tacca ora può controllare la musica nella scheda
+535	CI non riuscita: {0}
+536	Vedi log
+537	CI riuscita: {0}
+538	Al lavoro · {0}
+539	In attesa
+540	CI riuscita: 
+541	CI non riuscita: 
+542	Aperto
+543	{0} ha raggiunto il limite di {1}
+544	{0} ha usato il {1}% del limite di {2}
+545	Attendi fino alle {0} (mancano {1})
+546	Si azzera alle {0}
+547	{0} connesso
+548	{0} disconnesso
+549	Batteria di {0} scarica
+550	In carica
+551	Alimentazione scollegata
+552	Batteria scarica
+553	{0}% rimanente
+554	Alle 
+555	Tempo scaduto
+556	Schermata principale
+557	Icone sempre visibili sulla tacca ridotta.
+558	Schermata di blocco
+559	Solo visualizzazione: non si espande e non si può fare clic.
+560	Come la schermata principale
+561	Separato
+562	Avvisa dei tentativi di sblocco errati
+563	La tacca vibra in rosso se la password o l'impronta digitale è errata. Dopo lo sblocco indica quanti tentativi sono falliti.
+564	Sinistra
+565	Destra
+566	Fai clic su + per aggiungere, clic per modificare e trascina per scambiare. Fino a {0} per lato{1}
+567	Aggiungi dalla Libreria icone
+568	Sincronizza animazioni
+569	Riavvia tutte le icone animate contemporaneamente
+570	Icona fissa
+571	A destra della tacca
+572	A sinistra della tacca
+573	Oltre 8.000 simboli Apple
+574	Alcuni caratteri o emoji
+575	Personaggi animati, GIF
+576	Sulla tacca
+577	Digita fino a 8 caratteri
+578	Scelte rapide
+579	Trascina qui un'altra immagine
+580	Trascina qui un'immagine
+581	Scegli immagine…
+582	Apri Libreria icone
+583	Il tuo GIF o spritesheet…
+584	{0}/sec
+585	PNG, JPG, HEIC… Le immagini quadrate sono le migliori.
+586	Forma
+587	Cerchio
+588	Quadrato
+589	Bordo
+590	Colore del testo
+591	Colore del simbolo
+592	Rimuovi icona
+593	Usa l'icona predefinita
+594	Senza sfondo
+595	Altro colore
+596	Suggeriti
+597	Tutti
+598	Comunicazione
+599	Meteo
+600	Mappe
+601	Oggetti
+602	Foto
+603	Giochi
+604	Trasporti
+605	Accessibilità
+606	Persone
+607	Casa
+608	Sport
+609	Natura
+610	Modifica
+611	Testo
+612	Media
+613	Tastiera
+614	Commercio
+615	Ora
+616	Salute
+617	Forme
+618	Frecce
+619	Numeri e lettere
+620	Matematica
+621	Cerca in inglese: star, cloud, cat, hammer…
+622	{0} · {1} simboli
+623	{0} risultati
+624	{0} icone animate · Gratis
+625	Cerca
+626	Nessuna icona corrisponde a “{0}”.
+627	Pacchetti della community: in arrivo.
+628	In uso
+629	Icona fissa sulla tacca
+630	Imposta per un'app monitorata
+631	Imposta per uno strumento di build
+632	Apri
+633	fino alle 
+634	Eventi
+635	Panoramica
+636	Monitoraggio
+637	Abbinamento
+638	Icone e blocco
+639	Libreria icone
+640	Comportamento
+641	Permessi
+642	La tacca mostra ciò che è in esecuzione e resta silenziosa quando non c'è nulla.
+643	Errori CI
+644	Vedi guida
+645	Trascina per riordinare sulla tacca.
+646	Posizione da ridotta
+647	Colore
+648	Richiede il permesso {0}
+649	Ripristina colore predefinito
+650	Prova avviso
+651	Colore superiore
+652	Colore inferiore
+653	Stile
+654	Colore personalizzato
+655	Esporta…
+656	Importa…
+657	Esegui backup delle impostazioni
+658	Tutte le personalizzazioni in un file .json.
+659	Questo schermo ha una tacca: si adatta alla fotocamera.
+660	Questo schermo non ha una tacca: appare come Dynamic Island fluttuante.
+661	Attività completata
+662	Avviso di prova
+663	Volume
+664	Pacchetto suoni
+665	Backup e condivisione
+666	Esporta pacchetto…
+667	Importa pacchetto…
+668	I suoni sono conservati a parte: cambiare aspetto non li cancella. Esporta un pacchetto per usarli su un altro computer.
+669	Suoni NotchTasks.notchsounds
+670	Impossibile esportare il pacchetto suoni
+671	Scegli file del pacchetto suoni (.notchsounds)
+672	Impossibile importare il pacchetto suoni
+673	Come aprire
+674	Ritardo {0} ms
+675	Feedback aptico
+676	CPU e RAM quando espansa
+677	Avvisa se dura almeno {0} sec
+678	Avvisa sui limiti al {0}%
+679	Altro
+680	Icona della barra dei menu
+681	Concedi solo i permessi necessari alle funzioni che usi. Disattiva del tutto una funzione nella pagina Moduli.
+682	Aggiorna
+683	Alcuni permessi si possono verificare solo quando l'app interessata è aperta.
+684	Revoca
+685	Ripristina
+686	Rimuovi la vecchia voce di NotchTasks in Impostazioni e richiedi di nuovo il permesso
+687	Apri Impostazioni
+688	Apri app
+689	No
+690	Scegli il tuo file…
+691	Anteprima
+692	Impossibile creare il codice di abbinamento: {0}
+693	Telefono
+694	Impossibile inviare al telefono: {0}
+695	Connessione con il telefono persa, nuovo tentativo…
+696	Rispondi agli agent e vedi cosa è in esecuzione sul telefono. I dati sono crittografati tra i tuoi dispositivi.
+697	Apri NotchTasks sul telefono → Abbina al computer e scansiona questo codice.
+698	Chiunque abbia questo codice può leggere le domande degli agent: non condividerlo.
+699	Copia codice

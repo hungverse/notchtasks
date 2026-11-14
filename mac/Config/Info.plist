@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>CFBundleAllowMixedLocalizations</key>
+	<true/>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>en</string><string>vi</string><string>zh-Hans</string><string>zh-Hant</string><string>ja</string>
+		<string>ko</string><string>es</string><string>fr</string><string>de</string><string>pt-BR</string>
+		<string>it</string><string>ru</string><string>id</string><string>th</string><string>tr</string><string>hi</string>
+	</array>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeIconFile</key>
+			<string>AppIcon</string>
+			<key>CFBundleTypeName</key>
+			<string>Gói âm thanh NotchTasks</string>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>LSHandlerRank</key>
+			<string>Owner</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>com.notchtasks.sounds</string>
+			</array>
+		</dict>
+	</array>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(MARKETING_VERSION)</string>
+	<key>CFBundleVersion</key>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.productivity</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
+	<key>LSUIElement</key>
+	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>NotchTasks đọc bài đang phát và điều khiển Spotify, Music, trình duyệt trên notch.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_notchtasks._tcp</string>
+	</array>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>NotchTasks hiện sự kiện sắp tới trên notch, kèm nút tham gia khi có link họp.</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>NotchTasks hiện sự kiện sắp tới trên notch, kèm nút tham gia khi có link họp.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>NotchTasks hiện gương camera trong notch để bạn xem nhanh trước khi vào họp. Hình ảnh không được lưu hay gửi đi.</string>
+	<key>NSDownloadsFolderUsageDescription</key>
+	<string>NotchTasks báo khi một file tải xong, kèm nút mở nơi lưu file.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>NotchTasks nối thẳng với iPhone đã ghép khi hai máy cùng mạng Wi‑Fi, nhanh hơn và không qua máy chủ.</string>
+	<key>UTExportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>Gói âm thanh NotchTasks</string>
+			<key>UTTypeIconFile</key>
+			<string>AppIcon</string>
+			<key>UTTypeIdentifier</key>
+			<string>com.notchtasks.sounds</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>notchsounds</string>
+				</array>
+			</dict>
+		</dict>
+	</array>
+</dict>
+</plist>

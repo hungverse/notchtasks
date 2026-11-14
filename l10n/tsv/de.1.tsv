@@ -1,0 +1,340 @@
+0	{0} Anfragen warten auf dich
+1	Sprache
+2	Gerät
+3	Befehl ausführen
+4	Datei bearbeiten
+5	Datei lesen
+6	Webzugriff
+7	 fragt
+8	 braucht deine Freigabe
+9	Wie App
+10	Blau
+11	Grün
+12	Orange
+13	Pink
+14	Lila
+15	Weiß
+16	Schwarz
+17	Milchglas
+18	Leuchtender Rand
+19	Insel
+20	Kompakt
+21	Schwebende Karte
+22	Banner
+23	Weich
+24	Federnd
+25	Schnell
+26	Minimal
+27	Schloss-Symbol
+28	Feste Symbole
+29	Aufgaben, Musik, Timer
+30	Batterie
+31	Wiedergabe
+32	Kalender
+33	Timer
+34	Dateiablage
+35	KI-Limits
+36	Geräte
+37	Anrufe
+38	Lautstärke & Helligkeit
+39	Netzwerk
+40	Downloads
+41	Computerzustand
+42	Kameraspiegel
+43	Klassisch
+44	Glas
+45	Schlicht
+46	Sonnenuntergang
+47	Ozean
+48	Löscht Dateien oder Ordner
+49	Läuft mit Administratorrechten
+50	Überschreibt den Verlauf auf dem Git-Server
+51	Verwirft alle ungesicherten Änderungen
+52	Löscht nicht verfolgte Dateien
+53	Führt ein aus dem Netz geladenes Skript aus
+54	Schreibt direkt auf eine Festplatte
+55	Gibt allen vollen Zugriff auf alle Dateien
+56	Löscht Daten in einer Datenbank
+57	Überspringt Sicherheitsprüfungen
+58	Pausen- und Trinkerinnerungen
+59	Erinnert dich 6-mal pro Arbeitstag daran, aufzustehen, Wasser zu trinken und die Augen zu entspannen. Mit dem Schalter abschaltbar.
+60	Tagesbericht
+61	Jeden Abend um 21:00: wie lange du dich heute konzentriert hast, wie viele Einheiten, deine Serie.
+62	Pomodoro und 90-Minuten-Einheiten
+63	Konzentriere dich in kurzen Einheiten mit Pausen (standardmäßig 4 × 25 Minuten, 5 Minuten Pause). Dazu eine 90-Minuten-Einheit.
+64	Blumenkranz und Schal
+65	Dein Haustier wird größer und trägt Blumenkranz und Schal.
+66	Auf die Notch
+67	Setz dein Haustier auf die Notch des Computers. Es ändert die Pose je nachdem, was der Computer tut.
+68	Strenger Fokusmodus
+69	Wähle beim Start einer Einheit den strengen Modus: Er lässt sich bis zum Ende nicht stoppen.
+70	Krone und Umhang
+71	Dein Haustier trägt Krone und Umhang, mit Heiligenschein.
+72	Normal
+73	Fröhlich
+74	Schläft
+75	Hungrig
+76	Traurig
+77	Fokus
+78	Müde
+79	Schläft tief… zzz
+80	Schläft… zzz
+81	Ich verhungere, gib mir was
+82	So müde, lass mich kurz schlafen
+83	Konzentriert sich mit dir
+84	Sorge, dein Computer wartet auf dich
+85	So stolz auf dich!
+86	Traurig, dass du aufgegeben hast
+87	Traurig, der Build ist fehlgeschlagen
+88	Langweilig, spiel mit mir
+89	Ein bisschen hungrig
+90	Feuert den Agenten an
+91	Wird müde
+92	Guten Morgen!
+93	Gut gelaunt
+94	Füttern
+95	Spielen
+96	Schlafen legen
+97	Wecken
+98	Computer
+99	Kopple deinen Computer, um die Arbeit deiner KI-Agenten zu prüfen und Builds direkt hier zu sehen.
+100	Beispiel ansehen
+101	Computer koppeln
+102	Art
+103	Haustiere
+104	Store
+105	Verfügbar
+106	Tippen, um ein Haustier zu wählen
+107	, nicht gekauft
+108	Gekauft
+109	Das gewählte Haustier erscheint überall in der App, in Widgets und auf dem Sperrbildschirm.
+110	{0} gewählt
+111	Dein neues Haustier erscheint auf dem Home-Tab, in Widgets und auf dem Sperrbildschirm für Apps.
+112	Kauf nicht möglich
+113	Keine Verbindung zum Computer: {0}
+114	Dieser Computer ist schon mit einem anderen Telefon gekoppelt. Für mehr braucht es Pro.
+115	Der Computer hat dieses Telefon entkoppelt. Scanne den QR-Code erneut, um zu koppeln.
+116	Auf dem Computer: NotchTasks → Systemsteuerung → Koppeln öffnen, Gerät koppeln klicken, dann den QR-Code scannen.
+117	Oder Kopplungscode einfügen
+118	Kopplungscode einfügen
+119	Kopplungscode vom Computer
+120	Koppeln
+121	Das ist kein NotchTasks-Kopplungscode.
+122	Dieser Code funktioniert nur für deine Geräte.
+123	Mit Computer koppeln
+124	Abbrechen
+125	Beispieldaten
+126	Wartet auf dich
+127	Aktivität
+128	Warte auf {0}…
+129	Computer
+130	Öffne NotchTasks auf deinem Computer, um Agenten und Fragen hier zu sehen.
+131	Nicht am Computer · aktualisiert {0}
+132	Mit Pro: Agenten von überall sehen und beantworten.
+133	Wartet auf deine Freigabe
+134	{0} Punkte warten auf Freigabe
+135	 läuft
+136	Ein Build ist fehlgeschlagen
+137	Alles erledigt
+138	Computer ist untätig
+139	Die Notch deines Computers, in deiner Hand
+140	Prüfe die Arbeit deiner KI-Agenten und sieh Builds direkt hier, sogar auf dem Sperrbildschirm.
+141	Mit Beispieldaten ausprobieren
+142	Installiere NotchTasks auf deinem Computer, öffne **Systemsteuerung → Koppeln** und scanne den QR-Code.
+143	Antworten
+144	Ablehnen
+145	Erlauben
+146	Eine oder mehrere wählen
+147	Antwort senden
+148	Für diesen Befehl ist Face ID nötig.
+149	Später am Computer antworten
+150	Details
+151	gerade eben
+152	 her
+153	Kühl
+154	Warm
+155	Heiß
+156	Sehr heiß
+157	Temperatur
+158	Zurückgesetzt in {0}
+159	wenigen Minuten
+160	{0} T. {1} Std.
+161	{0} Tagen
+162	{0} Std. {1} Min.
+163	{0} Stunden
+164	{0} Min.
+165	Erlaubt
+166	Abgelehnt
+167	Dem Computer überlassen
+168	Gewählt: 
+169	Angezeigt
+170	Beispieldaten
+171	Nicht gekoppelt
+172	Beispieldaten beenden
+173	Entkoppeln
+174	Direkt verbinden im selben WLAN
+175	Verbindung
+176	Direkt per WLAN
+177	Mitteilungen
+178	Verbindung
+179	Selbes WLAN: sofort aktuell. Unterwegs: wechselt von selbst ins Internet.
+180	Live-Aktivität ansehen
+181	Zeigt 3 Beispielanfragen. Sperr das Telefon, um sie zu sehen.
+182	Live-Aktivitäten sind aus: Schalte sie in Einstellungen → NotchTasks ein.
+183	Face ID für riskante Befehle
+184	Sicherheit
+185	Verlangt Face ID, bevor Befehle erlaubt werden, die Daten löschen oder überschreiben können.
+186	Info
+187	Version
+188	Einstellungen
+189	Pro aktiv
+190	Pro aktiv (auf anderem Gerät gekauft)
+191	Aktueller Zeitraum endet
+192	Abo verwalten
+193	Pro 7 Tage gratis testen
+194	Käufe wiederherstellen
+195	Überall nutzbar, direkt aus Mitteilungen antworten, Live-Aktivitäten für Agenten und Builds, mehrere Geräte koppeln.
+196	Monats- und Jahresabos verlängern sich automatisch. Kündige in Einstellungen → dein Name → Abonnements, mindestens 24 Stunden vor dem nächsten Zeitraum.
+197	Bedingungen
+198	Datenschutz
+199	Nicht fertig
+200	Pro jährlich
+201	Pro monatlich
+202	Pro lebenslang
+203	 / Jahr
+204	 / Monat
+205	Deins
+206	Widget hinzufügen: Home-Bildschirm gedrückt halten → Bearbeiten → Widget hinzufügen → NotchTasks.
+207	Haustiere ansehen und wechseln
+208	Level {0}!
+209	{0} ist ein Stück gewachsen.
+210	Freigeschaltet: {0}.
+211	Super
+212	Alles freigeschaltet. Abgeschlossene Einheiten bringen weiter XP; Aufgeben macht es traurig.
+213	1 Minute Fokus = 1 XP. Level {0}: {1}.
+214	Fokus läuft
+215	Streng
+216	Stopp
+217	Pause
+218	Als Nächstes: Einheit {0}/{1}
+219	Jetzt starten
+220	Zählt hier und auf der Notch des Computers
+221	Erscheint auf dem Sperrbildschirm, meldet sich bei Zeitende
+222	Starten
+223	Streng starten
+224	Strenger Modus: lässt sich bis zum Ende nicht stoppen.
+225	Strengen Modus einschalten?
+226	Streng starten
+227	Während des Fokus nicht stoppbar, über alle {0} Einheiten. Pausen lassen sich weiter stoppen.
+228	{0} Minuten lang nicht stoppbar. Blockierte Apps öffnen sich bei Zeitende wieder.
+229	Pomodoro: {0} Einheiten × {1} Min.
+230	{0}-Minuten-Einheit
+231	Steh auf und streck dich ein bisschen!
+232	Trink einen Schluck Wasser 💧
+233	Gönn den Augen 20 Sekunden, schau in die Ferne.
+234	Schultern locker, tief durchatmen.
+235	Geh ein paar Schritte, um dich zu lockern.
+236	Schon Wasser getrunken? Nur zur Erinnerung 💧
+237	{0} erinnert dich
+238	{0}: Rückblick auf heute
+239	Wie lange hast du dich konzentriert, wie viele Fragen geprüft? Öffnen zum Ansehen.
+240	Pause vorbei
+241	{0} ist bereit für Einheit {1}/{2}, {3} Minuten. Tippen zum Starten.
+242	Fokusminuten
+243	Einheiten
+244	geprüfte Fragen
+245	Tage in Folge
+246	Kopple deinen Computer, um dein Haustier auf die Notch zu setzen.
+247	Level {0}
+248	Tippen, um es auf die Notch zu setzen. Dein Haustier ändert die Pose je nachdem, was der Computer tut.
+249	Haustiere auf der Notch
+250	Links hinzufügen
+251	Rechts hinzufügen
+252	Symbol {0} {1} ersetzen
+253	rechts
+254	links
+255	Von der Notch entfernen
+256	Konzentriere dich in kurzen Einheiten mit Pausen dazwischen. Nach der Pause startet die nächste Einheit von selbst.
+257	Fokus: {0} Min.
+258	Pause: {0} Min.
+259	Einheiten: {0}
+260	Pro Pomodoro
+261	Insgesamt {0} Minuten Fokus. Wenn du jetzt startest, bist du um {1} fertig.
+262	Starte über die Fokus-Karte auf dem Home-Tab.
+263	Pausen haben die Tasten „Jetzt starten“ und „Stopp“.
+264	Beim Start kannst du den strengen Modus wählen.
+265	Beispielzahlen, da es heute noch keine Einheiten gibt.
+266	Letzte 7 Tage · Fokusminuten
+267	Jeden Abend um 21:00 kommt eine Erinnerung zum Ansehen.
+268	Ab Level 3: die Heute-Karte und eine Mitteilung um 21:00.
+269	{0} hat den ganzen Tag auf dich gewartet. Morgen konzentrieren wir uns zusammen!
+270	{0}: heute {1} Minuten, ein guter Anfang!
+271	{0}: {1} Minuten Fokus, {2} Einheiten. Klasse!
+272	{0}: {1} Minuten! Du hast heute richtig viel geschafft, denk an Pausen.
+273	Glückwunsch! 🎉
+274	{0} hat Level {1} erreicht und freigeschaltet:
+275	Automatisch eingeschaltet. Anpassen auf der Haustier-Seite.
+276	Toll
+277	Build fehlgeschlagen
+278	Live-Aktivität konnte nicht erstellt werden: {0}
+279	Einheit {0}/{1} geschafft
+280	Fokuszeit vorbei
+281	Mach {0} Minuten Pause, dann die nächste Einheit.
+282	{0} Minuten geschafft. Mach eine kurze Pause.
+283	 🎉 Freigeschaltet: {0}.
+284	Riskanten Befehl erlauben: {0}
+285	Wie sollen die Daten gespeichert werden?
+286	Speicher
+287	SQLite (empfohlen)
+288	Dein MacBook Pro
+289	Bearbeitet NotchView.swift
+290	Führt Tests aus
+291	Baut für iPhone 17 Pro
+292	CI fehlgeschlagen: deploy
+293	6 Min.
+294	CI bestanden: test
+295	Keine Notch am Computer gefunden
+296	Aktualisiere NotchTasks auf deinem Computer und öffne es, um die Notch von hier aus anzupassen.
+297	Wird gesendet…
+298	Beispielcomputer: probier alles aus
+299	Synchronisiert mit {0}
+300	Design
+301	Sperrbildschirm mit eigenen Symbolen
+302	Symbole auf dem Sperrbildschirm
+303	Auswählen
+304	Ändern
+305	Entfernen
+306	Symbole für Build-Tools
+307	Das Symbol auf der Notch, während dieses Tool baut.
+308	Darstellung
+309	Größe
+310	Groß
+311	Notch öffnen
+312	Darüberfahren
+313	Klicken
+314	Hintergrund
+315	Startfarbe
+316	Endfarbe
+317	Bewegung
+318	Hinweisstil
+319	Module
+320	{0} an
+321	Ton & Haptik
+322	Ton
+323	Trackpad-Haptik
+324	Systemmitteilungen
+325	Notch auf dem Sperrbildschirm
+326	Sperrbildschirm des Computers
+327	Fertig melden, wenn es länger lief als
+328	jede Aufgabe
+329	{0} Sek.
+330	KI-Limit-Warnung bei
+331	Notch-Symbole
+332	Tippe, wohin es soll. Tippe dasselbe Symbol erneut, um abzubrechen.
+333	Zieh ein Symbol zum Tauschen, tipp zum Verschieben, Ändern oder Entfernen. Bis zu {0} pro Seite{1}
+334	, mit Pro 4.
+335	Verschieben
+336	Symbol ändern
+337	Entfernen
+338	rechte Seite
+339	linke Seite

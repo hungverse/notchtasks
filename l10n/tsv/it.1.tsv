@@ -1,0 +1,340 @@
+0	{0} richieste in attesa di una tua risposta
+1	Lingua
+2	Del dispositivo
+3	Esegui comando
+4	Modifica file
+5	Leggi file
+6	Accesso al web
+7	 sta chiedendo
+8	 richiede la tua approvazione
+9	Abbina all'app
+10	Blu
+11	Verde
+12	Arancione
+13	Rosa
+14	Viola
+15	Bianco
+16	Nero
+17	Vetro satinato
+18	Bordo luminoso
+19	Isola
+20	Compatto
+21	Scheda fluttuante
+22	Banner
+23	Fluido
+24	Elastico
+25	Rapido
+26	Minimo
+27	Icona lucchetto
+28	Icone fisse
+29	Attività, musica, timer
+30	Batteria
+31	In riproduzione
+32	Calendario
+33	Timer
+34	Ripiano file
+35	Limiti IA
+36	Dispositivi
+37	Chiamate
+38	Volume e luminosità
+39	Rete
+40	Download
+41	Stato del computer
+42	Specchio fotocamera
+43	Classico
+44	Vetro
+45	Minimalista
+46	Tramonto
+47	Oceano
+48	Elimina file o cartelle
+49	Esegue come amministratore
+50	Sovrascrive la cronologia sul server git
+51	Scarta tutte le modifiche non salvate
+52	Elimina file non tracciati
+53	Esegue uno script scaricato dal web
+54	Scrive direttamente su un disco
+55	Concede a tutti pieno accesso ai file
+56	Elimina dati da un database
+57	Salta i controlli di sicurezza
+58	Promemoria per pause e acqua
+59	Ti ricorda di alzarti, bere acqua e riposare gli occhi 6 volte durante la giornata lavorativa. Disattiva con l'interruttore.
+60	Resoconto di fine giornata
+61	Ogni sera alle 21: tempo di concentrazione, numero di sessioni e giorni consecutivi.
+62	Pomodoro e sessioni da 90 minuti
+63	Alterna brevi sessioni di concentrazione e pause (di default 4 × 25 minuti con pause di 5 minuti). Include una sessione da 90 minuti.
+64	Corona di fiori e sciarpa
+65	Il tuo animaletto cresce e indossa una corona di fiori e una sciarpa.
+66	Sulla tacca
+67	Metti l'animaletto sulla tacca del computer. Cambia posa in base all'attività del computer.
+68	Modalità concentrazione rigorosa
+69	All'inizio di una sessione, scegli la modalità rigorosa: non puoi interromperla finché il tempo non scade.
+70	Corona e mantello
+71	Il tuo animaletto indossa una corona e un mantello, con un'aureola.
+72	Normale
+73	Felice
+74	Addormentato
+75	Affamato
+76	Triste
+77	Concentrato
+78	Stanco
+79	Dormo bene… zzz
+80	Sto dormendo… zzz
+81	Ho tanta fame, dammi da mangiare
+82	Sono stanco, lasciami fare un sonnellino
+83	Mi concentro con te
+84	Sono preoccupato, il computer ti aspetta
+85	Sono così fiero di te!
+86	Triste perché hai rinunciato
+87	Triste perché la build non è riuscita
+88	Mi annoio, gioca con me
+89	Ho un po' fame
+90	Faccio il tifo per l'agent
+91	Mi viene sonno
+92	Buongiorno!
+93	Allegro
+94	Dai da mangiare
+95	Gioca
+96	Fai dormire
+97	Sveglia
+98	Computer
+99	Abbina il computer per controllare il lavoro dei tuoi agent IA e vedere le build qui.
+100	Vedi un esempio
+101	Abbina computer
+102	Tipo
+103	Animaletti
+104	Negozio
+105	Disponibile
+106	Tocca per scegliere un animaletto
+107	, non acquistato
+108	Acquistato
+109	L'animaletto scelto appare nell'app, nei widget e sulla schermata di blocco.
+110	Hai scelto {0}
+111	Il nuovo animaletto apparirà nella schermata Home, nei widget e nella schermata di blocco.
+112	Acquisto non riuscito
+113	Impossibile connettersi al computer: {0}
+114	Questo computer è abbinato a un altro telefono. Per abbinarne altri serve Pro.
+115	Il computer ha annullato l'abbinamento con questo telefono. Scansiona di nuovo il codice QR.
+116	Sul computer: apri NotchTasks → Pannello di controllo → Abbinamento, fai clic su Abbina dispositivo e scansiona il codice QR.
+117	Oppure incolla un codice di abbinamento
+118	Incolla un codice di abbinamento
+119	Codice di abbinamento dal computer
+120	Abbina
+121	Questo non è un codice di abbinamento di NotchTasks.
+122	Questo codice funziona solo con i tuoi dispositivi.
+123	Abbina al computer
+124	Annulla
+125	dati di esempio
+126	In attesa di te
+127	Attività
+128	In attesa di {0}…
+129	computer
+130	Apri NotchTasks sul computer per vedere qui agent e domande.
+131	Lontano dal computer · aggiornato {0}
+132	Con Pro puoi vedere e rispondere agli agent ovunque.
+133	In attesa della tua approvazione
+134	{0} elementi in attesa di approvazione
+135	 in esecuzione
+136	Una build non è riuscita
+137	Tutto fatto
+138	Il computer è inattivo
+139	La tacca del computer nel palmo della tua mano
+140	Controlla il lavoro dei tuoi agent IA e le build qui, anche sulla schermata di blocco.
+141	Prova con dati di esempio
+142	Installa NotchTasks sul computer, apri **Pannello di controllo → Abbinamento** e scansiona il codice QR.
+143	Rispondi
+144	Rifiuta
+145	Consenti
+146	Scegli uno o più elementi
+147	Invia risposta
+148	Per consentire questo comando serve Face ID.
+149	Rispondi più tardi sul computer
+150	Dettagli
+151	proprio ora
+152	 fa
+153	Freddo
+154	Tiepido
+155	Caldo
+156	Molto caldo
+157	Temperatura
+158	Si azzera tra {0}
+159	pochi minuti
+160	{0} g {1} h
+161	{0} giorni
+162	{0} h {1} min
+163	{0} ore
+164	{0} min
+165	Consentito
+166	Rifiutato
+167	Lascia al computer
+168	Scelto: 
+169	Visualizzazione
+170	Dati di esempio
+171	Non abbinato
+172	Esci dai dati di esempio
+173	Annulla abbinamento
+174	Connettiti direttamente sulla stessa rete Wi‑Fi
+175	Connessione
+176	Direttamente tramite Wi‑Fi
+177	Notifiche
+178	Connessione
+179	Stessa rete Wi‑Fi: aggiornamenti immediati. Altrove: passa automaticamente a Internet.
+180	Anteprima Live Activity
+181	Mostra 3 richieste di esempio. Blocca il telefono per vederle.
+182	Live Activity disattivata: attivala in Impostazioni → NotchTasks.
+183	Face ID per comandi rischiosi
+184	Sicurezza
+185	Richiedi Face ID prima di consentire comandi che possono eliminare o sovrascrivere dati.
+186	Informazioni
+187	Versione
+188	Impostazioni
+189	Pro attivo
+190	Pro attivo (acquistato su un altro dispositivo)
+191	Il periodo attuale termina il
+192	Gestisci abbonamento
+193	Pro gratis per 7 giorni
+194	Ripristina acquisti
+195	Usalo ovunque, rispondi dalle notifiche, segui agent e build con Live Activity e abbina più dispositivi.
+196	I piani mensili e annuali si rinnovano automaticamente. Annulla in Impostazioni → il tuo nome → Abbonamenti almeno 24 ore prima del rinnovo.
+197	Termini
+198	Privacy
+199	Non completato
+200	Pro annuale
+201	Pro mensile
+202	Pro a vita
+203	 / anno
+204	 / mese
+205	Tuo
+206	Aggiungi un widget: tieni premuta la schermata Home → Modifica → Aggiungi widget → NotchTasks.
+207	Vedi e cambia animaletti
+208	Livello {0}!
+209	{0} è cresciuto un po'.
+210	Sbloccato: {0}.
+211	Ottimo
+212	Hai sbloccato tutto. Le sessioni completate danno ancora XP; rinunciare lo rende triste.
+213	1 minuto di concentrazione = 1 XP. Livello {0}: {1}.
+214	Concentrazione in corso
+215	Rigorosa
+216	Interrompi
+217	Pausa
+218	Prossima: sessione {0}/{1}
+219	Inizia subito
+220	Il conto alla rovescia è qui e sulla tacca del computer
+221	Appare sulla schermata di blocco e ti avvisa alla scadenza
+222	Inizia
+223	Avvia modalità rigorosa
+224	Modalità rigorosa: non puoi interromperla finché il tempo non scade.
+225	Attivare la modalità rigorosa?
+226	Avvia rigorosa
+227	Non puoi fermarti durante la concentrazione per tutte le {0} sessioni. Puoi interrompere le pause.
+228	Non puoi interrompere per {0} minuti. Le app bloccate si riapriranno allo scadere del tempo.
+229	Pomodoro: {0} sessioni × {1} min
+230	Sessione da {0} minuti
+231	Alzati e fai un po' di stretching!
+232	Bevi un sorso d'acqua 💧
+233	Riposa gli occhi per 20 secondi e guarda lontano.
+234	Rilassa le spalle e fai un respiro profondo.
+235	Fai qualche passo per sgranchirti.
+236	Hai bevuto acqua? Te lo ricordo io 💧
+237	{0} te lo ricorda
+238	{0}: ripensa alla giornata
+239	Quanto tempo ti sei concentrato? Quante domande hai esaminato? Apri per scoprirlo.
+240	Pausa terminata
+241	{0} è pronto per la sessione {1}/{2} di {3} minuti. Tocca per iniziare.
+242	minuti di concentrazione
+243	sessioni
+244	domande esaminate
+245	giorni consecutivi
+246	Abbina il computer per mettere l'animaletto sulla tacca.
+247	Livello {0}
+248	Tocca per metterlo sulla tacca. Cambia posa in base all'attività del computer.
+249	Animaletti sulla tacca
+250	Aggiungi a sinistra
+251	Aggiungi a destra
+252	Sostituisci icona {0} a {1}
+253	destra
+254	sinistra
+255	Rimuovi dalla tacca
+256	Concentrati in brevi sessioni alternate a pause. Al termine di una pausa, la sessione successiva inizia automaticamente.
+257	Concentrazione: {0} min
+258	Pausa: {0} min
+259	Sessioni: {0}
+260	Ogni Pomodoro
+261	{0} minuti di concentrazione in totale. Se inizi ora, finisci alle {1}.
+262	Inizia dalla scheda Concentrazione nella schermata Home.
+263	Durante le pause trovi i pulsanti “Inizia subito” e “Interrompi”.
+264	Puoi scegliere la modalità rigorosa quando inizi.
+265	Dati di esempio: oggi non hai ancora fatto sessioni.
+266	Ultimi 7 giorni · minuti di concentrazione
+267	Ogni sera alle 21 ricevi un promemoria per controllare.
+268	Si sblocca al livello 3: scheda Oggi e notifica alle 21.
+269	{0} ti ha aspettato tutto il giorno. Domani ci concentriamo insieme!
+270	{0}: {1} minuti oggi, un buon inizio!
+271	{0}: {1} minuti di concentrazione, {2} sessioni. Bravo!
+272	{0}: {1} minuti! Hai lavorato sodo oggi, ricorda di riposare.
+273	Congratulazioni! 🎉
+274	{0} ha raggiunto il livello {1} e sbloccato:
+275	Attivato automaticamente. Modificalo nella pagina Animaletti.
+276	Fantastico
+277	Build non riuscita
+278	Impossibile avviare Live Activity: {0}
+279	Sessione {0}/{1} completata
+280	Tempo di concentrazione scaduto
+281	Fai una pausa di {0} minuti, poi passa alla prossima sessione.
+282	{0} minuti completati. Riposati un po'.
+283	 🎉 Sbloccato: {0}.
+284	Consenti comando rischioso: {0}
+285	Come vuoi archiviare i dati?
+286	Archiviazione
+287	SQLite (Consigliato)
+288	Il tuo MacBook Pro
+289	Modifica di NotchView.swift
+290	Esecuzione test
+291	Build per iPhone 17 Pro in corso
+292	CI non riuscita: deploy
+293	6 min
+294	CI riuscita: test
+295	Tacca del computer non trovata
+296	Aggiorna NotchTasks sul computer all'ultima versione, poi aprilo per personalizzare la tacca da qui.
+297	Invio…
+298	Computer di esempio: prova liberamente
+299	Sincronizzato con {0}
+300	Tema
+301	La schermata di blocco usa icone proprie
+302	Icone della schermata di blocco
+303	Scegli
+304	Cambia
+305	Rimuovi
+306	Icone degli strumenti di build
+307	L'icona mostrata sulla tacca mentre lo strumento esegue la build.
+308	Aspetto
+309	Dimensioni
+310	Grande
+311	Apertura della tacca
+312	Passaggio del cursore
+313	Clic
+314	Sfondo
+315	Colore superiore
+316	Colore inferiore
+317	Movimento
+318	Stile avvisi
+319	Moduli
+320	{0} attivi
+321	Suoni e feedback aptico
+322	Suoni
+323	Feedback aptico del trackpad
+324	Notifiche di sistema
+325	Tacca sulla schermata di blocco
+326	Schermata di blocco del computer
+327	Avvisa del completamento se dura più di
+328	ogni attività
+329	{0} sec
+330	Avvisa sui limiti IA al
+331	Icone sulla tacca
+332	Tocca dove vuoi spostarla. Tocca di nuovo la stessa icona per annullare.
+333	Trascina un'icona per scambiare le posizioni; toccala per spostarla, cambiarla o rimuoverla. Fino a {0} per lato{1}
+334	, Pro ne consente 4.
+335	Sposta
+336	Cambia icona
+337	Rimuovi
+338	lato destro
+339	lato sinistro

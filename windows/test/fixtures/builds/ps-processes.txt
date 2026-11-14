@@ -1,0 +1,6 @@
+  501     1 Mon Nov 10 10:00:00 2026    0:01.50 /Applications/Xcode.app/Contents/MacOS/Xcode -x
+  812   640 Mon Nov 10 10:10:00 2026   1:31.00 node /Users/dev/proj/node_modules/next/dist/bin/next build
+ 2044   812 Mon Nov 10 10:10:01 2026   0:04.10 node /Users/dev/proj/node_modules/next/dist/compiled/jest-worker/processChild.js
+ 3300  1500 Mon Nov 10 10:20:00 2026   0:02.00 /usr/bin/xcodebuild -workspace /Users/dev/mobile-app/ios/App.xcworkspace -scheme App build
+ 5120  1500 Sun Nov  9 09:00:00 2026 1-02:03:04 /opt/homebrew/bin/ffmpeg -i /Users/dev/Movies/in.mov out.mp4
+ 6400  1500 Mon Nov 10 10:25:00 2026   0:00.01 git push origin main

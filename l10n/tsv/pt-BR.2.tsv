@@ -1,0 +1,360 @@
+340	Adicionar ícone à direita
+341	Adicionar ícone à esquerda
+342	Adicionar ícone: requer Pro
+343	Sua animação
+344	Sua imagem
+345	Símbolo
+346	Tema {0}
+347	Cor de destaque
+348	Personalizado
+349	Arraste para reordenar.
+350	{0} ícones animados · Grátis
+351	Toque em um ícone para colocá-lo na notch.
+352	Escolher ícone
+353	Conecte ao computador para usar este ícone na notch.
+354	Usar este ícone na notch.
+355	Não foi possível acessar a App Store. Tente novamente mais tarde.
+356	A App Store não conseguiu verificar esta compra.
+357	Compra aguardando aprovação. Você a receberá assim que for aprovada.
+358	O simulador não bloqueia apps reais.
+359	Permissão não concedida. Inicie sessão no iCloud nos Ajustes.
+360	O bloqueio de apps ainda não foi permitido.
+361	Não foi possível programar o desbloqueio. Abra o app após a sessão para desbloquear os apps.
+362	Bloquear outros apps durante o foco
+363	Pode ser alterado após a sessão.
+364	Só os apps permitidos podem abrir.
+365	Escolher apps permitidos
+366	{0} itens permitidos
+367	Início
+368	Desativado
+369	Abrir para revisar
+370	Registrando…
+371	Desativado: ative nos Ajustes
+372	Não foi possível ativar; tente depois
+373	Ativando…
+374	Erro: FCM não forneceu um token
+375	Ativado
+376	{0} XP · faltam {1} XP para o nível {2}
+377	Hoje
+378	Toque para visualizar
+379	Não adquirido
+380	, prévia
+381	Desbloqueios por nível
+382	Pelo nível mais alto: {0}
+383	Sobre: {0}
+384	Nível {0} · desbloqueado
+385	Desbloqueia no nível {0}
+386	Ver prévia do relatório
+387	Filhote
+388	Nível 5
+389	Nível 10
+390	Nível {0} · {1}
+391	Não adquirido · prévia
+392	Estágio
+393	Selecionado
+394	Escolher {0}
+395	Comprar pacote de Pets · {0}
+396	Conexão remota
+397	Use em qualquer lugar, sem precisar da mesma rede Wi‑Fi
+398	Responder pelas notificações
+399	Permita ou negue na hora, sem abrir o app
+400	Agents e builds na tela bloqueada e na Dynamic Island
+401	Alertas de build e CI
+402	Saiba assim que um build terminar ou falhar
+403	Vários dispositivos
+404	Conecte vários telefones ao mesmo computador
+405	Mais ícones na notch
+406	Até 4 ícones de cada lado
+407	Seu computador, em qualquer lugar.
+408	Teste grátis por 7 dias
+409	depois {0}{1}
+410	A mesma rede Wi‑Fi continua grátis. Compre uma vez e use em todos os dispositivos conectados.
+411	Fechar
+412	7 dias grátis
+413	Pague uma vez, use para sempre
+414	Sapo, panda, coelho e coruja
+415	Ocioso
+416	Em execução
+417	Esperando por você
+418	Erro
+419	Raposa
+420	Cheio
+421	Energia
+422	{0} {1} por cento
+423	Nível {0}, {1} por cento até o próximo nível
+424	Prévia da notch
+425	{0} tarefas em execução
+426	Voltar ao foco
+427	Abre novamente às {0}
+428	Tempo de foco em andamento
+429	{0}. Termine a sessão de foco e {1} ganha mais XP (agora no nível {2}).
+430	Seu pet fica feliz ou triste com seu dia de trabalho.
+431	Comece uma sessão de foco de 25 ou 50 minutos.
+432	Próxima: sessão {0}/{1}
+433	Iniciar sessão {0}/{1}
+434	Concluir
+435	RIGOROSO
+436	Não é possível parar
+437	MODO RIGOROSO
+438	Não é possível parar até o tempo acabar
+439	Concluído!
+440	{0} min de foco · +{1} XP
+441	Rigoroso · não é possível parar
+442	Próxima: sessão {0}
+443	Visão geral do computador
+444	Itens aguardando aprovação, agents e builds no computador.
+445	Claude precisa da sua aprovação
+446	e mais {0} perguntas
+447	aguardando você
+448	Abra o app para revisar
+449	Abra NotchTasks para conectar um computador
+450	{0} para revisar
+451	aguardando sua aprovação
+452	Todos os agents estão em repouso
+453	{0} aguardando
+454	Revisar
+455	Compilando
+456	Um agent está esperando por você
+457	Abra NotchTasks para ver a solicitação.
+458	Abra o app para escolher uma resposta
+459	Revisar no app
+460	{0} agents em execução
+461	Agent em execução
+462	O que a notch acompanha. Só aparece nela o que está em atividade.
+463	Editar
+464	Ativado
+465	 (adicionado)
+466	Apps abertos
+467	Escolher outro app…
+468	Inserir um processo…
+469	Adicionar item para acompanhar
+470	Escolha um agent, um app aberto ou digite o nome de um processo.
+471	Responder aos agents na notch
+472	Quando um agent pergunta, a notch mostra botões de resposta.
+473	Pronto
+474	Não foi possível editar as configurações de {0}: {1}
+475	Entra em vigor na próxima vez que o agent iniciar.
+476	Revisar comandos, edições de arquivos e responder a perguntas
+477	Revisar comandos e edições de arquivos
+478	Nega comandos. Permite apenas quando Cursor executa comandos por conta própria
+479	Revisar comandos, edições de arquivos e acesso à web
+480	Item acompanhado
+481	Nome exibido
+482	Exibir em
+483	Alterar ícone
+484	Alterar…
+485	{0} é acompanhado por sessão de trabalho. Não é preciso configurar mais nada.
+486	Nome do processo
+487	Linha de comando contém
+488	opcional, por exemplo: gemini-cli
+489	Detecção
+490	Nome do processo, como no Activity Monitor.
+491	Cada linha na notch é
+492	Cada execução
+493	Cada subprocesso (runner, worker)
+494	Ativo quando a CPU está acima de
+495	Aumente se aparecer em repouso; diminua se deixar passar atividades.
+496	O app não está aberto.
+497	Não encontrado. Abra a ferramenta e clique em Verificar novamente.
+498	Correspondência: {0}
+499	Verificar novamente
+500	Adicionar
+501	Salvar
+502	Exibir todas as ferramentas
+503	Ainda não há builds. Ative “Exibir todas” para definir ícones antecipadamente.
+504	Não é preciso adicionar: qualquer ferramenta em execução aparece. Clique nela para mudar o ícone.
+505	Alterado
+506	Modelo rodando localmente
+507	Conexão restabelecida
+508	Wi‑Fi conectado
+509	Conectado
+510	Rede desconectada
+511	Verifique o Wi‑Fi ou o cabo de rede
+512	VPN ativada
+513	VPN desativada
+514	Download concluído
+515	Mostrar na pasta
+516	Disco quase cheio
+517	%.1f GB livres
+518	Liberar espaço
+519	O computador está muito quente
+520	O computador está quente
+521	{0} está trabalhando intensamente
+522	Considere fechar apps pesados
+523	Ver apps
+524	Em chamada
+525	Encerrada
+526	Microfone ligado
+527	Câmera ligada
+528	Não foi possível silenciar o microfone
+529	Use o botão em {0}
+530	Nenhum modelo carregado
+531	Carregado 
+532	Adicionar à bandeja
+533	Controles de {0} ativados
+534	A notch agora pode controlar a música na aba
+535	CI falhou: {0}
+536	Ver log
+537	CI aprovado: {0}
+538	Em atividade · {0}
+539	Aguardando
+540	CI aprovado: 
+541	CI falhou: 
+542	Aberto
+543	{0} atingiu seu limite de {1}
+544	{0} usou {1}% do limite de {2}
+545	Aguarde até {0} (faltam {1})
+546	Redefine às {0}
+547	{0} conectado
+548	{0} desconectado
+549	Bateria de {0} fraca
+550	Carregando
+551	Desconectado do carregador
+552	Bateria fraca
+553	Restam {0}%
+554	Às 
+555	Tempo esgotado
+556	Tela principal
+557	Ícones sempre visíveis na notch recolhida.
+558	Tela bloqueada
+559	Somente visualização: não se expande nem aceita cliques.
+560	Igual à tela principal
+561	Separado
+562	Avisar sobre tentativas de desbloqueio incorretas
+563	A notch treme e fica vermelha quando a senha ou impressão digital está errada. Depois de desbloquear, mostra quantas tentativas falharam.
+564	Esquerda
+565	Direita
+566	Clique em + para adicionar, clique para editar e arraste para trocar. Até {0} de cada lado{1}
+567	Adicionar da Biblioteca de Ícones
+568	Sincronizar animações
+569	Reiniciar todos os ícones animados ao mesmo tempo
+570	Ícone fixo
+571	À direita da notch
+572	À esquerda da notch
+573	Mais de 8.000 símbolos da Apple
+574	Alguns caracteres ou emoji
+575	Personagens animados, GIFs
+576	Na notch
+577	Digite até 8 caracteres
+578	Escolhas rápidas
+579	Solte outra imagem aqui
+580	Solte uma imagem aqui
+581	Escolher imagem…
+582	Abrir Biblioteca de Ícones
+583	Seu GIF ou spritesheet…
+584	{0}/s
+585	PNG, JPG, HEIC… Imagens quadradas ficam melhores.
+586	Formato
+587	Círculo
+588	Quadrado
+589	Borda
+590	Cor do texto
+591	Cor do símbolo
+592	Remover ícone
+593	Usar ícone padrão
+594	Sem fundo
+595	Outra cor
+596	Sugestões
+597	Todos
+598	Comunicação
+599	Tempo
+600	Mapas
+601	Objetos
+602	Fotos
+603	Jogos
+604	Transporte
+605	Acessibilidade
+606	Pessoas
+607	Casa
+608	Esportes
+609	Natureza
+610	Edição
+611	Texto
+612	Mídia
+613	Teclado
+614	Comércio
+615	Hora
+616	Saúde
+617	Formas
+618	Setas
+619	Números e letras
+620	Matemática
+621	Pesquise em inglês: star, cloud, cat, hammer…
+622	{0} · {1} símbolos
+623	{0} resultados
+624	{0} ícones animados · Grátis
+625	Buscar
+626	Nenhum ícone corresponde a “{0}”.
+627	Pacotes da comunidade: em breve.
+628	Em uso
+629	Ícone fixo na notch
+630	Definir para um app acompanhado
+631	Definir para uma ferramenta de build
+632	Abrir
+633	até 
+634	Eventos
+635	Visão geral
+636	Acompanhamento
+637	Conexão
+638	Ícones e bloqueio
+639	Biblioteca de Ícones
+640	Comportamento
+641	Permissões
+642	A notch mostra o que está em execução e fica quieta quando não há atividade.
+643	Erros de CI
+644	Ver guia
+645	Arraste para reordenar na notch.
+646	Posição quando recolhida
+647	Cor
+648	Precisa da permissão {0}
+649	Voltar à cor padrão
+650	Testar alerta
+651	Cor superior
+652	Cor inferior
+653	Estilo
+654	Cor personalizada
+655	Exportar…
+656	Importar…
+657	Fazer backup das configurações
+658	Todas as suas personalizações em um arquivo .json.
+659	Esta tela tem notch: ela se ajusta à câmera.
+660	Esta tela não tem notch: aparece como uma Dynamic Island flutuante.
+661	Tarefa concluída
+662	Alerta de teste
+663	Volume
+664	Pacote de sons
+665	Backup e compartilhamento
+666	Exportar pacote…
+667	Importar pacote…
+668	Os sons são guardados separadamente. Mudar a aparência não os remove. Exporte um pacote para levá-los a outro computador.
+669	Sons do NotchTasks.notchsounds
+670	Não foi possível exportar o pacote de sons
+671	Escolher arquivo de pacote de sons (.notchsounds)
+672	Não foi possível importar o pacote de sons
+673	Como abrir
+674	Atraso de {0} ms
+675	Resposta tátil
+676	CPU e RAM quando expandida
+677	Avisar conclusão após {0} s ou mais
+678	Avisar sobre limites em {0}%
+679	Outros
+680	Ícone na barra de menus
+681	Conceda permissões apenas para os recursos que usa. Desative totalmente um recurso na página Módulos.
+682	Atualizar
+683	Algumas permissões só podem ser verificadas enquanto o app relacionado estiver aberto.
+684	Revogar
+685	Redefinir
+686	Remova a entrada antiga do NotchTasks nos Ajustes e solicite novamente
+687	Abrir Ajustes
+688	Abrir app
+689	Não
+690	Escolher seu arquivo…
+691	Prévia
+692	Não foi possível criar o código de conexão: {0}
+693	Telefone
+694	Não foi possível enviar ao telefone: {0}
+695	Conexão com o telefone perdida. Tentando novamente…
+696	Responda aos agents e veja o que está em execução no telefone. Os dados são criptografados entre seus dispositivos.
+697	Abra NotchTasks no telefone → Conectar ao computador e escaneie este código.
+698	Qualquer pessoa com este código pode ler as perguntas dos seus agents: não o compartilhe.
+699	Copiar código

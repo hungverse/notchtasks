@@ -1,0 +1,22 @@
+1031	Fanlar
+1032	Fanlar ve sıcaklık
+1033	Sıcaklık ve fan hızları bu Mac'ten okunur. Fan denetimi yalnızca uyarıyı kabul ettikten sonra açılır.
+1034	Yanlış fan denetimi donanıma zarar verebilir.
+1035	Fan yardımcısını etkinleştir
+1036	Yardımcı hızları Mac'in bildirdiği sınırlar içinde tutar ve bağlantı kaybolunca veya Mac çok ısınınca otomatiğe döner.
+1037	Sensörler
+1038	Sıcaklık sensörleri okunamadı.
+1039	Sistem Ayarları'nda Giriş Öğeleri içinden yardımcının çalışmasına izin verin.
+1040	Bu Mac SMC üzerinden fan bildirmiyor; sıcaklık okuması çalışmaya devam eder.
+1041	Fan {0}
+1042	Zorlanmış
+1043	Mod
+1044	Sabit hız
+1045	Sensöre göre
+1046	Başlangıç {0}°C
+1047	Maksimum {0}°C
+1048	Mac çok sıcak olduğu için fanlar otomatiğe döndü
+1049	Fan yardımcısı kaydedilemedi: {0}
+1050	Fan yardımcısına bağlanılamadı: {0}
+1051	Yarı
+1052	Maksimum

@@ -1,0 +1,67 @@
+name: windows
+
+# The Windows port (windows/): tests, a PowerShell check of the SMTC script, and the installer and zip.
+on:
+  push:
+    branches: [main]
+    paths: ["windows/**", "mac/Sources/l10n-*.json", "mac/Resources/Sprites/**", ".github/workflows/windows.yml"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: windows
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: windows/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Unit tests
+        run: npm test
+
+      - name: PowerShell syntax check (media-smtc.ps1)
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $errors = $null
+          $null = [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path 'src/core/media-smtc.ps1').Path, [ref]$tokens, [ref]$errors)
+          if ($errors.Count -gt 0) {
+            $errors | ForEach-Object { Write-Error $_.Message }
+            exit 1
+          }
+
+      - name: SMTC script smoke run (5 s)
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath powershell.exe -PassThru -NoNewWindow -RedirectStandardOutput smtc.out -RedirectStandardError smtc.err `
+            -ArgumentList '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', 'src/core/media-smtc.ps1'
+          Start-Sleep -Seconds 5
+          if ($p.HasExited) {
+            Get-Content smtc.err -ErrorAction SilentlyContinue
+            throw "media-smtc.ps1 exited early with code $($p.ExitCode)"
+          }
+          $p.Kill()
+          Get-Content smtc.err -ErrorAction SilentlyContinue | Select-Object -First 20
+          $out = Get-Content smtc.out -Raw -ErrorAction SilentlyContinue
+          Write-Host "stdout: $out"
+          if (-not $out) { throw 'media-smtc.ps1 printed nothing in 5 s' }
+
+      - name: Installer and zip
+        run: npm run dist:win
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: notchtasks-windows
+          path: |
+            windows/dist/*.exe
+            windows/dist/*.zip
+          if-no-files-found: error

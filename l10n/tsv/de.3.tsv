@@ -1,0 +1,312 @@
+700	Code verbergen
+701	Weiteres Gerät koppeln…
+702	Code wird erstellt…
+703	Gerät koppeln…
+704	Mein iPhone nur benachrichtigen, wenn ich weg bin
+705	{0} Geräte über Wi‑Fi
+706	Im selben Wi‑Fi erhält dein iPhone Updates sofort, sonst über das Internet. Solange du diesen Computer nutzt, bleibt dein iPhone stumm.
+707	Noch keine Geräte.
+708	Alle entkoppeln
+709	Gekoppelt
+710	Alle Geräte werden von diesem Computer getrennt. Zum erneuten Koppeln brauchst du einen neuen Code.
+711	Nicht erteilt
+712	Nicht geprüft
+713	Benachrichtigt, wenn eine Aufgabe abgeschlossen wird oder fehlschlägt.
+714	Zeigt bevorstehende Termine.
+715	Steuert Musik im Browser.
+716	{0} steuern
+717	Liest und steuert die aktuelle Wiedergabe.
+718	Musik in {0}
+719	Direkt im Tab pausieren, abspielen und Titel überspringen.
+720	Bei Anmeldung öffnen
+721	Startet bei der Anmeldung automatisch.
+722	In {0} ausschalten
+723	Dasselbe Element deaktivieren:\n
+724	Befehl enthält „{0}“
+725	Prozess „{0}“
+726	 · Befehl enthält „{0}“
+727	ein Unterprozess pro Zeile
+728	App · {0}
+729	Jede Sitzung verfolgen
+730	Während der Ausführung anzeigen
+731	KI-Apps
+732	Schritt {0}/{1}
+733	Überspringen
+734	Zurück
+735	Weiter
+736	Willkommen bei NotchTasks
+737	KI und Builds
+738	Sieh, welcher Agent arbeitet und welcher Build abgeschlossen oder fehlgeschlagen ist
+739	Musik, Anrufe
+740	Musik steuern und bei Anrufen das Mikrofon schnell stummschalten
+741	Übersichtliche Hinweise
+742	Laden, Kopfhörer, Downloads, Netzwerk, Hitze
+743	Privat
+744	Alles läuft auf deinem Computer. Nichts wird irgendwohin gesendet
+745	Was die Notch anzeigt
+746	Zum Ein- oder Ausschalten klicken. Im Kontrollzentrum jederzeit ändern.
+747	KI-Agenten auf deinem Computer
+748	Gefunden und aktiviert. Später im Kontrollzentrum hinzufügen oder entfernen.
+749	Noch keine KI-Agenten gefunden. Später auf der Seite „Beobachten“ hinzufügen.
+750	Das Modul für KI-Agenten ist aus.
+751	Nur das, was die ausgewählten Module brauchen. Du kannst diesen Schritt überspringen.
+752	Alles bereit
+753	Ein paar Tipps für den Einstieg:
+754	Zeiger auf die Notch bewegen
+755	Die Notch öffnet sich mit allem, was gerade läuft. Bewege den Zeiger weg, um sie zu schließen.
+756	Auf Hinweisschaltflächen klicken
+757	Hinweise bleiben stehen, solange der Zeiger darüber ist, mit Schaltflächen wie „Im Finder zeigen“ und „Speicherplatz freigeben“.
+758	Dateien auf die Notch ziehen
+759	Dateien vorübergehend in der Ablage aufbewahren und bei Bedarf wieder herausziehen.
+760	Notch gestalten
+761	Animierte Figuren in der Symbolgalerie auswählen.
+762	Kontrollzentrum öffnen
+763	Klicke auf das NotchTasks-Symbol in der Menüleiste oder bei geöffneter Notch auf ⚙.
+764	Klicke bei geöffneter Notch auf ⚙ oder öffne NotchTasks erneut über Spotlight.
+765	Tool verwenden 
+766	Auf der Notch abgelehnt
+767	In Codex noch nicht als vertrauenswürdig eingestuft
+768	Codex öffnen
+769	Nicht angemeldet
+770	Anmelden
+771	1. Safari › Einstellungen › Erweitert: „Funktionen für Webentwickler anzeigen“ aktivieren.\n2. Menü „Entwickler“ › „JavaScript von Apple Events erlauben“.
+772	In {0} in der Menüleiste: Darstellung (View) › Entwickler (Developer) › JavaScript von Apple Events erlauben.
+773	Musiksteuerung aktivieren
+774	Safari-Einstellungen öffnen
+775	Safari › Einstellungen… (⌘,)
+776	Entwicklerfunktionen anzeigen
+777	Tab „Erweitert“: „Funktionen für Webentwickler anzeigen“ aktivieren
+778	JavaScript von Apple Events erlauben
+779	Menü „Darstellung“ öffnen
+780	In der Menüleiste von {0} auf View (Darstellung) klicken
+781	„Entwickler“ auswählen
+782	Zeiger auf Developer (Entwickler) bewegen
+783	Auf „Allow JavaScript from Apple Events“ klicken
+784	Letzter Menüpunkt. Ein ✓ zeigt, dass es erledigt ist
+785	Musik in {0} über die Notch steuern
+786	Einmalige Einrichtung, etwa 10 Sekunden. Danach kannst du direkt im Tab über die Notch pausieren, abspielen, spulen und Titel wechseln.
+787	Aktiviert. Die Notch kann jetzt {0} steuern.
+788	Warte, bis du es aktivierst… dieses Fenster erkennt es automatisch
+789	Später
+790	{0} öffnen
+791	Aktive KI-Agenten und Apps
+792	Builds, Tests, Installationen, Rendering, CI
+793	Aktueller Titel mit Steuerung
+794	Agent-Nutzung und Hinweis bei knappem Limit
+795	Anschließen, Trennen, niedriger Akkustand
+796	Bevorstehende Termine mit Besprechungslink
+797	Dateien vorübergehend auf die Notch ziehen
+798	Schneller Timer
+799	Kopfhörer, Tastatur, Maus und Akku
+800	Anrufzeit, Mikrofon stummschalten (FaceTime, Zoom…)
+801	Hinweis, wenn eine App Mikrofon oder Kamera nutzt
+802	Lautstärke und Helligkeit bei Änderung
+803	Verbindung verloren, wiederhergestellt, VPN
+804	Hinweis bei abgeschlossenem Download, im Finder zeigen
+805	Computer heiß, Festplatte fast voll
+806	Kamera vor einer Besprechung prüfen
+807	Arbeit
+808	Musik und Geräte
+809	Anrufe und Privatsphäre
+810	System
+811	App-Steuerung
+812	Downloads-Ordner
+813	App-Farbe verwenden
+814	Eigene Auswahl…
+815	Diese Datei ist kein NotchTasks-Soundpaket.
+816	Diese Datei enthält keine verwendbaren Sounds.
+817	Warte auf Runner
+818	wird ausgeführt
+819	Wird ausgeführt · {0}
+820	Fertig · vor {0}
+821	Case
+822	{0} Aufgaben laufen
+823	Log öffnen
+824	+{0} weitere Aufgaben
+825	Hinweis ausblenden
+826	Audio wird abgespielt
+827	Steuerung in {0} aktivieren
+828	Direkt im Tab pausieren, abspielen und Titel wechseln, ohne andere Musik-Apps automatisch zu starten
+829	Zum Spulen ziehen
+830	Videoanruf · {0}
+831	Anruf läuft · {0}
+832	 · Mikrofon stumm
+833	Mikrofon einschalten
+834	Mikrofon stummschalten
+835	NotchTasks darf die Kamera noch nicht verwenden
+836	Kameraeinstellungen öffnen
+837	Spiegeln ausschalten
+838	Warte auf 
+839	In {0} antworten
+840	Hier überspringen, {0} fragt dann wie gewohnt
+841	Senden
+842	Lans Geburtstag
+843	Familie
+844	Urlaub
+845	Bericht schreiben
+846	Sprint-Besprechung
+847	Mittagessen mit dem Team
+848	Kunden anrufen
+849	 verbunden
+850	 getrennt
+851	L 100 % · R 98 % · Case 62 %
+852	1 fehlgeschlagener Entsperrversuch
+853	{0} fehlgeschlagene Entsperrversuche
+854	Zuletzt um {0}, als der Computer gesperrt war
+855	Soundpaket angewendet
+856	Kontrollzentrum…
+857	Anleitung…
+858	Timer für {0} Minuten
+859	Timer stoppen
+860	NotchTasks beenden
+861	Raum A / https://us02web.zoom.us/j/123?pwd=x
+862	Welche Farbe?
+863	Rot
+864	Farbe?
+865	Von der Notch nach unten gleiten.
+866	Passt genau auf die Notch.
+867	Schwebende Karte unter der Notch.
+868	Breit, große Schrift.
+869	Automatisch
+870	Links
+871	Rechts
+872	KI / Aufgabe erledigt
+873	Agent fragt, Freigabe nötig
+874	CI erfolgreich
+875	CI fehlgeschlagen
+876	KI-Limit fast erreicht
+877	Bevorstehender Termin
+878	Timer abgelaufen
+879	Ladegerät angeschlossen
+880	Ladegerät getrennt
+881	Gerät verbunden
+882	Gerät getrennt
+883	Anruf begonnen
+884	Anruf beendet
+885	Mikrofon oder Kamera an
+886	Fehlgeschlagene Entsperrung
+887	Verbindung verloren
+888	Verbindung wiederhergestellt, VPN
+889	Download abgeschlossen
+890	Computer heiß, Festplatte voll
+891	Notch einklappen
+892	Standard
+893	Lebhaft
+894	Leise
+895	kopieren
+896	herunterladen
+897	komprimieren / entpacken
+898	Video verarbeiten
+899	Bild verarbeiten
+900	transkribieren
+901	 · länger als gewöhnlich
+902	 noch
+903	wird verarbeitet · {0} % CPU
+904	Kopieren
+905	Empfangen
+906	Entpacken
+907	Datei übertragen
+908	 · verbleibend 
+909	Ganztägig
+910	In Kalender öffnen
+911	+{0} weitere Termine
+912	Läuft · noch {0}
+913	Demnächst · in {0}
+914	{0} · in Kalender öffnen
+915	läuft
+916	noch 
+917	Diesen Termin auf der Notch ausblenden
+918	{0}/{1} ausgewählt
+919	Auswahl aufheben
+920	Alle auswählen
+921	Im Finder anzeigen
+922	Alle per AirDrop senden
+923	Per AirDrop senden
+924	Alle aus der Ablage entfernen (Originaldateien bleiben erhalten)
+925	Aus der Ablage entfernen (Originaldatei bleibt erhalten)
+926	Dateien hinzufügen…
+927	Hier ablegen
+928	Dateien auf die Notch ziehen oder auf + klicken, um sie auszuwählen
+929	Klicken zum Auswählen · Doppelklick zum Öffnen · Herausziehen, um sie in einer anderen App abzulegen
+930	Eine ausgewählte Datei ziehen, um alle {0} Dateien mitzunehmen
+931	Aus der Ablage entfernen
+932	Datei nicht mehr gefunden: {0}
+933	Fingerabdruck stimmt nicht überein
+934	Falsches Passwort
+935	Aus
+936	1 Fehler
+937	{0} Fehler
+938	{0} laufen
+939	{0} warten
+940	Nichts läuft
+941	Kontrollzentrum
+942	Spiegel
+943	Kameravorschau
+944	Dateien ziehen oder auswählen
+945	Dateien auf die Notch ziehen oder klicken, um Dateien für die Ablage auszuwählen
+946	CPU des gesamten Computers: 
+947	Verwendeter Speicher: 
+948	{0} % · klicken, um Activity Monitor zu öffnen
+949	Text, Emoji
+950	Animation
+951	Fleißig
+952	Niedlich
+953	Datei herunterladen
+954	Agent antworten
+955	Frage
+956	Fragetext
+957	Auswahl
+958	Nächste Sitzung starten
+959	Fokus starten
+960	Minuten
+961	Fokus beenden
+962	Pixel-Freund versorgen
+963	Aufgabe
+964	Kleiner Oranger
+965	Lichtstrahl
+966	Terminalwolke
+967	Rakete
+968	Astronaut
+969	Blauer Stern
+970	Kleiner Roboter
+971	Denkt nach
+972	Bergarbeiter
+973	Schmieden
+974	Kleines Zahnrad
+975	Hamster im Laufrad
+976	Kaffee
+977	Fortschrittsbalken
+978	Lagerfeuer
+979	Bugs fangen
+980	Münze
+981	Katze
+982	Slime
+983	Kleiner Geist
+984	Gummiente
+985	Schlagendes Herz
+986	Pinguin
+987	Roboter
+988	Kampfroboter
+989	Chibi
+990	Anime-Katze
+991	Niedliche Wolke
+992	Oranger Lichtstrahl
+993	Umlaufbahn
+994	Funkeln
+995	Neuronales Netz
+996	Tippt…
+997	Zahnrad
+998	Sanduhr
+999	Bausteine stapeln
+1000	Kleiner Kreis
+1001	Fröhlicher Stern
+1002	Frosch
+1003	Panda
+1004	Hase
+1005	Eule
+1006	Es gibt ein Update von deinem Mac.
+1007	Build abgeschlossen
+1008	Öffne NotchTasks, um es anzusehen.
+1009	Build läuft
+1010	Auf dem Sperrbildschirm verfolgen.
+1011	Öffne NotchTasks, um zu erlauben oder abzulehnen.

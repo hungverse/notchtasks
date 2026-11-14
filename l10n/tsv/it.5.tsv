@@ -1,0 +1,22 @@
+1031	Ventole
+1032	Ventole e temperatura
+1033	La temperatura e la velocità delle ventole vengono lette da questo Mac. Il controllo si attiva solo dopo aver accettato l’avviso.
+1034	Un controllo errato delle ventole può danneggiare l’hardware.
+1035	Attiva assistente ventole
+1036	L’assistente mantiene le velocità entro i limiti del Mac e torna in automatico se perde la connessione o il Mac è troppo caldo.
+1037	Sensori
+1038	Impossibile leggere i sensori di temperatura.
+1039	Consenti l’assistente in Elementi login nelle Impostazioni di Sistema.
+1040	Questo Mac non segnala ventole tramite SMC; la lettura della temperatura continua a funzionare.
+1041	Ventola {0}
+1042	Forzata
+1043	Modalità
+1044	Velocità fissa
+1045	Per sensore
+1046	Avvio {0}°C
+1047	Massimo {0}°C
+1048	Le ventole sono tornate automatiche perché il Mac è troppo caldo
+1049	Impossibile registrare l’assistente ventole: {0}
+1050	Impossibile connettersi all’assistente ventole: {0}
+1051	Metà
+1052	Massimo

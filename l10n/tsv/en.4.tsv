@@ -1,0 +1,24 @@
+1012	Update
+1013	Version
+1014	Downloading… {0}%
+1015	Verifying…
+1016	Download and install
+1017	No update available. Last checked: {0}
+1018	Checking…
+1019	Check now
+1020	No notes.
+1021	The update information is invalid.
+1022	Couldn't download the update.
+1023	The downloaded file doesn't match its checksum.
+1024	The disk image doesn't contain NotchTasks.app.
+1025	The update signature doesn't match this app.
+1026	The update isn't newer than the running app.
+1027	Can't write to {0}. Drag the app from the disk image to Applications.
+1028	Another update is unfinished. Try again later.
+1029	New version {0}
+1030	Couldn't open the update disk image.
+1055	Needed now
+1056	Granted
+1057	Not in use
+1058	Fan helper
+1059	Chip

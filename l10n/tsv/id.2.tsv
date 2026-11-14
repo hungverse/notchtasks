@@ -1,0 +1,360 @@
+340	Tambah ikon di kanan
+341	Tambah ikon di kiri
+342	Tambah ikon: perlu Pro
+343	Animasi Anda
+344	Gambar Anda
+345	Simbol
+346	Tema {0}
+347	Warna aksen
+348	Kustom
+349	Seret untuk mengurutkan ulang.
+350	{0} ikon animasi · Gratis
+351	Ketuk ikon untuk menempatkannya di notch.
+352	Pilih ikon
+353	Pasangkan dengan komputer untuk menggunakan ikon ini di notch.
+354	Gunakan ikon ini di notch.
+355	Tidak dapat menghubungi App Store. Coba lagi nanti.
+356	App Store tidak dapat memverifikasi pembelian ini.
+357	Pembelian menunggu persetujuan. Anda akan mendapatkannya begitu disetujui.
+358	Simulator tidak memblokir aplikasi sungguhan.
+359	Izin belum diberikan. Masuk ke iCloud melalui Pengaturan.
+360	Pemblokiran aplikasi belum diizinkan.
+361	Tidak dapat menjadwalkan pembukaan blokir. Buka aplikasi setelah sesi untuk membuka blokir aplikasi.
+362	Blokir aplikasi lain saat fokus
+363	Dapat diubah setelah sesi.
+364	Hanya aplikasi yang Anda izinkan dapat dibuka.
+365	Pilih aplikasi yang diizinkan
+366	{0} item diizinkan
+367	Beranda
+368	Nonaktif
+369	Buka untuk meninjau
+370	Mendaftar…
+371	Nonaktif: aktifkan di Pengaturan
+372	Tidak dapat mengaktifkan, coba lagi nanti
+373	Mengaktifkan…
+374	Kesalahan: FCM tidak memberikan token
+375	Aktif
+376	{0} XP · {1} XP lagi ke level {2}
+377	Hari ini
+378	Ketuk untuk pratinjau
+379	Belum dimiliki
+380	, pratinjau
+381	Terbuka berdasarkan level
+382	Berdasarkan level tertinggi: {0}
+383	Tentang: {0}
+384	Level {0} · terbuka
+385	Terbuka pada level {0}
+386	Lihat pratinjau laporan
+387	Bayi
+388	Level 5
+389	Level 10
+390	Level {0} · {1}
+391	Belum dimiliki · pratinjau
+392	Tahap
+393	Dipilih
+394	Pilih {0}
+395	Beli paket Peliharaan · {0}
+396	Koneksi jarak jauh
+397	Gunakan di mana saja, tanpa perlu Wi‑Fi yang sama
+398	Balas dari notifikasi
+399	Izinkan atau tolak langsung, tanpa membuka aplikasi
+400	Agent dan build di layar terkunci serta Dynamic Island
+401	Peringatan build & CI
+402	Langsung tahu saat build selesai atau gagal
+403	Beberapa perangkat
+404	Pasangkan beberapa ponsel dengan satu komputer
+405	Lebih banyak ikon notch
+406	Hingga 4 ikon per sisi
+407	Komputer Anda, di mana saja.
+408	Coba gratis 7 hari
+409	lalu {0}{1}
+410	Wi‑Fi yang sama tetap gratis. Beli sekali, gunakan di semua perangkat yang dipasangkan.
+411	Tutup
+412	7 hari gratis
+413	Bayar sekali, pakai selamanya
+414	Katak, panda, kelinci, dan burung hantu
+415	Diam
+416	Berjalan
+417	Menunggu Anda
+418	Kesalahan
+419	Rubah
+420	Kenyang
+421	Energi
+422	{0} {1} persen
+423	Level {0}, {1} persen ke level berikutnya
+424	Pratinjau notch
+425	{0} pekerjaan berjalan
+426	Kembali ke fokus
+427	Terbuka lagi pukul {0}
+428	Waktu fokus sedang berjalan
+429	{0}. Selesaikan sesi fokus agar {1} mendapat lebih banyak XP (sekarang level {2}).
+430	Peliharaan Anda ikut senang atau sedih sepanjang hari kerja.
+431	Mulai fokus selama 25 atau 50 menit.
+432	Berikutnya: sesi {0}/{1}
+433	Mulai sesi {0}/{1}
+434	Selesaikan
+435	KETAT
+436	Tidak dapat dihentikan
+437	MODE KETAT
+438	Tidak dapat dihentikan hingga waktu habis
+439	Selesai!
+440	{0} mnt fokus · +{1} XP
+441	Ketat · tidak dapat dihentikan
+442	Berikutnya: sesi {0}
+443	Ringkasan komputer
+444	Hal yang menunggu persetujuan, agent, dan build di komputer.
+445	Claude membutuhkan persetujuan Anda
+446	dan {0} pertanyaan lainnya
+447	menunggu Anda
+448	Buka aplikasi untuk meninjau
+449	Buka NotchTasks untuk memasangkan komputer
+450	{0} untuk ditinjau
+451	menunggu persetujuan Anda
+452	Semua agent sedang beristirahat
+453	{0} menunggu
+454	Tinjau
+455	Sedang build
+456	Agent menunggu Anda
+457	Buka NotchTasks untuk melihat permintaan.
+458	Buka aplikasi untuk memilih jawaban
+459	Tinjau di aplikasi
+460	{0} agent berjalan
+461	Agent berjalan
+462	Yang dipantau notch. Hanya yang sedang bekerja tampil di notch.
+463	Edit
+464	Aktif
+465	 (ditambahkan)
+466	Aplikasi terbuka
+467	Pilih aplikasi lain…
+468	Masukkan proses…
+469	Tambah item untuk dipantau
+470	Pilih agent, aplikasi terbuka, atau ketik nama proses.
+471	Jawab agent di notch
+472	Saat agent bertanya, notch menampilkan tombol jawaban.
+473	Siap
+474	Tidak dapat mengedit pengaturan {0}: {1}
+475	Berlaku saat agent berikutnya dijalankan.
+476	Tinjau perintah, pengeditan file, dan jawab pertanyaan
+477	Tinjau perintah dan pengeditan file
+478	Menolak perintah. Mengizinkan hanya saat Cursor menjalankan perintah sendiri
+479	Tinjau perintah, pengeditan file, dan akses web
+480	Item yang dipantau
+481	Nama tampilan
+482	Tampilkan di
+483	Ganti ikon
+484	Ganti…
+485	{0} dipantau per sesi kerja. Tidak perlu pengaturan lain.
+486	Nama proses
+487	Baris perintah memuat
+488	opsional, misalnya gemini-cli
+489	Deteksi
+490	Nama proses, seperti di Activity Monitor.
+491	Setiap baris di notch adalah
+492	Setiap kali berjalan
+493	Setiap subproses (runner, worker)
+494	Bekerja saat CPU di atas
+495	Naikkan jika muncul saat diam, turunkan jika ada pekerjaan yang terlewat.
+496	Aplikasi belum terbuka.
+497	Tidak ditemukan. Buka alatnya lalu klik Periksa lagi.
+498	Cocok: {0}
+499	Periksa lagi
+500	Tambah
+501	Simpan
+502	Tampilkan semua alat
+503	Belum ada build. Aktifkan “Tampilkan semua” untuk mengatur ikon lebih awal.
+504	Tidak perlu menambah: alat apa pun yang berjalan akan muncul. Klik alat untuk mengubah ikonnya.
+505	Diubah
+506	Model berjalan di komputer
+507	Kembali online
+508	Wi‑Fi terhubung
+509	Terhubung
+510	Jaringan terputus
+511	Periksa Wi‑Fi atau kabel jaringan
+512	VPN aktif
+513	VPN nonaktif
+514	Unduhan selesai
+515	Tampilkan dalam folder
+516	Disk hampir penuh
+517	Sisa %.1f GB
+518	Kosongkan ruang
+519	Komputer sangat panas
+520	Komputer memanas
+521	{0} bekerja keras
+522	Pertimbangkan menutup aplikasi berat
+523	Lihat aplikasi
+524	Sedang menelepon
+525	Berakhir
+526	Mikrofon aktif
+527	Kamera aktif
+528	Tidak dapat membisukan mikrofon
+529	Gunakan tombol di {0}
+530	Belum ada model dimuat
+531	Dimuat 
+532	Tambahkan ke rak
+533	Kontrol {0} aktif
+534	Notch kini dapat mengontrol musik di tab
+535	CI gagal: {0}
+536	Lihat log
+537	CI lulus: {0}
+538	Bekerja · {0}
+539	Menunggu
+540	CI lulus: 
+541	CI gagal: 
+542	Terbuka
+543	{0} telah mencapai batas {1}
+544	{0} menggunakan {1}% dari batas {2}
+545	Tunggu hingga {0} (tersisa {1})
+546	Diatur ulang pukul {0}
+547	{0} terhubung
+548	{0} terputus
+549	Baterai {0} lemah
+550	Mengisi daya
+551	Daya dilepas
+552	Baterai lemah
+553	Tersisa {0}%
+554	Pukul 
+555	Waktu habis
+556	Layar utama
+557	Ikon selalu terlihat pada notch yang diciutkan.
+558	Layar terkunci
+559	Hanya untuk dilihat: tidak mengembang dan tidak dapat diklik.
+560	Sama seperti layar utama
+561	Terpisah
+562	Beri tahu saat gagal membuka kunci
+563	Notch bergetar merah saat kata sandi atau sidik jari salah. Setelah dibuka, notch menampilkan jumlah percobaan yang gagal.
+564	Kiri
+565	Kanan
+566	Klik + untuk menambah, klik untuk mengedit, seret untuk bertukar tempat. Hingga {0} per sisi{1}
+567	Tambah dari Pustaka Ikon
+568	Sinkronkan animasi
+569	Mulai ulang semua ikon animasi bersamaan
+570	Ikon tetap
+571	Di kanan notch
+572	Di kiri notch
+573	Lebih dari 8.000 simbol Apple
+574	Beberapa karakter atau emoji
+575	Karakter animasi, GIF
+576	Di notch
+577	Ketik hingga 8 karakter
+578	Pilihan cepat
+579	Letakkan gambar lain di sini
+580	Letakkan gambar di sini
+581	Pilih gambar…
+582	Buka Pustaka Ikon
+583	GIF atau spritesheet Anda…
+584	{0}/dtk
+585	PNG, JPG, HEIC… Gambar persegi terlihat paling bagus.
+586	Bentuk
+587	Lingkaran
+588	Persegi
+589	Bingkai
+590	Warna teks
+591	Warna simbol
+592	Hapus ikon
+593	Gunakan ikon bawaan
+594	Tanpa latar
+595	Warna lain
+596	Disarankan
+597	Semua
+598	Komunikasi
+599	Cuaca
+600	Peta
+601	Objek
+602	Foto
+603	Game
+604	Transportasi
+605	Aksesibilitas
+606	Orang
+607	Rumah
+608	Olahraga
+609	Alam
+610	Pengeditan
+611	Teks
+612	Media
+613	Papan ketik
+614	Perdagangan
+615	Waktu
+616	Kesehatan
+617	Bentuk
+618	Panah
+619	Angka & huruf
+620	Matematika
+621	Cari dalam bahasa Inggris: star, cloud, cat, hammer…
+622	{0} · {1} simbol
+623	{0} hasil
+624	{0} ikon animasi · Gratis
+625	Cari
+626	Tidak ada ikon yang cocok dengan “{0}”.
+627	Paket komunitas: segera hadir.
+628	Sedang digunakan
+629	Ikon tetap di notch
+630	Tetapkan untuk aplikasi yang dipantau
+631	Tetapkan untuk alat build
+632	Buka
+633	hingga 
+634	Acara
+635	Ringkasan
+636	Pemantauan
+637	Pemasangan
+638	Ikon & kunci
+639	Pustaka Ikon
+640	Perilaku
+641	Izin
+642	Notch menampilkan yang sedang berjalan dan diam saat tidak ada aktivitas.
+643	Kesalahan CI
+644	Lihat panduan
+645	Seret untuk mengurutkan ulang di notch.
+646	Posisi saat diciutkan
+647	Warna
+648	Perlu izin {0}
+649	Kembali ke warna bawaan
+650	Coba peringatan
+651	Warna atas
+652	Warna bawah
+653	Gaya
+654	Warna kustom
+655	Ekspor…
+656	Impor…
+657	Cadangkan pengaturan
+658	Semua penyesuaian Anda dalam satu file .json.
+659	Layar ini memiliki notch: notch menyatu dengan kamera.
+660	Layar ini tidak memiliki notch: ditampilkan sebagai Dynamic Island mengambang.
+661	Tugas selesai
+662	Peringatan uji
+663	Volume
+664	Paket suara
+665	Cadangkan, bagikan
+666	Ekspor paket…
+667	Impor paket…
+668	Suara disimpan terpisah, jadi perubahan tampilan tidak akan menghapusnya. Ekspor paket untuk memindahkannya ke komputer lain.
+669	Suara NotchTasks.notchsounds
+670	Tidak dapat mengekspor paket suara
+671	Pilih file paket suara (.notchsounds)
+672	Tidak dapat mengimpor paket suara
+673	Cara membuka
+674	Jeda {0} ms
+675	Respons haptik
+676	CPU dan RAM saat diperluas
+677	Beri tahu selesai jika berjalan {0} dtk atau lebih
+678	Peringatkan batas pada {0}%
+679	Lainnya
+680	Ikon bilah menu
+681	Berikan izin hanya untuk fitur yang Anda gunakan. Nonaktifkan sepenuhnya fitur di halaman Modul.
+682	Segarkan
+683	Beberapa izin hanya dapat diperiksa saat aplikasi terkait terbuka.
+684	Cabut
+685	Atur ulang
+686	Hapus entri lama NotchTasks di Pengaturan, lalu minta izin lagi
+687	Buka Pengaturan
+688	Buka aplikasi
+689	Tidak
+690	Pilih file Anda…
+691	Pratinjau
+692	Tidak dapat membuat kode pemasangan: {0}
+693	Ponsel
+694	Tidak dapat mengirim ke ponsel: {0}
+695	Koneksi ke ponsel hilang, mencoba lagi…
+696	Jawab agent dan lihat pekerjaan yang berjalan langsung di ponsel. Data dienkripsi antarperangkat Anda.
+697	Buka NotchTasks di ponsel → Pasangkan dengan komputer, lalu pindai kode ini.
+698	Siapa pun yang memiliki kode ini dapat membaca pertanyaan agent Anda: jangan bagikan.
+699	Salin kode

@@ -1,0 +1,22 @@
+1031	Fans
+1032	Fans & temperature
+1033	Temperature and fan speeds are read from this Mac. Fan control turns on only after you accept the warning.
+1034	Fan control can damage hardware when used incorrectly.
+1035	Enable fan helper
+1036	The helper always keeps speeds within the machine-reported minimum and maximum, and returns to automatic when it loses its connection or the Mac is too hot.
+1037	Sensors
+1038	Could not read temperature sensors.
+1039	Allow the helper in Login Items in System Settings.
+1040	This Mac does not report fans through SMC; temperature reading still works.
+1041	Fan {0}
+1042	Forced
+1043	Mode
+1044	Fixed speed
+1045	By sensor
+1046	Start {0}°C
+1047	Maximum {0}°C
+1048	Fans returned to automatic because the Mac is too hot
+1049	Could not register the fan helper: {0}
+1050	Could not connect to the fan helper: {0}
+1051	Half
+1052	Max

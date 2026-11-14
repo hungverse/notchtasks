@@ -1,0 +1,330 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		AA0000000000000000000B01 /* AppIcon.icns in Resources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000F01 /* AppIcon.icns */; };
+		AA0000000000000000000B02 /* Sprites in Resources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000F02 /* Sprites */; };
+		AA0000000000000000000B03 /* com.notchtasks.fanhelper in PrivilegedHelperTools */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000F09 /* com.notchtasks.fanhelper */; };
+		AA0000000000000000000B04 /* com.notchtasks.fanhelper.plist in LaunchDaemons */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000F08 /* com.notchtasks.fanhelper.plist */; };
+		AA0000000000000000000B05 /* FanHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000F07 /* FanHelper.swift */; };
+		AA0000000000000000000B06 /* SMC.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000F0A /* SMC.swift */; };
+		AA0000000000000000000B07 /* Fans.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000F0B /* Fans.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		AA0000000000000000000F01 /* AppIcon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = AppIcon.icns; sourceTree = "<group>"; };
+		AA0000000000000000000F02 /* Sprites */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Sprites; sourceTree = "<group>"; };
+		AA0000000000000000000F03 /* NotchTasks.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NotchTasks.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA0000000000000000000F04 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		AA0000000000000000000F05 /* NotchTasks.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NotchTasks.entitlements; sourceTree = "<group>"; };
+		AA0000000000000000000F06 /* NotchTasks-AppStore.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "NotchTasks-AppStore.entitlements"; sourceTree = "<group>"; };
+		AA0000000000000000000F07 /* FanHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FanHelper.swift; sourceTree = "<group>"; };
+		AA0000000000000000000F08 /* com.notchtasks.fanhelper.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = com.notchtasks.fanhelper.plist; sourceTree = "<group>"; };
+		AA0000000000000000000F09 /* com.notchtasks.fanhelper */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = com.notchtasks.fanhelper; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA0000000000000000000F0A /* SMC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SMC.swift; path = ../Sources/SMC.swift; sourceTree = "<group>"; };
+		AA0000000000000000000F0B /* Fans.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Fans.swift; path = ../Sources/Fans.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		AA0000000000000000000D01 /* Sources */ = {isa = PBXFileSystemSynchronizedRootGroup; path = Sources; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		AA0000000000000000000601 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA0000000000000000000605 /* Frameworks */ = { isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		AA0000000000000000000E00 = {
+			isa = PBXGroup;
+			children = (
+				AA0000000000000000000D01 /* Sources */,
+				AA0000000000000000000E01 /* Resources */,
+				AA0000000000000000000E02 /* Config */,
+				AA0000000000000000000E03 /* Products */,
+				AA0000000000000000000E04 /* Helper */,
+			);
+			sourceTree = "<group>";
+		};
+		AA0000000000000000000E01 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000000000000000000F01 /* AppIcon.icns */,
+				AA0000000000000000000F02 /* Sprites */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		AA0000000000000000000E02 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000000000000000000F04 /* Info.plist */,
+				AA0000000000000000000F05 /* NotchTasks.entitlements */,
+				AA0000000000000000000F06 /* NotchTasks-AppStore.entitlements */,
+				AA0000000000000000000F08 /* com.notchtasks.fanhelper.plist */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
+		AA0000000000000000000E03 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000000000000000000F03 /* NotchTasks.app */,
+				AA0000000000000000000F09 /* com.notchtasks.fanhelper */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		AA0000000000000000000E04 /* Helper */ = { isa = PBXGroup; children = (AA0000000000000000000F07 /* FanHelper.swift */, AA0000000000000000000F0A /* SMC.swift */, AA0000000000000000000F0B /* Fans.swift */,); path = Helper; sourceTree = "<group>"; };
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		AA0000000000000000000701 /* NotchTasks */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AA0000000000000000000902 /* Build configuration list for PBXNativeTarget "NotchTasks" */;
+			buildPhases = (
+				AA0000000000000000000602 /* Sources */,
+				AA0000000000000000000601 /* Frameworks */,
+				AA0000000000000000000603 /* Resources */,
+				AA0000000000000000000606 /* Embed Fan Helper */,
+				AA0000000000000000000607 /* Embed Fan Helper Plist */,
+			);
+			buildRules = (
+			);
+			dependencies = (AA0000000000000000000802 /* PBXTargetDependency */,);
+			fileSystemSynchronizedGroups = (
+				AA0000000000000000000D01 /* Sources */,
+			);
+			name = NotchTasks;
+			productName = NotchTasks;
+			productReference = AA0000000000000000000F03 /* NotchTasks.app */;
+			productType = "com.apple.product-type.application";
+		};
+		AA0000000000000000000702 /* FanHelper */ = { isa = PBXNativeTarget; buildConfigurationList = AA0000000000000000000903 /* Build configuration list for PBXNativeTarget "FanHelper" */; buildPhases = (AA0000000000000000000604 /* Sources */, AA0000000000000000000605 /* Frameworks */); buildRules = (); dependencies = (); name = FanHelper; productName = com.notchtasks.fanhelper; productReference = AA0000000000000000000F09 /* com.notchtasks.fanhelper */; productType = "com.apple.product-type.tool"; };
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		AA0000000000000000000801 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2700;
+				LastUpgradeCheck = 2700;
+				TargetAttributes = {
+					AA0000000000000000000701 = {
+						CreatedOnToolsVersion = 27.0;
+					};
+					AA0000000000000000000702 = { CreatedOnToolsVersion = 27.0; };
+				};
+			};
+			buildConfigurationList = AA0000000000000000000901 /* Build configuration list for PBXProject "NotchTasks" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				vi,
+				Base,
+			);
+			mainGroup = AA0000000000000000000E00;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = AA0000000000000000000E03 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+				targets = (
+				AA0000000000000000000701 /* NotchTasks */,
+				AA0000000000000000000702 /* FanHelper */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXContainerItemProxy section */
+		AA0000000000000000000A01 /* PBXContainerItemProxy */ = { isa = PBXContainerItemProxy; containerPortal = AA0000000000000000000801 /* Project object */; proxyType = 1; remoteGlobalIDString = AA0000000000000000000702; remoteInfo = FanHelper; };
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		AA0000000000000000000606 /* Embed Fan Helper */ = { isa = PBXCopyFilesBuildPhase; buildActionMask = 2147483647; dstPath = "Contents/Library/PrivilegedHelperTools"; dstSubfolderSpec = 1; files = (AA0000000000000000000B03 /* com.notchtasks.fanhelper in PrivilegedHelperTools */,); runOnlyForDeploymentPostprocessing = 0; };
+		AA0000000000000000000607 /* Embed Fan Helper Plist */ = { isa = PBXCopyFilesBuildPhase; buildActionMask = 2147483647; dstPath = "Contents/Library/LaunchDaemons"; dstSubfolderSpec = 1; files = (AA0000000000000000000B04 /* com.notchtasks.fanhelper.plist in LaunchDaemons */,); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXResourcesBuildPhase section */
+		AA0000000000000000000603 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA0000000000000000000B01 /* AppIcon.icns in Resources */,
+				AA0000000000000000000B02 /* Sprites in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		AA0000000000000000000602 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA0000000000000000000604 /* Sources */ = { isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (AA0000000000000000000B05 /* FanHelper.swift in Sources */, AA0000000000000000000B06 /* SMC.swift in Sources */, AA0000000000000000000B07 /* Fans.swift in Sources */,); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		AA0000000000000000000802 /* PBXTargetDependency */ = { isa = PBXTargetDependency; target = AA0000000000000000000702 /* FanHelper */; targetProxy = AA0000000000000000000A01 /* PBXContainerItemProxy */; };
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		AA0000000000000000000C01 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		AA0000000000000000000C02 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+			};
+			name = Release;
+		};
+		AA0000000000000000000C05 /* AppStore */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+			};
+			name = AppStore;
+		};
+		AA0000000000000000000C03 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Config/NotchTasks.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 7;
+				DEVELOPMENT_TEAM = 827KQMHNVL;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Config/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 2.2;
+				PRODUCT_BUNDLE_IDENTIFIER = com.notchtasks.mac;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		AA0000000000000000000C04 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Config/NotchTasks.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 7;
+				DEVELOPMENT_TEAM = 827KQMHNVL;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Config/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 2.2;
+				PRODUCT_BUNDLE_IDENTIFIER = com.notchtasks.mac;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		AA0000000000000000000C06 /* AppStore */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = "Config/NotchTasks-AppStore.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 7;
+				DEVELOPMENT_TEAM = 827KQMHNVL;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Config/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 2.2;
+				PRODUCT_BUNDLE_IDENTIFIER = com.notchtasks.mac;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = APPSTORE;
+				SWIFT_VERSION = 5.0;
+			};
+			name = AppStore;
+		};
+		AA0000000000000000000C07 /* Debug */ = { isa = XCBuildConfiguration; buildSettings = { CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 7; MARKETING_VERSION = 2.2; DEVELOPMENT_TEAM = 827KQMHNVL; MACOSX_DEPLOYMENT_TARGET = 14.0; PRODUCT_BUNDLE_IDENTIFIER = com.notchtasks.fanhelper; PRODUCT_NAME = com.notchtasks.fanhelper; SKIP_INSTALL = YES; SWIFT_ACTIVE_COMPILATION_CONDITIONS = FAN_HELPER; SWIFT_VERSION = 5.0; }; name = Debug; };
+		AA0000000000000000000C08 /* Release */ = { isa = XCBuildConfiguration; buildSettings = { CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 7; MARKETING_VERSION = 2.2; DEVELOPMENT_TEAM = 827KQMHNVL; MACOSX_DEPLOYMENT_TARGET = 14.0; PRODUCT_BUNDLE_IDENTIFIER = com.notchtasks.fanhelper; PRODUCT_NAME = com.notchtasks.fanhelper; SKIP_INSTALL = YES; SWIFT_ACTIVE_COMPILATION_CONDITIONS = FAN_HELPER; SWIFT_VERSION = 5.0; }; name = Release; };
+		AA0000000000000000000C09 /* AppStore */ = { isa = XCBuildConfiguration; buildSettings = { CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 7; MARKETING_VERSION = 2.2; DEVELOPMENT_TEAM = 827KQMHNVL; MACOSX_DEPLOYMENT_TARGET = 14.0; PRODUCT_BUNDLE_IDENTIFIER = com.notchtasks.fanhelper; PRODUCT_NAME = com.notchtasks.fanhelper; SKIP_INSTALL = YES; SWIFT_ACTIVE_COMPILATION_CONDITIONS = "APPSTORE FAN_HELPER"; SWIFT_VERSION = 5.0; }; name = AppStore; };
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		AA0000000000000000000901 /* Build configuration list for PBXProject "NotchTasks" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA0000000000000000000C01 /* Debug */,
+				AA0000000000000000000C02 /* Release */,
+				AA0000000000000000000C05 /* AppStore */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AA0000000000000000000902 /* Build configuration list for PBXNativeTarget "NotchTasks" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA0000000000000000000C03 /* Debug */,
+				AA0000000000000000000C04 /* Release */,
+				AA0000000000000000000C06 /* AppStore */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AA0000000000000000000903 /* Build configuration list for PBXNativeTarget "FanHelper" */ = { isa = XCConfigurationList; buildConfigurations = (AA0000000000000000000C07 /* Debug */, AA0000000000000000000C08 /* Release */, AA0000000000000000000C09 /* AppStore */); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+/* End XCConfigurationList section */
+	};
+	rootObject = AA0000000000000000000801 /* Project object */;
+}

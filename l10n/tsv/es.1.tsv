@@ -1,0 +1,340 @@
+0	{0} solicitudes te esperan
+1	Idioma
+2	Dispositivo
+3	Ejecutar comando
+4	Editar archivo
+5	Leer archivo
+6	Acceso web
+7	 está preguntando
+8	 necesita tu aprobación
+9	Según la app
+10	Azul
+11	Verde
+12	Naranja
+13	Rosa
+14	Morado
+15	Blanco
+16	Negro
+17	Vidrio esmerilado
+18	Borde luminoso
+19	Isla
+20	Compacto
+21	Tarjeta flotante
+22	Banda
+23	Suave
+24	Rebote
+25	Rápido
+26	Mínimo
+27	Icono de candado
+28	Iconos fijos
+29	Tareas, música, temporizadores
+30	Batería
+31	Reproduciendo
+32	Calendario
+33	Temporizador
+34	Bandeja de archivos
+35	Límites de IA
+36	Dispositivos
+37	Llamadas
+38	Volumen y brillo
+39	Red
+40	Descargas
+41	Salud del equipo
+42	Espejo de cámara
+43	Clásico
+44	Vidrio
+45	Minimalista
+46	Atardecer
+47	Océano
+48	Borra archivos o carpetas
+49	Se ejecuta como administrador
+50	Sobrescribe el historial en el servidor git
+51	Descarta todos los cambios sin guardar
+52	Borra archivos no rastreados
+53	Ejecuta un script descargado de internet
+54	Escribe directamente en un disco
+55	Da acceso total a todos los archivos
+56	Borra datos de una base de datos
+57	Omite las comprobaciones de seguridad
+58	Recordatorios de descanso y agua
+59	Te recuerda levantarte, beber agua y descansar la vista 6 veces en la jornada. Se apaga con el interruptor.
+60	Informe del día
+61	Cada noche a las 21:00: cuánto te concentraste hoy, cuántas sesiones, tu racha.
+62	Pomodoro y sesiones de 90 minutos
+63	Concéntrate en sesiones cortas con descansos (4 × 25 minutos y 5 de descanso por defecto). Incluye una sesión de 90 minutos.
+64	Corona de flores y bufanda
+65	Tu mascota crece y lleva corona de flores y bufanda.
+66	En el notch
+67	Pon tu mascota en el notch del equipo. Cambia de pose según lo que hace el equipo.
+68	Modo de concentración estricto
+69	Al empezar una sesión, elige el modo estricto: no se puede detener hasta que acabe el tiempo.
+70	Corona y capa
+71	Tu mascota lleva corona, capa y aureola.
+72	Normal
+73	Feliz
+74	Durmiendo
+75	Hambre
+76	Triste
+77	Concentración
+78	Cansada
+79	Durmiendo a gusto… zzz
+80	Durmiendo… zzz
+81	Me muero de hambre, dame de comer
+82	Qué cansancio, déjame dormir un rato
+83	Concentrándome contigo
+84	Qué nervios, tu equipo te está esperando
+85	¡Qué orgullo!
+86	Triste porque lo dejaste a medias
+87	Triste porque falló la compilación
+88	Qué aburrido, juega conmigo
+89	Tengo un poco de hambre
+90	Animando al agente
+91	Me está dando sueño
+92	¡Buenos días!
+93	Contenta
+94	Comer
+95	Jugar
+96	Dormir
+97	Despertar
+98	Equipo
+99	Empareja tu equipo para revisar el trabajo de tus agentes de IA y ver las compilaciones aquí.
+100	Ver un ejemplo
+101	Emparejar equipo
+102	Tipo
+103	Mascotas
+104	Tienda
+105	Disponible
+106	Toca para elegir una mascota
+107	, sin comprar
+108	Tuyo
+109	La mascota que elijas aparece en toda la app, los widgets y la pantalla bloqueada.
+110	Elegiste {0}
+111	Tu nueva mascota aparecerá en el inicio, los widgets y la pantalla de bloqueo de apps.
+112	No se pudo comprar
+113	No se pudo conectar con el equipo: {0}
+114	Este equipo ya está emparejado con otro teléfono. Necesitas Pro para emparejar más.
+115	El equipo desemparejó este teléfono. Escanea el código QR de nuevo para emparejar.
+116	En tu equipo: abre NotchTasks → Panel de control → Emparejar, pulsa Emparejar dispositivo y escanea el código QR.
+117	O pega un código de emparejamiento
+118	Pega un código de emparejamiento
+119	Código de emparejamiento del equipo
+120	Emparejar
+121	Este no es un código de emparejamiento de NotchTasks.
+122	Este código solo sirve para tus dispositivos.
+123	Emparejar con un equipo
+124	Cancelar
+125	datos de ejemplo
+126	Te esperan
+127	Actividad
+128	Esperando a {0}…
+129	equipo
+130	Abre NotchTasks en tu equipo para ver aquí los agentes y sus preguntas.
+131	Lejos del equipo · actualizado {0}
+132	Con Pro: ve y responde a los agentes desde cualquier lugar.
+133	Esperando tu aprobación
+134	{0} tareas esperan tu aprobación
+135	 en curso
+136	Falló una compilación
+137	Todo listo
+138	El equipo está libre
+139	El notch de tu equipo, en tu mano
+140	Revisa el trabajo de tus agentes de IA y ve las compilaciones aquí, incluso en la pantalla bloqueada.
+141	Probar con datos de ejemplo
+142	Instala NotchTasks en tu equipo, abre **Panel de control → Emparejar** y escanea el código QR.
+143	Responder
+144	Rechazar
+145	Permitir
+146	Elige una o varias
+147	Enviar respuesta
+148	Permitir este comando requiere Face ID.
+149	Responder luego en el equipo
+150	Detalles
+151	ahora mismo
+152	 atrás
+153	Fresco
+154	Templado
+155	Caliente
+156	Muy caliente
+157	Temperatura
+158	Se reinicia en {0}
+159	unos minutos
+160	{0} d {1} h
+161	{0} días
+162	{0} h {1} min
+163	{0} horas
+164	{0} min
+165	Permitido
+166	Rechazado
+167	Dejar para el equipo
+168	Elegido: 
+169	Viendo
+170	Datos de ejemplo
+171	Sin emparejar
+172	Salir de los datos de ejemplo
+173	Desemparejar
+174	Conexión directa en la misma Wi‑Fi
+175	Conexión
+176	Directa por Wi‑Fi
+177	Notificaciones
+178	Conexión
+179	Misma Wi‑Fi: al instante. Fuera de casa: pasa a internet solo.
+180	Ver Live Activity de prueba
+181	Muestra 3 solicitudes de ejemplo. Bloquea el teléfono para verlas.
+182	Las Live Activities están desactivadas: actívalas en Ajustes → NotchTasks.
+183	Face ID para comandos peligrosos
+184	Seguridad
+185	Pide Face ID antes de permitir comandos que puedan borrar o sobrescribir datos.
+186	Información
+187	Versión
+188	Ajustes
+189	Pro activo
+190	Pro activo (comprado en otro dispositivo)
+191	El periodo actual termina
+192	Gestionar suscripción
+193	Prueba Pro gratis 7 días
+194	Restaurar compras
+195	Úsalo en cualquier lugar, responde desde las notificaciones, Live Activities para agentes y compilaciones, empareja varios dispositivos.
+196	Los planes mensual y anual se renuevan solos. Cancela en Ajustes → tu nombre → Suscripciones, al menos 24 horas antes del siguiente periodo.
+197	Términos
+198	Privacidad
+199	Sin terminar
+200	Pro anual
+201	Pro mensual
+202	Pro de por vida
+203	 / año
+204	 / mes
+205	Lo tuyo
+206	Añade un widget: mantén pulsada la pantalla de inicio → Editar → Añadir widget → NotchTasks.
+207	Ver y cambiar mascotas
+208	¡Nivel {0}!
+209	{0} ha crecido un poco.
+210	Desbloqueado: {0}.
+211	Genial
+212	Todo desbloqueado. Las sesiones completadas siguen dando XP; si abandonas, se pone triste.
+213	1 minuto de concentración = 1 XP. Nivel {0}: {1}.
+214	Concentrándote
+215	Estricto
+216	Detener
+217	Descanso
+218	Siguiente: sesión {0}/{1}
+219	Empezar ya
+220	Cuenta aquí y en el notch del equipo
+221	Aparece en la pantalla bloqueada y avisa al terminar
+222	Empezar
+223	Empezar en modo estricto
+224	Modo estricto: no se puede detener hasta que acabe el tiempo.
+225	¿Activar el modo estricto?
+226	Empezar estricto
+227	No se puede detener mientras te concentras, en las {0} sesiones. Los descansos sí se pueden detener.
+228	No se puede detener durante {0} minutos. Las apps bloqueadas se abren de nuevo al terminar.
+229	Pomodoro: {0} sesiones × {1} min
+230	Sesión de {0} minutos
+231	¡Levántate y estírate un poco!
+232	Bebe un sorbo de agua 💧
+233	Descansa la vista 20 segundos, mira a lo lejos.
+234	Relaja los hombros, respira hondo.
+235	Camina unos pasos para despejarte.
+236	¿Ya bebiste agua? Te lo recuerdo 💧
+237	{0} te recuerda
+238	{0}: repasa tu día
+239	¿Cuánto te concentraste y cuántas preguntas revisaste? Ábrelo para verlo.
+240	Fin del descanso
+241	{0} está lista para la sesión {1}/{2}, {3} minutos. Toca para empezar.
+242	minutos de concentración
+243	sesiones
+244	preguntas revisadas
+245	días seguidos
+246	Empareja tu equipo para poner tu mascota en el notch.
+247	Nivel {0}
+248	Toca para ponerla en el notch. Tu mascota cambia de pose según lo que hace el equipo.
+249	Mascotas en el notch
+250	Añadir a la izquierda
+251	Añadir a la derecha
+252	Sustituir icono {0} de la {1}
+253	derecha
+254	izquierda
+255	Quitar del notch
+256	Concéntrate en sesiones cortas con descansos entre medias. Al acabar el descanso, la siguiente sesión empieza sola.
+257	Concentración: {0} min
+258	Descanso: {0} min
+259	Sesiones: {0}
+260	Cada Pomodoro
+261	{0} minutos de concentración en total. Si empiezas ahora, terminas a las {1}.
+262	Empieza desde la tarjeta Concentración en Inicio.
+263	Los descansos tienen los botones "Empezar ya" y "Detener".
+264	Puedes elegir el modo estricto al empezar.
+265	Datos de ejemplo, porque hoy aún no hay sesiones.
+266	Últimos 7 días · minutos de concentración
+267	Cada noche a las 21:00 llega un aviso para verlo.
+268	Se desbloquea en el nivel 3: la tarjeta Hoy y un aviso a las 21:00.
+269	{0} te esperó todo el día. ¡Mañana nos concentramos juntos!
+270	{0}: hoy {1} minutos, ¡buen comienzo!
+271	{0}: {1} minutos de concentración, {2} sesiones. ¡Muy bien!
+272	{0}: ¡{1} minutos! Hoy trabajaste muchísimo, recuerda descansar.
+273	¡Enhorabuena! 🎉
+274	{0} subió al nivel {1} y desbloqueó:
+275	Se activó solo. Ajústalo en la página Mascotas.
+276	Genial
+277	Falló la compilación
+278	No se pudo crear la Live Activity: {0}
+279	Sesión {0}/{1} terminada
+280	Se acabó el tiempo de concentración
+281	Descansa {0} minutos y luego sigue con la siguiente sesión.
+282	{0} minutos listos. Descansa un poco.
+283	 🎉 Desbloqueado: {0}.
+284	Permitir comando peligroso: {0}
+285	¿Cómo se deben guardar los datos?
+286	Almacenamiento
+287	SQLite (recomendado)
+288	Tu MacBook Pro
+289	Editando NotchView.swift
+290	Ejecutando pruebas
+291	Compilando para iPhone 17 Pro
+292	CI falló: deploy
+293	6 min
+294	CI correcto: test
+295	No se encontró el notch del equipo
+296	Actualiza NotchTasks en tu equipo a la última versión y ábrelo para ajustar el notch desde aquí.
+297	Enviando…
+298	Equipo de ejemplo: prueba lo que quieras
+299	Sincronizado con {0}
+300	Tema
+301	La pantalla bloqueada usa sus propios iconos
+302	Iconos de la pantalla bloqueada
+303	Elegir
+304	Cambiar
+305	Quitar
+306	Iconos de herramientas de compilación
+307	El icono que aparece en el notch mientras esa herramienta compila.
+308	Apariencia
+309	Tamaño
+310	Grande
+311	Abrir el notch
+312	Pasar el puntero
+313	Clic
+314	Fondo
+315	Color inicial
+316	Color final
+317	Movimiento
+318	Estilo de aviso
+319	Módulos
+320	{0} activados
+321	Sonido y vibración
+322	Sonido
+323	Vibración del trackpad
+324	Notificaciones del sistema
+325	Notch en la pantalla bloqueada
+326	Pantalla bloqueada del equipo
+327	Avisar al terminar si duró más de
+328	todas las tareas
+329	{0} s
+330	Avisar del límite de IA al
+331	Iconos del notch
+332	Toca dónde debe ir. Vuelve a tocar el mismo icono para cancelar.
+333	Arrastra un icono para cambiarlo de sitio, tócalo para moverlo, cambiarlo o quitarlo. Hasta {0} por lado{1}
+334	, Pro permite 4.
+335	Mover
+336	Cambiar icono
+337	Quitar
+338	lado derecho
+339	lado izquierdo
