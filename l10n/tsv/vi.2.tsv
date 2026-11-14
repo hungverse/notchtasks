@@ -1,0 +1,349 @@
+338	Thêm icon bên phải
+339	Thêm icon bên trái
+340	Thêm icon: cần Pro
+341	Ảnh động của bạn
+342	Ảnh của bạn
+343	Biểu tượng
+344	Chủ đề {0}
+345	Màu nhấn
+346	Tự chọn
+347	Kéo để đổi thứ tự.
+348	{0} icon động · Miễn phí
+349	Chạm một icon để đưa lên notch.
+350	Chọn icon
+351	Ghép với máy tính để dùng icon này trên notch.
+352	Dùng icon này trên notch.
+353	Chưa kết nối được App Store. Thử lại sau.
+354	App Store không xác nhận được giao dịch này.
+355	Giao dịch đang chờ duyệt. Bạn sẽ có ngay khi được duyệt.
+356	Simulator không chặn app thật.
+357	Chưa được cấp quyền. Hãy đăng nhập iCloud trong Cài đặt.
+358	Chưa được cấp quyền chặn app.
+359	Chưa hẹn được giờ mở lại. Mở app sau phiên để mở các app đã chặn.
+360	Chặn app khác khi tập trung
+361	Đổi được sau khi hết phiên.
+362	Chỉ mở được app bạn cho phép.
+363	Chọn app được dùng
+364	Đang cho phép {0} mục
+365	Trang chủ
+366	Chưa bật
+367	Mở để duyệt
+368	Đang đăng ký…
+369	Đang tắt: bật trong Cài đặt
+370	Chưa bật được, thử lại sau
+371	Đang bật…
+372	Lỗi: FCM không cấp token
+373	Đã bật
+374	{0} XP · còn {1} XP tới cấp {2}
+375	Hôm nay
+376	Chạm để xem trước
+377	Chưa có
+378	, xem trước
+379	Mở khoá theo cấp
+380	Theo cấp cao nhất: {0}
+381	Giải thích: {0}
+382	Cấp {0} · đã mở
+383	Mở ở cấp {0}
+384	Xem thử báo cáo
+385	Bé
+386	Cấp 5
+387	Cấp 10
+388	Cấp {0} · {1}
+389	Chưa có · xem trước
+390	Giai đoạn
+391	Đang chọn
+392	Chọn {0}
+393	Mua gói Thú cưng · {0}
+394	Kết nối từ xa
+395	Dùng ở bất cứ đâu, không cần chung Wi‑Fi
+396	Trả lời ngay trên thông báo
+397	Cho phép hoặc từ chối ngay, không cần mở app
+398	Agent và build trên màn hình khoá và Dynamic Island
+399	Thông báo build và CI
+400	Biết ngay khi build xong hoặc lỗi
+401	Nhiều thiết bị
+402	Ghép nhiều điện thoại với cùng một máy tính
+403	Thêm icon trên notch
+404	Tối đa 4 icon mỗi bên
+405	Máy tính của bạn, ở bất cứ đâu.
+406	Dùng thử 7 ngày miễn phí
+407	rồi {0}{1}
+408	Dùng chung Wi‑Fi vẫn miễn phí. Mua một lần, dùng cho mọi thiết bị đã ghép.
+409	Đóng
+410	7 ngày miễn phí
+411	Trả một lần, dùng mãi
+412	Ếch, gấu trúc, thỏ và cú
+413	Rảnh
+414	Đang chạy
+415	Lỗi
+416	Cáo
+417	No
+418	Sức
+419	{0} {1} phần trăm
+420	Cấp {0}, {1} phần trăm tới cấp sau
+421	Xem trước notch
+422	{0} việc đang chạy
+423	Quay lại tập trung
+424	Mở lại lúc {0}
+425	Đang trong giờ tập trung
+426	{0}. Tập trung xong {1} được thêm XP (đang cấp {2}).
+427	Thú cưng của bạn, vui buồn theo ngày làm việc.
+428	Bắt đầu tập trung 25 hoặc 50 phút.
+429	Vào phiên {0}/{1}
+430	Kết thúc
+431	NGHIÊM
+432	Không dừng được
+433	CHẾ ĐỘ NGHIÊM
+434	Không dừng được tới khi hết giờ
+435	Xong rồi!
+436	{0} phút tập trung · +{1} XP
+437	Nghiêm · không dừng được
+438	Tiếp theo: phiên {0}
+439	Tổng quan máy tính
+440	Việc chờ bạn duyệt, agent và build trên máy tính.
+441	Claude cần bạn duyệt
+442	và {0} câu khác
+443	đang chờ bạn
+444	Mở app để duyệt
+445	Mở NotchTasks để ghép máy tính
+446	{0} chờ duyệt
+447	đang chờ bạn duyệt
+448	Mọi agent đang nghỉ
+449	{0} chờ
+450	Duyệt
+451	Đang build
+452	Agent đang chờ bạn
+453	Mở NotchTasks để xem yêu cầu.
+454	Mở app để chọn câu trả lời
+455	Duyệt trong app
+456	{0} agent đang chạy
+457	Agent đang chạy
+458	Những gì notch theo dõi. Chỉ cái đang làm việc mới hiện lên notch.
+459	Sửa
+460	 (đã thêm)
+461	Ứng dụng đang mở
+462	Chọn ứng dụng khác…
+463	Tự nhập tiến trình…
+464	Thêm mục theo dõi
+465	Chọn agent, ứng dụng đang mở, hoặc nhập tên tiến trình.
+466	Trả lời agent trên notch
+467	Khi agent hỏi, notch hiện sẵn nút trả lời.
+468	Sẵn sàng
+469	Không sửa được cấu hình {0}: {1}
+470	Có hiệu lực từ lần mở agent tiếp theo.
+471	Duyệt lệnh, sửa file, trả lời câu hỏi
+472	Duyệt lệnh, sửa file
+473	Từ chối lệnh. Cho phép chỉ khi Cursor đang tự chạy lệnh
+474	Duyệt lệnh, sửa file, truy cập web
+475	Mục theo dõi
+476	Tên hiển thị
+477	Hiện trong
+478	Đổi…
+479	{0} được theo dõi theo từng phiên làm việc, không cần chỉnh gì thêm.
+480	Tên tiến trình
+481	Dòng lệnh có chứa
+482	tuỳ chọn, vd: gemini-cli
+483	Nhận diện
+484	Tên tiến trình, như trong Activity Monitor.
+485	Mỗi dòng trên notch là
+486	Mỗi lần chạy
+487	Mỗi lệnh con (runner, worker)
+488	Đang làm việc khi CPU trên
+489	Tăng nếu hiện cả lúc rảnh, giảm nếu bỏ sót.
+490	Ứng dụng chưa mở.
+491	Chưa thấy. Mở công cụ rồi bấm Kiểm tra lại.
+492	Đang khớp: {0}
+493	Kiểm tra lại
+494	Thêm
+495	Lưu
+496	Hiện tất cả công cụ
+497	Chưa thấy lần build nào. Bật "Hiện tất cả" để đặt biểu tượng trước.
+498	Không cần thêm: công cụ nào chạy là hiện. Bấm một công cụ để đổi biểu tượng.
+499	Đã đổi
+500	Model chạy trên máy
+501	Đã có mạng lại
+502	Wi‑Fi đã kết nối
+503	Đã kết nối
+504	Mất kết nối mạng
+505	Kiểm tra Wi‑Fi hoặc dây mạng
+506	VPN đã bật
+507	VPN đã tắt
+508	Đã tải xong
+509	Mở nơi lưu
+510	Ổ đĩa sắp đầy
+511	Còn %.1f GB trống
+512	Dọn ổ đĩa
+513	Máy đang rất nóng
+514	Máy đang nóng
+515	{0} đang chạy nặng
+516	Nên đóng bớt ứng dụng nặng
+517	Xem ứng dụng
+518	Đang gọi
+519	Đã kết thúc
+520	Micro đang bật
+521	Camera đang bật
+522	Không tắt được mic
+523	Hãy dùng nút trong {0}
+524	Chưa nạp model
+525	Đã nạp 
+526	Thêm vào khay
+527	Đã bật điều khiển {0}
+528	Giờ notch điều khiển được nhạc trong tab
+529	CI lỗi: {0}
+530	Xem log
+531	CI đạt: {0}
+532	Đang làm việc · {0}
+533	Đang chờ
+534	CI đạt: 
+535	CI lỗi: 
+536	Đang mở
+537	{0} đã hết giới hạn {1}
+538	{0} đã dùng {1}% giới hạn {2}
+539	Chờ đến {0} (còn {1})
+540	Đặt lại lúc {0}
+541	{0} đã kết nối
+542	{0} đã ngắt kết nối
+543	Pin {0} yếu
+544	Đang sạc
+545	Đã rút sạc
+546	Pin yếu
+547	Còn {0}%
+548	Lúc 
+549	Hết giờ
+550	Màn hình chính
+551	Biểu tượng luôn hiện trên notch thu nhỏ.
+552	Màn hình khoá
+553	Chỉ để xem: không mở rộng, không bấm được.
+554	Như màn hình chính
+555	Riêng
+556	Báo khi mở khoá sai
+557	Notch rung đỏ khi sai mật khẩu hoặc vân tay. Mở máy xong sẽ báo có mấy lần sai.
+558	Trái
+559	Phải
+560	Bấm + để thêm, bấm để sửa, kéo để đổi chỗ. Mỗi bên tối đa {0}{1}
+561	Thêm từ Kho biểu tượng
+562	Đồng bộ chuyển động
+563	Cho mọi biểu tượng động chạy lại từ đầu cùng lúc
+564	Biểu tượng cố định
+565	Bên phải notch
+566	Bên trái notch
+567	Hơn 8.000 biểu tượng của Apple
+568	Vài ký tự hoặc emoji
+569	Nhân vật chuyển động, GIF
+570	Gõ tối đa 8 ký tự
+571	Chọn nhanh
+572	Kéo ảnh khác vào đây
+573	Kéo ảnh vào đây
+574	Chọn ảnh…
+575	Mở Kho biểu tượng
+576	GIF hoặc spritesheet của bạn…
+577	{0}/giây
+578	PNG, JPG, HEIC… Ảnh vuông trông đẹp nhất.
+579	Hình dạng
+580	Tròn
+581	Vuông
+582	Viền
+583	Màu chữ
+584	Màu biểu tượng
+585	Xoá biểu tượng
+586	Dùng biểu tượng mặc định
+587	Không nền
+588	Màu khác
+589	Gợi ý
+590	Tất cả
+591	Liên lạc
+592	Thời tiết
+593	Bản đồ
+594	Đồ vật
+595	Ảnh
+596	Trò chơi
+597	Đi lại
+598	Trợ năng
+599	Con người
+600	Thể thao
+601	Thiên nhiên
+602	Chỉnh sửa
+603	Văn bản
+604	Đa phương tiện
+605	Bàn phím
+606	Mua bán
+607	Thời gian
+608	Sức khoẻ
+609	Hình
+610	Mũi tên
+611	Số, chữ
+612	Toán
+613	Tìm bằng tiếng Anh: star, cloud, cat, hammer…
+614	{0} · {1} biểu tượng
+615	{0} kết quả
+616	Tìm
+617	Không có biểu tượng nào khớp “{0}”.
+618	Gói của cộng đồng: sắp có.
+619	Đang dùng
+620	Biểu tượng cố định trên notch
+621	Đặt cho ứng dụng đang theo dõi
+622	Đặt cho công cụ build
+623	đến 
+624	Sự kiện
+625	Tổng quan
+626	Theo dõi
+627	Ghép nối
+628	Biểu tượng & khoá
+629	Kho biểu tượng
+630	Hành vi
+631	Quyền
+632	Notch hiện những gì đang chạy, và im lặng khi không có gì.
+633	Lỗi CI
+634	Xem hướng dẫn
+635	Kéo để đổi thứ tự trên notch.
+636	Vị trí khi thu gọn
+637	Màu
+638	Cần quyền {0}
+639	Về màu mặc định
+640	Thử thông báo
+641	Kiểu
+642	Màu tự chọn
+643	Xuất…
+644	Nhập…
+645	Sao lưu cấu hình
+646	Toàn bộ tuỳ chỉnh trong một file .json.
+647	Màn hình này có notch: notch ôm sát camera.
+648	Màn hình này không có notch: hiện dạng Dynamic Island nổi.
+649	Tác vụ đã xong
+650	Âm lượng
+651	Gói âm thanh
+652	Sao lưu, chia sẻ
+653	Xuất gói…
+654	Nhập gói…
+655	Âm thanh giữ riêng, đổi giao diện không mất. Xuất gói để mang sang máy khác.
+656	Âm thanh NotchTasks.notchsounds
+657	Không xuất được gói âm thanh
+658	Chọn file gói âm thanh (.notchsounds)
+659	Không nhập được gói âm thanh
+660	Cách mở
+661	Độ trễ {0} ms
+662	Rung phản hồi
+663	CPU và RAM khi mở rộng
+664	Báo xong khi chạy từ {0} giây
+665	Cảnh báo giới hạn ở {0}%
+666	Khác
+667	Biểu tượng trên thanh menu
+668	Chỉ cấp quyền cho tính năng bạn dùng. Tắt hẳn một tính năng ở trang Mô-đun.
+669	Làm mới
+670	Một số quyền chỉ kiểm tra được khi ứng dụng liên quan đang mở.
+671	Thu hồi
+672	Đặt lại
+673	Xoá mục cũ của NotchTasks trong Cài đặt rồi xin lại
+674	Mở Cài đặt
+675	Mở ứng dụng
+676	Không
+677	Chọn file của bạn…
+678	Nghe thử
+679	Không tạo được mã ghép: {0}
+680	Điện thoại
+681	Không gửi được sang điện thoại: {0}
+682	Mất kết nối với điện thoại, đang thử lại…
+683	Trả lời agent và xem việc đang chạy ngay trên điện thoại. Dữ liệu được mã hoá giữa các thiết bị.
+684	Mở NotchTasks trên điện thoại → Ghép với máy tính, rồi quét mã này.
+685	Ai có mã này đều đọc được câu hỏi của agent: đừng chia sẻ.
+686	Sao chép mã

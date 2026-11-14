@@ -75,12 +75,12 @@ struct OnboardingView: View {
                             .frame(width: i == page ? 18 : 7, height: 7)
                     }
                 }
-                Text(L("Bước {0}/{1}", page + 1, lastPage + 1)).font(.caption).foregroundStyle(.secondary).padding(.leading, 6)
+                Text(L("Step {0}/{1}", page + 1, lastPage + 1)).font(.caption).foregroundStyle(.secondary).padding(.leading, 6)
                 Spacer()
-                Button(L("Bỏ qua")) { done() }.buttonStyle(.borderless).foregroundStyle(.secondary)
+                Button(L("Skip")) { done() }.buttonStyle(.borderless).foregroundStyle(.secondary)
                     .keyboardShortcut(.cancelAction)
-                if page > 0 { Button(L("Quay lại")) { withAnimation(.snappy) { page -= 1 } } }
-                Button(page == lastPage ? L("Cho tôi xem") : page == 4 ? L("Để sau") : L("Tiếp")) {
+                if page > 0 { Button(L("Back")) { withAnimation(.snappy) { page -= 1 } } }
+                Button(page == lastPage ? L("Show me") : page == 4 ? L("Later") : L("Next")) {
                     if page == lastPage { done(.notch) } else { withAnimation(.snappy) { page += 1 } }
                 }
                 .buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction)
@@ -110,17 +110,17 @@ struct OnboardingView: View {
     var welcome: some View {
         VStack(spacing: 20) {
             NotchPreview(model: model).frame(width: 360)
-            Text(L("Chào mừng đến NotchTasks")).font(.title2.bold())
-            Text(L("Notch hiện những gì đang chạy, và im lặng khi không có gì."))
+            Text(L("Welcome to NotchTasks")).font(.title2.bold())
+            Text(L("The notch shows what's running, and stays quiet when nothing is."))
                 .multilineTextAlignment(.center).foregroundStyle(.secondary)
-            Label(L("Nhìn lên mép trên màn hình: đó là notch của bạn."), systemImage: "arrow.up")
+            Label(L("Look at the top edge of the screen: that is your notch."), systemImage: "arrow.up")
                 .font(.callout).settingsCard()
         }.frame(maxWidth: .infinity)
     }
 
     var modules: some View {
         VStack(alignment: .leading, spacing: 10) {
-            header(L("Hiện gì trên notch"), L("Bấm để bật hoặc tắt. Đổi lại bất cứ lúc nào trong Bảng điều khiển."))
+            header(L("What the notch shows"), L("Click to turn on or off. Change it anytime in the Control Panel."))
             ForEach(ModuleID.groups, id: \.title) { group in
                 VStack(alignment: .leading, spacing: 4) {
                     Text(group.title.uppercased()).font(.caption.weight(.semibold)).foregroundStyle(.secondary)
@@ -131,7 +131,7 @@ struct OnboardingView: View {
             }
             HStack(spacing: 8) {
                 Image(systemName: "fan.fill").frame(width: 22)
-                Text(L("Quạt & nhiệt độ")).font(.caption.weight(.semibold))
+                Text(L("Fans & temperature")).font(.caption.weight(.semibold))
                 Spacer()
                 if !Requirement.fan.met(on: Requirement.current) {
                     Text(Requirement.fan.label).font(.system(size: 9)).foregroundStyle(.secondary)
@@ -146,7 +146,7 @@ struct OnboardingView: View {
                                          }))
                     .labelsHidden().toggleStyle(.switch).controlSize(.mini)
                     .disabled(!Requirement.fan.met(on: Requirement.current))
-                    .accessibilityLabel(L("Quạt & nhiệt độ"))
+                    .accessibilityLabel(L("Fans & temperature"))
             }.settingsCard(padding: 8)
         }
     }
@@ -172,18 +172,18 @@ struct OnboardingView: View {
 
     var agents: some View {
         VStack(alignment: .leading, spacing: 12) {
-            header(L("Trả lời agent trên notch"), L("Mỗi công tắc thêm một mục vào cấu hình agent và sao lưu bản cũ. Có hiệu lực từ phiên mở sau."))
+            header(L("Answer agents on the notch"), L("Each switch adds one entry to the agent config and backs up the old file. It applies to new sessions."))
             if foundAgents.isEmpty {
-                Text(L("Chưa thấy AI agent nào. Thêm sau ở trang Theo dõi.")).foregroundStyle(.secondary).settingsCard()
+                Text(L("No AI agents found yet. Add them later on the Watching page.")).foregroundStyle(.secondary).settingsCard()
             } else {
                 ForEach(foundAgents) { kind in
                     HStack(spacing: 12) {
                         if let item = kind.item(in: model.items) { ItemIcon(item: item, size: 26) }
                         Text(kind.name).font(.body.weight(.medium))
                         Spacer()
-                        Toggle(L("Trả lời agent trên notch"), isOn: Binding(get: { asksOn[kind] ?? false }, set: { on in
+                        Toggle(L("Answer agents on the notch"), isOn: Binding(get: { asksOn[kind] ?? false }, set: { on in
                             do { try AgentAsks.setInstalled(on, kind); asksError = nil }
-                            catch { asksError = L("Không sửa được cấu hình {0}: {1}", kind.name, error.localizedDescription) }
+                            catch { asksError = L("Couldn't edit {0}'s settings: {1}", kind.name, error.localizedDescription) }
                             asksOn[kind] = AgentAsks.installed(kind)
                             if on, asksOn[kind] == true, let setup = kind.setupStep { AgentAsks.openInTerminal(setup.command) }
                         })).toggleStyle(.switch).controlSize(.small)
@@ -197,10 +197,10 @@ struct OnboardingView: View {
 
     var perms: some View {
         VStack(alignment: .leading, spacing: 12) {
-            header(L("Quyền"), L("Chỉ những gì mô-đun đã chọn cần. Có thể bỏ qua."))
+            header(L("Permissions"), L("Only what the chosen modules need. You can skip this."))
             let shown = permissions.items.filter { OnboardingGuide.needs($0, modules: chosenModules, notifications: settings.systemNotifications) }
-            if permissions.items.isEmpty { Text(L("Đang kiểm tra…")).foregroundStyle(.secondary).settingsCard() }
-            else if shown.isEmpty { Text(L("Chưa cần cấp quyền nào.")).foregroundStyle(.secondary).settingsCard() }
+            if permissions.items.isEmpty { Text(L("Checking…")).foregroundStyle(.secondary).settingsCard() }
+            else if shown.isEmpty { Text(L("No permissions needed yet.")).foregroundStyle(.secondary).settingsCard() }
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
                 ForEach(shown) { item in
                     HStack(spacing: 8) {
@@ -212,7 +212,7 @@ struct OnboardingView: View {
                         Spacer(minLength: 0)
                         if item.state == .checking { Text(item.state.label).font(.caption).foregroundStyle(.secondary) }
                         else if item.state == .granted { Image(systemName: "checkmark.circle.fill").foregroundStyle(.green) }
-                        else { Button(item.state == .denied ? L("Mở Cài đặt") : item.state == .needsApp ? L("Mở ứng dụng") : L("Cho phép")) {
+                        else { Button(item.state == .denied ? L("Open Settings") : item.state == .needsApp ? L("Open app") : L("Allow")) {
                             permissions.request(item)
                         }.controlSize(.mini) }
                     }.settingsCard(padding: 8)
@@ -223,17 +223,17 @@ struct OnboardingView: View {
 
     var phone: some View {
         VStack(alignment: .leading, spacing: 16) {
-            header(L("Điện thoại (tuỳ chọn)"), L("Ghép điện thoại để trả lời agent từ màn hình khoá khi rời máy tính."))
-            Button(L("Mở Ghép nối")) { done(.phone) }.buttonStyle(.bordered)
+            header(L("Phone (optional)"), L("Pair your phone to answer agents from the lock screen when away from your computer."))
+            Button(L("Open Pairing")) { done(.phone) }.buttonStyle(.bordered)
         }
     }
 
     var ready: some View {
         VStack(alignment: .leading, spacing: 12) {
-            header(L("Sẵn sàng rồi"), L("Ba điều cần nhớ:"))
-            step(["cursorarrow.rays"], L("Mở notch"), L("Trỏ chuột vào notch ở mép trên màn hình."))
-            step(["gearshape", "power"], L("Bảng điều khiển"), L("Nút Bảng điều khiển và Thoát ở góc dưới bên phải khi notch mở."))
-            step(["menubar.rectangle"], L("Biểu tượng trên thanh menu"), L("Biểu tượng trên thanh menu cũng mở Bảng điều khiển khi được bật."))
+            header(L("You're all set"), L("Three things to remember:"))
+            step(["cursorarrow.rays"], L("Opening the notch"), L("Point at the notch at the top of the screen."))
+            step(["gearshape", "power"], L("Control Panel"), L("The Control Panel and Quit buttons are at the bottom right of the open notch."))
+            step(["menubar.rectangle"], L("Menu bar icon"), L("The menu bar icon also opens the Control Panel when enabled."))
         }
     }
 

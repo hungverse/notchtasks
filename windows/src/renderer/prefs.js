@@ -11,26 +11,26 @@
 
   // Sidebar, in the Mac's order. Fans, permissions and the lock screen are Mac-only and not listed.
   const PANES = [
-    { id: 'overview', title: 'Tổng quan', icon: 'layout-grid' },
-    { id: 'modules', title: 'Mô-đun', icon: 'puzzle' },
-    { id: 'agents', title: 'Theo dõi', icon: 'eye' },
-    { id: 'phone', title: 'Ghép nối', icon: 'link' },
-    { id: 'appearance', title: 'Giao diện', icon: 'paintbrush' },
-    { id: 'badges', title: 'Biểu tượng', icon: 'star' },
-    { id: 'store', title: 'Kho biểu tượng', icon: 'sparkles' },
-    { id: 'sounds', title: 'Âm thanh', icon: 'volume-2' },
-    { id: 'behavior', title: 'Hành vi', icon: 'hand' },
+    { id: 'overview', title: 'Overview', icon: 'layout-grid' },
+    { id: 'modules', title: 'Modules', icon: 'puzzle' },
+    { id: 'agents', title: 'Watching', icon: 'eye' },
+    { id: 'phone', title: 'Pairing', icon: 'link' },
+    { id: 'appearance', title: 'Appearance', icon: 'paintbrush' },
+    { id: 'badges', title: 'Symbol', icon: 'star' },
+    { id: 'store', title: 'Icon Library', icon: 'sparkles' },
+    { id: 'sounds', title: 'Sound', icon: 'volume-2' },
+    { id: 'behavior', title: 'Behavior', icon: 'hand' },
   ];
   const AGENT_NOTES = {
-    claude: 'Duyệt lệnh, sửa file, trả lời câu hỏi', gemini: 'Duyệt lệnh, sửa file, trả lời câu hỏi',
-    antigravity: 'Duyệt lệnh, sửa file, trả lời câu hỏi', codex: 'Duyệt lệnh, sửa file',
-    cursor: 'Từ chối lệnh. Cho phép chỉ khi Cursor đang tự chạy lệnh', opencode: 'Duyệt lệnh, sửa file, truy cập web',
+    claude: 'Review commands, file edits, answer questions', gemini: 'Review commands, file edits, answer questions',
+    antigravity: 'Review commands, file edits, answer questions', codex: 'Review commands, file edits',
+    cursor: 'Denies commands. Allows only while Cursor runs commands on its own', opencode: 'Review commands, file edits, web access',
   };
-  const PLACE_LABEL = { auto: 'Tự động', left: 'Bên trái', right: 'Bên phải' };
-  const BG_LABEL = { black: 'Đen', glass: 'Kính mờ', gradient: 'Gradient', glow: 'Viền phát sáng' };
-  const TOAST_LABEL = { island: 'Đảo', compact: 'Gọn', card: 'Thẻ nổi', banner: 'Dải ngang' };
-  const TOAST_BLURB = { island: 'Trượt xuống từ notch.', compact: 'Nằm gọn trên notch.', card: 'Thẻ nổi dưới notch.', banner: 'Rộng, chữ lớn.' };
-  const MOTION_LABEL = { smooth: 'Mượt', bouncy: 'Nảy', snappy: 'Nhanh', reduced: 'Tối thiểu' };
+  const PLACE_LABEL = { auto: 'Automatic', left: 'Left side', right: 'Right side' };
+  const BG_LABEL = { black: 'Black', glass: 'Frosted glass', gradient: 'Gradient', glow: 'Glowing edge' };
+  const TOAST_LABEL = { island: 'Island', compact: 'Compact', card: 'Floating card', banner: 'Banner' };
+  const TOAST_BLURB = { island: 'Slides down from the notch.', compact: 'Fits inside the notch.', card: 'A card floating below the notch.', banner: 'Wide, large text.' };
+  const MOTION_LABEL = { smooth: 'Smooth', bouncy: 'Bouncy', snappy: 'Nhanh', reduced: 'Minimal' };
   const THEME_ID = (t) => t.id;
 
   let state = null;
@@ -131,20 +131,20 @@
       h('div', { class: 'hero' },
         wall(NotchPreview(s, live, {})),
         h('div', { class: 'hero-text' }, h('div', { class: 'hero-t' }, 'NotchTasks'),
-          h('div', { class: 'dim' }, L('Notch hiện những gì đang chạy, và im lặng khi không có gì.')))),
-      h('div', { class: 'stats' }, stat('zap', live.working, L('Đang chạy')), stat('octagon-x', live.alerts, L('Lỗi CI')),
-        stat('puzzle', `${enabled}/${total}`, L('Mô-đun'))),
-      s.onboardingDone && steps.length ? h('div', { class: 'block' }, h('div', { class: 'sec-t' }, L('Tiếp theo')),
+          h('div', { class: 'dim' }, L('The notch shows what\'s running, and stays quiet when nothing is.')))),
+      h('div', { class: 'stats' }, stat('zap', live.working, L('Running')), stat('octagon-x', live.alerts, L('CI errors')),
+        stat('puzzle', `${enabled}/${total}`, L('Modules'))),
+      s.onboardingDone && steps.length ? h('div', { class: 'block' }, h('div', { class: 'sec-t' }, L('Next steps')),
         steps.map((st) => h('div', { class: 'step' },
           icon(st.kind === 'agent' ? 'sparkles' : 'smartphone', 16, 'dim'),
-          h('div', { class: 'step-t' }, st.kind === 'agent' ? `${st.agent.name} · ${L('Trả lời agent trên notch')}` : L('Ghép nối')),
-          button(st.kind === 'agent' ? L('Bật') : L('Ghép nối'), () => go(st.kind === 'agent' ? 'agents' : 'phone'), { small: true })))) : null,
-      h('div', { class: 'sec-t' }, L('Mô-đun')),
+          h('div', { class: 'step-t' }, st.kind === 'agent' ? `${st.agent.name} · ${L('Answer agents on the notch')}` : L('Pairing')),
+          button(st.kind === 'agent' ? L('On') : L('Pairing'), () => go(st.kind === 'agent' ? 'agents' : 'phone'), { small: true })))) : null,
+      h('div', { class: 'sec-t' }, L('Modules')),
       CAT.moduleGroups.map((g) => h('div', { class: 'block' }, h('div', { class: 'grp-t' }, L(g.title)),
         h('div', { class: 'grid2' }, g.ids.map((id) => moduleCell(id))))),
       h('div', { class: 'row gap wrap' },
-        button(L('Xem hướng dẫn'), () => nt.act('openOnboarding')),
-        button(L('Báo lỗi'), openReport)),
+        button(L('See the guide'), () => nt.act('openOnboarding')),
+        button(L('Report a problem'), openReport)),
     ];
   }
 
@@ -176,15 +176,15 @@
     };
     return [
       h('div', { class: 'hint-row' },
-        h('span', { class: 'dim' }, L('Kéo để đổi thứ tự trên notch.')),
-        h('span', { class: 'cols' }, h('span', { class: 'col w-pl' }, L('Vị trí khi thu gọn')), h('span', { class: 'col w-col' }, L('Màu')),
-          h('span', { class: 'col w-tg' }, L('Bật')))),
+        h('span', { class: 'dim' }, L('Drag to reorder on the notch.')),
+        h('span', { class: 'cols' }, h('span', { class: 'col w-pl' }, L('Position when collapsed')), h('span', { class: 'col w-col' }, L('Color')),
+          h('span', { class: 'col w-tg' }, L('On')))),
       h('div', { class: 'list' }, s.modules.map((id) => {
         const m = CAT.modules.find((x) => x.id === id);
         if (!m) return null;
         const on = !s.disabled.includes(id);
         const color = s.moduleColors[id] || '#808080';
-        const colorInput = h('input', { type: 'color', class: 'color', value: color, title: L('Màu'),
+        const colorInput = h('input', { type: 'color', class: 'color', value: color, title: L('Color'),
           oncontextmenu: (e) => { e.preventDefault(); const map = { ...s.moduleColors }; delete map[id]; set('moduleColors', map); },
           onchange: (e) => set('moduleColors', { ...s.moduleColors, [id]: e.target.value.toUpperCase() }) });
         return h('div', { class: 'mrow', draggable: 'true',
@@ -195,7 +195,7 @@
         tileIcon(m.icon, on),
         h('span', { class: 'mtext' }, h('span', { class: `mt${on ? '' : ' off'}` }, L(m.title)), h('span', { class: 'ms dim' }, L(m.blurb))),
         select(['auto', 'left', 'right'].map((v) => ({ value: v, label: L(PLACE_LABEL[v]) })), s.placements[id] || 'auto',
-          (v) => set('placements', { ...s.placements, [id]: v }), L('Vị trí khi thu gọn')),
+          (v) => set('placements', { ...s.placements, [id]: v }), L('Position when collapsed')),
         colorInput,
         toggle(on, (v) => setModuleOn(id, v), L(m.title)));
       })),
@@ -224,18 +224,18 @@
 
   function addMenu(anchor) {
     const sections = CAT.presetGroups.map((g) => ({ title: L(g.title), items: g.items.map((p) => ({
-      label: p.name + (presetAdded(p) ? L(' (đã thêm)') : ''), disabled: presetAdded(p), onClick: () => addPreset(p) })) }));
-    sections.push({ title: L('Build & CI'), items: CAT.buildPresets.map((p) => ({ label: p.name + (presetAdded(p) ? L(' (đã thêm)') : ''),
+      label: p.name + (presetAdded(p) ? L(' (added)') : ''), disabled: presetAdded(p), onClick: () => addPreset(p) })) }));
+    sections.push({ title: L('Build & CI'), items: CAT.buildPresets.map((p) => ({ label: p.name + (presetAdded(p) ? L(' (added)') : ''),
       disabled: presetAdded(p), onClick: () => addPreset(p) })) });
-    sections.push({ title: L('Ứng dụng đang mở'), empty: L('Không có ứng dụng nào'), items: (state.running || []).map((r) => ({
+    sections.push({ title: L('Open apps'), empty: L('No apps'), items: (state.running || []).map((r) => ({
       label: r.name, onClick: () => setItems([...state.items, { id: crypto.randomUUID(), name: r.name, kind: 'app', bundleID: r.bundleID, enabled: true }]) })) });
     sections.push({ items: [
-      { label: L('Chọn ứng dụng khác…'), onClick: () => nt.act('pickApp') },
-      { label: L('Tự nhập tiến trình…'), onClick: () => openItemEditor(null) }] });
+      { label: L('Choose another app…'), onClick: () => nt.act('pickApp') },
+      { label: L('Enter a process…'), onClick: () => openItemEditor(null) }] });
     menu(anchor, sections);
   }
 
-  function agentNote(a) { return L(AGENT_NOTES[a.kind] || 'Duyệt lệnh, sửa file'); }
+  function agentNote(a) { return L(AGENT_NOTES[a.kind] || 'Review commands, file edits'); }
 
   function watch() {
     const s = S();
@@ -255,9 +255,9 @@
     grip(), itemIcon(item), h('div', { class: 'itext' }, h('div', { class: 'it' }, item.name),
       h('div', { class: 'is dim' }, (nt.itemIsBuild(item) ? L('Build & CI') : L('AI agent')) + ' · ' + nt.itemSummary(item))),
     h('span', { class: 'sp' }),
-    button(L('Sửa'), () => openItemEditor(item), { small: true }),
-    toggle(item.enabled, (v) => setItems(state.items.map((x) => (x.id === item.id ? { ...x, enabled: v } : x))), L('Bật')),
-    h('button', { class: 'icon-btn', type: 'button', title: L('Xoá'), 'aria-label': L('Xoá'),
+    button(L('Edit'), () => openItemEditor(item), { small: true }),
+    toggle(item.enabled, (v) => setItems(state.items.map((x) => (x.id === item.id ? { ...x, enabled: v } : x))), L('On')),
+    h('button', { class: 'icon-btn', type: 'button', title: L('Remove'), 'aria-label': L('Remove'),
       onclick: () => setItems(state.items.filter((x) => x.id !== item.id)) }, icon('trash-2', 14))));
 
     const agents = state.agents.map((a) => {
@@ -266,11 +266,11 @@
       return h('div', { class: `arow${a.present ? '' : ' absent'}` },
         icon('bot', 22, 'dim'),
         h('div', { class: 'itext' }, h('div', { class: 'it' }, a.name,
-          h('span', { class: `chip ${a.tested ? 'ok' : ''}` }, L(a.tested ? 'Đã kiểm tra' : 'Chưa kiểm tra'))),
-        h('div', { class: 'is dim' }, a.present ? agentNote(a) : L('Chưa thấy trên máy này'))),
+          h('span', { class: `chip ${a.tested ? 'ok' : ''}` }, L(a.tested ? 'Tested' : 'Not checked'))),
+        h('div', { class: 'is dim' }, a.present ? agentNote(a) : L('Not found on this computer'))),
         h('span', { class: 'sp' }),
         setup,
-        a.present && a.installed && !a.setup ? h('span', { class: 'ok-t' }, icon('circle-check', 14), L('Sẵn sàng')) : null,
+        a.present && a.installed && !a.setup ? h('span', { class: 'ok-t' }, icon('circle-check', 14), L('Ready')) : null,
         toggle(a.installed, (on) => {
           state = { ...state, agents: state.agents.map((x) => (x.kind === a.kind ? { ...x, installed: on } : x)) };
           nt.act(on ? 'installHook' : 'uninstallHook', a.kind);
@@ -279,14 +279,14 @@
     });
 
     return [
-      h('p', { class: 'dim lead' }, L('Những gì notch theo dõi. Chỉ cái đang làm việc mới hiện lên notch.')),
-      h('div', { class: 'list' }, itemRows.length ? itemRows : h('div', { class: 'empty dim' }, L('Chưa có mục nào.'))),
-      h('div', { class: 'row gap' }, button(L('Thêm mục theo dõi'), (e) => addMenu(e.currentTarget), { icon: 'circle-plus' }),
-        h('span', { class: 'dim small' }, L('Chọn agent, ứng dụng đang mở, hoặc nhập tên tiến trình.'))),
-      card(L('Trả lời agent trên notch'), L('Khi agent hỏi, notch hiện sẵn nút trả lời.'),
+      h('p', { class: 'dim lead' }, L('What the notch watches. Only what\'s working shows on the notch.')),
+      h('div', { class: 'list' }, itemRows.length ? itemRows : h('div', { class: 'empty dim' }, L('Nothing here yet.'))),
+      h('div', { class: 'row gap' }, button(L('Add item to watch'), (e) => addMenu(e.currentTarget), { icon: 'circle-plus' }),
+        h('span', { class: 'dim small' }, L('Choose an agent, an open app, or type a process name.'))),
+      card(L('Answer agents on the notch'), L('When an agent asks, the notch shows answer buttons.'),
         h('div', { class: 'list' }, agents),
         state.agentError ? h('div', { class: 'err' }, state.agentError) : null,
-        h('div', { class: 'dim small pt' }, L('Có hiệu lực từ lần mở agent tiếp theo.'))),
+        h('div', { class: 'dim small pt' }, L('Takes effect the next time the agent starts.'))),
       buildTools(),
     ];
   }
@@ -299,11 +299,11 @@
     const tools = showAllTools ? [...new Set([...s.seenTools, ...CAT.knownTools])] : s.seenTools;
     return card('Build & CI', null,
       h('div', { class: 'row between' }, h('span', { class: 'dim small' },
-        s.seenTools.length || showAllTools ? L('Không cần thêm: công cụ nào chạy là hiện. Bấm một công cụ để đổi biểu tượng.')
-          : L('Chưa thấy lần build nào. Bật "Hiện tất cả" để đặt biểu tượng trước.'))),
+        s.seenTools.length || showAllTools ? L('Nothing to add: any running tool shows up. Click a tool to change its icon.')
+          : L('No builds seen yet. Turn on "Show all" to set icons ahead of time.'))),
       h('div', { class: 'row between' }, h('span', { class: 'dim small' }, ''),
         h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: showAllTools,
-          onchange: (e) => { showAllTools = e.target.checked; render(); } }), L('Hiện tất cả công cụ'))),
+          onchange: (e) => { showAllTools = e.target.checked; render(); } }), L('Show all tools'))),
       h('div', { class: 'tools' }, tools.map((t) => {
         const custom = s.toolIcons[t];
         return h('button', { class: 'tool', type: 'button', onclick: () => openToolEditor(t) },
@@ -315,7 +315,7 @@
 
   function openToolEditor(tool) {
     const cur = S().toolIcons[tool] || { id: crypto.randomUUID(), symbol: 'hammer.fill', shape: 'rounded', border: false, right: false };
-    BadgeEditor({ badge: cur, title: L('Biểu tượng'), subtitle: tool,
+    BadgeEditor({ badge: cur, title: L('Symbol'), subtitle: tool,
       onChange: (b) => set('toolIcons', { ...S().toolIcons, [tool]: b }),
       onReset: () => { const map = { ...S().toolIcons }; delete map[tool]; set('toolIcons', map); } });
   }
@@ -332,56 +332,56 @@
       const clean = { ...it, name: it.name.trim(), process: (it.process || '').trim() };
       setItems(isNew ? [...state.items, clean] : state.items.map((x) => (x.id === clean.id ? clean : x)));
       dlg.close();
-    } }, isNew ? L('Thêm') : L('Lưu'));
+    } }, isNew ? L('Add') : L('Save'));
     const refresh = () => { save.disabled = !valid(); };
 
     function draw() {
-      const iconBtn = h('button', { class: 'icon-pick', type: 'button', title: L('Đổi biểu tượng'), onclick: () => {
+      const iconBtn = h('button', { class: 'icon-pick', type: 'button', title: L('Change icon'), onclick: () => {
         BadgeEditor({ badge: it.icon || { id: crypto.randomUUID(), symbol: itemSymbol(it), shape: 'rounded', border: false, right: false },
-          title: L('Biểu tượng'), subtitle: it.name || null,
+          title: L('Symbol'), subtitle: it.name || null,
           onChange: (b) => { it = { ...it, icon: b }; draw(); },
           onReset: () => { it = { ...it, icon: null }; draw(); } });
       } }, itemIcon(it, 30));
       const matches = state.matches && state.matches.id === it.id ? state.matches.rows : null;
       fill(body, [
-        h('div', { class: 'ie-head' }, iconBtn, h('div', { class: 'itext' }, h('div', { class: 'it' }, it.name || L(isNew ? 'Thêm mục theo dõi' : 'Mục theo dõi')),
+        h('div', { class: 'ie-head' }, iconBtn, h('div', { class: 'itext' }, h('div', { class: 'it' }, it.name || L(isNew ? 'Add item to watch' : 'Watched item')),
           h('div', { class: 'is dim' }, it.inBuild ? 'Build & CI' : 'AI agent'))),
-        h('label', { class: 'field' }, h('span', { class: 'field-l' }, L('Tên hiển thị')),
+        h('label', { class: 'field' }, h('span', { class: 'field-l' }, L('Display name')),
           h('input', { class: 'inp', value: it.name, placeholder: 'vd: My Agent', oninput: (e) => { it.name = e.target.value; refresh(); } })),
-        configurable ? h('div', { class: 'field' }, h('span', { class: 'field-l' }, L('Hiện trong')),
+        configurable ? h('div', { class: 'field' }, h('span', { class: 'field-l' }, L('Show in')),
           segmented([{ value: false, label: 'AI agent' }, { value: true, label: 'Build & CI' }], !!it.build,
             (v) => { it = { ...it, build: v }; draw(); })) : null,
         it.kind === 'process' ? h('div', { class: 'block' },
-          h('label', { class: 'field' }, h('span', { class: 'field-l' }, L('Tên tiến trình')),
+          h('label', { class: 'field' }, h('span', { class: 'field-l' }, L('Process name')),
             h('span', { class: 'row gap' }, h('input', { class: 'inp', value: it.process, placeholder: 'vd: node',
               oninput: (e) => { it.process = e.target.value; refresh(); } }))),
-          h('label', { class: 'field' }, h('span', { class: 'field-l' }, L('Dòng lệnh có chứa')),
-            h('input', { class: 'inp', value: it.args || '', placeholder: L('tuỳ chọn, vd: gemini-cli'),
+          h('label', { class: 'field' }, h('span', { class: 'field-l' }, L('Command line contains')),
+            h('input', { class: 'inp', value: it.args || '', placeholder: L('optional, e.g. gemini-cli'),
               oninput: (e) => { it.args = e.target.value || null; refresh(); } })),
-          h('div', { class: 'field' }, h('span', { class: 'field-l' }, L('Mỗi dòng trên notch là')),
-            segmented([{ value: false, label: L('Mỗi lần chạy') }, { value: true, label: L('Mỗi lệnh con (runner, worker)') }],
+          h('div', { class: 'field' }, h('span', { class: 'field-l' }, L('Each line on the notch is')),
+            segmented([{ value: false, label: L('Each run') }, { value: true, label: L('Each subprocess (runner, worker)') }],
               !!it.childTasks, (v) => { it = { ...it, childTasks: v }; draw(); }))) : null,
-        configurable ? h('div', { class: 'field' }, h('span', { class: 'field-l' }, L('Đang làm việc khi CPU trên')),
+        configurable ? h('div', { class: 'field' }, h('span', { class: 'field-l' }, L('Working when CPU is above')),
           slider(threshold(), 0.5, 50, 0.5, (v) => { it = { ...it, threshold: v }; }, null).el) : null,
-        it.kind === 'process' ? h('div', { class: 'field' }, h('span', { class: 'field-l' }, L('Đang khớp: {0}', matches ? matches.length : 0)),
+        it.kind === 'process' ? h('div', { class: 'field' }, h('span', { class: 'field-l' }, L('Matching: {0}', matches ? matches.length : 0)),
           h('div', { class: 'matches' }, matches && matches.length ? matches.map((m) => h('div', { class: 'mt-row' },
             h('div', { class: 'mono' }, `${m.name} · pid ${m.pid}`), h('div', { class: 'mono dim small' }, m.command))) : h('div', { class: 'dim small' },
-            L('Chưa thấy. Mở công cụ rồi bấm Kiểm tra lại.'))),
-          h('div', { class: 'row gap' }, button(L('Kiểm tra lại'), () => nt.act('checkItem', it), { small: true }))) : null]);
+            L('Not found. Open the tool, then click Check again.'))),
+          h('div', { class: 'row gap' }, button(L('Check again'), () => nt.act('checkItem', it), { small: true }))) : null]);
       refresh();
     }
     draw();
     const dlg = modal({ width: 520, title: null, body: h('div', { class: 'ie' }, body),
-      footer: [button(L('Huỷ'), () => dlg.close()), save] });
+      footer: [button(L('Cancel'), () => dlg.close()), save] });
     if (it.kind === 'process') nt.act('checkItem', it);
   }
 
   // ---- phone ----------------------------------------------------------------------------------------------------------
 
   function proStatus(until) {
-    if (!until || until <= Date.now()) return L('Chưa có Pro: một điện thoại, thông báo cơ bản');
-    if (until >= 30_000_000_000_000) return L('Pro trọn đời');
-    return L('Pro đến {0}', new Date(until).toLocaleDateString());
+    if (!until || until <= Date.now()) return L('No Pro: one phone, basic notifications');
+    if (until >= 30_000_000_000_000) return L('Pro lifetime');
+    return L('Pro until {0}', new Date(until).toLocaleDateString());
   }
 
   function qrBlock(url) {
@@ -399,31 +399,31 @@
     return [
       card(null, null,
         h('div', { class: 'pro-t' }, proStatus(sy.proUntil)),
-        h('div', { class: 'dim' }, L('Trả lời agent và xem việc đang chạy ngay trên điện thoại. Dữ liệu được mã hoá giữa các thiết bị.'))),
+        h('div', { class: 'dim' }, L('Answer agents and see what\'s running right on your phone. Data is encrypted between your devices.'))),
       !hasPhones ? card(null, null,
-        h('ol', { class: 'steps' }, h('li', {}, L('Cài NotchTasks trên điện thoại')), h('li', {}, L('Bấm Ghép thiết bị')),
-          h('li', {}, L('Quét mã QR bằng app hoặc Camera')))) : null,
+        h('ol', { class: 'steps' }, h('li', {}, L('Install NotchTasks on your phone')), h('li', {}, L('Tap Pair device')),
+          h('li', {}, L('Scan the QR code with the app or Camera')))) : null,
       pairing ? card(null, null,
         h('div', { class: 'pair' }, qrBlock(sy.url), h('div', { class: 'pair-text' },
-          h('div', {}, L('Mở NotchTasks trên điện thoại → Ghép với máy tính, rồi quét mã này.')),
-          h('div', { class: 'dim small' }, L('Mã này chỉ dùng cho các thiết bị của bạn.')),
-          h('div', { class: 'row gap wrap' }, button(L('Sao chép mã'), () => copy(sy.url), { small: true }),
-            hasPhones ? button(L('Ẩn mã'), () => { showPhoneCode = false; render(); }, { small: true }) : null)))) : null,
-      !pairing ? h('div', { class: 'row gap' }, button(sy.busy ? L('Đang tạo mã…') : (hasPhones ? L('Ghép thêm thiết bị…') : L('Ghép thiết bị…')),
+          h('div', {}, L('Open NotchTasks on your phone → Pair with computer, then scan this code.')),
+          h('div', { class: 'dim small' }, L('This code only works for your devices.')),
+          h('div', { class: 'row gap wrap' }, button(L('Copy code'), () => copy(sy.url), { small: true }),
+            hasPhones ? button(L('Hide code'), () => { showPhoneCode = false; render(); }, { small: true }) : null)))) : null,
+      !pairing ? h('div', { class: 'row gap' }, button(sy.busy ? L('Creating code…') : (hasPhones ? L('Pair another device…') : L('Pair device…')),
         () => { if (hasPhones) { showPhoneCode = true; render(); } if (!sy.url) nt.act('pair'); }, { primary: true, disabled: !!sy.busy })) : null,
       sy.problem ? h('div', { class: 'warn' }, sy.problem) : null,
-      h('div', { class: 'row gap' }, button(L('Báo lỗi'), openReport, { small: true })),
+      h('div', { class: 'row gap' }, button(L('Report a problem'), openReport, { small: true })),
       hasPhones ? group(
-        row(L('Nối trực tiếp khi cùng Wi‑Fi'), toggle(sy.lan, (v) => { state = { ...state, sync: { ...sy, lan: v } }; nt.act('setSyncOption', 'lan', v); render(); })),
-        row(L('Chỉ báo điện thoại khi tôi rời máy'), toggle(sy.onlyAway, (v) => { state = { ...state, sync: { ...sy, onlyAway: v } }; nt.act('setSyncOption', 'onlyAway', v); render(); })),
-        row(L('Đang nối'), h('span', { class: 'dim' }, sy.direct > 0 ? L('{0} thiết bị qua Wi‑Fi', sy.direct) : L('Qua Internet')))) : null,
-      hasPhones ? h('p', { class: 'dim small' }, L('Cùng Wi‑Fi thì điện thoại nhận ngay, khác mạng thì qua Internet. Khi bạn đang dùng máy này, điện thoại không reo.')) : null,
-      hasPhones ? card(L('Đã ghép'), L('Mọi thiết bị sẽ ngắt khỏi máy này. Ghép lại sẽ dùng mã mới.'),
+        row(L('Connect directly on the same Wi‑Fi'), toggle(sy.lan, (v) => { state = { ...state, sync: { ...sy, lan: v } }; nt.act('setSyncOption', 'lan', v); render(); })),
+        row(L('Only alert my phone when I\'m away'), toggle(sy.onlyAway, (v) => { state = { ...state, sync: { ...sy, onlyAway: v } }; nt.act('setSyncOption', 'onlyAway', v); render(); })),
+        row(L('Connecting…'), h('span', { class: 'dim' }, sy.direct > 0 ? L('{0} devices over Wi‑Fi', sy.direct) : L('Over the Internet')))) : null,
+      hasPhones ? h('p', { class: 'dim small' }, L('On the same Wi‑Fi your phone gets updates instantly; elsewhere, over the Internet. While you\'re using this computer, your phone stays quiet.')) : null,
+      hasPhones ? card(L('Paired'), L('Every device will disconnect from this computer. Pairing again uses a new code.'),
         h('div', { class: 'list' }, sy.phones.map((p) => h('div', { class: 'prow' }, icon('smartphone', 16, 'dim'), h('span', { class: 'it' }, p.name),
           h('span', { class: 'sp' }), p.pro ? h('span', { class: 'pro' }, 'Pro') : null,
-          h('button', { class: 'icon-btn', type: 'button', title: L('Huỷ ghép'), 'aria-label': L('Huỷ ghép'),
+          h('button', { class: 'icon-btn', type: 'button', title: L('Unpair'), 'aria-label': L('Unpair'),
             onclick: () => nt.act('unpair', p.uid) }, icon('x', 14))))),
-        h('div', { class: 'row gap' }, button(L('Huỷ ghép tất cả'), () => nt.act('unpairAll'), { danger: true, small: true }))) : null,
+        h('div', { class: 'row gap' }, button(L('Unpair all'), () => nt.act('unpairAll'), { danger: true, small: true }))) : null,
     ];
   }
 
@@ -454,24 +454,24 @@
     const s = S();
     return [
       h('div', { class: 'hero' }, wall(NotchPreview(s, state.live, {})), h('span', { class: 'sp' }),
-        button(L('Thử thông báo'), () => nt.act('testToast'), { primary: true, icon: 'bell-ring' })),
+        button(L('Test alert'), () => nt.act('testToast'), { primary: true, icon: 'bell-ring' })),
       h('div', { class: 'themes' }, CAT.themes.map(themeTile)),
-      card('Notch', isWin ? L('Trên máy tính này notch là viên thuốc nổi ở giữa đỉnh màn hình.') : null,
+      card('Notch', isWin ? L('On this computer, the notch is a pill floating at the top centre of the screen.') : null,
         group(
-          row(L('Nền'), select(CAT.backgrounds.map((v) => ({ value: v, label: L(BG_LABEL[v]) })), s.background, (v) => set('background', v))),
-          s.background === 'gradient' ? row(L('Màu trên'), colorInput(s.gradientA, (v) => set('gradientA', v))) : null,
-          s.background === 'gradient' ? row(L('Màu dưới'), colorInput(s.gradientB, (v) => set('gradientB', v))) : null,
-          row(L('Kích thước'), segmented([{ value: 'compact', label: L('Gọn') }, { value: 'regular', label: L('Lớn') }], s.size, (v) => set('size', v))),
-          row(L('Chuyển động'), segmented(CAT.motions.map((v) => ({ value: v, label: L(MOTION_LABEL[v]) })), s.motion, (v) => set('motion', v))))),
-      card(L('Thông báo'), L(TOAST_BLURB[s.toastStyle]),
-        group(row(L('Kiểu'), segmented(CAT.toastStyles.map((v) => ({ value: v, label: L(TOAST_LABEL[v]) })), s.toastStyle, (v) => set('toastStyle', v))))),
-      card(L('Màu'), null,
+          row(L('Background'), select(CAT.backgrounds.map((v) => ({ value: v, label: L(BG_LABEL[v]) })), s.background, (v) => set('background', v))),
+          s.background === 'gradient' ? row(L('Top color'), colorInput(s.gradientA, (v) => set('gradientA', v))) : null,
+          s.background === 'gradient' ? row(L('Bottom color'), colorInput(s.gradientB, (v) => set('gradientB', v))) : null,
+          row(L('Size'), segmented([{ value: 'compact', label: L('Compact') }, { value: 'regular', label: L('Large') }], s.size, (v) => set('size', v))),
+          row(L('Motion'), segmented(CAT.motions.map((v) => ({ value: v, label: L(MOTION_LABEL[v]) })), s.motion, (v) => set('motion', v))))),
+      card(L('Notifications'), L(TOAST_BLURB[s.toastStyle]),
+        group(row(L('Style'), segmented(CAT.toastStyles.map((v) => ({ value: v, label: L(TOAST_LABEL[v]) })), s.toastStyle, (v) => set('toastStyle', v))))),
+      card(L('Color'), null,
         group(
-          row(L('Màu nhấn'), select(CAT.accents.map((a) => ({ value: a.name, label: L(a.title) })), s.accent, (v) => set('accent', v))),
-          s.accent === 'custom' ? row(L('Màu tự chọn'), colorInput(s.customAccent, (v) => set('customAccent', v))) : null)),
-      card(L('Sao lưu cấu hình'), L('Toàn bộ tuỳ chỉnh trong một file .json.'),
-        h('div', { class: 'row gap' }, button(L('Xuất…'), () => nt.act('exportProfile'), { small: true }),
-          button(L('Nhập…'), () => nt.act('importProfile'), { small: true }))),
+          row(L('Accent color'), select(CAT.accents.map((a) => ({ value: a.name, label: L(a.title) })), s.accent, (v) => set('accent', v))),
+          s.accent === 'custom' ? row(L('Custom color'), colorInput(s.customAccent, (v) => set('customAccent', v))) : null)),
+      card(L('Back up settings'), L('All your customization in one .json file.'),
+        h('div', { class: 'row gap' }, button(L('Export…'), () => nt.act('exportProfile'), { small: true }),
+          button(L('Import…'), () => nt.act('importProfile'), { small: true }))),
     ];
   }
 
@@ -496,7 +496,7 @@
     const b = S().badges.find((x) => x.id === id);
     if (!b) return;
     const save = (nb) => set('badges', S().badges.map((x) => (x.id === nb.id ? nb : x)), { rerender: true });
-    BadgeEditor({ badge: b, title: L('Biểu tượng cố định'), subtitle: b.right ? L('Bên phải notch') : L('Bên trái notch'),
+    BadgeEditor({ badge: b, title: L('Pinned icon'), subtitle: b.right ? L('Right of the notch') : L('Left of the notch'),
       onChange: save, onDelete: () => set('badges', S().badges.filter((x) => x.id !== id)) });
   }
 
@@ -517,7 +517,7 @@
       onEdit: ({ id, right }) => { if (id) openBadge(id); else addBadge(right); },
       onStore: () => go('store'),
     });
-    return [card(L('Màn hình chính'), L('Biểu tượng luôn hiện trên notch thu nhỏ.'),
+    return [card(L('Main screen'), L('Icons always shown on the collapsed notch.'),
       screenStrip(s.badges), board)];
   }
 
@@ -529,22 +529,22 @@
       && (!q || L(x.title).toLowerCase().includes(q) || x.category.toLowerCase().includes(q)));
     const used = (id) => s.badges.some((b) => b.sprite === id) || state.items.some((i) => i.icon && i.icon.sprite === id)
       || Object.values(s.toolIcons).some((b) => b.sprite === id);
-    const search = h('input', { class: 'inp narrow', value: storeQuery, placeholder: L('Tìm'),
+    const search = h('input', { class: 'inp narrow', value: storeQuery, placeholder: L('Search'),
       oninput: (e) => { storeQuery = e.target.value; render(); } });
     return [
-      h('div', { class: 'store-head' }, h('div', { class: 'store-t' }, L('Có sẵn')),
-        h('span', { class: 'dim small' }, L('{0} biểu tượng động · Miễn phí', CAT.sprites.filter((x) => x.category !== 'pets').length)),
+      h('div', { class: 'store-head' }, h('div', { class: 'store-t' }, L('Available')),
+        h('span', { class: 'dim small' }, L('{0} animated icons · Free', CAT.sprites.filter((x) => x.category !== 'pets').length)),
         h('span', { class: 'sp' }), search,
-        h('button', { class: 'icon-btn', type: 'button', title: L('Cho mọi biểu tượng động chạy lại từ đầu cùng lúc'),
+        h('button', { class: 'icon-btn', type: 'button', title: L('Restart every animated icon at once'),
           onclick: () => syncSprites(document) }, icon('refresh-cw', 14))),
-      h('div', { class: 'chips' }, h('button', { class: `chip-b${storeCat === '' ? ' on' : ''}`, type: 'button', onclick: () => { storeCat = ''; render(); } }, L('Tất cả')),
+      h('div', { class: 'chips' }, h('button', { class: `chip-b${storeCat === '' ? ' on' : ''}`, type: 'button', onclick: () => { storeCat = ''; render(); } }, L('All')),
         cats.map((c) => h('button', { class: `chip-b${storeCat === c ? ' on' : ''}`, type: 'button', onclick: () => { storeCat = c; render(); } }, L(c)))),
       shown.length ? h('div', { class: 'sprite-tiles' }, shown.map((x) => h('button', {
         class: `stile${justAdded === x.id ? ' added' : ''}`, type: 'button', title: L(x.title),
         onclick: (e) => storeMenu(e.currentTarget, x) },
       h('span', { class: 'stile-art' }, spriteEl(nt.spriteURL(x.id), x.frames, x.fps, 40, x.pixel), used(x.id) ? h('span', { class: 'dot' }) : null),
-      h('span', { class: 'stile-t' }, L(x.title))))) : h('div', { class: 'empty dim' }, L('Không có biểu tượng nào khớp “{0}”.', storeQuery)),
-      h('div', { class: 'dim small' }, icon('users', 14), ' ', L('Gói của cộng đồng: sắp có.')),
+      h('span', { class: 'stile-t' }, L(x.title))))) : h('div', { class: 'empty dim' }, L('No icons match “{0}”.', storeQuery)),
+      h('div', { class: 'dim small' }, icon('users', 14), ' ', L('Community packs: coming soon.')),
     ];
   }
 
@@ -554,12 +554,12 @@
     const flash = () => { justAdded = sprite.id; render(); setTimeout(() => { justAdded = null; render(); }, 1600); };
     const full = (right) => s.badges.filter((b) => b.right === right).length >= CAT.perSide;
     menu(anchor, [
-      { title: L('Biểu tượng cố định trên notch'), items: [
-        { label: L('Thêm bên trái'), disabled: full(false), onClick: () => { set('badges', [...s.badges, { ...icon2, right: false }]); flash(); } },
-        { label: L('Thêm bên phải'), disabled: full(true), onClick: () => { set('badges', [...s.badges, { ...icon2, right: true }]); flash(); } }] },
-      { title: L('Đặt cho ứng dụng đang theo dõi'), items: state.items.map((it) => ({ label: it.name,
+      { title: L('Pinned icon on the notch'), items: [
+        { label: L('Add on the left'), disabled: full(false), onClick: () => { set('badges', [...s.badges, { ...icon2, right: false }]); flash(); } },
+        { label: L('Add on the right'), disabled: full(true), onClick: () => { set('badges', [...s.badges, { ...icon2, right: true }]); flash(); } }] },
+      { title: L('Set for a watched app'), items: state.items.map((it) => ({ label: it.name,
         onClick: () => { setItems(state.items.map((x) => (x.id === it.id ? { ...x, icon: { ...icon2, right: false } } : x))); flash(); } })) },
-      { title: L('Đặt cho công cụ build'), items: s.seenTools.map((t) => ({ label: t,
+      { title: L('Set for a build tool'), items: s.seenTools.map((t) => ({ label: t,
         onClick: () => { set('toolIcons', { ...s.toolIcons, [t]: { ...icon2, right: false } }); flash(); } })) },
     ]);
   }
@@ -573,13 +573,13 @@
   }
 
   function soundName(v) {
-    if (!v) return L('Không');
+    if (!v) return L('No');
     return v.includes('/') || v.includes('\\') ? `♪ ${v.split(/[\\/]/).pop()}` : v;
   }
 
   function sounds() {
     const s = S();
-    const packOptions = [...(currentPack() ? [] : [{ value: '', label: L('Của bạn') }]),
+    const packOptions = [...(currentPack() ? [] : [{ value: '', label: L('Yours') }]),
       ...CAT.soundPacks.map((p) => ({ value: p.name, label: L(p.name) }))];
     const fileInput = h('input', { type: 'file', accept: '.wav,.mp3,.m4a,.ogg,.aiff', class: 'hidden' });
     let pendingEvent = null;
@@ -596,32 +596,32 @@
     vol.show(`${Math.round(s.volume * 100)}%`);
 
     const soundGroup = group(
-      row(L('Âm thanh'), toggle(s.sounds, (v) => set('sounds', v))),
-      row(L('Âm lượng'), vol.el),
-      row(L('Gói âm thanh'), select(packOptions, currentPack(), (v) => { if (v) nt.act('applyPack', v); }, L('Gói âm thanh'))),
-      row(L('Sao lưu, chia sẻ'), h('div', { class: 'row gap' },
-        button(L('Xuất gói…'), () => nt.act('exportSounds'), { small: true }),
-        button(L('Nhập gói…'), () => nt.act('importSounds'), { small: true }))));
+      row(L('Sound'), toggle(s.sounds, (v) => set('sounds', v))),
+      row(L('Volume'), vol.el),
+      row(L('Sound pack'), select(packOptions, currentPack(), (v) => { if (v) nt.act('applyPack', v); }, L('Sound pack'))),
+      row(L('Back up, share'), h('div', { class: 'row gap' },
+        button(L('Export pack…'), () => nt.act('exportSounds'), { small: true }),
+        button(L('Import pack…'), () => nt.act('importSounds'), { small: true }))));
 
     const eventRows = CAT.soundEvents.map((e) => {
       const cur = s.soundMap[e.id] ?? '';
-      const options = [{ value: '', label: L('Không') }, ...CAT.soundNames.map((n) => ({ value: n, label: n }))];
+      const options = [{ value: '', label: L('No') }, ...CAT.soundNames.map((n) => ({ value: n, label: n }))];
       if (cur && !CAT.soundNames.includes(cur)) options.push({ value: cur, label: soundName(cur) });
-      options.push({ value: '__file__', label: L('Chọn file của bạn…') });
+      options.push({ value: '__file__', label: L('Choose your file…') });
       const pick = select(options, cur, (v) => {
         if (v === '__file__') { pendingEvent = e.id; fileInput.click(); return; }
         set('soundMap', { ...S().soundMap, [e.id]: v });
         if (v) nt.act('playSound', v, S().volume);
       }, L(e.title));
-      const play = h('button', { class: 'icon-btn', type: 'button', title: L('Nghe thử'), disabled: !cur,
+      const play = h('button', { class: 'icon-btn', type: 'button', title: L('Preview'), disabled: !cur,
         onclick: () => nt.act('playSound', cur, S().volume) }, icon('play', 14));
       return h('div', { class: 'srow2' }, icon(e.icon, 16, 'dim'), h('span', { class: 'it' }, L(e.title)), h('span', { class: 'sp' }), pick, play);
     });
 
     return [
       soundGroup,
-      h('div', { class: 'dim small pt' }, L('Âm thanh giữ riêng, đổi giao diện không mất. Xuất gói để mang sang máy khác.')),
-      card(L('Sự kiện'), null, fileInput, h('div', { class: `list${s.sounds ? '' : ' muted'}` }, eventRows)),
+      h('div', { class: 'dim small pt' }, L('Sounds are kept separately, changing the look won\'t lose them. Export a pack to take it to another computer.')),
+      card(L('Events'), null, fileInput, h('div', { class: `list${s.sounds ? '' : ' muted'}` }, eventRows)),
     ];
   }
 
@@ -629,7 +629,7 @@
 
   function behavior() {
     const s = S();
-    const langs = [{ value: '', label: `${L('Theo máy')} · ${(CAT.languages.find((x) => x.code === state.device) || {}).name || 'English'}` },
+    const langs = [{ value: '', label: `${L('Device')} · ${(CAT.languages.find((x) => x.code === state.device) || {}).name || 'English'}` },
       ...CAT.languages.map((x) => ({ value: x.code, label: x.name }))];
     const delay = slider(s.hoverDelay, 0, 1, 0.05, (v) => { state = { ...state, settings: { ...state.settings, hoverDelay: v } }; },
       (v) => set('hoverDelay', v, { rerender: false }));
@@ -638,18 +638,18 @@
       (v) => set('limitWarn', v, { rerender: false }));
     limit.show(`${Math.round(s.limitWarn)}%`);
     return [
-      card(L('Mở notch'), null, group(
-        row(L('Cách mở'), segmented([{ value: 'hover', label: L('Rê chuột') }, { value: 'click', label: L('Bấm') }], s.expandMode, (v) => set('expandMode', v))),
-        s.expandMode === 'hover' ? row(L('Độ trễ {0} ms', Math.round(s.hoverDelay * 1000)), delay.el) : null,
-        row(L('CPU và RAM khi mở rộng'), toggle(s.systemLoad, (v) => set('systemLoad', v)))),
+      card(L('Opening the notch'), null, group(
+        row(L('How to open'), segmented([{ value: 'hover', label: L('Hover') }, { value: 'click', label: L('Click') }], s.expandMode, (v) => set('expandMode', v))),
+        s.expandMode === 'hover' ? row(L('Delay {0} ms', Math.round(s.hoverDelay * 1000)), delay.el) : null,
+        row(L('CPU and RAM when expanded'), toggle(s.systemLoad, (v) => set('systemLoad', v)))),
       ),
-      card(L('Thông báo'), null, group(
-        row(L('Thông báo hệ thống'), toggle(s.systemNotifications, (v) => set('systemNotifications', v))),
-        row(L('Báo xong khi chạy từ {0} giây', Math.round(s.doneAfter)), stepper(s.doneAfter, 5, 600, 5, (v) => set('doneAfter', v))),
-        row(L('Cảnh báo giới hạn ở {0}%', Math.round(s.limitWarn)), limit.el))),
-      card(L('Khác'), null, group(
-        row(L('Ngôn ngữ'), select(langs, state.choice || '', (v) => nt.act('setLanguage', v))),
-        row(L('Gửi thống kê sử dụng ẩn danh'), toggle(state.analytics, (v) => { state = { ...state, analytics: v }; nt.act('setAnalytics', v); render(); })))),
+      card(L('Notifications'), null, group(
+        row(L('System notifications'), toggle(s.systemNotifications, (v) => set('systemNotifications', v))),
+        row(L('Say done when it ran {0} sec or more', Math.round(s.doneAfter)), stepper(s.doneAfter, 5, 600, 5, (v) => set('doneAfter', v))),
+        row(L('Warn about limits at {0}%', Math.round(s.limitWarn)), limit.el))),
+      card(L('Other'), null, group(
+        row(L('Language'), select(langs, state.choice || '', (v) => nt.act('setLanguage', v))),
+        row(L('Send anonymous usage statistics'), toggle(state.analytics, (v) => { state = { ...state, analytics: v }; nt.act('setAnalytics', v); render(); })))),
     ];
   }
 
@@ -672,27 +672,27 @@
     let topic = topics[2];
     let text = '';
     let contact = '';
-    const area = h('textarea', { class: 'inp area', rows: 4, placeholder: L('Chuyện gì đã xảy ra?'), oninput: (e) => { text = e.target.value; send.disabled = !text.trim() || !!state.report?.code || !!state.report?.busy; } });
-    const mail = h('input', { class: 'inp', placeholder: L('Email hoặc cách liên hệ (để chúng tôi trả lời)'), oninput: (e) => { contact = e.target.value; } });
+    const area = h('textarea', { class: 'inp area', rows: 4, placeholder: L('What happened?'), oninput: (e) => { text = e.target.value; send.disabled = !text.trim() || !!state.report?.code || !!state.report?.busy; } });
+    const mail = h('input', { class: 'inp', placeholder: L('Email or other contact (so we can reply)'), oninput: (e) => { contact = e.target.value; } });
     const status = h('div', { class: 'status' });
     const send = h('button', { class: 'btn primary', type: 'button', disabled: true, onclick: () => {
       nt.act('sendReport', { topic: L(topic), text, contact });
       send.disabled = true;
-    } }, L('Gửi'));
+    } }, L('Send'));
     const body = h('div', { class: 'stack' },
-      h('label', { class: 'field' }, h('span', { class: 'field-l' }, L('Loại vấn đề')),
+      h('label', { class: 'field' }, h('span', { class: 'field-l' }, L('Issue type')),
         select(topics.map((t) => ({ value: t, label: L(t) })), topic, (v) => { topic = v; })),
       area, mail,
-      h('div', { class: 'dim small' }, L('Nội dung và liên hệ bạn nhập; mã thiết bị ẩn danh, mã nhóm, tình trạng ghép nối, số điện thoại, phiên bản ứng dụng, hệ điều hành, mẫu thiết bị, ngôn ngữ, trạng thái Pro và giao dịch nếu có. Không tự động gửi lệnh, mã nguồn, đường dẫn, tên công việc hay tên dự án.')),
+      h('div', { class: 'dim small' }, L('Your description and contact; anonymous device ID, group ID, pairing status, number of phones, app version, OS, device model, language, Pro status and transaction if available. Commands, source code, file paths, task titles and project names are not attached automatically.')),
       status);
     const refresh = () => {
       const r = state.report || {};
       status.replaceChildren();
-      if (r.code) status.append(h('div', {}, L('Đã gửi. Mã báo lỗi: {0}', String(r.code).slice(-6))));
+      if (r.code) status.append(h('div', {}, L('Sent. Report code: {0}', String(r.code).slice(-6))));
       if (r.problem) status.append(h('div', { class: 'warn' }, r.problem));
     };
     refresh();
-    const dlg = modal({ width: 500, title: L('Báo lỗi'), body, footer: [button(L('Đóng'), () => dlg.close()), send],
+    const dlg = modal({ width: 500, title: L('Report a problem'), body, footer: [button(L('Close'), () => dlg.close()), send],
       onClose: () => { reportDialog = null; } });
     reportDialog = { refresh, send };
   }
@@ -702,16 +702,16 @@
   function updateFooter() {
     const u = state.update || {};
     if (u.busy && u.progress != null) {
-      return h('div', { class: 'upd' }, h('div', { class: 'dim' }, L('Đang tải… {0}%', Math.round(u.progress * 100))),
+      return h('div', { class: 'upd' }, h('div', { class: 'dim' }, L('Downloading… {0}%', Math.round(u.progress * 100))),
         h('div', { class: 'bar' }, h('i', { style: { width: `${Math.round(u.progress * 100)}%` } })));
     }
-    if (u.busy) return h('div', { class: 'upd dim' }, L('Đang kiểm tra…'));
+    if (u.busy) return h('div', { class: 'upd dim' }, L('Checking…'));
     if (u.available) return h('div', { class: 'upd' },
-      button(L('Cập nhật {0}', u.version || ''), () => nt.act('installUpdate'), { primary: true, small: true, icon: 'download' }),
+      button(L('Update {0}', u.version || ''), () => nt.act('installUpdate'), { primary: true, small: true, icon: 'download' }),
       u.notes ? h('div', { class: 'dim small clamp', title: u.notes }, u.notes) : null);
     if (u.error) return h('div', { class: 'upd' }, h('div', { class: 'warn small' }, u.error),
-      button(L('Thử lại'), () => nt.act('checkUpdate'), { small: true }));
-    return h('button', { class: 'upd-ver dim', type: 'button', title: L('Kiểm tra ngay'), onclick: () => nt.act('checkUpdate') }, `v${state.version}`);
+      button(L('Try again'), () => nt.act('checkUpdate'), { small: true }));
+    return h('button', { class: 'upd-ver dim', type: 'button', title: L('Check now'), onclick: () => nt.act('checkUpdate') }, `v${state.version}`);
   }
 
   // ---- frame ----------------------------------------------------------------------------------------------------------

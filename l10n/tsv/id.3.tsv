@@ -1,312 +1,309 @@
-700	Sembunyikan kode
-701	Pasangkan perangkat lain…
-702	Membuat kode…
-703	Pasangkan perangkat…
-704	Beri tahu ponsel hanya saat saya pergi
-705	{0} perangkat melalui Wi‑Fi
-706	Di Wi‑Fi yang sama, ponsel langsung menerima pembaruan; di jaringan lain, melalui Internet. Saat Anda memakai komputer ini, ponsel tetap diam.
-707	Belum ada perangkat.
-708	Lepas semua pasangan
-709	Dipasangkan
-710	Semua perangkat akan terputus dari komputer ini. Untuk memasangkan lagi, gunakan kode baru.
-711	Belum diberikan
-712	Belum diperiksa
-713	Beri tahu saat tugas selesai atau gagal.
-714	Menampilkan acara mendatang.
-715	Mengontrol musik dalam browser.
-716	Kontrol {0}
-717	Membaca dan mengontrol yang sedang diputar.
-718	Musik di {0}
-719	Jeda, putar, dan lewati lagu langsung di tab.
-720	Buka saat masuk
-721	Berjalan saat Anda masuk.
-722	Nonaktifkan di {0}
-723	Hapus centang pada item yang sama:\n
-724	Perintah memuat “{0}”
-725	Proses “{0}”
-726	 · perintah memuat “{0}”
-727	satu subproses per baris
-728	Aplikasi · {0}
-729	Pantau setiap sesi
-730	Tampilkan saat berjalan
-731	Aplikasi AI
-732	Langkah {0}/{1}
-733	Lewati
-734	Kembali
-735	Berikutnya
-736	Selamat datang di NotchTasks
-737	AI & build
-738	Ketahui agent mana yang bekerja dan build mana yang selesai atau gagal
-739	Musik, panggilan
-740	Kontrol musik dan bisukan mikrofon dengan cepat saat menelepon
-741	Peringatan rapi
-742	Pengisian daya, headphone, unduhan, jaringan, panas
-743	Pribadi
-744	Semuanya berjalan di komputer Anda; tidak ada yang dikirim ke mana pun
-745	Yang ditampilkan notch
-746	Klik untuk mengaktifkan atau menonaktifkan. Ubah kapan saja di Panel Kontrol.
-747	Agent AI di komputer Anda
-748	Ditemukan dan diaktifkan. Tambah atau hapus nanti di Panel Kontrol.
-749	Belum ada agent AI ditemukan. Tambahkan nanti di halaman Pemantauan.
-750	Modul agent AI nonaktif.
-751	Hanya yang dibutuhkan modul pilihan Anda. Langkah ini dapat dilewati.
-752	Semua siap
-753	Beberapa kiat untuk memulai lebih cepat:
-754	Arahkan kursor ke notch
-755	Notch terbuka menampilkan semua yang sedang berjalan. Jauhkan kursor untuk menutupnya.
-756	Klik tombol pada peringatan
-757	Peringatan tetap terlihat saat kursor berada di atasnya, dengan tombol seperti “Tampilkan dalam folder” dan “Kosongkan ruang”.
-758	Seret file ke notch
-759	Simpan file sementara di rak, lalu seret keluar saat diperlukan.
-760	Hias notch
-761	Pilih karakter animasi di Pustaka Ikon.
-762	Buka Panel Kontrol
-763	Klik ikon NotchTasks di bilah menu atau tombol ⚙ saat notch terbuka.
-764	Klik ⚙ saat notch terbuka atau buka lagi NotchTasks lewat Spotlight.
-765	Gunakan alat 
-766	Ditolak di notch
-767	Belum dipercaya di Codex
-768	Buka Codex
-769	Belum masuk
-770	Masuk
-771	1. Safari › Pengaturan › Lanjutan: aktifkan “Tampilkan fitur untuk pengembang web”.\n2. Menu Kembangkan › Izinkan JavaScript dari Apple Events.
-772	Di {0}, pada bilah menu: Tampilan (View) › Pengembang (Developer) › Izinkan JavaScript dari Apple Events.
-773	Aktifkan kontrol musik
-774	Buka pengaturan Safari
-775	Safari › Pengaturan… (⌘,)
-776	Tampilkan fitur pengembang
-777	Tab Lanjutan: aktifkan “Show features for web developers”
-778	Izinkan JavaScript dari Apple Events
-779	Buka menu Tampilan
-780	Pada bilah menu {0}, klik View (Tampilan)
-781	Pilih Pengembang
-782	Arahkan kursor ke Developer (Pengembang)
-783	Klik Allow JavaScript from Apple Events
-784	Item terakhir. Tanda ✓ berarti selesai
-785	Izinkan notch mengontrol musik di {0}
-786	Cukup sekali, sekitar 10 detik. Setelah itu, notch dapat menjeda, memutar, memajukan, dan mengganti lagu langsung di tab.
-787	Aktif. Notch kini dapat mengontrol {0}.
-788	Menunggu Anda mengaktifkan… jendela ini akan mendeteksi saat selesai
-789	Nanti saja
-790	Buka {0}
-791	Agent dan aplikasi AI yang bekerja
-792	Build, tes, instalasi, rendering, CI
-793	Lagu yang diputar, lengkap dengan kontrol
-794	Penggunaan agent, peringatan saat hampir habis
-795	Colok dan lepas pengisi daya, baterai lemah
-796	Acara mendatang dengan tautan rapat
-797	Seret file ke notch untuk menyimpannya sementara
-798	Timer cepat
-799	Headphone, papan ketik, mouse, dan baterai
-800	Saat menelepon, tombol bisukan mikrofon (FaceTime, Zoom…)
-801	Beri tahu saat aplikasi memakai mikrofon atau kamera
-802	Volume dan kecerahan saat Anda mengubahnya
-803	Jaringan terputus, pulih, VPN
-804	Beri tahu saat unduhan selesai, buka foldernya
-805	Komputer panas, disk hampir penuh
-806	Periksa kamera sebelum rapat
-807	Pekerjaan
-808	Musik & perangkat
-809	Panggilan & privasi
-810	Sistem
-811	Kontrol aplikasi
-812	Folder Unduhan
-813	Ikuti warna aplikasi
-814	Pilih sendiri…
-815	File ini bukan paket suara NotchTasks.
-816	Tidak ada suara yang dapat digunakan dalam file ini.
-817	Menunggu runner
-818	sedang berjalan
-819	Berjalan · {0}
-820	Selesai · {0} lalu
-821	Casing
-822	{0} tugas berjalan
-823	Buka log
-824	+{0} tugas lainnya
-825	Sembunyikan peringatan
-826	Memutar audio
-827	Aktifkan kontrol di {0}
-828	Untuk menjeda, memutar, dan mengganti lagu langsung di tab tanpa membuat aplikasi musik lain memutar otomatis
-829	Seret untuk mencari posisi
-830	Panggilan video · {0}
-831	Sedang menelepon · {0}
-832	 · Mikrofon dibisukan
-833	Aktifkan mikrofon
-834	Bisukan mikrofon
-835	NotchTasks belum diizinkan memakai kamera
-836	Buka Pengaturan Kamera
-837	Matikan cermin
-838	Menunggu 
-839	Jawab di {0}
-840	Lewati di sini, {0} akan bertanya seperti biasa
-841	Kirim
-842	Ulang tahun Lan
-843	Keluarga
-844	Cuti
-845	Tulis laporan
-846	Rapat sprint
-847	Makan siang bersama tim
-848	Telepon klien
-849	 terhubung
-850	 terputus
-851	K 100% · Kn 98% · Casing 62%
-852	1 percobaan membuka kunci gagal
-853	{0} percobaan membuka kunci gagal
-854	Terakhir pukul {0} saat komputer terkunci
-855	Paket suara diterapkan
-856	Panel Kontrol…
-857	Panduan…
-858	Timer {0} menit
-859	Hentikan timer
-860	Keluar dari NotchTasks
-861	Ruang A / https://us02web.zoom.us/j/123?pwd=x
-862	Warna apa?
-863	Merah
-864	Warna?
-865	Meluncur turun dari notch.
-866	Pas di notch.
-867	Kartu mengambang di bawah notch.
-868	Lebar, teks besar.
-869	Otomatis
-870	Kiri
-871	Kanan
-872	AI / tugas selesai
-873	Agent bertanya, perlu persetujuan
-874	CI lulus
-875	CI gagal
-876	Batas AI hampir habis
-877	Acara mendatang
-878	Timer selesai
-879	Pengisi daya terpasang
-880	Pengisi daya dilepas
-881	Perangkat terhubung
-882	Perangkat terputus
-883	Panggilan dimulai
-884	Panggilan berakhir
-885	Mikrofon atau kamera aktif
-886	Gagal membuka kunci
-887	Jaringan terputus
-888	Jaringan pulih, VPN
-889	Unduhan selesai
-890	Komputer panas, disk penuh
-891	Ciutkan notch
-892	Bawaan
-893	Semarak
-894	Senyap
-895	menyalin
-896	mengunduh
-897	mengompresi / mengekstrak
-898	memproses video
-899	memproses gambar
-900	mentranskripsikan
-901	 · lebih lama dari biasanya
-902	 lagi
-903	memproses · {0}% CPU
-904	Menyalin
-905	Menerima
-906	Mengekstrak
-907	Mentransfer file
-908	 · tersisa 
-909	Sepanjang hari
-910	Buka di Kalender
-911	+{0} acara lainnya
-912	Berlangsung · tersisa {0}
-913	Segera · {0} lagi
-914	{0} · buka di Kalender
-915	berlangsung
-916	tersisa 
-917	Sembunyikan acara ini dari notch
-918	{0}/{1} dipilih
-919	Batalkan pilihan
-920	Pilih semua
-921	Tampilkan di Finder
-922	Kirim semua lewat AirDrop
-923	Kirim lewat AirDrop
-924	Hapus semua dari rak (file asli tetap ada)
-925	Hapus dari rak (file asli tetap ada)
-926	Tambah file…
-927	Letakkan di sini
-928	Seret file ke notch atau klik + untuk memilih
-929	Klik untuk memilih · klik dua kali untuk membuka · seret keluar untuk melepas di aplikasi lain
-930	Seret satu file terpilih untuk membawa seluruh {0} file
-931	Hapus dari rak
-932	File tidak ditemukan lagi: {0}
-933	Sidik jari tidak cocok
-934	Kata sandi salah
-935	Nonaktif
-936	1 kesalahan
-937	{0} kesalahan
-938	{0} berjalan
-939	{0} menunggu
-940	Tidak ada yang berjalan
-941	Panel Kontrol
-942	Cermin
-943	Pratinjau kamera
-944	Seret atau pilih file
-945	Seret file ke notch atau klik untuk memilih file ke rak
-946	CPU seluruh komputer: 
-947	Memori digunakan: 
-948	{0}% · klik untuk membuka Activity Monitor
-949	Teks, emoji
-950	Animasi
-951	Pekerja keras
-952	Imut
-953	Unduh file
-954	Jawab agent
-955	Pertanyaan
-956	Isi pertanyaan
-957	Pilihan
-958	Lanjut sesi berikutnya
-959	Mulai fokus
-960	Menit
-961	Hentikan fokus
-962	Rawat teman piksel
-963	Tugas
-964	Si Oranye
-965	Sinar cahaya
-966	Awan terminal
-967	Roket
-968	Astronot
-969	Bintang biru
-970	Robot kecil
-971	Berpikir
-972	Penambang
-973	Menempa
-974	Roda gigi kecil
-975	Hamster berlari
-976	Kopi
-977	Bilah kemajuan
-978	Api unggun
-979	Menangkap bug
-980	Koin
-981	Kucing
-982	Slime
-983	Hantu kecil
-984	Bebek karet
-985	Jantung berdebar
-986	Penguin
-987	Robot
-988	Robot tempur
-989	Chibi
-990	Kucing anime
-991	Awan imut
-992	Sinar oranye
-993	Orbit
-994	Berkilau
-995	Jaringan saraf
-996	Sedang mengetik…
-997	Roda gigi
-998	Jam pasir
-999	Menumpuk balok
-1000	Si Bundar
-1001	Bintang ceria
-1002	Katak
-1003	Panda
-1004	Kelinci
-1005	Burung hantu
-1006	Ada pembaruan dari Mac Anda.
-1007	Build selesai
-1008	Buka NotchTasks untuk melihat.
-1009	Build sedang berjalan
-1010	Pantau di layar terkunci.
-1011	Buka NotchTasks untuk mengizinkan atau menolak.
+687	Sembunyikan kode
+688	Pasangkan perangkat lain…
+689	Membuat kode…
+690	Pasangkan perangkat…
+691	Beri tahu ponsel hanya saat saya pergi
+692	{0} perangkat melalui Wi‑Fi
+693	Di Wi‑Fi yang sama, ponsel langsung menerima pembaruan; di jaringan lain, melalui Internet. Saat Anda memakai komputer ini, ponsel tetap diam.
+694	Belum ada perangkat.
+695	Lepas semua pasangan
+696	Dipasangkan
+697	Semua perangkat akan terputus dari komputer ini. Untuk memasangkan lagi, gunakan kode baru.
+698	Belum diberikan
+699	Belum diperiksa
+700	Beri tahu saat tugas selesai atau gagal.
+701	Menampilkan acara mendatang.
+702	Mengontrol musik dalam browser.
+703	Kontrol {0}
+704	Membaca dan mengontrol yang sedang diputar.
+705	Musik di {0}
+706	Jeda, putar, dan lewati lagu langsung di tab.
+707	Buka saat masuk
+708	Berjalan saat Anda masuk.
+709	Nonaktifkan di {0}
+710	Hapus centang pada item yang sama:\n
+711	Perintah memuat “{0}”
+712	Proses “{0}”
+713	 · perintah memuat “{0}”
+714	satu subproses per baris
+715	Aplikasi · {0}
+716	Pantau setiap sesi
+717	Tampilkan saat berjalan
+718	Aplikasi AI
+719	Langkah {0}/{1}
+720	Lewati
+721	Kembali
+722	Berikutnya
+723	Selamat datang di NotchTasks
+724	AI & build
+725	Ketahui agent mana yang bekerja dan build mana yang selesai atau gagal
+726	Musik, panggilan
+727	Kontrol musik dan bisukan mikrofon dengan cepat saat menelepon
+728	Peringatan rapi
+729	Pengisian daya, headphone, unduhan, jaringan, panas
+730	Pribadi
+731	Semuanya berjalan di komputer Anda; tidak ada yang dikirim ke mana pun
+732	Yang ditampilkan notch
+733	Klik untuk mengaktifkan atau menonaktifkan. Ubah kapan saja di Panel Kontrol.
+734	Agent AI di komputer Anda
+735	Ditemukan dan diaktifkan. Tambah atau hapus nanti di Panel Kontrol.
+736	Belum ada agent AI ditemukan. Tambahkan nanti di halaman Pemantauan.
+737	Modul agent AI nonaktif.
+738	Hanya yang dibutuhkan modul pilihan Anda. Langkah ini dapat dilewati.
+739	Semua siap
+740	Beberapa kiat untuk memulai lebih cepat:
+741	Arahkan kursor ke notch
+742	Notch terbuka menampilkan semua yang sedang berjalan. Jauhkan kursor untuk menutupnya.
+743	Klik tombol pada peringatan
+744	Peringatan tetap terlihat saat kursor berada di atasnya, dengan tombol seperti “Tampilkan dalam folder” dan “Kosongkan ruang”.
+745	Seret file ke notch
+746	Simpan file sementara di rak, lalu seret keluar saat diperlukan.
+747	Hias notch
+748	Pilih karakter animasi di Pustaka Ikon.
+749	Buka Panel Kontrol
+750	Klik ikon NotchTasks di bilah menu atau tombol ⚙ saat notch terbuka.
+751	Klik ⚙ saat notch terbuka atau buka lagi NotchTasks lewat Spotlight.
+752	Gunakan alat 
+753	Ditolak di notch
+754	Belum dipercaya di Codex
+755	Buka Codex
+756	Belum masuk
+757	Masuk
+758	1. Safari › Pengaturan › Lanjutan: aktifkan “Tampilkan fitur untuk pengembang web”.\n2. Menu Kembangkan › Izinkan JavaScript dari Apple Events.
+759	Di {0}, pada bilah menu: Tampilan (View) › Pengembang (Developer) › Izinkan JavaScript dari Apple Events.
+760	Aktifkan kontrol musik
+761	Buka pengaturan Safari
+762	Safari › Pengaturan… (⌘,)
+763	Tampilkan fitur pengembang
+764	Tab Lanjutan: aktifkan “Show features for web developers”
+765	Izinkan JavaScript dari Apple Events
+766	Buka menu Tampilan
+767	Pada bilah menu {0}, klik View (Tampilan)
+768	Pilih Pengembang
+769	Arahkan kursor ke Developer (Pengembang)
+770	Klik Allow JavaScript from Apple Events
+771	Item terakhir. Tanda ✓ berarti selesai
+772	Izinkan notch mengontrol musik di {0}
+773	Cukup sekali, sekitar 10 detik. Setelah itu, notch dapat menjeda, memutar, memajukan, dan mengganti lagu langsung di tab.
+774	Aktif. Notch kini dapat mengontrol {0}.
+775	Menunggu Anda mengaktifkan… jendela ini akan mendeteksi saat selesai
+776	Nanti saja
+777	Buka {0}
+778	Agent dan aplikasi AI yang bekerja
+779	Build, tes, instalasi, rendering, CI
+780	Lagu yang diputar, lengkap dengan kontrol
+781	Penggunaan agent, peringatan saat hampir habis
+782	Colok dan lepas pengisi daya, baterai lemah
+783	Acara mendatang dengan tautan rapat
+784	Seret file ke notch untuk menyimpannya sementara
+785	Timer cepat
+786	Headphone, papan ketik, mouse, dan baterai
+787	Saat menelepon, tombol bisukan mikrofon (FaceTime, Zoom…)
+788	Beri tahu saat aplikasi memakai mikrofon atau kamera
+789	Volume dan kecerahan saat Anda mengubahnya
+790	Jaringan terputus, pulih, VPN
+791	Beri tahu saat unduhan selesai, buka foldernya
+792	Komputer panas, disk hampir penuh
+793	Periksa kamera sebelum rapat
+794	Pekerjaan
+795	Musik & perangkat
+796	Panggilan & privasi
+797	Sistem
+798	Kontrol aplikasi
+799	Folder Unduhan
+800	Ikuti warna aplikasi
+801	Pilih sendiri…
+802	File ini bukan paket suara NotchTasks.
+803	Tidak ada suara yang dapat digunakan dalam file ini.
+804	Menunggu runner
+805	sedang berjalan
+806	Berjalan · {0}
+807	Selesai · {0} lalu
+808	Casing
+809	{0} tugas berjalan
+810	Buka log
+811	+{0} tugas lainnya
+812	Sembunyikan peringatan
+813	Memutar audio
+814	Aktifkan kontrol di {0}
+815	Untuk menjeda, memutar, dan mengganti lagu langsung di tab tanpa membuat aplikasi musik lain memutar otomatis
+816	Seret untuk mencari posisi
+817	Panggilan video · {0}
+818	Sedang menelepon · {0}
+819	 · Mikrofon dibisukan
+820	Aktifkan mikrofon
+821	Bisukan mikrofon
+822	NotchTasks belum diizinkan memakai kamera
+823	Buka Pengaturan Kamera
+824	Matikan cermin
+825	Menunggu 
+826	Jawab di {0}
+827	Lewati di sini, {0} akan bertanya seperti biasa
+828	Kirim
+829	Ulang tahun Lan
+830	Keluarga
+831	Cuti
+832	Tulis laporan
+833	Rapat sprint
+834	Makan siang bersama tim
+835	Telepon klien
+836	 terhubung
+837	 terputus
+838	K 100% · Kn 98% · Casing 62%
+839	1 percobaan membuka kunci gagal
+840	{0} percobaan membuka kunci gagal
+841	Terakhir pukul {0} saat komputer terkunci
+842	Paket suara diterapkan
+843	Panel Kontrol…
+844	Panduan…
+845	Timer {0} menit
+846	Hentikan timer
+847	Keluar dari NotchTasks
+848	Ruang A / https://us02web.zoom.us/j/123?pwd=x
+849	Warna apa?
+850	Merah
+851	Warna?
+852	Meluncur turun dari notch.
+853	Pas di notch.
+854	Kartu mengambang di bawah notch.
+855	Lebar, teks besar.
+856	Otomatis
+857	Kiri
+858	Kanan
+859	AI / tugas selesai
+860	Agent bertanya, perlu persetujuan
+861	CI lulus
+862	CI gagal
+863	Batas AI hampir habis
+864	Acara mendatang
+865	Timer selesai
+866	Pengisi daya terpasang
+867	Perangkat terhubung
+868	Perangkat terputus
+869	Panggilan dimulai
+870	Panggilan berakhir
+871	Mikrofon atau kamera aktif
+872	Gagal membuka kunci
+873	Jaringan terputus
+874	Jaringan pulih, VPN
+875	Unduhan selesai
+876	Komputer panas, disk penuh
+877	Ciutkan notch
+878	Bawaan
+879	Semarak
+880	Senyap
+881	menyalin
+882	mengunduh
+883	mengompresi / mengekstrak
+884	memproses video
+885	memproses gambar
+886	mentranskripsikan
+887	 · lebih lama dari biasanya
+888	 lagi
+889	memproses · {0}% CPU
+890	Menyalin
+891	Menerima
+892	Mengekstrak
+893	Mentransfer file
+894	 · tersisa 
+895	Sepanjang hari
+896	Buka di Kalender
+897	+{0} acara lainnya
+898	Berlangsung · tersisa {0}
+899	Segera · {0} lagi
+900	{0} · buka di Kalender
+901	berlangsung
+902	tersisa 
+903	Sembunyikan acara ini dari notch
+904	{0}/{1} dipilih
+905	Batalkan pilihan
+906	Pilih semua
+907	Tampilkan di Finder
+908	Kirim semua lewat AirDrop
+909	Kirim lewat AirDrop
+910	Hapus semua dari rak (file asli tetap ada)
+911	Hapus dari rak (file asli tetap ada)
+912	Tambah file…
+913	Letakkan di sini
+914	Seret file ke notch atau klik + untuk memilih
+915	Klik untuk memilih · klik dua kali untuk membuka · seret keluar untuk melepas di aplikasi lain
+916	Seret satu file terpilih untuk membawa seluruh {0} file
+917	Hapus dari rak
+918	File tidak ditemukan lagi: {0}
+919	Sidik jari tidak cocok
+920	Kata sandi salah
+921	1 kesalahan
+922	{0} kesalahan
+923	{0} berjalan
+924	Tidak ada yang berjalan
+925	Panel Kontrol
+926	Cermin
+927	Pratinjau kamera
+928	Seret atau pilih file
+929	Seret file ke notch atau klik untuk memilih file ke rak
+930	CPU seluruh komputer: 
+931	Memori digunakan: 
+932	{0}% · klik untuk membuka Activity Monitor
+933	Teks, emoji
+934	Animasi
+935	Pekerja keras
+936	Imut
+937	Unduh file
+938	Jawab agent
+939	Pertanyaan
+940	Isi pertanyaan
+941	Pilihan
+942	Lanjut sesi berikutnya
+943	Mulai fokus
+944	Menit
+945	Hentikan fokus
+946	Rawat teman piksel
+947	Tugas
+948	Si Oranye
+949	Sinar cahaya
+950	Awan terminal
+951	Roket
+952	Astronot
+953	Bintang biru
+954	Robot kecil
+955	Berpikir
+956	Penambang
+957	Menempa
+958	Roda gigi kecil
+959	Hamster berlari
+960	Kopi
+961	Bilah kemajuan
+962	Api unggun
+963	Menangkap bug
+964	Koin
+965	Kucing
+966	Slime
+967	Hantu kecil
+968	Bebek karet
+969	Jantung berdebar
+970	Penguin
+971	Robot
+972	Robot tempur
+973	Chibi
+974	Kucing anime
+975	Awan imut
+976	Sinar oranye
+977	Orbit
+978	Berkilau
+979	Jaringan saraf
+980	Sedang mengetik…
+981	Roda gigi
+982	Jam pasir
+983	Menumpuk balok
+984	Si Bundar
+985	Bintang ceria
+986	Katak
+987	Panda
+988	Kelinci
+989	Burung hantu
+990	Ada pembaruan dari Mac Anda.
+991	Build selesai
+992	Buka NotchTasks untuk melihat.
+993	Build sedang berjalan
+994	Pantau di layar terkunci.
+995	Buka NotchTasks untuk mengizinkan atau menolak.

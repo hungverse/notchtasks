@@ -1,19 +1,19 @@
-1119	Informar de un problema
-1120	La compra se completó, pero el grupo no tiene Pro.
-1121	Esta compra no se aceptó para este grupo.
-1122	No se pudieron restaurar las compras.
-1123	Tipo de problema
-1124	Pago
-1125	Notificaciones y Actividad en directo
-1126	¿Qué ocurrió?
-1127	Correo u otro contacto (para responderte)
-1128	Información incluida
-1129	ID anónimo del dispositivo, ID del grupo, versión de la app, sistema operativo, modelo, idioma, estado Pro y transacción si existe. No se envían comandos, código fuente, rutas de archivos, títulos de tareas ni nombres de proyectos.
-1130	Informe guardado. Se enviará al conectarse.
-1131	Enviado. Código del informe: {0}
-1132	Hay hasta 3 informes pendientes. Inténtalo de nuevo al conectarte.
-1133	El pago falló.
-1134	Pago incompleto
-1135	ID anónimo del dispositivo, ID del grupo, versión de la app, sistema operativo, modelo, idioma y estado Pro. No se envían comandos, código fuente, rutas de archivos, títulos de tareas ni nombres de proyectos.
-1136	No se pudo enviar el informe. Inténtalo de nuevo al conectarte.
-1137	Tu descripción y contacto; ID anónimo del dispositivo, ID del grupo, estado de vinculación, número de teléfonos, versión de la app, sistema operativo, modelo, idioma, estado Pro y transacción si existe. No se adjuntan automáticamente comandos, código fuente, rutas de archivos, títulos de tareas ni nombres de proyectos.
+1102	Informar de un problema
+1103	La compra se completó, pero el grupo no tiene Pro.
+1104	Esta compra no se aceptó para este grupo.
+1105	No se pudieron restaurar las compras.
+1106	Tipo de problema
+1107	Pago
+1108	Notificaciones y Actividad en directo
+1109	¿Qué ocurrió?
+1110	Correo u otro contacto (para responderte)
+1111	Información incluida
+1112	ID anónimo del dispositivo, ID del grupo, versión de la app, sistema operativo, modelo, idioma, estado Pro y transacción si existe. No se envían comandos, código fuente, rutas de archivos, títulos de tareas ni nombres de proyectos.
+1113	Informe guardado. Se enviará al conectarse.
+1114	Enviado. Código del informe: {0}
+1115	Hay hasta 3 informes pendientes. Inténtalo de nuevo al conectarte.
+1116	El pago falló.
+1117	Pago incompleto
+1118	ID anónimo del dispositivo, ID del grupo, versión de la app, sistema operativo, modelo, idioma y estado Pro. No se envían comandos, código fuente, rutas de archivos, títulos de tareas ni nombres de proyectos.
+1119	No se pudo enviar el informe. Inténtalo de nuevo al conectarte.
+1120	Tu descripción y contacto; ID anónimo del dispositivo, ID del grupo, estado de vinculación, número de teléfonos, versión de la app, sistema operativo, modelo, idioma, estado Pro y transacción si existe. No se adjuntan automáticamente comandos, código fuente, rutas de archivos, títulos de tareas ni nombres de proyectos.

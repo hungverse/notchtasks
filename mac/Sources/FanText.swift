@@ -22,7 +22,7 @@ enum FanNotch {
     }
 
     static func name(count: Int, index: Int) -> String {
-        count == 1 ? L("Quạt") : count == 2 ? L(index == 0 ? "Trái" : "Phải") : L("Quạt {0}", index + 1)
+        count == 1 ? L("Fans") : count == 2 ? L(index == 0 ? "Left" : "Right") : L("Fan {0}", index + 1)
     }
     static func half(_ fan: FanReading) -> Int { fan.minimum + (fan.maximum - fan.minimum) / 2 }
     static func shouldSend(last: Date?, now: Date) -> Bool { last.map { now.timeIntervalSince($0) >= 0.3 } ?? true }
@@ -32,7 +32,7 @@ enum FanNotch {
     }
     static func valueText(actual: Int?, forced: Bool, parked: Bool) -> String {
         guard let actual else { return "—" }
-        return actual == 0 && (parked || forced) ? L("Dừng") : String(actual)
+        return actual == 0 && (parked || forced) ? L("Stop") : String(actual)
     }
     static func keepLastGood(previous: [FanReading], reads: [FanReading], failures: [Int: Int]) -> (fans: [FanReading], failures: [Int: Int]) {
         var next = failures
@@ -83,12 +83,12 @@ enum FanNotch {
         return nil
     }
     static func rowText(_ fan: FanReading, choice: FanChoice, hot: Bool) -> String {
-        if hot { return L("Quạt đã về tự động vì máy quá nóng") }
-        let actual = fan.actual == 0 ? L("Dừng") : "\(fan.actual) rpm"
+        if hot { return L("Fans returned to automatic because the Mac is too hot") }
+        let actual = fan.actual == 0 ? L("Stop") : "\(fan.actual) rpm"
         switch choice {
-        case .automatic: return L("Tự động") + " · " + actual
+        case .automatic: return L("Automatic") + " · " + actual
         case .fixed: return actual
-        case .sensor: return L("Theo cảm biến") + " · " + actual
+        case .sensor: return L("By sensor") + " · " + actual
         }
     }
 
@@ -101,16 +101,16 @@ enum FanNotch {
         precondition(thumbValue(FanReading(index: 0, actual: 2300, minimum: 1200, maximum: 6000, target: 0, forced: false), choice: .automatic) == 2300
                      && thumbValue(fan, choice: .automatic) == 1200
                      && thumbValue(fan, choice: .fixed(3200)) == 3200, "fan thumb position")
-        precondition(name(count: 1, index: 0) == L("Quạt")
-                     && name(count: 2, index: 0) == L("Trái")
-                     && name(count: 2, index: 1) == L("Phải")
-                     && name(count: 3, index: 2) == L("Quạt {0}", 3), "notch fan names")
+        precondition(name(count: 1, index: 0) == L("Fans")
+                     && name(count: 2, index: 0) == L("Left")
+                     && name(count: 2, index: 1) == L("Right")
+                     && name(count: 3, index: 2) == L("Fan {0}", 3), "notch fan names")
         precondition(half(fan) == 3600, "notch half speed")
         precondition(refreshInterval(panelOpen: false, sinceCommand: nil) == 5
                      && refreshInterval(panelOpen: true, sinceCommand: nil) == 1
                      && refreshInterval(panelOpen: true, sinceCommand: 0.3) == .infinity
                      && refreshInterval(panelOpen: true, sinceCommand: 0.6) == 1, "fan refresh cadence")
-        precondition(valueText(actual: 0, forced: false, parked: true) == L("Dừng")
+        precondition(valueText(actual: 0, forced: false, parked: true) == L("Stop")
                      && valueText(actual: 2400, forced: true, parked: false) == "2400"
                      && valueText(actual: nil, forced: false, parked: false) == "—", "fan value states")
         let kept = keepLastGood(previous: [fan], reads: [], failures: [:])
@@ -157,10 +157,10 @@ enum FanNotch {
                      && preset(fans: [fan, other], choices: [0: .fixed(6000), 1: .fixed(6200)]) == .maximum
                      && preset(fans: [fan, other], choices: [0: .automatic, 1: .fixed(6200)]) == nil,
                      "notch fan preset selection")
-        precondition(rowText(fan, choice: .automatic, hot: false) == L("Tự động") + " · " + L("Dừng")
-                     && rowText(FanReading(index: 0, actual: 2400, minimum: 1200, maximum: 6000, target: 0, forced: false), choice: .automatic, hot: false) == L("Tự động") + " · 2400 rpm"
+        precondition(rowText(fan, choice: .automatic, hot: false) == L("Automatic") + " · " + L("Stop")
+                     && rowText(FanReading(index: 0, actual: 2400, minimum: 1200, maximum: 6000, target: 0, forced: false), choice: .automatic, hot: false) == L("Automatic") + " · 2400 rpm"
                      && rowText(FanReading(index: 0, actual: 2400, minimum: 1200, maximum: 6000, target: 3200, forced: true), choice: .fixed(3200), hot: false) == "2400 rpm"
-                     && rowText(fan, choice: .sensor(name: "CPU", startsAt: 50, maximumAt: 80), hot: false) == L("Theo cảm biến") + " · " + L("Dừng")
-                     && rowText(fan, choice: .automatic, hot: true) == L("Quạt đã về tự động vì máy quá nóng"), "notch fan row states")
+                     && rowText(fan, choice: .sensor(name: "CPU", startsAt: 50, maximumAt: 80), hot: false) == L("By sensor") + " · " + L("Stop")
+                     && rowText(fan, choice: .automatic, hot: true) == L("Fans returned to automatic because the Mac is too hot"), "notch fan row states")
     }
 }

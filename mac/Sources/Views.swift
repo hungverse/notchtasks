@@ -282,7 +282,7 @@ struct ItemCard: View {
                     .padding(.horizontal, 6).frame(height: 16)
                     .background(Capsule().fill(tint))
                     .contentTransition(.numericText())
-                    .help(L("{0} tác vụ đang chạy", state.jobs.count))
+                    .help(L("{0} tasks running", state.jobs.count))
             }
             .contentShape(Rectangle())
             .onTapGesture(perform: open)
@@ -297,7 +297,7 @@ struct ItemCard: View {
                         Spacer(minLength: 8)
                         Text(j.detail).font(.system(size: 11)).monospacedDigit().foregroundStyle(j.working ? tint : .gray).lineLimit(1)
                         if j.url != nil {
-                            Image(systemName: "text.alignleft").font(.system(size: 10)).foregroundStyle(.gray).help(L("Mở log"))
+                            Image(systemName: "text.alignleft").font(.system(size: 10)).foregroundStyle(.gray).help(L("Open log"))
                         }
                     }
                     if let p = j.progress { ProgressLine(value: p, estimated: j.estimated, tint: tint).padding(.leading, 28) }
@@ -307,7 +307,7 @@ struct ItemCard: View {
                 .onTapGesture { if let url = j.url { NSWorkspace.shared.open(url) } }
             }
             if state.jobs.count > 4 {
-                Text(L("+{0} tác vụ khác", state.jobs.count - 4)).font(.system(size: 11)).foregroundStyle(.gray).padding(.leading, 28)
+                Text(L("+{0} more tasks", state.jobs.count - 4)).font(.system(size: 11)).foregroundStyle(.gray).padding(.leading, 28)
             }
         }
         .padding(10)
@@ -340,19 +340,19 @@ struct AlertCard: View {
         HStack(spacing: 10) {
             Image(systemName: "xmark.octagon.fill").font(.system(size: 16)).foregroundStyle(.red)
             VStack(alignment: .leading, spacing: 1) {
-                Text(L("CI lỗi: {0}", alert.name)).font(.system(size: 12, weight: .semibold)).foregroundStyle(.white)
+                Text(L("CI failed: {0}", alert.name)).font(.system(size: 12, weight: .semibold)).foregroundStyle(.white)
                 Text("\(alert.project) · \(alert.reason)").font(.system(size: 11)).foregroundStyle(.gray).lineLimit(1)
             }
             Spacer(minLength: 6)
             if alert.url != nil {
-                Text(L("Xem log")).font(.system(size: 11, weight: .semibold)).foregroundStyle(.red)
+                Text(L("View log")).font(.system(size: 11, weight: .semibold)).foregroundStyle(.red)
                     .padding(.horizontal, 8).frame(height: 20)
                     .background(Capsule().fill(.red.opacity(hover ? 0.3 : 0.18)))
             }
             Button(action: dismiss) {
                 Image(systemName: "xmark").font(.system(size: 10, weight: .bold)).foregroundStyle(.gray).frame(width: 18, height: 18)
             }
-            .buttonStyle(.plain).help(L("Ẩn thông báo"))
+            .buttonStyle(.plain).help(L("Hide alert"))
         }
         .padding(10)
         .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(.red.opacity(0.14)))
@@ -399,9 +399,9 @@ struct NowPlayingCard: View {
         HStack(spacing: 12) {
             NowPlayingArt(np: np, size: 46)
                 .onTapGesture { NSRunningApplication.runningApplications(withBundleIdentifier: np.source).first?.activate() }
-                .help(L("Mở {0}", np.appName))
+                .help(L("Open {0}", np.appName))
             VStack(alignment: .leading, spacing: 4) {
-                Text(np.title ?? L("Đang phát âm thanh")).font(.system(size: 13, weight: .semibold)).foregroundStyle(.white).lineLimit(1)
+                Text(np.title ?? L("Playing audio")).font(.system(size: 13, weight: .semibold)).foregroundStyle(.white).lineLimit(1)
                 HStack(spacing: 5) {
                     ItemIcon(item: np.item, size: 12)
                     Text([np.artist, np.appName].compactMap { $0 }.joined(separator: " · "))
@@ -411,7 +411,7 @@ struct NowPlayingCard: View {
                     Button(action: enableControl) {
                         HStack(spacing: 5) {
                             Image(systemName: "hand.tap.fill").font(.system(size: 9))
-                            Text(L("Bật điều khiển trong {0}", np.appName)).font(.system(size: 10, weight: .semibold))
+                            Text(L("Turn on control in {0}", np.appName)).font(.system(size: 10, weight: .semibold))
                             Image(systemName: "chevron.right").font(.system(size: 8, weight: .bold))
                         }
                         .foregroundStyle(.black)
@@ -419,7 +419,7 @@ struct NowPlayingCard: View {
                         .background(Capsule().fill(.yellow))
                     }
                     .buttonStyle(.plain).padding(.top, 2)
-                    .help(L("Để dừng, phát và chuyển bài ngay trong tab, không làm ứng dụng nhạc khác tự phát"))
+                    .help(L("To pause, play and skip right in the tab without making other music apps start playing"))
                 }
                 if let d = np.duration, d > 0, let p = np.position {
                     SeekBar(position: p, duration: d, playing: np.playing, tint: tint,
@@ -504,7 +504,7 @@ struct SeekBar: View {
             anchor = Date()
         }
         .onChange(of: duration) { base = position; anchor = Date() }
-        .help(seek == nil ? "" : L("Kéo để tua"))
+        .help(seek == nil ? "" : L("Drag to seek"))
     }
 }
 
@@ -528,17 +528,17 @@ struct CallCard: View {
                     .frame(width: 15, height: 15).background(Circle().fill(.green)).offset(x: 3, y: 3)
             }
             VStack(alignment: .leading, spacing: 1) {
-                Text(call.video ? L("Gọi video · {0}", call.name) : L("Đang gọi · {0}", call.name))
+                Text(call.video ? L("Video call · {0}", call.name) : L("On a call · {0}", call.name))
                     .font(.system(size: 12, weight: .semibold)).foregroundStyle(.white).lineLimit(1)
                 TimelineView(.periodic(from: .now, by: 1)) { ctx in
-                    Text(mmss(ctx.date.timeIntervalSince(call.since)) + (call.muted ? L(" · Mic đang tắt") : ""))
+                    Text(mmss(ctx.date.timeIntervalSince(call.since)) + (call.muted ? L(" · Mic muted") : ""))
                         .font(.system(size: 11, weight: .medium)).monospacedDigit().foregroundStyle(call.muted ? .red : .green)
                 }
             }
             Spacer(minLength: 6)
             // big round buttons with words under them: easy to hit and to understand mid-call
-            round(call.muted ? "mic.slash.fill" : "mic.fill", call.muted ? L("Bật mic") : L("Tắt mic"), call.muted ? .red : .white.opacity(0.18), mute)
-            round("arrow.up.forward.app.fill", L("Mở"), .white.opacity(0.18), open)
+            round(call.muted ? "mic.slash.fill" : "mic.fill", call.muted ? L("Unmute") : L("Mute"), call.muted ? .red : .white.opacity(0.18), mute)
+            round("arrow.up.forward.app.fill", L("Open"), .white.opacity(0.18), open)
         }
         .padding(10)
         .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(.green.opacity(0.12)))
@@ -569,7 +569,7 @@ struct SensorRow: View {
             }
             if sensors.camera {
                 Image(systemName: "video.fill").foregroundStyle(.green).symbolEffect(.pulse)
-                Text(L("Camera đang bật"))
+                Text(L("Camera on"))
             }
             Spacer(minLength: 0)
         }
@@ -592,8 +592,8 @@ struct MirrorCard: View {
             if status == .denied || status == .restricted {
                 VStack(spacing: 8) {
                     Image(systemName: "video.slash.fill").font(.system(size: 22)).foregroundStyle(.gray)
-                    Text(L("NotchTasks chưa được dùng camera")).font(.system(size: 12, weight: .semibold)).foregroundStyle(.white)
-                    Button(L("Mở Cài đặt Camera")) {
+                    Text(L("NotchTasks can't use the camera yet")).font(.system(size: 12, weight: .semibold)).foregroundStyle(.white)
+                    Button(L("Open Camera settings")) {
                         NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Camera")!)
                     }
                     .controlSize(.small)
@@ -608,7 +608,7 @@ struct MirrorCard: View {
                 Image(systemName: "xmark").font(.system(size: 10, weight: .bold)).foregroundStyle(.white)
                     .frame(width: 22, height: 22).background(Circle().fill(.black.opacity(0.5)))
             }
-            .buttonStyle(.plain).padding(8).help(L("Tắt gương"))
+            .buttonStyle(.plain).padding(8).help(L("Close mirror"))
         }
         .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(.white.opacity(0.06)))
     }
@@ -682,12 +682,12 @@ struct AskCard: View {
                     Image(systemName: "sparkles").font(.system(size: 14, weight: .bold)).foregroundStyle(.orange).frame(width: 28, height: 28)
                 }
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(ask.kind.name + (ask.isQuestion ? L(" đang hỏi") : L(" cần bạn duyệt"))).font(.system(size: 12, weight: .semibold)).foregroundStyle(.white)
+                    Text(ask.kind.name + (ask.isQuestion ? L(" is asking") : L(" needs your approval"))).font(.system(size: 12, weight: .semibold)).foregroundStyle(.white)
                     Text(ask.session).font(.system(size: 11)).foregroundStyle(.gray).lineLimit(1)
                 }
                 Spacer(minLength: 6)
                 TimelineView(.periodic(from: .now, by: 1)) { ctx in
-                    Text(L("Chờ ") + mmss(ctx.date.timeIntervalSince(ask.at))).font(.system(size: 10, weight: .medium)).monospacedDigit().foregroundStyle(.orange)
+                    Text(L("Waiting ") + mmss(ctx.date.timeIntervalSince(ask.at))).font(.system(size: 10, weight: .medium)).monospacedDigit().foregroundStyle(.orange)
                 }
             }
 
@@ -712,18 +712,18 @@ struct AskCard: View {
 
             HStack(spacing: 6) {
                 Button { reply(.pass) } label: {
-                    Text(L("Trả lời trong {0}", ask.kind.name)).font(.system(size: 11)).foregroundStyle(.gray).underline()
+                    Text(L("Answer in {0}", ask.kind.name)).font(.system(size: 11)).foregroundStyle(.gray).underline()
                 }
-                .buttonStyle(.plain).help(L("Bỏ qua ở đây, {0} sẽ tự hỏi như bình thường", ask.kind.name))
+                .buttonStyle(.plain).help(L("Skip here, {0} will ask as usual", ask.kind.name))
                 Spacer()
                 if ask.isQuestion {
                     // one single-choice question is sent by the tap itself
                     if !(ask.questions.count == 1 && !ask.questions[0].multiSelect) {
-                        choiceButton(L("Gửi"), primary: true) { reply(.answers(answers)) }.disabled(!ready).opacity(ready ? 1 : 0.4)
+                        choiceButton(L("Send"), primary: true) { reply(.answers(answers)) }.disabled(!ready).opacity(ready ? 1 : 0.4)
                     }
                 } else {
-                    choiceButton(L("Từ chối"), primary: false) { reply(.deny) }
-                    choiceButton(L("Cho phép"), primary: true) { reply(.allow) }
+                    choiceButton(L("Deny"), primary: false) { reply(.deny) }
+                    choiceButton(L("Allow"), primary: true) { reply(.allow) }
                 }
             }
         }

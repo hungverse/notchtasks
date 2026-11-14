@@ -28,13 +28,13 @@ function summary(it) {
   switch (it.kind) {
     case 'process': {
       const what = !it.process
-        ? L('Lệnh chứa “{0}”', it.args || '')
-        : L('Tiến trình “{0}”', it.process) + (it.args ? L(' · lệnh chứa “{0}”', it.args) : '');
-      return [what, it.childTasks ? L('mỗi lệnh con một dòng') : null, cpu].filter((x) => x != null).join(' · ');
+        ? L('Command contains “{0}”', it.args || '')
+        : L('Process “{0}”', it.process) + (it.args ? L(' · command contains “{0}”', it.args) : '');
+      return [what, it.childTasks ? L('one line per subprocess') : null, cpu].filter((x) => x != null).join(' · ');
     }
-    case 'app': return L('Ứng dụng · {0}', cpu);
-    case 'codex': case 'claude': return L('Theo dõi từng phiên');
-    case 'dev': return L('Hiện khi đang chạy');
+    case 'app': return L('App · {0}', cpu);
+    case 'codex': case 'claude': return L('Tracks each session');
+    case 'dev': return L('Shows while running');
     default: return '';
   }
 }
@@ -136,7 +136,7 @@ const presetGroups = [
     agent('Kiro CLI', 'kiro-cli', { process: 'kiro-cli' }),
     agent('OpenClaw', 'openclaw', { args: 'openclaw/dist', threshold: 15 }), // its gateway idles at 1–4% CPU
   ]],
-  [L('Ứng dụng AI'), [
+  [L('AI apps'), [
     aiApp('ChatGPT', 'com.openai.chat', 15),
     aiApp('Cursor', 'com.todesktop.230313mzl4w4u92', 30),
     aiApp('Windsurf', 'com.exafunction.windsurf', 30),
@@ -146,7 +146,7 @@ const presetGroups = [
     aiApp('Perplexity', 'ai.perplexity.mac', 15),
   ]],
   // local model runners: on the pill while they generate, with the model they have loaded
-  [L('Model chạy trên máy'), [
+  [L('Model running locally'), [
     aiApp('LM Studio', 'ai.elementlabs.lmstudio', 8),
     item({ name: 'Ollama', kind: 'process', process: 'ollama', bundleID: 'com.electron.ollama', threshold: 8, cli: 'ollama' }),
   ]],

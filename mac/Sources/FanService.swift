@@ -105,7 +105,7 @@ enum FanChoice: Codable, Equatable {
         refreshStatus()
         guard !available else { return }
         do { try service.register(); UserDefaults.standard.set(Self.marker, forKey: markerKey); refreshStatus(); status = "" }
-        catch { refreshStatus(); status = needsApproval ? "" : L("Không đăng ký được trợ lý quạt: {0}", error.localizedDescription) }
+        catch { refreshStatus(); status = needsApproval ? "" : L("Could not register the fan helper: {0}", error.localizedDescription) }
     }
 
     private func repair(manual: Bool = false) {
@@ -129,7 +129,7 @@ enum FanChoice: Codable, Equatable {
             } catch {
                 refreshStatus()
                 repairing = false
-                status = needsApproval ? "" : L("Không đăng ký được trợ lý quạt: {0}", error.localizedDescription) + "\n" + L("Hãy tắt rồi bật lại trợ lý quạt trong mục Quạt.")
+                status = needsApproval ? "" : L("Could not register the fan helper: {0}", error.localizedDescription) + "\n" + L("Turn the fan helper off and on again in the Fans pane.")
             }
         }
     }
@@ -195,7 +195,7 @@ enum FanChoice: Codable, Equatable {
             if error != nil { self.lastTarget[fan.index] = nil; self.activeSent.remove(fan.index) }
             if error == "Fan control paused until every sensor is below 85°C" {
                 self.hot = true
-                self.status = L("Quạt đã về tự động vì máy quá nóng")
+                self.status = L("Fans returned to automatic because the Mac is too hot")
                 self.onOverheat?()
             } else { self.status = error ?? "" }
             if error == nil { self.onCommandAcknowledged?() }
@@ -241,8 +241,8 @@ enum FanChoice: Codable, Equatable {
         refreshStatus()
         close()
         if needsApproval { status = ""; return }
-        status = L("Không kết nối được trợ lý quạt: {0}", reason)
-        if repairedThisLaunch { status += "\n" + L("Hãy tắt rồi bật lại trợ lý quạt trong mục Quạt.") }
+        status = L("Could not connect to the fan helper: {0}", reason)
+        if repairedThisLaunch { status += "\n" + L("Turn the fan helper off and on again in the Fans pane.") }
         else { repair() }
     }
 

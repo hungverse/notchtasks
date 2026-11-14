@@ -1,19 +1,19 @@
-1119	Relatar um problema
-1120	A compra foi concluída, mas o grupo não tem Pro.
-1121	Esta compra não foi aceita para este grupo.
-1122	Não foi possível restaurar as compras.
-1123	Tipo de problema
-1124	Pagamento
-1125	Notificações e Atividade ao Vivo
-1126	O que aconteceu?
-1127	E-mail ou outro contato (para respondermos)
-1128	Informações incluídas
-1129	ID anônimo do dispositivo, ID do grupo, versão do app, sistema operacional, modelo, idioma, status do Pro e transação, se disponível. Comandos, código-fonte, caminhos de arquivos, títulos de tarefas e nomes de projetos não são enviados.
-1130	Relato salvo. Será enviado quando houver conexão.
-1131	Enviado. Código do relato: {0}
-1132	Até 3 relatos estão aguardando. Tente novamente quando houver conexão.
-1133	O pagamento falhou.
-1134	Pagamento incompleto
-1135	ID anônimo do dispositivo, ID do grupo, versão do app, sistema operacional, modelo, idioma e status do Pro. Comandos, código-fonte, caminhos de arquivos, títulos de tarefas e nomes de projetos não são enviados.
-1136	Não foi possível enviar o relato. Tente novamente quando houver conexão.
-1137	Sua descrição e contato; ID anônimo do dispositivo, ID do grupo, estado de pareamento, número de telefones, versão do app, sistema operacional, modelo, idioma, status do Pro e transação, se disponível. Comandos, código-fonte, caminhos de arquivos, títulos de tarefas e nomes de projetos não são anexados automaticamente.
+1102	Relatar um problema
+1103	A compra foi concluída, mas o grupo não tem Pro.
+1104	Esta compra não foi aceita para este grupo.
+1105	Não foi possível restaurar as compras.
+1106	Tipo de problema
+1107	Pagamento
+1108	Notificações e Atividade ao Vivo
+1109	O que aconteceu?
+1110	E-mail ou outro contato (para respondermos)
+1111	Informações incluídas
+1112	ID anônimo do dispositivo, ID do grupo, versão do app, sistema operacional, modelo, idioma, status do Pro e transação, se disponível. Comandos, código-fonte, caminhos de arquivos, títulos de tarefas e nomes de projetos não são enviados.
+1113	Relato salvo. Será enviado quando houver conexão.
+1114	Enviado. Código do relato: {0}
+1115	Até 3 relatos estão aguardando. Tente novamente quando houver conexão.
+1116	O pagamento falhou.
+1117	Pagamento incompleto
+1118	ID anônimo do dispositivo, ID do grupo, versão do app, sistema operacional, modelo, idioma e status do Pro. Comandos, código-fonte, caminhos de arquivos, títulos de tarefas e nomes de projetos não são enviados.
+1119	Não foi possível enviar o relato. Tente novamente quando houver conexão.
+1120	Sua descrição e contato; ID anônimo do dispositivo, ID do grupo, estado de pareamento, número de telefones, versão do app, sistema operacional, modelo, idioma, status do Pro e transação, se disponível. Comandos, código-fonte, caminhos de arquivos, títulos de tarefas e nomes de projetos não são anexados automaticamente.

@@ -85,7 +85,7 @@ test('GitHubWatcher: settings token wins; jobs row for a run in progress', async
 test('GitHubWatcher: queued run says it waits for a runner', () => {
   const w = new G.GitHubWatcher();
   w.runs = new Map([[1, { id: 1, repo: 'a/b', workflow: 'CI', status: 'queued', started: 0, url: null, progress: null }]]);
-  assert.equal(w.jobs[0].detail, L('Đang chờ runner'));
+  assert.equal(w.jobs[0].detail, L('Waiting for a runner'));
 });
 
 test('GitHubWatcher.pushed records the checkout only', () => {

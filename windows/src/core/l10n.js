@@ -1,5 +1,5 @@
 'use strict';
-// Port of Sources/L10n.swift. Vietnamese text is the key; tables are l10n-<code>.json.
+// Port of Sources/L10n.swift. English text is the key; tables are l10n-<code>.json (every code but en).
 const fs = require('fs');
 const path = require('path');
 const { resourceDir } = require('./resources');
@@ -62,12 +62,14 @@ function table(code) {
 }
 
 function code() {
-  return testing ? 'vi' : choiceCode || device();
+  return testing ? 'en' : choiceCode || device();
 }
 
+// A Vietnamese text (old key, saved value, data) maps to its English key first; l10n-legacy.json (rekey.py).
 function text(key, lang) {
-  if (lang === 'vi') return key;
-  return table(lang)[key] ?? table('en')[key] ?? key;
+  const k = table('legacy')[key] ?? key;
+  if (lang === 'en') return k;
+  return table(lang)[k] ?? k;
 }
 
 function fill(s, args) {

@@ -16,9 +16,9 @@
   let page = 0;
 
   const AGENT_NOTES = {
-    claude: 'Duyệt lệnh, sửa file, trả lời câu hỏi', gemini: 'Duyệt lệnh, sửa file, trả lời câu hỏi',
-    antigravity: 'Duyệt lệnh, sửa file, trả lời câu hỏi', codex: 'Duyệt lệnh, sửa file',
-    cursor: 'Từ chối lệnh. Cho phép chỉ khi Cursor đang tự chạy lệnh', opencode: 'Duyệt lệnh, sửa file, truy cập web',
+    claude: 'Review commands, file edits, answer questions', gemini: 'Review commands, file edits, answer questions',
+    antigravity: 'Review commands, file edits, answer questions', codex: 'Review commands, file edits',
+    cursor: 'Denies commands. Allows only while Cursor runs commands on its own', opencode: 'Review commands, file edits, web access',
   };
 
   function setSetting(key, value) {
@@ -39,16 +39,16 @@
   function welcome() {
     return h('div', { class: 'ob-hero' },
       h('div', { class: 'wall' }, NotchPreview(state.settings, state.live, {})),
-      h('div', { class: 't ob-t' }, L('Chào mừng đến NotchTasks')),
-      h('div', { class: 'dim' }, L('Notch hiện những gì đang chạy, và im lặng khi không có gì.')),
+      h('div', { class: 't ob-t' }, L('Welcome to NotchTasks')),
+      h('div', { class: 'dim' }, L('The notch shows what\'s running, and stays quiet when nothing is.')),
       h('div', { class: 'card-block' }, icon('arrow-up', 16, 'acc'),
-        h('span', {}, L('Nhìn lên mép trên màn hình: đó là notch của bạn.'))));
+        h('span', {}, L('Look at the top edge of the screen: that is your notch.'))));
   }
 
   function modulesPage() {
     const s = state.settings;
     return h('div', { class: 'ob-stack' },
-      header(L('Hiện gì trên notch'), L('Bấm để bật hoặc tắt. Đổi lại bất cứ lúc nào trong Bảng điều khiển.')),
+      header(L('What the notch shows'), L('Click to turn on or off. Change it anytime in the Control Panel.')),
       CAT.moduleGroups.map((g) => h('div', { class: 'block' }, h('div', { class: 'grp-t' }, L(g.title)),
         h('div', { class: 'ob-mod' }, g.ids.map((id) => {
           const m = CAT.modules.find((x) => x.id === id);
@@ -68,21 +68,21 @@
   function agentsPage() {
     const found = state.agents.filter((a) => a.present);
     return h('div', { class: 'ob-stack' },
-      header(L('Trả lời agent trên notch'), L('Mỗi công tắc thêm một mục vào cấu hình agent và sao lưu bản cũ. Có hiệu lực từ phiên mở sau.')),
+      header(L('Answer agents on the notch'), L('Each switch adds one entry to the agent config and backs up the old file. It applies to new sessions.')),
       found.length ? h('div', { class: 'list' }, found.map((a) => h('div', { class: 'irow' }, icon('bot', 22, 'dim'),
-        h('div', { class: 'itext' }, h('div', { class: 'it' }, a.name), h('div', { class: 'is dim' }, L(AGENT_NOTES[a.kind] || 'Duyệt lệnh, sửa file'))),
+        h('div', { class: 'itext' }, h('div', { class: 'it' }, a.name), h('div', { class: 'is dim' }, L(AGENT_NOTES[a.kind] || 'Review commands, file edits'))),
         toggle(a.installed, (on) => {
           state = { ...state, agents: state.agents.map((x) => (x.kind === a.kind ? { ...x, installed: on } : x)) };
           nt.act(on ? 'installHook' : 'uninstallHook', a.kind);
           render();
-        }, a.name)))) : h('div', { class: 'card-block dim' }, L('Chưa thấy AI agent nào. Thêm sau ở trang Theo dõi.')),
+        }, a.name)))) : h('div', { class: 'card-block dim' }, L('No AI agents found yet. Add them later on the Watching page.')),
       state.agentError ? h('div', { class: 'err' }, state.agentError) : null);
   }
 
   function phonePage() {
     return h('div', { class: 'ob-phone' },
-      header(L('Điện thoại (tuỳ chọn)'), L('Ghép điện thoại để trả lời agent từ màn hình khoá khi rời máy tính.')),
-      h('div', { class: 'row' }, h('button', { class: 'btn', type: 'button', onclick: () => done('phone') }, L('Mở Ghép nối'))));
+      header(L('Phone (optional)'), L('Pair your phone to answer agents from the lock screen when away from your computer.')),
+      h('div', { class: 'row' }, h('button', { class: 'btn', type: 'button', onclick: () => done('phone') }, L('Open Pairing'))));
   }
 
   function readyPage() {
@@ -90,11 +90,11 @@
       h('span', { class: 'row' }, glyphs.map((g) => h('span', { class: 'glyph' }, icon(g, 16)))),
       h('div', { class: 'itext' }, h('div', { class: 'it' }, title), h('div', { class: 'is dim' }, text)));
     return h('div', { class: 'ob-stack' },
-      header(L('Sẵn sàng rồi'), L('Ba điều cần nhớ:')),
+      header(L('You\'re all set'), L('Three things to remember:')),
       h('div', { class: 'ob-steps' },
-        step(['mouse-pointer-click'], L('Mở notch'), L('Trỏ chuột vào notch ở mép trên màn hình.')),
-        step(['settings', 'power'], L('Bảng điều khiển'), L('Nút Bảng điều khiển và Thoát nằm ở cuối notch khi mở.')),
-        step(['panel-top'], L('Biểu tượng trên khay hệ thống'), L('Biểu tượng NotchTasks ở khay hệ thống (cạnh đồng hồ) mở Bảng điều khiển.'))));
+        step(['mouse-pointer-click'], L('Opening the notch'), L('Point at the notch at the top of the screen.')),
+        step(['settings', 'power'], L('Control Panel'), L('The Control Panel and Quit buttons are at the end of the notch when it is open.')),
+        step(['panel-top'], L('Icon in the system tray'), L('The NotchTasks icon in the system tray (by the clock) opens the Control Panel.'))));
   }
 
   const BUILDERS = [welcome, modulesPage, agentsPage, phonePage, readyPage];
@@ -105,13 +105,13 @@
     fill(pageEl, [BUILDERS[page]()]);
     const dots = h('div', { class: 'dots' }, PAGES.map((_, i) => h('i', { class: i === page ? 'on' : '' })));
     const last = page === LAST;
-    const next = last ? L('Cho tôi xem') : page === PHONE ? L('Để sau') : L('Tiếp');
+    const next = last ? L('Show me') : page === PHONE ? L('Later') : L('Next');
     fill(document.getElementById('foot'), [
       dots,
-      h('span', { class: 'dim small' }, L('Bước {0}/{1}', page + 1, PAGES.length)),
+      h('span', { class: 'dim small' }, L('Step {0}/{1}', page + 1, PAGES.length)),
       h('span', { class: 'sp' }),
-      h('button', { class: 'btn', type: 'button', onclick: () => done('close') }, L('Bỏ qua')),
-      page > 0 ? h('button', { class: 'btn', type: 'button', onclick: () => { page -= 1; render(); } }, L('Quay lại')) : null,
+      h('button', { class: 'btn', type: 'button', onclick: () => done('close') }, L('Skip')),
+      page > 0 ? h('button', { class: 'btn', type: 'button', onclick: () => { page -= 1; render(); } }, L('Back')) : null,
       h('button', { class: 'btn primary', type: 'button', onclick: () => (last ? done('notch') : (page += 1, render())) }, next)]);
   }
 

@@ -106,7 +106,7 @@ test('pair signs up anonymously, writes the Mac member, returns a code parsePair
 
 test('update writes a sealed snapshot, does not rewrite the same state, writes at once when asks change', async () => {
   const { sync, fb } = makeSync({ fb: { entitlement: { pro: true, until: PRO_UNTIL } }, group: groupFixture() });
-  await sync.update(input({ runs: [{ id: 'r1', agent: 'claude', title: 'api', detail: 'Đang chạy' }] }));
+  await sync.update(input({ runs: [{ id: 'r1', agent: 'claude', title: 'api', detail: 'Running' }] }));
   await waitFor(() => fb.calls.some(isSnap));
   const first = fb.calls.find(isSnap);
   const opened = box.open(first.body.box, KEY);
@@ -115,11 +115,11 @@ test('update writes a sealed snapshot, does not rewrite the same state, writes a
   assert.equal(first.body.asks, 0);
   await sleep(30);
 
-  await sync.update(input({ runs: [{ id: 'r1', agent: 'claude', title: 'api', detail: 'Đang chạy' }] }));
+  await sync.update(input({ runs: [{ id: 'r1', agent: 'claude', title: 'api', detail: 'Running' }] }));
   await sleep(30);
   assert.equal(fb.calls.filter(isSnap).length, 1, 'same state: no second write');
 
-  await sync.update(input({ runs: [{ id: 'r1', agent: 'claude', title: 'api', detail: 'Đang chạy' }], asks: [ask()] }));
+  await sync.update(input({ runs: [{ id: 'r1', agent: 'claude', title: 'api', detail: 'Running' }], asks: [ask()] }));
   await waitFor(() => fb.calls.filter(isSnap).length === 2);
   const second = fb.calls.filter(isSnap)[1].body;
   assert.equal(second.asks, 1, 'asks count is readable');

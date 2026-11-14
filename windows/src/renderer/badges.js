@@ -253,7 +253,7 @@
       const add = mine.length < perSide ? slot(right) : null;
       return h('div', { class: `bside ${right ? 'r' : 'l'}` }, right ? tiles : [add, ...tiles], right ? add : null);
     };
-    const slot = (right) => h('button', { class: 'add-slot', type: 'button', title: L(right ? 'Thêm bên phải' : 'Thêm bên trái'),
+    const slot = (right) => h('button', { class: 'add-slot', type: 'button', title: L(right ? 'Add on the right' : 'Add on the left'),
       ondragover: (e) => e.preventDefault(),
       ondrop: (e) => { e.preventDefault(); if (dragId) onChange(moveBadge(badges, dragId, right, perSide)); dragId = null; },
       onclick: () => onEdit({ id: null, right }) }, icon('plus', 14));
@@ -265,9 +265,9 @@
     NotchBadge(b, 22, accentHex(catalogSettings)));
     const row = h('div', { class: 'board-row' }, side(false), h('div', { class: 'camera' }, h('i', {})), side(true));
     return h('div', { class: 'board' }, row,
-      h('div', { class: 'board-hint' }, L('Bấm + để thêm, bấm để sửa, kéo để đổi chỗ. Mỗi bên tối đa {0}{1}', perSide,
-        perSide < catalog.proPerSide ? L(', Pro được 4.') : '.')),
-      h('div', { class: 'board-actions' }, h('button', { class: 'btn sm', type: 'button', onclick: onStore }, icon('sparkles', 14), L('Thêm từ Kho biểu tượng'))));
+      h('div', { class: 'board-hint' }, L('Click + to add, click to edit, drag to swap places. Up to {0} per side{1}', perSide,
+        perSide < catalog.proPerSide ? L(', Pro gets 4.') : '.')),
+      h('div', { class: 'board-actions' }, h('button', { class: 'btn sm', type: 'button', onclick: onStore }, icon('sparkles', 14), L('Add from Icon Library'))));
   }
 
   // The settings the board's accent comes from; prefs.js keeps it current.
@@ -277,10 +277,10 @@
   // ---- icon editor ----------------------------------------------------------------------------------------------------
 
   const TABS = [
-    { id: 'symbol', icon: 'star', label: 'Biểu tượng', hint: 'Hơn 1.000 biểu tượng nét mảnh' },
-    { id: 'text', icon: 'type', label: 'Chữ, emoji', hint: 'Vài ký tự hoặc emoji' },
-    { id: 'image', icon: 'image', label: 'Ảnh', hint: 'Ảnh của bạn' },
-    { id: 'motion', icon: 'clapperboard', label: 'Ảnh động', hint: 'Nhân vật chuyển động, GIF' },
+    { id: 'symbol', icon: 'star', label: 'Symbol', hint: 'Over 1,000 thin-line icons' },
+    { id: 'text', icon: 'type', label: 'Text, emoji', hint: 'A few characters or emoji' },
+    { id: 'image', icon: 'image', label: 'Photos', hint: 'Your picture' },
+    { id: 'motion', icon: 'clapperboard', label: 'Animation', hint: 'Animated characters, GIFs' },
   ];
 
   /**
@@ -297,7 +297,7 @@
     const style = h('div', { class: 'be-style' });
 
     const big = h('div', { class: 'be-big' });
-    const live = h('div', { class: 'be-live', title: L('Trên notch') });
+    const live = h('div', { class: 'be-live', title: L('On the notch') });
     const head = h('div', { class: 'be-head' },
       big, h('div', { class: 'be-titles' }, h('div', { class: 'be-title' }, title), subtitle ? h('div', { class: 'be-sub' }, subtitle) : null),
       h('span', { class: 'sp' }), live);
@@ -325,14 +325,14 @@
       const results = iconResults();
       const grid = h('div', { class: 'icon-grid' }, results.map(gridItem));
       const count = h('div', { class: 'caption' });
-      const input = h('input', { class: 'inp', placeholder: L('Tìm bằng tiếng Anh: star, cloud, cat, hammer…'), value: query,
+      const input = h('input', { class: 'inp', placeholder: L('Search in English: star, cloud, cat, hammer…'), value: query,
         oninput: (e) => {
           query = e.target.value;
           const hits = iconResults();
           grid.replaceChildren(...hits.map(gridItem));
-          count.textContent = query ? L('{0} kết quả', hits.length) : L('{0} biểu tượng', hits.length);
+          count.textContent = query ? L('{0} results', hits.length) : L('{0} icons', hits.length);
         } });
-      count.textContent = query ? L('{0} kết quả', results.length) : L('{0} biểu tượng', results.length);
+      count.textContent = query ? L('{0} results', results.length) : L('{0} icons', results.length);
       return h('div', { class: 'stack' }, input, grid, count);
     }
 
@@ -346,9 +346,9 @@
     }
 
     function textTab() {
-      const input = h('input', { class: 'inp big', maxlength: 32, value: b.text || '', placeholder: L('Gõ tối đa 8 ký tự'),
+      const input = h('input', { class: 'inp big', maxlength: 32, value: b.text || '', placeholder: L('Type up to 8 characters'),
         oninput: (e) => { const v = Array.from(e.target.value).slice(0, 8).join(''); e.target.value = v; b = { ...b, text: v, image: null, sprite: null, frames: null, fps: null }; emit(); } });
-      return h('div', { class: 'stack' }, input, h('div', { class: 'caption' }, L('Chọn nhanh')),
+      return h('div', { class: 'stack' }, input, h('div', { class: 'caption' }, L('Quick picks')),
         h('div', { class: 'emoji-grid' }, EMOJI.map((e) => h('button', { class: `eg${b.text === e ? ' on' : ''}`, type: 'button',
           onclick: () => { b = { ...b, text: e, image: null, sprite: null, frames: null, fps: null }; emit(); renderContent(); } }, e))));
     }
@@ -366,10 +366,10 @@
         ondragleave: () => zone.classList.remove('over'),
         ondrop: (e) => { e.preventDefault(); zone.classList.remove('over'); const f = e.dataTransfer.files[0]; if (f) adopt(f.path); } },
       b.image ? h('img', { class: 'drop-img', src: nt.fileURL(b.image), alt: '' }) : icon('image', 40, 'dim'),
-      h('div', { class: 'dim' }, L(b.image ? 'Kéo ảnh khác vào đây' : 'Kéo ảnh vào đây')),
-      h('button', { class: 'btn', type: 'button', onclick: () => pick.click() }, L('Chọn ảnh…')),
+      h('div', { class: 'dim' }, L(b.image ? 'Drop another picture here' : 'Drop a picture here')),
+      h('button', { class: 'btn', type: 'button', onclick: () => pick.click() }, L('Choose picture…')),
       pick,
-      h('div', { class: 'caption' }, L('PNG, JPG, HEIC… Ảnh vuông trông đẹp nhất.')));
+      h('div', { class: 'caption' }, L('PNG, JPG, HEIC… Square pictures look best.')));
       return zone;
     }
 
@@ -397,12 +397,12 @@
         };
         probe.src = nt.fileURL(path);
       });
-      const custom = [h('button', { class: 'btn', type: 'button', onclick: () => own.click() }, icon('film', 14), L('GIF hoặc spritesheet của bạn…')), own];
+      const custom = [h('button', { class: 'btn', type: 'button', onclick: () => own.click() }, icon('film', 14), L('Your GIF or spritesheet…')), own];
       const count = b.frames && b.image && !b.sprite ? h('div', { class: 'row gap' },
         h('span', { class: 'dim' }, `${b.frames} khung`),
         h('input', { type: 'range', min: 1, max: 120, value: b.frames, oninput: (e) => { b = { ...b, frames: Number(e.target.value) }; emit(); } }),
         h('input', { type: 'range', min: 1, max: 30, value: b.fps || 10, oninput: (e) => { b = { ...b, fps: Number(e.target.value) }; emit(); } }),
-        h('span', { class: 'dim' }, L('{0}/giây', b.fps || 10))) : null;
+        h('span', { class: 'dim' }, L('{0}/sec', b.fps || 10))) : null;
       return h('div', { class: 'stack' }, chips, grid, h('div', { class: 'row gap' }, custom), count);
     }
 
@@ -410,22 +410,22 @@
     function renderStyle() {
       const paints = tab === 'symbol' || tab === 'text';
       const fills = h('div', { class: 'swatches' },
-        h('button', { class: `sw-none${b.plain === true ? ' on' : ''}`, type: 'button', title: L('Không nền'),
+        h('button', { class: `sw-none${b.plain === true ? ' on' : ''}`, type: 'button', title: L('No background'),
           onclick: () => { b = { ...b, plain: true }; emit(); renderStyle(); } }, icon('circle-slash', 14)),
         FILLS.map((c) => swatch(c, b.plain !== true && b.color === c, () => { b = { ...b, color: c, plain: null }; emit(); renderStyle(); })),
-        h('input', { type: 'color', class: 'color', value: b.color || '#0A84FF', title: L('Màu khác'),
+        h('input', { type: 'color', class: 'color', value: b.color || '#0A84FF', title: L('Other color'),
           onchange: (e) => { b = { ...b, color: e.target.value, plain: null }; emit(); renderStyle(); } }));
       const inks = paints ? h('div', { class: 'swatches' }, FILLS.map((c) => swatch(c, b.fg === c, () => { b = { ...b, fg: c }; emit(); renderStyle(); })),
-        h('input', { type: 'color', class: 'color', value: b.fg || '#FFFFFF', title: L('Màu khác'),
+        h('input', { type: 'color', class: 'color', value: b.fg || '#FFFFFF', title: L('Other color'),
           onchange: (e) => { b = { ...b, fg: e.target.value }; emit(); renderStyle(); } })) : null;
       fill(style, [
-        h('div', { class: 'be-row' }, h('span', { class: 'dim' }, L('Hình dạng')),
-          segmented([{ value: 'circle', label: L('Tròn'), icon: 'circle' }, { value: 'rounded', label: L('Vuông'), icon: 'square' }], b.shape,
+        h('div', { class: 'be-row' }, h('span', { class: 'dim' }, L('Shape')),
+          segmented([{ value: 'circle', label: L('Circle'), icon: 'circle' }, { value: 'rounded', label: L('Square'), icon: 'square' }], b.shape,
             (v) => { b = { ...b, shape: v }; emit(); renderStyle(); }),
-          h('span', { class: 'sp' }), h('span', { class: 'dim' }, L('Viền')),
-          toggle(b.border, (v) => { b = { ...b, border: v }; emit(); renderStyle(); }, L('Viền'))),
-        h('div', { class: 'be-row' }, h('span', { class: 'dim' }, L('Nền')), fills),
-        inks ? h('div', { class: 'be-row' }, h('span', { class: 'dim' }, tab === 'text' ? L('Màu chữ') : L('Màu biểu tượng')), inks) : null]);
+          h('span', { class: 'sp' }), h('span', { class: 'dim' }, L('Border')),
+          toggle(b.border, (v) => { b = { ...b, border: v }; emit(); renderStyle(); }, L('Border'))),
+        h('div', { class: 'be-row' }, h('span', { class: 'dim' }, L('Background')), fills),
+        inks ? h('div', { class: 'be-row' }, h('span', { class: 'dim' }, tab === 'text' ? L('Text color') : L('Symbol color')), inks) : null]);
     }
     function swatch(c, on, go) {
       return h('button', { class: `sw${on ? ' on' : ''}`, type: 'button', title: c, style: { background: c }, onclick: go });
@@ -437,10 +437,10 @@
     renderStyle();
 
     const footer = h('div', { class: 'be-foot' },
-      onDelete ? h('button', { class: 'btn danger', type: 'button', onclick: () => { m.close(); onDelete(); } }, icon('trash-2', 14), L('Xoá biểu tượng')) : null,
-      onReset ? h('button', { class: 'btn', type: 'button', onclick: () => { m.close(); onReset(); } }, L('Dùng biểu tượng mặc định')) : null,
+      onDelete ? h('button', { class: 'btn danger', type: 'button', onclick: () => { m.close(); onDelete(); } }, icon('trash-2', 14), L('Remove icon')) : null,
+      onReset ? h('button', { class: 'btn', type: 'button', onclick: () => { m.close(); onReset(); } }, L('Use the default icon')) : null,
       h('span', { class: 'sp' }),
-      h('button', { class: 'btn primary', type: 'button', onclick: () => m.close() }, L('Xong')));
+      h('button', { class: 'btn primary', type: 'button', onclick: () => m.close() }, L('Done')));
     const body = h('div', { class: 'be' }, head, h('div', { class: 'be-main' }, side, content), style);
     const m = modal({ width: 680, body, footer, onClose: onDone });
     m.box.classList.add('be-box');

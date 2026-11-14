@@ -157,7 +157,7 @@ final class GitHubWatcher {
         runs.values.filter { $0.status != "completed" }.sorted { $0.id < $1.id }.map { r in
             let waiting = ["queued", "waiting", "pending", "requested"].contains(r.status)
             return Job(id: "gh:\(r.id)", title: "\(r.repo) · \(r.workflow)",
-                       detail: waiting ? L("Đang chờ runner") : "\(r.step ?? L("đang chạy")) · \(mmss(Date().timeIntervalSince(r.started)))",
+                       detail: waiting ? L("Waiting for a runner") : "\(r.step ?? L("running")) · \(mmss(Date().timeIntervalSince(r.started)))",
                        working: true, url: r.url, progress: r.progress, tool: "GitHub Actions")
         }
     }

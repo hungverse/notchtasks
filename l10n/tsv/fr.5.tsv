@@ -1,22 +1,22 @@
-1031	Ventilateurs
-1032	Ventilateurs et température
-1033	La température et la vitesse des ventilateurs sont lues sur ce Mac. Le contrôle s’active seulement après acceptation de l’avertissement.
-1034	Un mauvais contrôle des ventilateurs peut endommager le matériel.
-1035	Activer l’assistant de ventilateurs
-1036	L’assistant limite les vitesses aux bornes indiquées par la machine et revient en automatique si la connexion est perdue ou si le Mac est trop chaud.
-1037	Capteurs
-1038	Impossible de lire les capteurs de température.
-1039	Autorisez l’assistant dans Ouverture à l’ouverture des Réglages Système.
-1040	Ce Mac ne signale pas les ventilateurs via SMC ; la lecture de température fonctionne toujours.
-1041	Ventilateur {0}
-1042	Forcé
-1043	Mode
-1044	Vitesse fixe
-1045	Par capteur
-1046	Début {0}°C
-1047	Maximum {0}°C
-1048	Les ventilateurs sont revenus en automatique car le Mac est trop chaud
-1049	Impossible d’enregistrer l’assistant de ventilateurs : {0}
-1050	Impossible de joindre l’assistant de ventilateurs : {0}
-1051	Moitié
-1052	Maximum
+1015	Ventilateurs
+1016	Ventilateurs et température
+1017	La température et la vitesse des ventilateurs sont lues sur ce Mac. Le contrôle s’active seulement après acceptation de l’avertissement.
+1018	Un mauvais contrôle des ventilateurs peut endommager le matériel.
+1019	Activer l’assistant de ventilateurs
+1020	L’assistant limite les vitesses aux bornes indiquées par la machine et revient en automatique si la connexion est perdue ou si le Mac est trop chaud.
+1021	Capteurs
+1022	Impossible de lire les capteurs de température.
+1023	Autorisez l’assistant dans Ouverture à l’ouverture des Réglages Système.
+1024	Ce Mac ne signale pas les ventilateurs via SMC ; la lecture de température fonctionne toujours.
+1025	Ventilateur {0}
+1026	Forcé
+1027	Mode
+1028	Vitesse fixe
+1029	Par capteur
+1030	Début {0}°C
+1031	Maximum {0}°C
+1032	Les ventilateurs sont revenus en automatique car le Mac est trop chaud
+1033	Impossible d’enregistrer l’assistant de ventilateurs : {0}
+1034	Impossible de joindre l’assistant de ventilateurs : {0}
+1035	Moitié
+1036	Maximum

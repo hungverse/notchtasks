@@ -1,19 +1,19 @@
-1119	Laporkan masalah
-1120	Pembelian selesai, tetapi grup belum memiliki Pro.
-1121	Pembelian ini tidak diterima untuk grup ini.
-1122	Tidak dapat memulihkan pembelian.
-1123	Jenis masalah
-1124	Pembayaran
-1125	Notifikasi & Aktivitas Langsung
-1126	Apa yang terjadi?
-1127	Email atau kontak lain (agar kami bisa membalas)
-1128	Informasi yang disertakan
-1129	ID perangkat anonim, ID grup, versi aplikasi, OS, model perangkat, bahasa, status Pro, dan transaksi jika ada. Perintah, kode sumber, jalur file, judul tugas, dan nama proyek tidak dikirim.
-1130	Laporan disimpan. Akan dikirim saat online.
-1131	Terkirim. Kode laporan: {0}
-1132	Maksimal 3 laporan menunggu. Coba lagi saat online.
-1133	Pembayaran gagal.
-1134	Pembayaran belum selesai
-1135	ID perangkat anonim, ID grup, versi aplikasi, OS, model perangkat, bahasa, dan status Pro. Perintah, kode sumber, jalur file, judul tugas, dan nama proyek tidak dikirim.
-1136	Tidak dapat mengirim laporan. Coba lagi saat online.
-1137	Deskripsi dan kontak yang Anda masukkan; ID perangkat anonim, ID grup, status pemasangan, jumlah ponsel, versi aplikasi, OS, model perangkat, bahasa, status Pro, dan transaksi jika ada. Perintah, kode sumber, jalur file, judul tugas, dan nama proyek tidak dilampirkan otomatis.
+1102	Laporkan masalah
+1103	Pembelian selesai, tetapi grup belum memiliki Pro.
+1104	Pembelian ini tidak diterima untuk grup ini.
+1105	Tidak dapat memulihkan pembelian.
+1106	Jenis masalah
+1107	Pembayaran
+1108	Notifikasi & Aktivitas Langsung
+1109	Apa yang terjadi?
+1110	Email atau kontak lain (agar kami bisa membalas)
+1111	Informasi yang disertakan
+1112	ID perangkat anonim, ID grup, versi aplikasi, OS, model perangkat, bahasa, status Pro, dan transaksi jika ada. Perintah, kode sumber, jalur file, judul tugas, dan nama proyek tidak dikirim.
+1113	Laporan disimpan. Akan dikirim saat online.
+1114	Terkirim. Kode laporan: {0}
+1115	Maksimal 3 laporan menunggu. Coba lagi saat online.
+1116	Pembayaran gagal.
+1117	Pembayaran belum selesai
+1118	ID perangkat anonim, ID grup, versi aplikasi, OS, model perangkat, bahasa, dan status Pro. Perintah, kode sumber, jalur file, judul tugas, dan nama proyek tidak dikirim.
+1119	Tidak dapat mengirim laporan. Coba lagi saat online.
+1120	Deskripsi dan kontak yang Anda masukkan; ID perangkat anonim, ID grup, status pemasangan, jumlah ponsel, versi aplikasi, OS, model perangkat, bahasa, status Pro, dan transaksi jika ada. Perintah, kode sumber, jalur file, judul tugas, dan nama proyek tidak dilampirkan otomatis.

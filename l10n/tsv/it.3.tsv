@@ -1,312 +1,309 @@
-700	Nascondi codice
-701	Abbina un altro dispositivo…
-702	Creazione codice…
-703	Abbina dispositivo…
-704	Avvisa il telefono solo quando sono lontano
-705	{0} dispositivi tramite Wi‑Fi
-706	Sulla stessa rete Wi‑Fi il telefono riceve subito gli aggiornamenti; altrove, tramite Internet. Mentre usi questo computer, il telefono resta silenzioso.
-707	Nessun dispositivo ancora.
-708	Annulla tutti gli abbinamenti
-709	Abbinato
-710	Tutti i dispositivi saranno scollegati da questo computer. Per abbinarli di nuovo servirà un nuovo codice.
-711	Non concesso
-712	Non verificato
-713	Avvisa quando un'attività termina o non riesce.
-714	Mostra gli eventi in arrivo.
-715	Controlla la musica nel browser.
-716	Controlla {0}
-717	Legge e controlla ciò che è in riproduzione.
-718	Musica in {0}
-719	Metti in pausa, riproduci e salta i brani direttamente nella scheda.
-720	Apri all'accesso
-721	Si avvia automaticamente quando accedi.
-722	Disattiva in {0}
-723	Deseleziona la stessa voce:\n
-724	Il comando contiene “{0}”
-725	Processo “{0}”
-726	 · il comando contiene “{0}”
-727	un sottoprocesso per riga
-728	App · {0}
-729	Monitora ogni sessione
-730	Mostra durante l'esecuzione
-731	App IA
-732	Passo {0}/{1}
-733	Salta
-734	Indietro
-735	Avanti
-736	Benvenuto in NotchTasks
-737	IA e build
-738	Scopri quale agent sta lavorando e quale build è terminata o non riuscita
-739	Musica e chiamate
-740	Controlla la musica e disattiva subito il microfono durante le chiamate
-741	Avvisi ordinati
-742	Ricarica, cuffie, download, rete e surriscaldamento
-743	Privato
-744	Tutto funziona sul tuo computer e non viene inviato altrove
-745	Cosa mostra la tacca
-746	Fai clic per attivare o disattivare. Puoi cambiare in qualsiasi momento nel Pannello di controllo.
-747	Agent IA sul tuo computer
-748	Trovati e attivati. Puoi aggiungerli o rimuoverli nel Pannello di controllo.
-749	Nessun agent IA trovato. Aggiungili in seguito nella pagina Monitoraggio.
-750	Il modulo agent IA è disattivato.
-751	Solo i permessi necessari ai moduli selezionati. Puoi saltare questo passaggio.
-752	È tutto pronto
-753	Qualche suggerimento per iniziare più velocemente:
-754	Passa il puntatore sulla tacca
-755	La tacca si apre mostrando tutto ciò che è in esecuzione. Allontana il puntatore per richiuderla.
-756	Fai clic sui pulsanti degli avvisi
-757	Gli avvisi restano visibili finché il puntatore è sopra, con pulsanti come “Mostra nella cartella” e “Libera spazio”.
-758	Trascina i file sulla tacca
-759	Tieni temporaneamente i file sul ripiano e trascinali fuori quando servono.
-760	Decora la tacca
-761	Scegli personaggi animati nella Libreria icone.
-762	Apri Pannello di controllo
-763	Fai clic sull'icona NotchTasks nella barra dei menu oppure su ⚙ quando la tacca è aperta.
-764	Fai clic su ⚙ quando la tacca è aperta oppure apri di nuovo NotchTasks da Spotlight.
-765	Usa strumento 
-766	Rifiutato sulla tacca
-767	Non ancora autorizzato in Codex
-768	Apri Codex
-769	Accesso non effettuato
-770	Accedi
-771	1. Safari › Impostazioni › Avanzate: attiva “Mostra funzionalità per sviluppatori web”.\n2. Menu Sviluppo › Consenti JavaScript da Eventi Apple.
-772	In {0}, nella barra dei menu: Vista (View) › Sviluppatore (Developer) › Consenti JavaScript da Eventi Apple.
-773	Attiva controllo della musica
-774	Apri impostazioni di Safari
-775	Safari › Impostazioni… (⌘,)
-776	Mostra funzionalità per sviluppatori
-777	Scheda Avanzate: attiva “Show features for web developers”
-778	Consenti JavaScript da Eventi Apple
-779	Apri menu Vista
-780	Nella barra dei menu di {0}, fai clic su View (Vista)
-781	Seleziona Sviluppatore
-782	Passa il puntatore su Developer (Sviluppatore)
-783	Fai clic su Allow JavaScript from Apple Events
-784	Ultima voce. Un ✓ indica che hai finito
-785	Consenti alla tacca di controllare la musica in {0}
-786	Configurazione una tantum, circa 10 secondi. Poi puoi mettere in pausa, riprodurre, avanzare e cambiare brano nella scheda dalla tacca.
-787	Attivato. La tacca ora può controllare {0}.
-788	In attesa dell'attivazione… questa finestra la rileva automaticamente
-789	Più tardi
-790	Apri {0}
-791	Agent e app IA al lavoro
-792	Build, test, installazioni, rendering, CI
-793	Brano in riproduzione, con comandi
-794	Utilizzo degli agent, avviso prima del limite
-795	Collegamento e scollegamento alimentazione, batteria scarica
-796	Eventi in arrivo con link alla riunione
-797	Trascina i file sulla tacca per tenerli temporaneamente
-798	Timer rapido
-799	Cuffie, tastiera, mouse e batteria
-800	Durante le chiamate, pulsante per disattivare il microfono (FaceTime, Zoom…)
-801	Avvisa quando un'app usa microfono o fotocamera
-802	Volume e luminosità mentre li regoli
-803	Rete persa, riconnessa, VPN
-804	Avvisa al termine dei download e mostra la cartella
-805	Computer caldo, disco quasi pieno
-806	Controlla la fotocamera prima di una riunione
-807	Lavoro
-808	Musica e dispositivi
-809	Chiamate e privacy
-810	Sistema
-811	Controlli delle app
-812	Cartella Download
-813	Usa il colore dell'app
-814	Scegli un colore…
-815	Questo file non è un pacchetto suoni di NotchTasks.
-816	Questo file non contiene suoni utilizzabili.
-817	In attesa del runner
-818	in esecuzione
-819	In esecuzione · {0}
-820	Terminato · {0} fa
-821	Custodia
-822	{0} attività in esecuzione
-823	Apri log
-824	+{0} altre attività
-825	Nascondi avviso
-826	Audio in riproduzione
-827	Attiva i controlli in {0}
-828	Per mettere in pausa, riprodurre e cambiare brano nella scheda senza avviare automaticamente altre app musicali
-829	Trascina per scorrere
-830	Videochiamata · {0}
-831	Chiamata in corso · {0}
-832	 · Microfono disattivato
-833	Attiva microfono
-834	Disattiva microfono
-835	NotchTasks non può ancora usare la fotocamera
-836	Apri impostazioni Fotocamera
-837	Disattiva specchio
-838	In attesa di 
-839	Rispondi in {0}
-840	Salta qui: {0} chiederà come al solito
-841	Invia
-842	Compleanno di Lan
-843	Famiglia
-844	Ferie
-845	Scrivi resoconto
-846	Riunione sprint
-847	Pranzo con il team
-848	Chiama il cliente
-849	 connesso
-850	 disconnesso
-851	S 100% · D 98% · Custodia 62%
-852	1 tentativo di sblocco errato
-853	{0} tentativi di sblocco errati
-854	L'ultimo alle {0}, mentre il computer era bloccato
-855	Pacchetto suoni applicato
-856	Pannello di controllo…
-857	Guida…
-858	Timer da {0} minuti
-859	Ferma timer
-860	Esci da NotchTasks
-861	Stanza A / https://us02web.zoom.us/j/123?pwd=x
-862	Quale colore?
-863	Rosso
-864	Colore?
-865	Scende dalla tacca.
-866	Si adatta alla tacca.
-867	Scheda fluttuante sotto la tacca.
-868	Largo, testo grande.
-869	Automatico
-870	Sinistra
-871	Destra
-872	IA / attività completata
-873	L'agent chiede, serve approvazione
-874	CI riuscita
-875	CI non riuscita
-876	Limite IA quasi raggiunto
-877	Evento in arrivo
-878	Timer scaduto
-879	Alimentazione collegata
-880	Alimentazione scollegata
-881	Dispositivo connesso
-882	Dispositivo disconnesso
-883	Chiamata iniziata
-884	Chiamata terminata
-885	Microfono o fotocamera attivi
-886	Sblocco non riuscito
-887	Rete disconnessa
-888	Rete riconnessa, VPN
-889	Download completato
-890	Computer caldo, disco pieno
-891	Riduci la tacca
-892	Predefinito
-893	Vivace
-894	Silenzioso
-895	copiare
-896	scaricare
-897	comprimere / decomprimere
-898	elaborare video
-899	elaborare immagini
-900	trascrivere
-901	 · più del solito
-902	 ancora
-903	elaborazione · {0}% CPU
-904	Copia
-905	Ricezione
-906	Decompressione
-907	Trasferimento file
-908	 · restano 
-909	Tutto il giorno
-910	Apri in Calendario
-911	+{0} altri eventi
-912	In corso · restano {0}
-913	In arrivo · tra {0}
-914	{0} · apri in Calendario
-915	in corso
-916	restano 
-917	Nascondi questo evento dalla tacca
-918	{0}/{1} selezionati
-919	Deseleziona
-920	Seleziona tutto
-921	Mostra nel Finder
-922	Invia tutto con AirDrop
-923	Invia con AirDrop
-924	Rimuovi tutto dal ripiano (i file originali restano)
-925	Rimuovi dal ripiano (il file originale resta)
-926	Aggiungi file…
-927	Rilascia qui
-928	Trascina file sulla tacca o fai clic su + per sceglierli
-929	Clic per selezionare · doppio clic per aprire · trascina fuori per rilasciare in un'altra app
-930	Trascina un file selezionato per portare con te tutti i {0} file
-931	Rimuovi dal ripiano
-932	File non più trovato: {0}
-933	Impronta digitale non riconosciuta
-934	Password errata
-935	Disattivato
-936	1 errore
-937	{0} errori
-938	{0} in esecuzione
-939	{0} in attesa
-940	Nessuna attività in esecuzione
-941	Pannello di controllo
-942	Specchio
-943	Anteprima fotocamera
-944	Trascina o scegli file
-945	Trascina i file sulla tacca o fai clic per scegliere i file da tenere sul ripiano
-946	CPU dell'intero computer: 
-947	Memoria in uso: 
-948	{0}% · clic per aprire Activity Monitor
-949	Testo, emoji
-950	Animazione
-951	Operoso
-952	Carino
-953	Scarica file
-954	Rispondi all'agent
-955	Domanda
-956	Testo della domanda
-957	Opzioni
-958	Prossima sessione
-959	Inizia concentrazione
-960	Minuti
-961	Termina concentrazione
-962	Cura l'amico pixel
-963	Attività
-964	Piccolo arancione
-965	Raggio di luce
-966	Nuvola terminale
-967	Razzo
-968	Astronauta
-969	Stella blu
-970	Piccolo robot
-971	Sta pensando
-972	Minatore
-973	Fabbro
-974	Piccolo ingranaggio
-975	Criceto sulla ruota
-976	Caffè
-977	Barra di avanzamento
-978	Falò
-979	Caccia ai bug
-980	Moneta
-981	Gatto
-982	Slime
-983	Fantasmino
-984	Paperella di gomma
-985	Cuore che batte
-986	Pinguino
-987	Robot
-988	Robot da combattimento
-989	Chibi
-990	Gatto anime
-991	Nuvola carina
-992	Raggio arancione
-993	Orbita
-994	Scintille
-995	Rete neurale
-996	Sta digitando…
-997	Ingranaggio
-998	Clessidra
-999	Impila blocchi
-1000	Pallina
-1001	Stella felice
-1002	Rana
-1003	Panda
-1004	Coniglio
-1005	Gufo
-1006	C'è un aggiornamento dal tuo Mac.
-1007	Build completata
-1008	Apri NotchTasks per vedere.
-1009	Build in corso
-1010	Segui sulla schermata di blocco.
-1011	Apri NotchTasks per consentire o rifiutare.
+687	Nascondi codice
+688	Abbina un altro dispositivo…
+689	Creazione codice…
+690	Abbina dispositivo…
+691	Avvisa il telefono solo quando sono lontano
+692	{0} dispositivi tramite Wi‑Fi
+693	Sulla stessa rete Wi‑Fi il telefono riceve subito gli aggiornamenti; altrove, tramite Internet. Mentre usi questo computer, il telefono resta silenzioso.
+694	Nessun dispositivo ancora.
+695	Annulla tutti gli abbinamenti
+696	Abbinato
+697	Tutti i dispositivi saranno scollegati da questo computer. Per abbinarli di nuovo servirà un nuovo codice.
+698	Non concesso
+699	Non verificato
+700	Avvisa quando un'attività termina o non riesce.
+701	Mostra gli eventi in arrivo.
+702	Controlla la musica nel browser.
+703	Controlla {0}
+704	Legge e controlla ciò che è in riproduzione.
+705	Musica in {0}
+706	Metti in pausa, riproduci e salta i brani direttamente nella scheda.
+707	Apri all'accesso
+708	Si avvia automaticamente quando accedi.
+709	Disattiva in {0}
+710	Deseleziona la stessa voce:\n
+711	Il comando contiene “{0}”
+712	Processo “{0}”
+713	 · il comando contiene “{0}”
+714	un sottoprocesso per riga
+715	App · {0}
+716	Monitora ogni sessione
+717	Mostra durante l'esecuzione
+718	App IA
+719	Passo {0}/{1}
+720	Salta
+721	Indietro
+722	Avanti
+723	Benvenuto in NotchTasks
+724	IA e build
+725	Scopri quale agent sta lavorando e quale build è terminata o non riuscita
+726	Musica e chiamate
+727	Controlla la musica e disattiva subito il microfono durante le chiamate
+728	Avvisi ordinati
+729	Ricarica, cuffie, download, rete e surriscaldamento
+730	Privato
+731	Tutto funziona sul tuo computer e non viene inviato altrove
+732	Cosa mostra la tacca
+733	Fai clic per attivare o disattivare. Puoi cambiare in qualsiasi momento nel Pannello di controllo.
+734	Agent IA sul tuo computer
+735	Trovati e attivati. Puoi aggiungerli o rimuoverli nel Pannello di controllo.
+736	Nessun agent IA trovato. Aggiungili in seguito nella pagina Monitoraggio.
+737	Il modulo agent IA è disattivato.
+738	Solo i permessi necessari ai moduli selezionati. Puoi saltare questo passaggio.
+739	È tutto pronto
+740	Qualche suggerimento per iniziare più velocemente:
+741	Passa il puntatore sulla tacca
+742	La tacca si apre mostrando tutto ciò che è in esecuzione. Allontana il puntatore per richiuderla.
+743	Fai clic sui pulsanti degli avvisi
+744	Gli avvisi restano visibili finché il puntatore è sopra, con pulsanti come “Mostra nella cartella” e “Libera spazio”.
+745	Trascina i file sulla tacca
+746	Tieni temporaneamente i file sul ripiano e trascinali fuori quando servono.
+747	Decora la tacca
+748	Scegli personaggi animati nella Libreria icone.
+749	Apri Pannello di controllo
+750	Fai clic sull'icona NotchTasks nella barra dei menu oppure su ⚙ quando la tacca è aperta.
+751	Fai clic su ⚙ quando la tacca è aperta oppure apri di nuovo NotchTasks da Spotlight.
+752	Usa strumento 
+753	Rifiutato sulla tacca
+754	Non ancora autorizzato in Codex
+755	Apri Codex
+756	Accesso non effettuato
+757	Accedi
+758	1. Safari › Impostazioni › Avanzate: attiva “Mostra funzionalità per sviluppatori web”.\n2. Menu Sviluppo › Consenti JavaScript da Eventi Apple.
+759	In {0}, nella barra dei menu: Vista (View) › Sviluppatore (Developer) › Consenti JavaScript da Eventi Apple.
+760	Attiva controllo della musica
+761	Apri impostazioni di Safari
+762	Safari › Impostazioni… (⌘,)
+763	Mostra funzionalità per sviluppatori
+764	Scheda Avanzate: attiva “Show features for web developers”
+765	Consenti JavaScript da Eventi Apple
+766	Apri menu Vista
+767	Nella barra dei menu di {0}, fai clic su View (Vista)
+768	Seleziona Sviluppatore
+769	Passa il puntatore su Developer (Sviluppatore)
+770	Fai clic su Allow JavaScript from Apple Events
+771	Ultima voce. Un ✓ indica che hai finito
+772	Consenti alla tacca di controllare la musica in {0}
+773	Configurazione una tantum, circa 10 secondi. Poi puoi mettere in pausa, riprodurre, avanzare e cambiare brano nella scheda dalla tacca.
+774	Attivato. La tacca ora può controllare {0}.
+775	In attesa dell'attivazione… questa finestra la rileva automaticamente
+776	Più tardi
+777	Apri {0}
+778	Agent e app IA al lavoro
+779	Build, test, installazioni, rendering, CI
+780	Brano in riproduzione, con comandi
+781	Utilizzo degli agent, avviso prima del limite
+782	Collegamento e scollegamento alimentazione, batteria scarica
+783	Eventi in arrivo con link alla riunione
+784	Trascina i file sulla tacca per tenerli temporaneamente
+785	Timer rapido
+786	Cuffie, tastiera, mouse e batteria
+787	Durante le chiamate, pulsante per disattivare il microfono (FaceTime, Zoom…)
+788	Avvisa quando un'app usa microfono o fotocamera
+789	Volume e luminosità mentre li regoli
+790	Rete persa, riconnessa, VPN
+791	Avvisa al termine dei download e mostra la cartella
+792	Computer caldo, disco quasi pieno
+793	Controlla la fotocamera prima di una riunione
+794	Lavoro
+795	Musica e dispositivi
+796	Chiamate e privacy
+797	Sistema
+798	Controlli delle app
+799	Cartella Download
+800	Usa il colore dell'app
+801	Scegli un colore…
+802	Questo file non è un pacchetto suoni di NotchTasks.
+803	Questo file non contiene suoni utilizzabili.
+804	In attesa del runner
+805	in esecuzione
+806	In esecuzione · {0}
+807	Terminato · {0} fa
+808	Custodia
+809	{0} attività in esecuzione
+810	Apri log
+811	+{0} altre attività
+812	Nascondi avviso
+813	Audio in riproduzione
+814	Attiva i controlli in {0}
+815	Per mettere in pausa, riprodurre e cambiare brano nella scheda senza avviare automaticamente altre app musicali
+816	Trascina per scorrere
+817	Videochiamata · {0}
+818	Chiamata in corso · {0}
+819	 · Microfono disattivato
+820	Attiva microfono
+821	Disattiva microfono
+822	NotchTasks non può ancora usare la fotocamera
+823	Apri impostazioni Fotocamera
+824	Disattiva specchio
+825	In attesa di 
+826	Rispondi in {0}
+827	Salta qui: {0} chiederà come al solito
+828	Invia
+829	Compleanno di Lan
+830	Famiglia
+831	Ferie
+832	Scrivi resoconto
+833	Riunione sprint
+834	Pranzo con il team
+835	Chiama il cliente
+836	 connesso
+837	 disconnesso
+838	S 100% · D 98% · Custodia 62%
+839	1 tentativo di sblocco errato
+840	{0} tentativi di sblocco errati
+841	L'ultimo alle {0}, mentre il computer era bloccato
+842	Pacchetto suoni applicato
+843	Pannello di controllo…
+844	Guida…
+845	Timer da {0} minuti
+846	Ferma timer
+847	Esci da NotchTasks
+848	Stanza A / https://us02web.zoom.us/j/123?pwd=x
+849	Quale colore?
+850	Rosso
+851	Colore?
+852	Scende dalla tacca.
+853	Si adatta alla tacca.
+854	Scheda fluttuante sotto la tacca.
+855	Largo, testo grande.
+856	Automatico
+857	Sinistra
+858	Destra
+859	IA / attività completata
+860	L'agent chiede, serve approvazione
+861	CI riuscita
+862	CI non riuscita
+863	Limite IA quasi raggiunto
+864	Evento in arrivo
+865	Timer scaduto
+866	Alimentazione collegata
+867	Dispositivo connesso
+868	Dispositivo disconnesso
+869	Chiamata iniziata
+870	Chiamata terminata
+871	Microfono o fotocamera attivi
+872	Sblocco non riuscito
+873	Rete disconnessa
+874	Rete riconnessa, VPN
+875	Download completato
+876	Computer caldo, disco pieno
+877	Riduci la tacca
+878	Predefinito
+879	Vivace
+880	Silenzioso
+881	copiare
+882	scaricare
+883	comprimere / decomprimere
+884	elaborare video
+885	elaborare immagini
+886	trascrivere
+887	 · più del solito
+888	 ancora
+889	elaborazione · {0}% CPU
+890	Copia
+891	Ricezione
+892	Decompressione
+893	Trasferimento file
+894	 · restano 
+895	Tutto il giorno
+896	Apri in Calendario
+897	+{0} altri eventi
+898	In corso · restano {0}
+899	In arrivo · tra {0}
+900	{0} · apri in Calendario
+901	in corso
+902	restano 
+903	Nascondi questo evento dalla tacca
+904	{0}/{1} selezionati
+905	Deseleziona
+906	Seleziona tutto
+907	Mostra nel Finder
+908	Invia tutto con AirDrop
+909	Invia con AirDrop
+910	Rimuovi tutto dal ripiano (i file originali restano)
+911	Rimuovi dal ripiano (il file originale resta)
+912	Aggiungi file…
+913	Rilascia qui
+914	Trascina file sulla tacca o fai clic su + per sceglierli
+915	Clic per selezionare · doppio clic per aprire · trascina fuori per rilasciare in un'altra app
+916	Trascina un file selezionato per portare con te tutti i {0} file
+917	Rimuovi dal ripiano
+918	File non più trovato: {0}
+919	Impronta digitale non riconosciuta
+920	Password errata
+921	1 errore
+922	{0} errori
+923	{0} in esecuzione
+924	Nessuna attività in esecuzione
+925	Pannello di controllo
+926	Specchio
+927	Anteprima fotocamera
+928	Trascina o scegli file
+929	Trascina i file sulla tacca o fai clic per scegliere i file da tenere sul ripiano
+930	CPU dell'intero computer: 
+931	Memoria in uso: 
+932	{0}% · clic per aprire Activity Monitor
+933	Testo, emoji
+934	Animazione
+935	Operoso
+936	Carino
+937	Scarica file
+938	Rispondi all'agent
+939	Domanda
+940	Testo della domanda
+941	Opzioni
+942	Prossima sessione
+943	Inizia concentrazione
+944	Minuti
+945	Termina concentrazione
+946	Cura l'amico pixel
+947	Attività
+948	Piccolo arancione
+949	Raggio di luce
+950	Nuvola terminale
+951	Razzo
+952	Astronauta
+953	Stella blu
+954	Piccolo robot
+955	Sta pensando
+956	Minatore
+957	Fabbro
+958	Piccolo ingranaggio
+959	Criceto sulla ruota
+960	Caffè
+961	Barra di avanzamento
+962	Falò
+963	Caccia ai bug
+964	Moneta
+965	Gatto
+966	Slime
+967	Fantasmino
+968	Paperella di gomma
+969	Cuore che batte
+970	Pinguino
+971	Robot
+972	Robot da combattimento
+973	Chibi
+974	Gatto anime
+975	Nuvola carina
+976	Raggio arancione
+977	Orbita
+978	Scintille
+979	Rete neurale
+980	Sta digitando…
+981	Ingranaggio
+982	Clessidra
+983	Impila blocchi
+984	Pallina
+985	Stella felice
+986	Rana
+987	Panda
+988	Coniglio
+989	Gufo
+990	C'è un aggiornamento dal tuo Mac.
+991	Build completata
+992	Apri NotchTasks per vedere.
+993	Build in corso
+994	Segui sulla schermata di blocco.
+995	Apri NotchTasks per consentire o rifiutare.

@@ -125,5 +125,5 @@ enum Proc {
 }
 
 func ago(_ s: TimeInterval) -> String {
-    s < 60 ? L("{0} giây", Int(s)) : s < 3600 ? L("{0} phút", Int(s / 60)) : L("{0} giờ", Int(s / 3600))
+    s < 60 ? L("{0} sec", Int(s)) : s < 3600 ? L("{0} min", Int(s / 60)) : L("{0} hours", Int(s / 3600))
 }

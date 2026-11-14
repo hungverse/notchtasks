@@ -55,13 +55,13 @@ import EventKit
     precondition(NowPlaying.parse("stopped", source: "x") == nil && NowPlaying.parse("paused\nA\n\n0\n0\n", source: "x")?.artist == nil, "stopped / no artist")
     precondition(mmss(65) == "1:05" && mmss(3725) == "1:02:05" && mmss(-3) == "0:00", "timer format")
     let ev = EKEvent(eventStore: EKEventStore())
-    ev.location = L("Phòng A / https://us02web.zoom.us/j/123?pwd=x")
+    ev.location = L("Room A / https://us02web.zoom.us/j/123?pwd=x")
     ev.notes = "fallback https://meet.google.com/abc-defg-hij"
     precondition(meetingLink(ev)?.host == "us02web.zoom.us", "meeting link from location")
     if let b = BatteryState.read() { precondition((0...100).contains(b.percent), "battery percent") }
     let bt = #"{"SPBluetoothDataType":[{"device_connected":[{"Hùng Airpod":{"device_minorType":"Headphones","device_batteryLevelLeft":"100%","device_batteryLevelRight":"12%","device_batteryLevelCase":"5%"}},{"K68":{"device_minorType":"Keyboard"}}]}]}"#
     let devs = Devices.parseBluetooth(Data(bt.utf8))
-    precondition(devs.count == 2 && devs[0].symbol == "airpods" && devs[0].battery == "L 100% · R 12% · Hộp 5%" && devs[0].lowest == 12
+    precondition(devs.count == 2 && devs[0].symbol == "airpods" && devs[0].battery == "L 100% · R 12% · Case 5%" && devs[0].lowest == 12
                  && devs[1].symbol == "keyboard" && devs[1].battery == nil, "bluetooth parse, case battery not counted as low")
     let fails = parsed.failed
     precondition(fails.count == 1 && fails[0].id == "17684692495" && fails[0].name == "test suite"
@@ -88,7 +88,7 @@ import EventKit
     precondition(DevRules.classify("uv", ["uv", "tool", "uvx", "mcp-server"]) == nil && DevRules.classify("uv", ["uv", "sync"])?.tool == "uv", "uvx servers")
     precondition(DevScanner.derivedDataProject(["swift-frontend", "-o", "/U/Library/Developer/Xcode/DerivedData/Mobile-App-abcdef/Build/x.o"]) == "Mobile-App", "derived data")
     let (p1, l1) = TaskHistory.estimate(elapsed: 30, expected: 120)
-    precondition(p1 == 0.25 && l1 == "0:30 · ≈ 2 phút nữa", "eta")
+    precondition(p1 == 0.25 && l1 == "0:30 · ≈ 2 min left", "eta")
     precondition(TaskHistory.estimate(elapsed: 30, expected: nil).0 == nil, "no history, no guess")
     // GitHub
     let gc = GitHub.parse(config: "[core]\n\tbare = false\n[remote \"origin\"]\n\turl = git@github.com:hung/notch.git\n", head: "ref: refs/heads/feat/x\n")
@@ -151,7 +151,7 @@ import EventKit
     let day0 = Calendar.current.startOfDay(for: Date())
     let oneDay = CalEvent(id: "a", title: "x", start: day0, end: day0.addingTimeInterval(86400), color: .blue, link: nil, allDay: true)
     let threeDays = CalEvent(id: "b", title: "x", start: day0, end: day0.addingTimeInterval(3 * 86400), color: .blue, link: nil, allDay: true)
-    precondition(oneDay.untilText == nil && threeDays.untilText?.hasPrefix("đến ") == true, "multi-day all-day label")
+    precondition(oneDay.untilText == nil && threeDays.untilText?.hasPrefix("until ") == true, "multi-day all-day label")
     precondition(DeviceArt.key(name: "x", vendor: 0x004C, product: 8194, type: "Headphones") == "banner:Banner-PID-8194", "exact AirPods picture")
     precondition(DeviceArt.key(name: "Hùng Airpod", vendor: 0x004C, product: 0x201B, type: "Headphones") == "banner:Banner-PID-8211", "unknown AirPods: closest look")
     precondition(DeviceArt.key(name: "Magic Mouse", vendor: 0x004C, product: nil, type: "Mouse")?.hasSuffix("Mouse.icns") == true
@@ -212,10 +212,10 @@ import EventKit
     // agent asks: what each agent's hook sends and what we answer
     let bash: [String: Any] = ["tool_name": "Bash", "tool_input": ["command": "rm -rf build", "description": "Clean"]]
     precondition(AgentAsks.ask(from: bash, kind: .claude, id: "a", pid: 1, session: "s").summary == "rm -rf build", "ask summary is the command")
-    let q: [String: Any] = ["tool_name": "AskUserQuestion", "tool_input": ["questions": [["question": L("Màu nào?"), "header": L("Màu"),
-        "multiSelect": false, "options": [["label": L("Đỏ"), "description": "x"], ["label": "Xanh", "description": "y"]]]]]]
+    let q: [String: Any] = ["tool_name": "AskUserQuestion", "tool_input": ["questions": [["question": L("Which color?"), "header": L("Color"),
+        "multiSelect": false, "options": [["label": L("Red"), "description": "x"], ["label": "Xanh", "description": "y"]]]]]]
     let qa = AgentAsks.ask(from: q, kind: .claude, id: "b", pid: 1, session: "s")
-    precondition(qa.isQuestion && qa.questions[0].options == ["Đỏ", "Xanh"] && qa.summary == "Màu nào?", "question parsed")
+    precondition(qa.isQuestion && qa.questions[0].options == ["Red", "Xanh"] && qa.summary == "Which color?", "question parsed")
     let codexIn: [String: Any] = ["tool_name": "shell", "tool_input": ["command": ["bash", "-lc", "touch x"]]]
     precondition(AgentAsks.ask(from: codexIn, kind: .codex, id: "c", pid: 1, session: "s").summary == "bash -lc touch x", "codex argv joined")
     let agyIn: [String: Any] = ["toolCall": ["name": "run_command", "args": ["CommandLine": "npm test"]], "workspacePaths": ["/p/app"]]
@@ -227,8 +227,8 @@ import EventKit
     }
     precondition(AgentAsks.output(.pass, input: bash, kind: .claude) == nil && AgentAsks.output(.pass, input: bash, kind: .gemini) == nil, "pass prints nothing")
     precondition(decision(.allow, bash)?["behavior"] as? String == "allow" && decision(.deny, bash, .codex)?["behavior"] as? String == "deny", "allow / deny")
-    let up = decision(.answers([L("Màu nào?"): "Xanh"]), q)?["updatedInput"] as? [String: Any]
-    precondition((up?["answers"] as? [String: String])?["Màu nào?"] == "Xanh" && up?["questions"] != nil, "answers keep the questions")
+    let up = decision(.answers([L("Which color?"): "Xanh"]), q)?["updatedInput"] as? [String: Any]
+    precondition((up?["answers"] as? [String: String])?["Which color?"] == "Xanh" && up?["questions"] != nil, "answers keep the questions")
     precondition(json(AgentAsks.output(.deny, input: [:], kind: .gemini))?["decision"] as? String == "deny", "gemini deny")
     precondition(json(AgentAsks.output(.pass, input: [:], kind: .antigravity))?["decision"] as? String == "ask", "antigravity pass = ask")
     AntigravityScanner.selfTest()
@@ -250,15 +250,15 @@ import EventKit
     precondition(AgentAsks.approvalMode(.claude, input: ["permission_mode": "bypassPermissions"], antigravityConfig: agyConfig) == nil, "claude untouched")
     try? FileManager.default.removeItem(at: approvalDir)
     // Antigravity's ask_question (plain string options), answered on the notch: the dialog is blocked, the answer handed over
-    let agyQ: [String: Any] = ["toolCall": ["name": "ask_question", "args": ["questions": [["question": L("Màu?"), "options": [L("Đỏ"), "Xanh"], "is_multi_select": false]]]]]
+    let agyQ: [String: Any] = ["toolCall": ["name": "ask_question", "args": ["questions": [["question": L("Color?"), "options": [L("Red"), "Xanh"], "is_multi_select": false]]]]]
     let agyQA = AgentAsks.ask(from: agyQ, kind: .antigravity, id: "e", pid: 1, session: "s")
-    precondition(agyQA.isQuestion && agyQA.questions[0].options == ["Đỏ", "Xanh"], "antigravity question parsed")
-    let handed = json(AgentAsks.output(.answers([L("Màu?"): "Xanh"]), input: agyQ, kind: .antigravity))
+    precondition(agyQA.isQuestion && agyQA.questions[0].options == ["Red", "Xanh"], "antigravity question parsed")
+    let handed = json(AgentAsks.output(.answers([L("Color?"): "Xanh"]), input: agyQ, kind: .antigravity))
     precondition(handed?["decision"] as? String == "deny" && (handed?["reason"] as? String)?.contains("Xanh") == true, "answer handed over")
-    precondition(json(AgentAsks.output(.answers(["Màu?": "Xanh"]), input: [:], kind: .gemini))?["decision"] as? String == "deny", "gemini answer handed over")
+    precondition(json(AgentAsks.output(.answers(["Color?": "Xanh"]), input: [:], kind: .gemini))?["decision"] as? String == "deny", "gemini answer handed over")
     // Cursor: flat command input, permission answers; Droid: Claude-style PreToolUse
     let cur = AgentAsks.ask(from: ["command": "npm i", "hook_event_name": "beforeShellExecution"], kind: .cursor, id: "f", pid: 1, session: "s")
-    precondition(cur.summary == "npm i" && cur.action == "Chạy lệnh", "cursor input")
+    precondition(cur.summary == "npm i" && cur.action == "Run command", "cursor input")
     precondition(json(AgentAsks.output(.pass, input: [:], kind: .cursor))?["permission"] as? String == "ask", "cursor pass = ask")
     precondition(LimitWindow.step(84) == 80 && LimitWindow.step(85) == 85 && LimitWindow.step(97) == 95 && LimitWindow.step(99.4) == 99 && LimitWindow.step(100) == 100, "limit steps: 5s, then 99 and 100")
     precondition(LocalModels.parseLMStudio(Data(#"[{"displayName":"Gemma 4 26B","identifier":"g"}]"#.utf8)) == ["Gemma 4 26B"], "lms ps")
@@ -266,7 +266,7 @@ import EventKit
     // OpenCode: its Permission object in, {status} out; pass keeps its own prompt
     let ocIn: [String: Any] = ["action": "bash", "resources": ["git push"], "metadata": ["command": "git push origin"]]
     let oc = AgentAsks.ask(from: ocIn, kind: .opencode, id: "g", pid: 1, session: "s")
-    precondition(oc.tool == "bash" && oc.summary == "git push origin" && oc.action == "Chạy lệnh", "opencode input")
+    precondition(oc.tool == "bash" && oc.summary == "git push origin" && oc.action == "Run command", "opencode input")
     precondition(json(AgentAsks.output(.allow, input: ocIn, kind: .opencode))?["status"] as? String == "allow"
                  && json(AgentAsks.output(.pass, input: ocIn, kind: .opencode))?["status"] as? String == "ask", "opencode output")
     // a question the Codex app leaves in a thread stays open until you write back

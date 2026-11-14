@@ -1,0 +1,309 @@
+687	Ẩn mã
+688	Ghép thêm thiết bị…
+689	Đang tạo mã…
+690	Ghép thiết bị…
+691	Chỉ báo điện thoại khi tôi rời máy
+692	{0} thiết bị qua Wi‑Fi
+693	Cùng Wi‑Fi thì điện thoại nhận ngay, khác mạng thì qua Internet. Khi bạn đang dùng máy này, điện thoại không reo.
+694	Chưa có thiết bị nào.
+695	Huỷ ghép tất cả
+696	Đã ghép
+697	Mọi thiết bị sẽ ngắt khỏi máy này. Ghép lại sẽ dùng mã mới.
+698	Chưa cấp
+699	Chưa kiểm tra
+700	Báo khi tác vụ xong hoặc có lỗi.
+701	Hiện sự kiện sắp tới.
+702	Điều khiển nhạc trong trình duyệt.
+703	Điều khiển {0}
+704	Đọc và điều khiển bài đang phát.
+705	Nhạc trong {0}
+706	Dừng, phát, chuyển bài ngay trong tab.
+707	Mở cùng macOS
+708	Tự chạy khi đăng nhập.
+709	Tắt trong {0}
+710	Bỏ chọn cùng mục đó:\n
+711	Lệnh chứa “{0}”
+712	Tiến trình “{0}”
+713	 · lệnh chứa “{0}”
+714	mỗi lệnh con một dòng
+715	Ứng dụng · {0}
+716	Theo dõi từng phiên
+717	Hiện khi đang chạy
+718	Ứng dụng AI
+719	Bước {0}/{1}
+720	Bỏ qua
+721	Quay lại
+722	Tiếp
+723	Chào mừng đến NotchTasks
+724	AI và build
+725	Biết agent nào đang làm, build nào xong hay lỗi
+726	Nhạc, cuộc gọi
+727	Điều khiển nhạc, tắt mic nhanh khi đang gọi
+728	Thông báo gọn
+729	Sạc pin, tai nghe, tải xong, mạng, máy nóng
+730	Riêng tư
+731	Mọi thứ chạy trên máy bạn, không gửi đi đâu
+732	Hiện gì trên notch
+733	Bấm để bật hoặc tắt. Đổi lại bất cứ lúc nào trong Bảng điều khiển.
+734	AI agent trên máy bạn
+735	Đã tìm thấy và bật sẵn. Thêm hoặc bớt sau trong Bảng điều khiển.
+736	Chưa thấy AI agent nào. Thêm sau ở trang Theo dõi.
+737	Mô-đun AI agent đang tắt.
+738	Chỉ những gì mô-đun đã chọn cần. Có thể bỏ qua.
+739	Sẵn sàng rồi
+740	Vài điều giúp bạn dùng nhanh hơn:
+741	Rê chuột lên notch
+742	Notch mở ra với mọi thứ đang chạy. Đưa chuột đi chỗ khác là thu lại.
+743	Bấm nút trên thông báo
+744	Thông báo đứng yên khi chuột ở trên, có nút như “Mở nơi lưu”, “Dọn ổ đĩa”.
+745	Kéo file lên notch
+746	Giữ tạm file ở khay, kéo ra lại khi cần.
+747	Trang trí notch
+748	Chọn nhân vật chuyển động trong Kho biểu tượng.
+749	Mở Bảng điều khiển
+750	Bấm biểu tượng NotchTasks trên thanh menu, hoặc nút ⚙ khi notch mở.
+751	Bấm nút ⚙ khi notch mở, hoặc mở lại NotchTasks từ Spotlight.
+752	Dùng công cụ 
+753	Đã từ chối trên notch
+754	Chưa Trust trong Codex
+755	Mở Codex
+756	Chưa đăng nhập
+757	Đăng nhập
+758	1. Safari › Cài đặt › Nâng cao: bật "Hiện tính năng cho nhà phát triển web".\n2. Menu Phát triển › Cho phép JavaScript từ Apple Events.
+759	Trong {0}, trên thanh menu: Xem (View) › Nhà phát triển (Developer) › Cho phép JavaScript từ Apple Events.
+760	Bật điều khiển nhạc
+761	Mở cài đặt Safari
+762	Safari › Cài đặt… (⌘,)
+763	Hiện tính năng nhà phát triển
+764	Tab Nâng cao: bật "Show features for web developers"
+765	Bật JavaScript từ Apple Events
+766	Mở menu Xem
+767	Trên thanh menu của {0}, bấm View (Xem)
+768	Chọn Nhà phát triển
+769	Rê chuột vào Developer (Nhà phát triển)
+770	Bấm Allow JavaScript from Apple Events
+771	Mục cuối cùng. Có dấu ✓ là xong
+772	Cho notch điều khiển nhạc trong {0}
+773	Làm một lần, khoảng 10 giây. Sau đó notch dừng, phát, tua và chuyển bài ngay trong tab.
+774	Đã bật. Notch đã điều khiển được {0}.
+775	Đang chờ bạn bật… cửa sổ này tự nhận ra khi xong
+776	Để sau
+777	Mở {0}
+778	Agent và app AI đang làm việc
+779	Build, test, cài đặt, render, CI
+780	Bài đang phát, có nút điều khiển
+781	Mức dùng agent, báo khi sắp hết
+782	Cắm, rút sạc, pin yếu
+783	Sự kiện sắp tới, có link họp
+784	Kéo file lên notch để giữ tạm
+785	Hẹn giờ nhanh
+786	Tai nghe, bàn phím, chuột và pin
+787	Giờ gọi, nút tắt mic (FaceTime, Zoom…)
+788	Báo khi app dùng mic hoặc camera
+789	Âm lượng, độ sáng khi bạn chỉnh
+790	Mất mạng, có mạng lại, VPN
+791	Báo tải xong, mở nơi lưu
+792	Máy nóng, ổ đĩa sắp đầy
+793	Xem camera trước khi vào họp
+794	Công việc
+795	Nhạc & thiết bị
+796	Gọi & riêng tư
+797	Hệ thống
+798	Điều khiển ứng dụng
+799	Thư mục Tải về
+800	Theo màu app
+801	Tự chọn…
+802	File này không phải gói âm thanh của NotchTasks.
+803	Không có âm thanh nào dùng được trong file này.
+804	Đang chờ runner
+805	đang chạy
+806	Đang chạy · {0}
+807	Xong · {0} trước
+808	Hộp
+809	{0} tác vụ đang chạy
+810	Mở log
+811	+{0} tác vụ khác
+812	Ẩn thông báo
+813	Đang phát âm thanh
+814	Bật điều khiển trong {0}
+815	Để dừng, phát và chuyển bài ngay trong tab, không làm ứng dụng nhạc khác tự phát
+816	Kéo để tua
+817	Gọi video · {0}
+818	Đang gọi · {0}
+819	 · Mic đang tắt
+820	Bật mic
+821	Tắt mic
+822	NotchTasks chưa được dùng camera
+823	Mở Cài đặt Camera
+824	Tắt gương
+825	Chờ 
+826	Trả lời trong {0}
+827	Bỏ qua ở đây, {0} sẽ tự hỏi như bình thường
+828	Gửi
+829	Sinh nhật Lan
+830	Gia đình
+831	Nghỉ phép
+832	Viết báo cáo
+833	Họp sprint
+834	Ăn trưa với team
+835	Gọi khách hàng
+836	 đã kết nối
+837	 đã ngắt kết nối
+838	L 100% · R 98% · Hộp 62%
+839	1 lần mở khoá sai
+840	{0} lần mở khoá sai
+841	Lần cuối lúc {0} khi máy đang khoá
+842	Đã dùng gói âm thanh
+843	Bảng điều khiển…
+844	Hướng dẫn…
+845	Hẹn giờ {0} phút
+846	Dừng hẹn giờ
+847	Thoát NotchTasks
+848	Phòng A / https://us02web.zoom.us/j/123?pwd=x
+849	Màu nào?
+850	Đỏ
+851	Màu?
+852	Trượt xuống từ notch.
+853	Nằm gọn trên notch.
+854	Thẻ nổi dưới notch.
+855	Rộng, chữ lớn.
+856	Tự động
+857	Bên trái
+858	Bên phải
+859	AI / tác vụ xong
+860	Agent hỏi, cần duyệt
+861	CI đạt
+862	CI lỗi
+863	Sắp hết giới hạn AI
+864	Sự kiện sắp tới
+865	Hết giờ hẹn
+866	Cắm sạc
+867	Thiết bị kết nối
+868	Thiết bị ngắt
+869	Bắt đầu cuộc gọi
+870	Kết thúc cuộc gọi
+871	Mic hoặc camera bật
+872	Mở khoá sai
+873	Mất mạng
+874	Có mạng lại, VPN
+875	Tải xong
+876	Máy nóng, ổ đĩa đầy
+877	Thu gọn notch
+878	Mặc định
+879	Sôi động
+880	Im lặng
+881	sao chép
+882	tải xuống
+883	nén / giải nén
+884	xử lý video
+885	xử lý ảnh
+886	chép lời
+887	 · lâu hơn thường lệ
+888	 nữa
+889	đang xử lý · {0}% CPU
+890	Sao chép
+891	Nhận
+892	Giải nén
+893	Truyền file
+894	 · còn 
+895	Cả ngày
+896	Mở trong Lịch
+897	+{0} sự kiện nữa
+898	Đang diễn ra · còn {0}
+899	Sắp tới · còn {0}
+900	{0} · mở trong Lịch
+901	đang diễn ra
+902	còn 
+903	Ẩn sự kiện này khỏi notch
+904	Đã chọn {0}/{1}
+905	Bỏ chọn
+906	Chọn tất cả
+907	Hiện trong Finder
+908	Gửi tất cả qua AirDrop
+909	Gửi qua AirDrop
+910	Bỏ hết khỏi khay (file gốc giữ nguyên)
+911	Bỏ khỏi khay (file gốc giữ nguyên)
+912	Thêm file…
+913	Thả vào đây
+914	Kéo file vào notch, hoặc bấm + để chọn
+915	Bấm để chọn · bấm đúp để mở · kéo ra để thả vào ứng dụng khác
+916	Kéo một file đã chọn để mang theo cả {0} file
+917	Bỏ khỏi khay
+918	Không còn tìm thấy file: {0}
+919	Vân tay không khớp
+920	Sai mật khẩu
+921	1 lỗi
+922	{0} lỗi
+923	{0} đang chạy
+924	Không có gì đang chạy
+925	Bảng điều khiển
+926	Gương
+927	Xem nhanh camera
+928	Kéo thả hoặc chọn file
+929	Kéo file lên notch, hoặc bấm để chọn file đưa vào khay
+930	CPU của cả máy: 
+931	Bộ nhớ đang dùng: 
+932	{0}% · bấm để mở Activity Monitor
+933	Chữ, emoji
+934	Ảnh động
+935	Cày cuốc
+936	Dễ thương
+937	Tải file
+938	Trả lời agent
+939	Câu hỏi
+940	Nội dung hỏi
+941	Lựa chọn
+942	Vào phiên tiếp
+943	Bắt đầu tập trung
+944	Số phút
+945	Dừng tập trung
+946	Chăm bạn pixel
+947	Việc
+948	Bé cam
+949	Tia sáng
+950	Mây dòng lệnh
+951	Tên lửa
+952	Phi hành gia
+953	Sao xanh
+954	Robot nhỏ
+955	Đang nghĩ
+956	Thợ mỏ
+957	Rèn sắt
+958	Bánh răng nhỏ
+959	Chuột lăn bánh
+960	Cà phê
+961	Thanh tiến trình
+962	Lửa trại
+963	Bắt bug
+964	Đồng xu
+965	Mèo
+966	Slime
+967	Ma nhỏ
+968	Vịt cao su
+969	Tim đập
+970	Cánh cụt
+971	Robot
+972	Robot chiến
+973	Chibi
+974	Mèo anime
+975	Mây dễ thương
+976	Tia sáng cam
+977	Quỹ đạo
+978	Lấp lánh
+979	Mạng nơ-ron
+980	Đang gõ…
+981	Bánh răng
+982	Đồng hồ cát
+983	Xếp gạch
+984	Bé tròn
+985	Sao vui
+986	Ếch
+987	Gấu trúc
+988	Thỏ
+989	Cú
+990	Có cập nhật từ máy Mac.
+991	Build xong
+992	Mở NotchTasks để xem.
+993	Build đang chạy
+994	Theo dõi trên màn hình khoá.
+995	Mở NotchTasks để cho phép hoặc từ chối.

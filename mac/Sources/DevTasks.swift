@@ -172,19 +172,19 @@ enum DevRules {
             let subject = v == "clone" ? words.dropFirst().first.map { base($0).replacingOccurrences(of: ".git", with: "") } : nil
             return DevMatch(tool: "Git", action: v, symbol: symbol(v), subject: subject)
         case "rsync", "scp", "rclone", "ditto":
-            return DevMatch(tool: name, action: L("sao chép"), symbol: "arrow.left.arrow.right", subject: words.last.map(base))
+            return DevMatch(tool: name, action: L("copying"), symbol: "arrow.left.arrow.right", subject: words.last.map(base))
         case "aria2c", "yt-dlp", "wget":
-            return DevMatch(tool: name, action: L("tải xuống"), symbol: "arrow.down.circle.fill", subject: words.last.map(base))
+            return DevMatch(tool: name, action: L("downloading"), symbol: "arrow.down.circle.fill", subject: words.last.map(base))
         case "curl":
             // only real downloads to a file; API calls from scripts are filtered by the minimum duration too
             guard let out = opt("-o", "--output") ?? (a.contains("-O") || a.contains("-LO") ? words.last.map(base) : nil) else { return nil }
-            return DevMatch(tool: "curl", action: L("tải xuống"), symbol: "arrow.down.circle.fill", subject: base(out))
+            return DevMatch(tool: "curl", action: L("downloading"), symbol: "arrow.down.circle.fill", subject: base(out))
         case "zip", "unzip", "tar", "bsdtar", "7z", "7zz", "xz", "zstd":
-            return DevMatch(tool: name, action: L("nén / giải nén"), symbol: "archivebox.fill", subject: words.last.map(base))
+            return DevMatch(tool: name, action: L("compressing / extracting"), symbol: "archivebox.fill", subject: words.last.map(base))
         case "hdiutil": return verb(["create", "convert", "makehybrid", "compact"], tool: "hdiutil")
         case "ffmpeg":
             let input = opt("-i").flatMap { $0.contains("=") ? nil : base($0) }  // lavfi/stream inputs aren't file names
-            return DevMatch(tool: "ffmpeg", action: L("xử lý video"), symbol: "film.stack", subject: [input, a.last.map(base)].compactMap { $0 }.joined(separator: " → "))
+            return DevMatch(tool: "ffmpeg", action: L("processing video"), symbol: "film.stack", subject: [input, a.last.map(base)].compactMap { $0 }.joined(separator: " → "))
         case "HandBrakeCLI":
             return DevMatch(tool: "HandBrake", action: "encode", symbol: "film.stack", icon: "fr.handbrake.HandBrake", subject: opt("-i", "--input").map(base))
         case "blender", "Blender":
@@ -193,9 +193,9 @@ enum DevRules {
             return DevMatch(tool: "Blender", action: frames, symbol: "cube.transparent.fill", icon: "org.blenderfoundation.blender",
                             subject: a.first { $0.hasSuffix(".blend") }.map(base))
         case "magick", "convert", "mogrify":
-            return DevMatch(tool: "ImageMagick", action: L("xử lý ảnh"), symbol: "photo.stack.fill", subject: words.last.map(base))
+            return DevMatch(tool: "ImageMagick", action: L("processing images"), symbol: "photo.stack.fill", subject: words.last.map(base))
         case "whisper", "whisper-cli":
-            return DevMatch(tool: "Whisper", action: L("chép lời"), symbol: "waveform", subject: words.last.map(base))
+            return DevMatch(tool: "Whisper", action: L("transcribing"), symbol: "waveform", subject: words.last.map(base))
         case "ollama": return verb(["pull", "create", "push"], tool: "Ollama", icon: "com.electron.ollama")
         case "terraform", "tofu": return verb(["apply", "plan", "init", "destroy"], tool: "Terraform")
         case "pulumi": return verb(["up", "preview", "destroy", "refresh"], tool: "Pulumi")
@@ -328,8 +328,8 @@ struct TaskHistory {
         let time = mmss(elapsed)
         guard let e = expected, e >= 10 else { return (nil, time) }
         let left = e - elapsed
-        if left <= 0 { return (0.99, time + L(" · lâu hơn thường lệ")) }
-        return (min(elapsed / e, 0.99), time + " · ≈ " + (left < 60 ? "\(Int(left))s" : L("{0} phút", Int(left / 60) + 1)) + L(" nữa"))
+        if left <= 0 { return (0.99, time + L(" · longer than usual")) }
+        return (min(elapsed / e, 0.99), time + " · ≈ " + (left < 60 ? "\(Int(left))s" : L("{0} min", Int(left / 60) + 1)) + L(" left"))
     }
 }
 
@@ -436,7 +436,7 @@ final class DevScanner {
             // sustained 10 s before it counts, so scrubbing a timeline doesn't
             let heavySince = busy ? (prev?.since ?? now) : prev?.since
             guard let since = heavySince, busy || (prev?.lastBusy.map { now.timeIntervalSince($0) < 8 } ?? false) else { continue }
-            let m = DevMatch(tool: r.name, action: L("đang xử lý · {0}% CPU", Int(load)), symbol: "film.stack", icon: bid, busyOnly: true)
+            let m = DevMatch(tool: r.name, action: L("working · {0}% CPU", Int(load)), symbol: "film.stack", icon: bid, busyOnly: true)
             keep(id, m, title: r.name, since: since, key: "app|\(bid)", busy: busy)
         }
 
@@ -497,10 +497,10 @@ final class FileProgressWatcher {
             guard !p.isFinished, !p.isCancelled, p.totalUnitCount >= 5_000_000 else { return nil }  // small files finish before anyone looks
             let url = p.userInfo[.fileURLKey] as? URL
             let kind = p.fileOperationKind
-            let verb = kind == .downloading ? L("Tải xuống") : kind == .copying ? L("Sao chép") : kind == .receiving ? L("Nhận") :
-                       kind == .decompressingAfterDownloading ? L("Giải nén") : L("Truyền file")
+            let verb = kind == .downloading ? L("Downloads") : kind == .copying ? L("Copy") : kind == .receiving ? L("Receiving") :
+                       kind == .decompressingAfterDownloading ? L("Extracting") : L("Transferring files")
             let size = ByteCountFormatter.string(fromByteCount: p.totalUnitCount, countStyle: .file)
-            let eta = p.estimatedTimeRemaining.map { L(" · còn ") + ($0 < 60 ? "\(Int($0))s" : L("{0} phút", Int($0 / 60) + 1)) } ?? ""
+            let eta = p.estimatedTimeRemaining.map { L(" · ") + ($0 < 60 ? "\(Int($0))s" : L("{0} min", Int($0 / 60) + 1)) } ?? ""
             return Job(id: "file:\(ObjectIdentifier(p).hashValue)", title: "\(verb) · \(url?.lastPathComponent ?? "file")",
                        detail: "\(Int(p.fractionCompleted * 100))% · \(size)\(eta)", working: true, progress: p.fractionCompleted,
                        symbol: kind == .downloading ? "arrow.down.circle.fill" : "doc.on.doc.fill", tool: "Tải file")

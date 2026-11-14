@@ -19,11 +19,11 @@ const MAX_MANIFEST_BYTES = 64 * 1024;
 const SHA256 = /^[0-9a-f]{64}$/i;
 
 const MESSAGES = {
-  invalidManifest: () => L('Thông tin bản cập nhật không hợp lệ.'),
-  download: () => L('Không tải được bản cập nhật.'),
-  hash: () => L('Tệp tải xuống không khớp mã kiểm tra.'),
-  oldBuild: () => L('Bản cập nhật không mới hơn bản đang chạy.'),
-  pending: () => L('Còn một bản cập nhật chưa hoàn tất. Hãy thử lại sau.'),
+  invalidManifest: () => L('The update information is invalid.'),
+  download: () => L('Couldn\'t download the update.'),
+  hash: () => L('The downloaded file doesn\'t match its checksum.'),
+  oldBuild: () => L('The update isn\'t newer than the running app.'),
+  pending: () => L('Another update is unfinished. Try again later.'),
 };
 
 class UpdateFailure extends Error {
@@ -76,7 +76,7 @@ function parseManifest(m) {
   return { version, build, url, sha256: sha256.toLowerCase(), minOS, notes };
 }
 
-const noteFor = (manifest, lang) => manifest.notes[lang] ?? manifest.notes.en ?? L('Không có ghi chú.');
+const noteFor = (manifest, lang) => manifest.notes[lang] ?? manifest.notes.en ?? L('No notes.');
 
 // GET with redirects followed (https only, or loopback http). Resolves with the response stream.
 function get(url, { timeout = 10000, redirects = 5 } = {}) {

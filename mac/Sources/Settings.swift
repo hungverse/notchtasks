@@ -48,20 +48,20 @@ enum ModuleID: String, CaseIterable, Identifiable {
         switch self {
         case .agents: return "AI agent"
         case .ci: return "Build & CI"
-        case .media: return L("Đang phát")
-        case .limits: return L("Giới hạn AI")
-        case .battery: return L("Pin")
-        case .calendar: return L("Lịch")
-        case .shelf: return L("Khay file")
-        case .timer: return L("Hẹn giờ")
-        case .devices: return L("Thiết bị")
-        case .calls: return L("Cuộc gọi")
+        case .media: return L("Now Playing")
+        case .limits: return L("AI limits")
+        case .battery: return L("Battery")
+        case .calendar: return L("Calendar")
+        case .shelf: return L("File shelf")
+        case .timer: return L("Timer")
+        case .devices: return L("Devices")
+        case .calls: return L("Calls")
         case .privacy: return L("Mic & camera")
-        case .levels: return L("Âm lượng & độ sáng")
-        case .network: return L("Mạng")
-        case .downloads: return L("Tải xuống")
-        case .health: return L("Sức khoẻ máy")
-        case .mirror: return L("Gương camera")
+        case .levels: return L("Volume & brightness")
+        case .network: return L("Network")
+        case .downloads: return L("Downloads")
+        case .health: return L("Computer health")
+        case .mirror: return L("Camera mirror")
         }
     }
 
@@ -88,39 +88,39 @@ enum ModuleID: String, CaseIterable, Identifiable {
 
     var blurb: String {
         switch self {
-        case .agents: return L("Agent và app AI đang làm việc")
-        case .ci: return L("Build, test, cài đặt, render, CI")
-        case .media: return L("Bài đang phát, có nút điều khiển")
-        case .limits: return L("Mức dùng agent, báo khi sắp hết")
-        case .battery: return L("Cắm, rút sạc, pin yếu")
-        case .calendar: return L("Sự kiện sắp tới, có link họp")
-        case .shelf: return L("Kéo file lên notch để giữ tạm")
-        case .timer: return L("Hẹn giờ nhanh")
-        case .devices: return L("Tai nghe, bàn phím, chuột và pin")
-        case .calls: return L("Giờ gọi, nút tắt mic (FaceTime, Zoom…)")
-        case .privacy: return L("Báo khi app dùng mic hoặc camera")
-        case .levels: return L("Âm lượng, độ sáng khi bạn chỉnh")
-        case .network: return L("Mất mạng, có mạng lại, VPN")
-        case .downloads: return L("Báo tải xong, mở nơi lưu")
-        case .health: return L("Máy nóng, ổ đĩa sắp đầy")
-        case .mirror: return L("Xem camera trước khi vào họp")
+        case .agents: return L("Agents and AI apps at work")
+        case .ci: return L("Build, test, install, render, CI")
+        case .media: return L("What's playing, with controls")
+        case .limits: return L("Agent usage, alerts before running out")
+        case .battery: return L("Plugged in, unplugged, low battery")
+        case .calendar: return L("Upcoming events, with meeting links")
+        case .shelf: return L("Drop files on the notch to keep them")
+        case .timer: return L("Quick timers")
+        case .devices: return L("Headphones, keyboards, mice and their batteries")
+        case .calls: return L("Call time, mute button (FaceTime, Zoom…)")
+        case .privacy: return L("Alerts when an app uses the mic or camera")
+        case .levels: return L("Volume and brightness as you change them")
+        case .network: return L("Offline, back online, VPN")
+        case .downloads: return L("Download finished, show in folder")
+        case .health: return L("Computer hot, disk almost full")
+        case .mirror: return L("Check the camera before joining a meeting")
         }
     }
 
     /// Where it sits on the Overview page: a few short groups read faster than one long grid.
     static var groups: [(title: String, modules: [ModuleID])] { [
-        (L("Công việc"), [.agents, .ci, .limits, .calendar, .timer]),
-        (L("Nhạc & thiết bị"), [.media, .devices, .battery, .levels]),
-        (L("Gọi & riêng tư"), [.calls, .privacy, .mirror]),
-        (L("Hệ thống"), [.network, .downloads, .health, .shelf]),
+        (L("Work"), [.agents, .ci, .limits, .calendar, .timer]),
+        (L("Music & devices"), [.media, .devices, .battery, .levels]),
+        (L("Calls & privacy"), [.calls, .privacy, .mirror]),
+        (L("System"), [.network, .downloads, .health, .shelf]),
     ] }
 
     /// Permissions this module may ask for (shown in the module list).
     var needs: String? {
         switch self {
-        case .media: return L("Điều khiển ứng dụng")
-        case .calendar: return L("Lịch")
-        case .downloads: return L("Thư mục Tải về")
+        case .media: return L("App control")
+        case .calendar: return L("Calendar")
+        case .downloads: return L("Downloads folder")
         case .mirror: return "Camera"
         default: return nil
         }
@@ -174,9 +174,9 @@ enum NotchSize: String, CaseIterable { case compact, regular }
     @Published var lockAuth: Bool { didSet { store(lockAuth, "lockAuth") } }  // react to wrong passwords / fingers
 
     static var accents: [(name: String, title: String, color: Color?)] { [
-        ("auto", L("Theo màu app"), nil), ("blue", L("Xanh dương"), .blue), ("green", L("Xanh lá"), .green),
-        ("orange", L("Cam"), .orange), ("pink", L("Hồng"), .pink), ("purple", L("Tím"), .purple), ("white", L("Trắng"), .white),
-        ("custom", L("Tự chọn…"), nil),
+        ("auto", L("Match app color"), nil), ("blue", L("Blue"), .blue), ("green", L("Green"), .green),
+        ("orange", L("Orange"), .orange), ("pink", L("Pink"), .pink), ("purple", L("Purple"), .purple), ("white", L("White"), .white),
+        ("custom", L("Custom…"), nil),
     ] }
     var accentColor: Color? { accent == "custom" ? Color(hex: customAccent) : Self.accents.first { $0.name == accent }?.color }
 
@@ -198,10 +198,10 @@ enum NotchSize: String, CaseIterable { case compact, regular }
     func importSounds(_ url: URL) -> String? {
         guard let data = try? Data(contentsOf: url), data.count < 100_000_000,
               let pack = try? JSONDecoder().decode(SoundPackFile.self, from: data), pack.format == "notchtasks.sounds" else {
-            return L("File này không phải gói âm thanh của NotchTasks.")
+            return L("This file isn't a NotchTasks sound pack.")
         }
         let map = pack.resolved(system: Sounds.system)
-        guard !map.isEmpty else { return L("Không có âm thanh nào dùng được trong file này.") }
+        guard !map.isEmpty else { return L("No usable sounds in this file.") }
         soundMap.merge(map) { _, new in new }
         if let v = pack.volume { volume = min(max(v, 0), 1) }
         return nil

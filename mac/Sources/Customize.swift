@@ -8,10 +8,10 @@ enum NotchBackground: String, CaseIterable, Codable {
     case black, glass, gradient, glow
     var title: String {
         switch self {
-        case .black: return L("Đen")
-        case .glass: return L("Kính mờ")
+        case .black: return L("Black")
+        case .glass: return L("Frosted glass")
         case .gradient: return "Gradient"
-        case .glow: return L("Viền phát sáng")
+        case .glow: return L("Glowing edge")
         }
     }
 }
@@ -20,18 +20,18 @@ enum ToastStyle: String, CaseIterable, Codable {
     case island, compact, card, banner
     var title: String {
         switch self {
-        case .island: return L("Đảo")
-        case .compact: return L("Gọn")
-        case .card: return L("Thẻ nổi")
-        case .banner: return L("Dải ngang")
+        case .island: return L("Island")
+        case .compact: return L("Compact")
+        case .card: return L("Floating card")
+        case .banner: return L("Banner")
         }
     }
     var blurb: String {
         switch self {
-        case .island: return L("Trượt xuống từ notch.")
-        case .compact: return L("Nằm gọn trên notch.")
-        case .card: return L("Thẻ nổi dưới notch.")
-        case .banner: return L("Rộng, chữ lớn.")
+        case .island: return L("Slides down from the notch.")
+        case .compact: return L("Fits inside the notch.")
+        case .card: return L("A card floating below the notch.")
+        case .banner: return L("Wide, large text.")
         }
     }
 }
@@ -40,10 +40,10 @@ enum Motion: String, CaseIterable, Codable {
     case smooth, bouncy, snappy, reduced
     var title: String {
         switch self {
-        case .smooth: return L("Mượt")
-        case .bouncy: return L("Nảy")
-        case .snappy: return L("Nhanh")
-        case .reduced: return L("Tối thiểu")
+        case .smooth: return L("Smooth")
+        case .bouncy: return L("Bouncy")
+        case .snappy: return L("Snappy")
+        case .reduced: return L("Minimal")
         }
     }
     var animation: Animation {
@@ -68,7 +68,7 @@ enum Motion: String, CaseIterable, Codable {
 
 enum BadgeShape: String, CaseIterable, Codable {
     case circle, rounded
-    var title: String { self == .circle ? L("Tròn") : L("Vuông") }
+    var title: String { self == .circle ? L("Circle") : L("Square") }
 }
 
 /// A fixed icon or picture on the collapsed notch.
@@ -119,10 +119,10 @@ enum LockContent: String, CaseIterable {
     case lock, badge, activity, battery
     var title: String {
         switch self {
-        case .lock: return L("Biểu tượng khoá")
-        case .badge: return L("Biểu tượng cố định")
-        case .activity: return L("Tác vụ, nhạc, hẹn giờ")
-        case .battery: return L("Pin")
+        case .lock: return L("Lock icon")
+        case .badge: return L("Pinned icon")
+        case .activity: return L("Tasks, music, timers")
+        case .battery: return L("Battery")
         }
     }
     var symbol: String {
@@ -139,9 +139,9 @@ enum Placement: String, CaseIterable, Codable {
     case auto, left, right
     var title: String {
         switch self {
-        case .auto: return L("Tự động")
-        case .left: return L("Bên trái")
-        case .right: return L("Bên phải")
+        case .auto: return L("Automatic")
+        case .left: return L("Left side")
+        case .right: return L("Right side")
         }
     }
 }
@@ -154,28 +154,28 @@ enum SoundEvent: String, CaseIterable, Codable, Identifiable {
     var id: String { rawValue }
     var title: String {
         switch self {
-        case .taskDone: return L("AI / tác vụ xong")
-        case .agentAsk: return L("Agent hỏi, cần duyệt")
-        case .ciPassed: return L("CI đạt")
-        case .ciFailed: return L("CI lỗi")
-        case .limitWarn: return L("Sắp hết giới hạn AI")
-        case .meeting: return L("Sự kiện sắp tới")
-        case .timerDone: return L("Hết giờ hẹn")
-        case .charging: return L("Cắm sạc")
-        case .unplugged: return L("Rút sạc")
-        case .lowBattery: return L("Pin yếu")
-        case .deviceOn: return L("Thiết bị kết nối")
-        case .deviceOff: return L("Thiết bị ngắt")
-        case .callStart: return L("Bắt đầu cuộc gọi")
-        case .callEnd: return L("Kết thúc cuộc gọi")
-        case .sensorOn: return L("Mic hoặc camera bật")
-        case .authFail: return L("Mở khoá sai")
-        case .netDown: return L("Mất mạng")
-        case .netUp: return L("Có mạng lại, VPN")
-        case .downloadDone: return L("Tải xong")
-        case .warning: return L("Máy nóng, ổ đĩa đầy")
-        case .open: return L("Mở notch")
-        case .close: return L("Thu gọn notch")
+        case .taskDone: return L("AI / task done")
+        case .agentAsk: return L("Agent asks for approval")
+        case .ciPassed: return L("CI passed")
+        case .ciFailed: return L("CI failed")
+        case .limitWarn: return L("AI limit running out")
+        case .meeting: return L("Upcoming event")
+        case .timerDone: return L("Timer done")
+        case .charging: return L("Plugged in")
+        case .unplugged: return L("Unplugged")
+        case .lowBattery: return L("Low battery")
+        case .deviceOn: return L("Device connected")
+        case .deviceOff: return L("Device disconnected")
+        case .callStart: return L("Call started")
+        case .callEnd: return L("Call ended")
+        case .sensorOn: return L("Mic or camera on")
+        case .authFail: return L("Failed unlock")
+        case .netDown: return L("Offline")
+        case .netUp: return L("Back online, VPN")
+        case .downloadDone: return L("Download done")
+        case .warning: return L("Hot computer, disk full")
+        case .open: return L("Opening the notch")
+        case .close: return L("Notch collapses")
         }
     }
     var symbol: String {
@@ -211,15 +211,15 @@ struct SoundPack {
     let map: [SoundEvent: String]  // "" = silent
 
     static var all: [SoundPack] { [
-        SoundPack(name: L("Mặc định"), map: [.taskDone: "Glass", .agentAsk: "Ping", .ciPassed: "Hero", .ciFailed: "Basso", .limitWarn: "Funk", .meeting: "Ping",
+        SoundPack(name: L("Default"), map: [.taskDone: "Glass", .agentAsk: "Ping", .ciPassed: "Hero", .ciFailed: "Basso", .limitWarn: "Funk", .meeting: "Ping",
                                           .timerDone: "Glass", .charging: "Pop", .unplugged: "", .lowBattery: "Funk", .deviceOn: "Pop", .deviceOff: "Bottle",
                                           .callStart: "Tink", .callEnd: "Bottle", .sensorOn: "", .authFail: "Basso",
                                           .netDown: "Basso", .netUp: "Tink", .downloadDone: "Glass", .warning: "Funk", .open: "", .close: ""]),
-        SoundPack(name: L("Tối giản"), map: [.taskDone: "Tink", .agentAsk: "Tink", .ciPassed: "Tink", .ciFailed: "Pop", .limitWarn: "Pop", .meeting: "Tink",
+        SoundPack(name: L("Minimal"), map: [.taskDone: "Tink", .agentAsk: "Tink", .ciPassed: "Tink", .ciFailed: "Pop", .limitWarn: "Pop", .meeting: "Tink",
                                           .timerDone: "Tink", .charging: "Tink", .unplugged: "", .lowBattery: "Pop", .deviceOn: "Tink", .deviceOff: "",
                                           .callStart: "Tink", .callEnd: "", .sensorOn: "", .authFail: "Pop",
                                           .netDown: "Pop", .netUp: "", .downloadDone: "Tink", .warning: "Pop", .open: "", .close: ""]),
-        SoundPack(name: L("Sôi động"), map: [.taskDone: "Hero", .agentAsk: "Submarine", .ciPassed: "Hero", .ciFailed: "Sosumi", .limitWarn: "Funk", .meeting: "Glass",
+        SoundPack(name: L("Lively"), map: [.taskDone: "Hero", .agentAsk: "Submarine", .ciPassed: "Hero", .ciFailed: "Sosumi", .limitWarn: "Funk", .meeting: "Glass",
                                           .timerDone: "Submarine", .charging: "Bottle", .unplugged: "Blow", .lowBattery: "Funk", .deviceOn: "Hero", .deviceOff: "Blow",
                                           .callStart: "Glass", .callEnd: "Blow", .sensorOn: "Pop", .authFail: "Sosumi",
                                           .netDown: "Sosumi", .netUp: "Hero", .downloadDone: "Hero", .warning: "Funk", .open: "Pop", .close: "Tink"]),
@@ -227,7 +227,7 @@ struct SoundPack {
                                        .timerDone: "Submarine", .charging: "Bottle", .unplugged: "Blow", .lowBattery: "Sosumi", .deviceOn: "Morse", .deviceOff: "Purr",
                                        .callStart: "Morse", .callEnd: "Purr", .sensorOn: "", .authFail: "Basso",
                                        .netDown: "Basso", .netUp: "Morse", .downloadDone: "Frog", .warning: "Sosumi", .open: "", .close: ""]),
-        SoundPack(name: L("Im lặng"), map: Dictionary(uniqueKeysWithValues: SoundEvent.allCases.map { ($0, "") })),
+        SoundPack(name: L("Silent"), map: Dictionary(uniqueKeysWithValues: SoundEvent.allCases.map { ($0, "") })),
     ] }
 }
 
@@ -254,7 +254,7 @@ enum Sounds {
     }
 
     static func displayName(_ name: String) -> String {
-        name.isEmpty ? L("Không") : name.hasPrefix("/") ? "♪ " + ((name as NSString).lastPathComponent) : name
+        name.isEmpty ? L("No") : name.hasPrefix("/") ? "♪ " + ((name as NSString).lastPathComponent) : name
     }
 }
 
@@ -340,17 +340,17 @@ struct Theme: Identifiable {
     let motion: Motion  // no sounds: they are the user's own and survive a theme change
 
     static var all: [Theme] { [
-        Theme(id: "classic", title: L("Cổ điển"), background: .black, gradient: ("#1E1B4B", "#000000"), accent: "auto", customAccent: "#FF9F0A",
+        Theme(id: "classic", title: L("Classic"), background: .black, gradient: ("#1E1B4B", "#000000"), accent: "auto", customAccent: "#FF9F0A",
               toast: .island, motion: .bouncy),
         Theme(id: "neon", title: "Neon", background: .glow, gradient: ("#0F172A", "#000000"), accent: "custom", customAccent: "#00F5D4",
               toast: .card, motion: .bouncy),
-        Theme(id: "glass", title: L("Kính"), background: .glass, gradient: ("#334155", "#0F172A"), accent: "white", customAccent: "#FFFFFF",
+        Theme(id: "glass", title: L("Glass"), background: .glass, gradient: ("#334155", "#0F172A"), accent: "white", customAccent: "#FFFFFF",
               toast: .banner, motion: .smooth),
-        Theme(id: "minimal", title: L("Tối giản"), background: .black, gradient: ("#111111", "#000000"), accent: "white", customAccent: "#FFFFFF",
+        Theme(id: "minimal", title: L("Minimal"), background: .black, gradient: ("#111111", "#000000"), accent: "white", customAccent: "#FFFFFF",
               toast: .compact, motion: .snappy),
-        Theme(id: "sunset", title: L("Hoàng hôn"), background: .gradient, gradient: ("#FF5F6D", "#5B247A"), accent: "custom", customAccent: "#FFC371",
+        Theme(id: "sunset", title: L("Sunset"), background: .gradient, gradient: ("#FF5F6D", "#5B247A"), accent: "custom", customAccent: "#FFC371",
               toast: .card, motion: .bouncy),
-        Theme(id: "ocean", title: L("Đại dương"), background: .gradient, gradient: ("#0EA5E9", "#1E1B4B"), accent: "custom", customAccent: "#7DD3FC",
+        Theme(id: "ocean", title: L("Ocean"), background: .gradient, gradient: ("#0EA5E9", "#1E1B4B"), accent: "custom", customAccent: "#7DD3FC",
               toast: .island, motion: .smooth),
     ] }
 }

@@ -187,7 +187,7 @@ class GitHubWatcher {
       return job({
         id: `gh:${r.id}`,
         title: `${r.repo} · ${r.workflow}`,
-        detail: waiting ? L('Đang chờ runner') : `${r.step || L('đang chạy')} · ${mmss((this.now() - r.started) / 1000)}`,
+        detail: waiting ? L('Waiting for a runner') : `${r.step || L('running')} · ${mmss((this.now() - r.started) / 1000)}`,
         working: true, url: r.url, progress: r.progress, tool: 'GitHub Actions',
       });
     });

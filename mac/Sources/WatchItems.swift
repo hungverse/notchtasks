@@ -32,11 +32,11 @@ struct WatchItem: Codable, Identifiable, Equatable {
         let cpu = "CPU > \(cpuThreshold.formatted(.number.precision(.fractionLength(0...1))))%"
         switch kind {
         case .process:
-            let what = process.isEmpty ? L("Lệnh chứa “{0}”", args ?? "") : L("Tiến trình “{0}”", process) + (args.map { L(" · lệnh chứa “{0}”", $0) } ?? "")
-            return [what, childTasks ? L("mỗi lệnh con một dòng") : nil, cpu].compactMap { $0 }.joined(separator: " · ")
-        case .app: return L("Ứng dụng · {0}", cpu)
-        case .codex, .claude: return L("Theo dõi từng phiên")
-        case .dev: return L("Hiện khi đang chạy")
+            let what = process.isEmpty ? L("Command contains “{0}”", args ?? "") : L("Process “{0}”", process) + (args.map { L(" · command contains “{0}”", $0) } ?? "")
+            return [what, childTasks ? L("one line per subprocess") : nil, cpu].compactMap { $0 }.joined(separator: " · ")
+        case .app: return L("App · {0}", cpu)
+        case .codex, .claude: return L("Tracks each session")
+        case .dev: return L("Shows while running")
         }
     }
 
@@ -112,7 +112,7 @@ let presetGroups: [(title: String, items: [WatchItem])] = [
         agent("Kiro CLI", cli: "kiro-cli", process: "kiro-cli"),
         agent("OpenClaw", cli: "openclaw", args: "openclaw/dist", threshold: 15),  // its gateway idles at 1–4% CPU
     ]),
-    (L("Ứng dụng AI"), [
+    (L("AI apps"), [
         aiApp("ChatGPT", "com.openai.chat", threshold: 15),
         aiApp("Cursor", "com.todesktop.230313mzl4w4u92", threshold: 30),
         aiApp("Windsurf", "com.exafunction.windsurf", threshold: 30),
@@ -122,7 +122,7 @@ let presetGroups: [(title: String, items: [WatchItem])] = [
         aiApp("Perplexity", "ai.perplexity.mac", threshold: 15),
     ]),
     // local model runners: on the notch while they generate, with the model they have loaded
-    (L("Model chạy trên máy"), [
+    (L("Model running locally"), [
         aiApp("LM Studio", "ai.elementlabs.lmstudio", threshold: 8),
         WatchItem(name: "Ollama", kind: .process, process: "ollama", bundleID: "com.electron.ollama", threshold: 8, cli: "ollama"),
     ]),

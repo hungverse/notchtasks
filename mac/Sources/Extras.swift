@@ -22,7 +22,7 @@ struct Toast: Identifiable, Equatable {
     var pane: String? = nil      // control-panel page opened by this toast's action
     var ask: AgentAsk? = nil     // an agent waiting on you: answer buttons instead of the action
     var toPhone = false          // also goes to the paired iPhone (task done, Mac too hot); CI, limits, low battery always do
-    var actionTitle: String? { url == nil && pane == nil ? nil : action ?? L("Mở") }
+    var actionTitle: String? { url == nil && pane == nil ? nil : action ?? L("Open") }
 }
 
 enum ToastArt: Equatable {
@@ -86,7 +86,7 @@ struct CalEvent: Equatable {
     /// "đến 6/11" for an all-day event spanning several days.
     var untilText: String? {
         let days = Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: start), to: end.addingTimeInterval(-1)).day ?? 0
-        return allDay && days >= 1 ? L("đến ") + end.addingTimeInterval(-1).formatted(.dateTime.day().month(.defaultDigits)) : nil
+        return allDay && days >= 1 ? L("until ") + end.addingTimeInterval(-1).formatted(.dateTime.day().month(.defaultDigits)) : nil
     }
 
     func running(at now: Date) -> Bool { !allDay && start <= now && now < end }
@@ -110,7 +110,7 @@ struct CalEvent: Equatable {
             .sorted { ($0.isAllDay ? 0 : 1, $0.startDate) < ($1.isAllDay ? 0 : 1, $1.startDate) }
             .prefix(10)
             .map { e in
-                CalEvent(id: (e.eventIdentifier ?? "") + "\(e.startDate.timeIntervalSince1970)", title: e.title ?? L("Sự kiện"),
+                CalEvent(id: (e.eventIdentifier ?? "") + "\(e.startDate.timeIntervalSince1970)", title: e.title ?? L("Events"),
                          start: e.startDate, end: e.endDate, color: Color(nsColor: e.calendar.color), link: meetingLink(e), allDay: e.isAllDay,
                          calendar: e.calendar.title, eventID: e.eventIdentifier)
             }

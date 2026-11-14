@@ -157,7 +157,7 @@ enum SyncBox {
             group = g; sent = nil; phones = [:]; pro = false; proUntil = nil; proProduct = ""; proTx = ""; proHolders = []; proNote = nil; problem = nil
             listen(); startLAN()
             Track.event("pair_code_created")
-        } catch { problem = L("Không tạo được mã ghép: {0}", error.localizedDescription) }
+        } catch { problem = L("Couldn't create a pairing code: {0}", error.localizedDescription) }
     }
 
     /// Removes every phone, then the Mac itself: nobody can read the old group any more.
@@ -177,7 +177,7 @@ enum SyncBox {
         guard let g = group else { return }
         if let d = try? await call("GET", "groups/\(g.g)/members", nil, group: g),
            let all = try? JSONSerialization.jsonObject(with: d) as? [String: [String: Any]] {
-            phones = all.compactMapValues { $0["role"] as? String == "phone" ? $0["name"] as? String ?? L("Điện thoại") : nil }
+            phones = all.compactMapValues { $0["role"] as? String == "phone" ? $0["name"] as? String ?? L("Phone") : nil }
         }
         await checkPro(g, force: true)
     }
@@ -256,7 +256,7 @@ enum SyncBox {
                 sent = s
                 sentAway = away
                 if problem != nil { problem = nil }
-            } catch { problem = L("Không gửi được sang điện thoại: {0}", error.localizedDescription) }
+            } catch { problem = L("Couldn't send to the phone: {0}", error.localizedDescription) }
         }
     }
 
@@ -317,7 +317,7 @@ enum SyncBox {
 
     /// The Live Activity counts the time itself: "· 0:12" or "· ≈ 40s nữa" in the detail would change it every second.
     static func bare(_ detail: String) -> String {
-        detail.replacingOccurrences(of: #"\s·\s(\d+:\d{2}(:\d{2})?|≈[^·]*|\d+\s(giây|phút|giờ)[^·]*)"#, with: "", options: .regularExpression)
+        detail.replacingOccurrences(of: #"\s·\s(\d+:\d{2}(:\d{2})?|≈[^·]*|\d+\s(giây|phút|giờ|sec|min|hours)[^·]*)"#, with: "", options: .regularExpression)
     }
 
     /// The longest build at work; when it stops, the same build as done (or failed, when CI said so) for 5 minutes.
@@ -403,9 +403,9 @@ enum SyncBox {
 
     static func proNoteText(_ why: String) -> String? {
         switch why {
-        case "moved": return L("Pro của nhóm đã chuyển sang máy tính khác")
-        case "refunded": return L("Gói Pro của nhóm đã được hoàn tiền")
-        case "expired": return L("Gói Pro của nhóm đã hết hạn")
+        case "moved": return L("The group’s Pro moved to another computer")
+        case "refunded": return L("The group’s Pro plan was refunded")
+        case "expired": return L("The group’s Pro plan has expired")
         default: return nil
         }
     }
@@ -431,7 +431,7 @@ enum SyncBox {
                         if event == "auth_revoked" || event == "cancel" { token = nil; break }
                     }
                 } catch is CancellationError { return } catch {
-                    if !Task.isCancelled { problem = L("Mất kết nối với điện thoại, đang thử lại…") }
+                    if !Task.isCancelled { problem = L("Lost connection to the phone, retrying…") }
                 }
                 try? await Task.sleep(for: .seconds(5))
             }
@@ -620,13 +620,13 @@ enum SyncBox {
         let p0 = Date(timeIntervalSince1970: 1000)
         precondition(isPro(["pro": true, "until": 1_000_001], now: p0) && !isPro(["pro": true, "until": 999_999], now: p0)
                      && !isPro(nil, now: p0) && !isPro(["pro": false, "until": 2_000_000], now: p0), "pro entitlement")
-        precondition(proNoteText("moved") == L("Pro của nhóm đã chuyển sang máy tính khác")
-                     && proNoteText("refunded") == L("Gói Pro của nhóm đã được hoàn tiền")
-                     && proNoteText("expired") == L("Gói Pro của nhóm đã hết hạn")
+        precondition(proNoteText("moved") == L("The group’s Pro moved to another computer")
+                     && proNoteText("refunded") == L("The group’s Pro plan was refunded")
+                     && proNoteText("expired") == L("The group’s Pro plan has expired")
                      && proNoteText("unknown") == nil, "pro notice texts")
-        precondition(PhonePane.status(until: nil, now: p0) == L("Chưa có Pro: một điện thoại, thông báo cơ bản")
-                     && PhonePane.status(until: 32_503_680_000_000, now: p0) == L("Pro trọn đời")
-                     && PhonePane.status(until: 1_001_000, now: p0).hasPrefix("Pro đến "), "pro status lines")
+        precondition(PhonePane.status(until: nil, now: p0) == L("No Pro: one phone, basic notifications")
+                     && PhonePane.status(until: 32_503_680_000_000, now: p0) == L("Pro lifetime")
+                     && PhonePane.status(until: 1_001_000, now: p0).hasPrefix("Pro until "), "pro status lines")
         let legacy = Data(#"{"ask":"x","reply":{"pass":{}},"at":0}"#.utf8)
         precondition((try? JSONDecoder().decode(SyncAnswer.self, from: legacy))?.phone == nil, "old answers still decode")
         let hello = SyncAnswer(ask: "", reply: .pass, at: Date(timeIntervalSince1970: 1), phone: "uid-1")
@@ -637,8 +637,8 @@ enum SyncBox {
         let code = try? JSONSerialization.jsonObject(with: Data(g.code.utf8)) as? [String: Any]
         precondition(code?["v"] as? Int == 1 && code?["g"] as? String == g.g && code?["k"] as? String == g.k, "pairing code")
         precondition(qr(g.code) != nil, "qr image")
-        precondition(bare("clean · NotchTasks · 0:04 · ≈ 40s nữa") == "clean · NotchTasks", "job detail without the clock")
-        precondition(bare("Đang làm việc · 9 phút") == "Đang làm việc", "agent detail without its minutes")
+        precondition(bare("clean · NotchTasks · 0:04 · ≈ 40s left") == "clean · NotchTasks", "job detail without the clock")
+        precondition(bare("Working · 9 min") == "Working" && bare("Đang làm việc · 9 phút") == "Đang làm việc", "agent detail without its minutes")
         let t0 = Date(timeIntervalSince1970: 0)
         let crew = members([SyncRun(id: "b", agent: .codex, title: "", detail: "", since: t0.addingTimeInterval(5)),
                             SyncRun(id: "a", agent: .claude, title: "", detail: "", since: t0), SyncRun(id: "c", agent: .claude, title: "", detail: "", since: t0)])
@@ -727,10 +727,10 @@ struct PhonePane: View {
 
     static func status(until: Double?, now: Date = Date()) -> String {
         guard let until, until > now.timeIntervalSince1970 * 1000 else {
-            return L("Chưa có Pro: một điện thoại, thông báo cơ bản")
+            return L("No Pro: one phone, basic notifications")
         }
-        return until >= 30_000_000_000_000 ? L("Pro trọn đời")
-            : L("Pro đến {0}", Date(timeIntervalSince1970: until / 1000).formatted(date: .abbreviated, time: .omitted))
+        return until >= 30_000_000_000_000 ? L("Pro lifetime")
+            : L("Pro until {0}", Date(timeIntervalSince1970: until / 1000).formatted(date: .abbreviated, time: .omitted))
     }
 
     private var proStatus: String { Self.status(until: sync.proUntil) }
@@ -742,13 +742,13 @@ struct PhonePane: View {
                 if let note = sync.proNote, let text = SyncHub.proNoteText(note.why) {
                     Text(text).font(.footnote).foregroundStyle(.secondary)
                 }
-                Text(L("Trả lời agent và xem việc đang chạy ngay trên điện thoại. Dữ liệu được mã hoá giữa các thiết bị."))
+                Text(L("Answer agents and see what's running right on your phone. Data is encrypted between your devices."))
                     .foregroundStyle(.secondary)
                 if sync.phones.isEmpty {
                     VStack(alignment: .leading, spacing: 6) {
-                        Text(L("1. Cài NotchTasks trên điện thoại"))
-                        Text(L("2. Bấm Ghép thiết bị"))
-                        Text(L("3. Quét mã QR bằng app hoặc Camera"))
+                        Text(L("1. Install NotchTasks on your phone"))
+                        Text(L("2. Click Pair device"))
+                        Text(L("3. Scan the QR code with the app or Camera"))
                     }
                     .font(.subheadline).padding(.vertical, 4)
                     if let g = sync.group {
@@ -757,15 +757,15 @@ struct PhonePane: View {
                                 Image(nsImage: img).interpolation(.none).resizable().frame(width: 240, height: 240)
                                     .padding(14).background(.white, in: RoundedRectangle(cornerRadius: 14))
                             }
-                            Text(L("Mã này chỉ dùng cho các thiết bị của bạn.")).font(.callout).foregroundStyle(.secondary)
-                            Button(L("Sao chép mã")) {
+                            Text(L("This code only works for your devices.")).font(.callout).foregroundStyle(.secondary)
+                            Button(L("Copy code")) {
                                 NSPasteboard.general.clearContents()
                                 NSPasteboard.general.setString(g.pairURL, forType: .string)
                             }
                         }
                         .frame(maxWidth: .infinity).padding(.vertical, 6)
                     } else {
-                        Button(busy ? L("Đang tạo mã…") : L("Ghép thiết bị…")) {
+                        Button(busy ? L("Creating code…") : L("Pair device…")) {
                             busy = true
                             Task { await sync.create(); busy = false; showCode = sync.group != nil }
                         }
@@ -779,31 +779,31 @@ struct PhonePane: View {
                                     .padding(14).background(.white, in: RoundedRectangle(cornerRadius: 14))
                             }
                             VStack(alignment: .leading, spacing: 8) {
-                                Text(L("Mở NotchTasks trên điện thoại → Ghép với máy tính, rồi quét mã này."))
-                                Text(L("Mã này chỉ dùng cho các thiết bị của bạn.")).font(.callout).foregroundStyle(.secondary)
+                                Text(L("Open NotchTasks on your phone → Pair with computer, then scan this code."))
+                                Text(L("This code only works for your devices.")).font(.callout).foregroundStyle(.secondary)
                                 HStack {
-                                    Button(L("Sao chép mã")) {
+                                    Button(L("Copy code")) {
                                         NSPasteboard.general.clearContents()
                                         NSPasteboard.general.setString(g.pairURL, forType: .string)
                                     }
-                                    Button(L("Ẩn mã")) { showCode = false }
+                                    Button(L("Hide code")) { showCode = false }
                                 }
                             }
                         }
                     } else {
-                        Button(L("Ghép thêm thiết bị…")) { showCode = true }
+                        Button(L("Pair another device…")) { showCode = true }
                     }
                 }
                 if let p = sync.problem { Label(p, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.orange) }
-                Button(L("Báo lỗi")) { showReport = true }
+                Button(L("Report a problem")) { showReport = true }
             }
             if sync.group != nil, !sync.phones.isEmpty {
                 Section {
-                    Toggle(L("Nối trực tiếp khi cùng Wi‑Fi"), isOn: $sync.lan)
-                    Toggle(L("Chỉ báo điện thoại khi tôi rời máy"), isOn: $sync.onlyAway)
-                    LabeledContent(L("Đang nối"), value: sync.lanPhones > 0 ? L("{0} thiết bị qua Wi‑Fi", sync.lanPhones) : "Qua Internet")
+                    Toggle(L("Connect directly on the same Wi‑Fi"), isOn: $sync.lan)
+                    Toggle(L("Only alert my phone when I'm away"), isOn: $sync.onlyAway)
+                    LabeledContent(L("Connecting…"), value: sync.lanPhones > 0 ? L("{0} devices over Wi‑Fi", sync.lanPhones) : "Qua Internet")
                 } footer: {
-                    Text(L("Cùng Wi‑Fi thì điện thoại nhận ngay, khác mạng thì qua Internet. Khi bạn đang dùng máy này, điện thoại không reo."))
+                    Text(L("On the same Wi‑Fi your phone gets updates instantly; elsewhere, over the Internet. While you're using this computer, your phone stays quiet."))
                 }
                 Section {
                     ForEach(sync.phones.sorted { $0.value < $1.value }, id: \.key) { entry in
@@ -813,15 +813,15 @@ struct PhonePane: View {
                             if sync.proHolders.contains(entry.key) { Text("Pro").font(.caption.weight(.semibold)).foregroundStyle(.orange) }
                         }
                     }
-                    Button(L("Huỷ ghép tất cả"), role: .destructive) {
+                    Button(L("Unpair all"), role: .destructive) {
                         busy = true
                         Task { await sync.unpairAll(); busy = false; showCode = false }
                     }
                     .disabled(busy)
                 } header: {
-                    Text(L("Đã ghép"))
+                    Text(L("Paired"))
                 } footer: {
-                    Text(L("Mọi thiết bị sẽ ngắt khỏi máy này. Ghép lại sẽ dùng mã mới."))
+                    Text(L("Every device will disconnect from this computer. Pairing again uses a new code."))
                 }
             }
         }

@@ -1,312 +1,309 @@
-700	Masquer le code
-701	Associer un autre appareil…
-702	Création du code…
-703	Associer un appareil…
-704	Alerter le téléphone seulement quand je suis loin
-705	{0} appareils en Wi‑Fi
-706	Sur le même Wi‑Fi, le téléphone est à jour instantanément ; ailleurs, via Internet. Quand vous utilisez cet ordinateur, le téléphone ne sonne pas.
-707	Aucun appareil pour l'instant.
-708	Tout dissocier
-709	Associés
-710	Tous les appareils seront déconnectés de cet ordinateur. Une nouvelle association utilisera un nouveau code.
-711	Non accordée
-712	Non vérifiée
-713	Prévient quand une tâche se termine ou échoue.
-714	Affiche les prochains événements.
-715	Contrôle la musique du navigateur.
-716	Contrôler {0}
-717	Lit et contrôle ce qui est en cours de lecture.
-718	Musique dans {0}
-719	Pause, lecture et morceau suivant directement dans l'onglet.
-720	Ouvrir à la connexion
-721	Se lance à l'ouverture de session.
-722	Désactiver dans {0}
-723	Décochez le même élément :\n
-724	La commande contient « {0} »
-725	Processus « {0} »
-726	 · la commande contient « {0} »
-727	une ligne par sous-processus
-728	App · {0}
-729	Suit chaque session
-730	S'affiche pendant l'exécution
-731	Apps d'IA
-732	Étape {0}/{1}
-733	Passer
-734	Retour
-735	Suivant
-736	Bienvenue dans NotchTasks
-737	IA et builds
-738	Sachez quel agent travaille et quel build a réussi ou échoué
-739	Musique, appels
-740	Contrôlez la musique, coupez le micro vite pendant les appels
-741	Alertes soignées
-742	Charge, écouteurs, téléchargements, réseau, chaleur
-743	Confidentiel
-744	Tout fonctionne sur votre ordinateur, rien n'est envoyé ailleurs
-745	Ce qu'affiche l'encoche
-746	Cliquez pour activer ou désactiver. Modifiable à tout moment dans le Panneau de contrôle.
-747	Les agents IA de votre ordinateur
-748	Trouvés et activés. Ajoutez-en ou retirez-en plus tard dans le Panneau de contrôle.
-749	Aucun agent IA trouvé. Ajoutez-les plus tard dans la page Surveillance.
-750	Le module des agents IA est désactivé.
-751	Seulement ce dont les modules choisis ont besoin. Vous pouvez passer.
-752	Tout est prêt
-753	Quelques astuces pour aller plus vite :
-754	Survolez l'encoche
-755	L'encoche s'ouvre avec tout ce qui tourne. Éloignez le pointeur pour la replier.
-756	Cliquez sur les boutons des alertes
-757	Les alertes restent tant que le pointeur est dessus, avec des boutons comme « Afficher dans le dossier » et « Libérer de l'espace ».
-758	Faites glisser des fichiers sur l'encoche
-759	Gardez des fichiers sur l'étagère un moment, ressortez-les au besoin.
-760	Décorez l'encoche
-761	Choisissez des personnages animés dans la bibliothèque d'icônes.
-762	Ouvrir le Panneau de contrôle
-763	Cliquez sur l'icône NotchTasks dans la barre des menus, ou sur le bouton ⚙ quand l'encoche est ouverte.
-764	Cliquez sur le bouton ⚙ quand l'encoche est ouverte, ou rouvrez NotchTasks depuis Spotlight.
-765	Utiliser l'outil 
-766	Refusé sur l'encoche
-767	Pas encore approuvé dans Codex
-768	Ouvrir Codex
-769	Non connecté
-770	Se connecter
-771	1. Safari › Réglages › Avancé : activez « Afficher les fonctionnalités pour les développeurs web ».\n2. Menu Développement › Autoriser JavaScript depuis les Apple Events.
-772	Dans {0}, dans la barre des menus : Présentation (View) › Développeur (Developer) › Autoriser JavaScript depuis les Apple Events.
-773	Activer le contrôle de la musique
-774	Ouvrir les réglages de Safari
-775	Safari › Réglages… (⌘,)
-776	Afficher les fonctions pour développeurs
-777	Onglet Avancé : activez « Show features for web developers »
-778	Autoriser JavaScript depuis les Apple Events
-779	Ouvrez le menu Présentation
-780	Dans la barre des menus de {0}, cliquez sur View (Présentation)
-781	Choisissez Développeur
-782	Survolez Developer (Développeur)
-783	Cliquez sur Allow JavaScript from Apple Events
-784	C'est le dernier élément. Une coche ✓ et c'est fait
-785	Laisser l'encoche contrôler la musique dans {0}
-786	Une seule fois, environ 10 secondes. Ensuite l'encoche met en pause, lance, avance et passe les morceaux directement dans l'onglet.
-787	Activé. L'encoche contrôle maintenant {0}.
-788	En attente de votre activation… cette fenêtre le détecte toute seule
-789	Plus tard
-790	Ouvrir {0}
-791	Agents et apps d'IA au travail
-792	Build, tests, installation, rendu, CI
-793	Ce qui joue, avec les commandes
-794	Utilisation des agents, alerte avant épuisement
-795	Branché, débranché, batterie faible
-796	Prochains événements, avec liens de réunion
-797	Déposez des fichiers sur l'encoche pour les garder
-798	Minuteurs rapides
-799	Écouteurs, claviers, souris et leur batterie
-800	Durée d'appel, bouton micro (FaceTime, Zoom…)
-801	Prévient quand une app utilise le micro ou la caméra
-802	Volume et luminosité quand vous les réglez
-803	Hors ligne, de retour en ligne, VPN
-804	Téléchargement terminé, afficher dans le dossier
-805	Ordinateur chaud, disque presque plein
-806	Vérifiez la caméra avant une réunion
-807	Travail
-808	Musique et appareils
-809	Appels et confidentialité
-810	Système
-811	Contrôle des apps
-812	Dossier Téléchargements
-813	Couleur de l'app
-814	Personnalisé…
-815	Ce fichier n'est pas un pack de sons NotchTasks.
-816	Aucun son utilisable dans ce fichier.
-817	En attente d'un runner
-818	en cours
-819	En cours · {0}
-820	Terminé · il y a {0}
-821	Boîtier
-822	{0} tâches en cours
-823	Ouvrir le journal
-824	+{0} autres tâches
-825	Masquer l'alerte
-826	Lecture audio
-827	Activer le contrôle dans {0}
-828	Pour mettre en pause, lancer et passer les morceaux dans l'onglet sans que d'autres apps de musique se lancent
-829	Faites glisser pour avancer
-830	Appel vidéo · {0}
-831	En appel · {0}
-832	 · Micro coupé
-833	Activer le micro
-834	Couper le micro
-835	NotchTasks ne peut pas encore utiliser la caméra
-836	Ouvrir les réglages Caméra
-837	Fermer le miroir
-838	En attente 
-839	Répondre dans {0}
-840	Ignorer ici, {0} demandera comme d'habitude
-841	Envoyer
-842	Anniversaire de Lan
-843	Famille
-844	Congés
-845	Rédiger le rapport
-846	Réunion de sprint
-847	Déjeuner d'équipe
-848	Appel client
-849	 connecté
-850	 déconnecté
-851	G 100 % · D 98 % · Boîtier 62 %
-852	1 déverrouillage échoué
-853	{0} déverrouillages échoués
-854	Le dernier à {0}, ordinateur verrouillé
-855	Pack de sons appliqué
-856	Panneau de contrôle…
-857	Guide…
-858	Minuteur de {0} minutes
-859	Arrêter le minuteur
-860	Quitter NotchTasks
-861	Salle A / https://us02web.zoom.us/j/123?pwd=x
-862	Quelle couleur ?
-863	Rouge
-864	Couleur ?
-865	Descend de l'encoche.
-866	Tient dans l'encoche.
-867	Une carte flottant sous l'encoche.
-868	Large, texte en gros.
-869	Automatique
-870	Côté gauche
-871	Côté droit
-872	IA / tâche terminée
-873	Un agent demande votre accord
-874	CI réussi
-875	Échec CI
-876	Limite IA presque atteinte
-877	Événement à venir
-878	Minuteur terminé
-879	Branché
-880	Débranché
-881	Appareil connecté
-882	Appareil déconnecté
-883	Appel commencé
-884	Appel terminé
-885	Micro ou caméra activés
-886	Déverrouillage échoué
-887	Hors ligne
-888	De retour en ligne, VPN
-889	Téléchargement terminé
-890	Ordinateur chaud, disque plein
-891	L'encoche se replie
-892	Par défaut
-893	Vif
-894	Silencieux
-895	copie
-896	téléchargement
-897	compression / extraction
-898	traitement vidéo
-899	traitement d'images
-900	transcription
-901	 · plus long que d'habitude
-902	 restantes
-903	au travail · {0} % du CPU
-904	Copie
-905	Réception
-906	Extraction
-907	Transfert de fichiers
-908	 · reste 
-909	Toute la journée
-910	Ouvrir dans Calendrier
-911	+{0} autres événements
-912	En cours · encore {0}
-913	Bientôt · dans {0}
-914	{0} · ouvrir dans Calendrier
-915	en cours
-916	dans 
-917	Masquer cet événement de l'encoche
-918	{0}/{1} sélectionnés
-919	Désélectionner
-920	Tout sélectionner
-921	Afficher dans le Finder
-922	Tout envoyer par AirDrop
-923	Envoyer par AirDrop
-924	Tout retirer de l'étagère (les originaux restent)
-925	Retirer de l'étagère (l'original reste)
-926	Ajouter des fichiers…
-927	Déposez ici
-928	Faites glisser des fichiers sur l'encoche, ou cliquez sur + pour choisir
-929	Clic pour sélectionner · double-clic pour ouvrir · glisser dehors pour déposer dans une autre app
-930	Faites glisser un fichier sélectionné pour emporter les {0}
-931	Retirer de l'étagère
-932	Fichier introuvable : {0}
-933	Empreinte non reconnue
-934	Mot de passe incorrect
-935	Désactivé
-936	1 erreur
-937	{0} erreurs
-938	{0} en cours
-939	{0} en attente
-940	Rien en cours
-941	Panneau de contrôle
-942	Miroir
-943	Coup d'œil à la caméra
-944	Glissez-déposez ou choisissez des fichiers
-945	Faites glisser des fichiers sur l'encoche, ou cliquez pour choisir des fichiers pour l'étagère
-946	CPU de tout l'ordinateur : 
-947	Mémoire utilisée : 
-948	{0} % · cliquez pour ouvrir Moniteur d'activité
-949	Texte, emoji
-950	Animation
-951	Au charbon
-952	Mignon
-953	Téléchargement
-954	Répondre à l'agent
-955	Question
-956	Texte de la question
-957	Choix
-958	Session suivante
-959	Démarrer la concentration
-960	Minutes
-961	Arrêter la concentration
-962	S'occuper du compagnon
-963	Action
-964	Boule orange
-965	Étincelle
-966	Nuage de commandes
-967	Fusée
-968	Astronaute
-969	Étoile bleue
-970	Petit robot
-971	Réfléchit
-972	Mineur
-973	Forgeron
-974	Petit engrenage
-975	Roue de hamster
-976	Café
-977	Barre de progression
-978	Feu de camp
-979	Chasseur de bugs
-980	Pièce
-981	Chat
-982	Slime
-983	Petit fantôme
-984	Canard en plastique
-985	Cœur battant
-986	Pingouin
-987	Robot
-988	Robot de combat
-989	Chibi
-990	Chat anime
-991	Nuage mignon
-992	Étincelle orange
-993	Orbite
-994	Scintillement
-995	Réseau de neurones
-996	Saisie…
-997	Engrenage
-998	Sablier
-999	Briques
-1000	Boule ronde
-1001	Étoile joyeuse
-1002	Grenouille
-1003	Panda
-1004	Lapin
-1005	Hibou
-1006	Du nouveau sur votre ordinateur.
-1007	Build terminé
-1008	Ouvrez NotchTasks pour le voir.
-1009	Build en cours
-1010	Suivez-le sur l'écran verrouillé.
-1011	Ouvrez NotchTasks pour autoriser ou refuser.
+687	Masquer le code
+688	Associer un autre appareil…
+689	Création du code…
+690	Associer un appareil…
+691	Alerter le téléphone seulement quand je suis loin
+692	{0} appareils en Wi‑Fi
+693	Sur le même Wi‑Fi, le téléphone est à jour instantanément ; ailleurs, via Internet. Quand vous utilisez cet ordinateur, le téléphone ne sonne pas.
+694	Aucun appareil pour l'instant.
+695	Tout dissocier
+696	Associés
+697	Tous les appareils seront déconnectés de cet ordinateur. Une nouvelle association utilisera un nouveau code.
+698	Non accordée
+699	Non vérifiée
+700	Prévient quand une tâche se termine ou échoue.
+701	Affiche les prochains événements.
+702	Contrôle la musique du navigateur.
+703	Contrôler {0}
+704	Lit et contrôle ce qui est en cours de lecture.
+705	Musique dans {0}
+706	Pause, lecture et morceau suivant directement dans l'onglet.
+707	Ouvrir à la connexion
+708	Se lance à l'ouverture de session.
+709	Désactiver dans {0}
+710	Décochez le même élément :\n
+711	La commande contient « {0} »
+712	Processus « {0} »
+713	 · la commande contient « {0} »
+714	une ligne par sous-processus
+715	App · {0}
+716	Suit chaque session
+717	S'affiche pendant l'exécution
+718	Apps d'IA
+719	Étape {0}/{1}
+720	Passer
+721	Retour
+722	Suivant
+723	Bienvenue dans NotchTasks
+724	IA et builds
+725	Sachez quel agent travaille et quel build a réussi ou échoué
+726	Musique, appels
+727	Contrôlez la musique, coupez le micro vite pendant les appels
+728	Alertes soignées
+729	Charge, écouteurs, téléchargements, réseau, chaleur
+730	Confidentiel
+731	Tout fonctionne sur votre ordinateur, rien n'est envoyé ailleurs
+732	Ce qu'affiche l'encoche
+733	Cliquez pour activer ou désactiver. Modifiable à tout moment dans le Panneau de contrôle.
+734	Les agents IA de votre ordinateur
+735	Trouvés et activés. Ajoutez-en ou retirez-en plus tard dans le Panneau de contrôle.
+736	Aucun agent IA trouvé. Ajoutez-les plus tard dans la page Surveillance.
+737	Le module des agents IA est désactivé.
+738	Seulement ce dont les modules choisis ont besoin. Vous pouvez passer.
+739	Tout est prêt
+740	Quelques astuces pour aller plus vite :
+741	Survolez l'encoche
+742	L'encoche s'ouvre avec tout ce qui tourne. Éloignez le pointeur pour la replier.
+743	Cliquez sur les boutons des alertes
+744	Les alertes restent tant que le pointeur est dessus, avec des boutons comme « Afficher dans le dossier » et « Libérer de l'espace ».
+745	Faites glisser des fichiers sur l'encoche
+746	Gardez des fichiers sur l'étagère un moment, ressortez-les au besoin.
+747	Décorez l'encoche
+748	Choisissez des personnages animés dans la bibliothèque d'icônes.
+749	Ouvrir le Panneau de contrôle
+750	Cliquez sur l'icône NotchTasks dans la barre des menus, ou sur le bouton ⚙ quand l'encoche est ouverte.
+751	Cliquez sur le bouton ⚙ quand l'encoche est ouverte, ou rouvrez NotchTasks depuis Spotlight.
+752	Utiliser l'outil 
+753	Refusé sur l'encoche
+754	Pas encore approuvé dans Codex
+755	Ouvrir Codex
+756	Non connecté
+757	Se connecter
+758	1. Safari › Réglages › Avancé : activez « Afficher les fonctionnalités pour les développeurs web ».\n2. Menu Développement › Autoriser JavaScript depuis les Apple Events.
+759	Dans {0}, dans la barre des menus : Présentation (View) › Développeur (Developer) › Autoriser JavaScript depuis les Apple Events.
+760	Activer le contrôle de la musique
+761	Ouvrir les réglages de Safari
+762	Safari › Réglages… (⌘,)
+763	Afficher les fonctions pour développeurs
+764	Onglet Avancé : activez « Show features for web developers »
+765	Autoriser JavaScript depuis les Apple Events
+766	Ouvrez le menu Présentation
+767	Dans la barre des menus de {0}, cliquez sur View (Présentation)
+768	Choisissez Développeur
+769	Survolez Developer (Développeur)
+770	Cliquez sur Allow JavaScript from Apple Events
+771	C'est le dernier élément. Une coche ✓ et c'est fait
+772	Laisser l'encoche contrôler la musique dans {0}
+773	Une seule fois, environ 10 secondes. Ensuite l'encoche met en pause, lance, avance et passe les morceaux directement dans l'onglet.
+774	Activé. L'encoche contrôle maintenant {0}.
+775	En attente de votre activation… cette fenêtre le détecte toute seule
+776	Plus tard
+777	Ouvrir {0}
+778	Agents et apps d'IA au travail
+779	Build, tests, installation, rendu, CI
+780	Ce qui joue, avec les commandes
+781	Utilisation des agents, alerte avant épuisement
+782	Branché, débranché, batterie faible
+783	Prochains événements, avec liens de réunion
+784	Déposez des fichiers sur l'encoche pour les garder
+785	Minuteurs rapides
+786	Écouteurs, claviers, souris et leur batterie
+787	Durée d'appel, bouton micro (FaceTime, Zoom…)
+788	Prévient quand une app utilise le micro ou la caméra
+789	Volume et luminosité quand vous les réglez
+790	Hors ligne, de retour en ligne, VPN
+791	Téléchargement terminé, afficher dans le dossier
+792	Ordinateur chaud, disque presque plein
+793	Vérifiez la caméra avant une réunion
+794	Travail
+795	Musique et appareils
+796	Appels et confidentialité
+797	Système
+798	Contrôle des apps
+799	Dossier Téléchargements
+800	Couleur de l'app
+801	Personnalisé…
+802	Ce fichier n'est pas un pack de sons NotchTasks.
+803	Aucun son utilisable dans ce fichier.
+804	En attente d'un runner
+805	en cours
+806	En cours · {0}
+807	Terminé · il y a {0}
+808	Boîtier
+809	{0} tâches en cours
+810	Ouvrir le journal
+811	+{0} autres tâches
+812	Masquer l'alerte
+813	Lecture audio
+814	Activer le contrôle dans {0}
+815	Pour mettre en pause, lancer et passer les morceaux dans l'onglet sans que d'autres apps de musique se lancent
+816	Faites glisser pour avancer
+817	Appel vidéo · {0}
+818	En appel · {0}
+819	 · Micro coupé
+820	Activer le micro
+821	Couper le micro
+822	NotchTasks ne peut pas encore utiliser la caméra
+823	Ouvrir les réglages Caméra
+824	Fermer le miroir
+825	En attente 
+826	Répondre dans {0}
+827	Ignorer ici, {0} demandera comme d'habitude
+828	Envoyer
+829	Anniversaire de Lan
+830	Famille
+831	Congés
+832	Rédiger le rapport
+833	Réunion de sprint
+834	Déjeuner d'équipe
+835	Appel client
+836	 connecté
+837	 déconnecté
+838	G 100 % · D 98 % · Boîtier 62 %
+839	1 déverrouillage échoué
+840	{0} déverrouillages échoués
+841	Le dernier à {0}, ordinateur verrouillé
+842	Pack de sons appliqué
+843	Panneau de contrôle…
+844	Guide…
+845	Minuteur de {0} minutes
+846	Arrêter le minuteur
+847	Quitter NotchTasks
+848	Salle A / https://us02web.zoom.us/j/123?pwd=x
+849	Quelle couleur ?
+850	Rouge
+851	Couleur ?
+852	Descend de l'encoche.
+853	Tient dans l'encoche.
+854	Une carte flottant sous l'encoche.
+855	Large, texte en gros.
+856	Automatique
+857	Côté gauche
+858	Côté droit
+859	IA / tâche terminée
+860	Un agent demande votre accord
+861	CI réussi
+862	Échec CI
+863	Limite IA presque atteinte
+864	Événement à venir
+865	Minuteur terminé
+866	Branché
+867	Appareil connecté
+868	Appareil déconnecté
+869	Appel commencé
+870	Appel terminé
+871	Micro ou caméra activés
+872	Déverrouillage échoué
+873	Hors ligne
+874	De retour en ligne, VPN
+875	Téléchargement terminé
+876	Ordinateur chaud, disque plein
+877	L'encoche se replie
+878	Par défaut
+879	Vif
+880	Silencieux
+881	copie
+882	téléchargement
+883	compression / extraction
+884	traitement vidéo
+885	traitement d'images
+886	transcription
+887	 · plus long que d'habitude
+888	 restantes
+889	au travail · {0} % du CPU
+890	Copie
+891	Réception
+892	Extraction
+893	Transfert de fichiers
+894	 · reste 
+895	Toute la journée
+896	Ouvrir dans Calendrier
+897	+{0} autres événements
+898	En cours · encore {0}
+899	Bientôt · dans {0}
+900	{0} · ouvrir dans Calendrier
+901	en cours
+902	dans 
+903	Masquer cet événement de l'encoche
+904	{0}/{1} sélectionnés
+905	Désélectionner
+906	Tout sélectionner
+907	Afficher dans le Finder
+908	Tout envoyer par AirDrop
+909	Envoyer par AirDrop
+910	Tout retirer de l'étagère (les originaux restent)
+911	Retirer de l'étagère (l'original reste)
+912	Ajouter des fichiers…
+913	Déposez ici
+914	Faites glisser des fichiers sur l'encoche, ou cliquez sur + pour choisir
+915	Clic pour sélectionner · double-clic pour ouvrir · glisser dehors pour déposer dans une autre app
+916	Faites glisser un fichier sélectionné pour emporter les {0}
+917	Retirer de l'étagère
+918	Fichier introuvable : {0}
+919	Empreinte non reconnue
+920	Mot de passe incorrect
+921	1 erreur
+922	{0} erreurs
+923	{0} en cours
+924	Rien en cours
+925	Panneau de contrôle
+926	Miroir
+927	Coup d'œil à la caméra
+928	Glissez-déposez ou choisissez des fichiers
+929	Faites glisser des fichiers sur l'encoche, ou cliquez pour choisir des fichiers pour l'étagère
+930	CPU de tout l'ordinateur : 
+931	Mémoire utilisée : 
+932	{0} % · cliquez pour ouvrir Moniteur d'activité
+933	Texte, emoji
+934	Animation
+935	Au charbon
+936	Mignon
+937	Téléchargement
+938	Répondre à l'agent
+939	Question
+940	Texte de la question
+941	Choix
+942	Session suivante
+943	Démarrer la concentration
+944	Minutes
+945	Arrêter la concentration
+946	S'occuper du compagnon
+947	Action
+948	Boule orange
+949	Étincelle
+950	Nuage de commandes
+951	Fusée
+952	Astronaute
+953	Étoile bleue
+954	Petit robot
+955	Réfléchit
+956	Mineur
+957	Forgeron
+958	Petit engrenage
+959	Roue de hamster
+960	Café
+961	Barre de progression
+962	Feu de camp
+963	Chasseur de bugs
+964	Pièce
+965	Chat
+966	Slime
+967	Petit fantôme
+968	Canard en plastique
+969	Cœur battant
+970	Pingouin
+971	Robot
+972	Robot de combat
+973	Chibi
+974	Chat anime
+975	Nuage mignon
+976	Étincelle orange
+977	Orbite
+978	Scintillement
+979	Réseau de neurones
+980	Saisie…
+981	Engrenage
+982	Sablier
+983	Briques
+984	Boule ronde
+985	Étoile joyeuse
+986	Grenouille
+987	Panda
+988	Lapin
+989	Hibou
+990	Du nouveau sur votre ordinateur.
+991	Build terminé
+992	Ouvrez NotchTasks pour le voir.
+993	Build en cours
+994	Suivez-le sur l'écran verrouillé.
+995	Ouvrez NotchTasks pour autoriser ou refuser.

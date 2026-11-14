@@ -43,298 +43,296 @@
 42	Miroir caméra
 43	Classique
 44	Verre
-45	Épuré
-46	Coucher de soleil
-47	Océan
-48	Supprime des fichiers ou dossiers
-49	S'exécute en administrateur
-50	Écrase l'historique sur le serveur git
-51	Abandonne toutes les modifications non enregistrées
-52	Supprime les fichiers non suivis
-53	Exécute un script téléchargé sur le web
-54	Écrit directement sur un disque
-55	Donne un accès total à tous les fichiers
-56	Supprime des données d'une base
-57	Ignore les vérifications de sécurité
-58	Rappels de pause et d'hydratation
-59	Vous rappelle de vous lever, boire de l'eau et reposer vos yeux 6 fois par journée de travail. Désactivable avec l'interrupteur.
-60	Bilan de fin de journée
-61	Chaque soir à 21 h : combien de temps vous vous êtes concentré, combien de sessions, votre série.
-62	Pomodoro et sessions de 90 minutes
-63	Concentrez-vous par courtes sessions entrecoupées de pauses (4 × 25 minutes, pauses de 5 minutes par défaut). Ajoute une session de 90 minutes.
-64	Couronne de fleurs et écharpe
-65	Votre compagnon grandit et porte une couronne de fleurs et une écharpe.
-66	Sur l'encoche
-67	Placez votre compagnon sur l'encoche de l'ordinateur. Il change de pose selon ce que fait l'ordinateur.
-68	Mode concentration strict
-69	Au début d'une session, choisissez le mode strict : impossible de l'arrêter avant la fin.
-70	Couronne et cape
-71	Votre compagnon porte une couronne, une cape et une auréole.
-72	Normal
-73	Joyeux
-74	Endormi
-75	Affamé
-76	Triste
-77	Concentré
-78	Fatigué
-79	Dort profondément… zzz
-80	Dort… zzz
-81	Je meurs de faim, nourris-moi
-82	Trop fatigué, laisse-moi dormir un peu
-83	Concentré avec vous
-84	Inquiet, votre ordinateur vous attend
-85	Trop fier de vous !
-86	Triste que vous ayez abandonné
-87	Triste, le build a échoué
-88	Je m'ennuie, joue avec moi
-89	Un petit creux
-90	Encourage l'agent
-91	Commence à avoir sommeil
-92	Bonjour !
-93	Gai
-94	Nourrir
-95	Jouer
-96	Endormir
-97	Réveiller
-98	Ordinateur
-99	Associez votre ordinateur pour examiner le travail de vos agents IA et voir les builds ici.
-100	Voir un exemple
-101	Associer l'ordinateur
-102	Type
-103	Compagnons
-104	Boutique
-105	Disponible
-106	Touchez pour choisir un compagnon
-107	, non acheté
-108	Acquis
-109	Le compagnon choisi apparaît partout dans l'app, les widgets et l'écran verrouillé.
-110	{0} choisi
-111	Votre nouveau compagnon apparaîtra sur l'accueil, les widgets et l'écran de blocage.
-112	Achat impossible
-113	Connexion à l'ordinateur impossible : {0}
-114	Cet ordinateur est déjà associé à un autre téléphone. Pro est nécessaire pour en associer davantage.
-115	L'ordinateur a dissocié ce téléphone. Scannez à nouveau le code QR pour l'associer.
-116	Sur votre ordinateur : ouvrez NotchTasks → Panneau de contrôle → Association, cliquez sur Associer un appareil, puis scannez le code QR.
-117	Ou collez un code d'association
-118	Collez un code d'association
-119	Code d'association de l'ordinateur
-120	Associer
-121	Ce n'est pas un code d'association NotchTasks.
-122	Ce code ne fonctionne que pour vos appareils.
-123	Associer un ordinateur
-124	Annuler
-125	données d'exemple
-126	Vous attend
-127	Activité
-128	En attente de {0}…
-129	ordinateur
-130	Ouvrez NotchTasks sur votre ordinateur pour voir ici les agents et leurs questions.
-131	Loin de l'ordinateur · mis à jour {0}
-132	Avec Pro : consultez et répondez aux agents depuis n'importe où.
-133	Attend votre accord
-134	{0} éléments attendent votre accord
-135	 en cours
-136	Un build a échoué
-137	Tout est terminé
-138	L'ordinateur est inactif
-139	L'encoche de votre ordinateur, dans votre main
-140	Examinez le travail de vos agents IA et voyez les builds ici, même sur l'écran verrouillé.
-141	Essayer avec des données d'exemple
-142	Installez NotchTasks sur votre ordinateur, ouvrez **Panneau de contrôle → Association**, puis scannez le code QR.
-143	Répondre
-144	Refuser
-145	Autoriser
-146	Choisissez une ou plusieurs options
-147	Envoyer la réponse
-148	Autoriser cette commande demande Face ID.
-149	Répondre plus tard sur l'ordinateur
-150	Détails
-151	à l'instant
-152	 plus tôt
-153	Frais
-154	Tiède
-155	Chaud
-156	Très chaud
-157	Température
-158	Réinitialisation dans {0}
-159	quelques minutes
-160	{0} j {1} h
-161	{0} jours
-162	{0} h {1} min
-163	{0} heures
-164	{0} min
-165	Autorisé
-166	Refusé
-167	Laisser à l'ordinateur
-168	Choisi : 
-169	Affichage
-170	Données d'exemple
-171	Non associé
-172	Quitter les données d'exemple
-173	Dissocier
-174	Connexion directe sur le même Wi‑Fi
-175	Connexion
-176	Directe par Wi‑Fi
-177	Notifications
-178	Connexion
-179	Même Wi‑Fi : mises à jour instantanées. Ailleurs : passe seul par Internet.
-180	Aperçu de l'activité en direct
-181	Affiche 3 demandes d'exemple. Verrouillez le téléphone pour les voir.
-182	Les activités en direct sont désactivées : activez-les dans Réglages → NotchTasks.
-183	Face ID pour les commandes risquées
-184	Sécurité
-185	Demande Face ID avant d'autoriser une commande pouvant supprimer ou écraser des données.
-186	Informations
-187	Version
-188	Réglages
-189	Pro actif
-190	Pro actif (acheté sur un autre appareil)
-191	Fin de la période en cours
-192	Gérer l'abonnement
-193	Essayer Pro gratuitement 7 jours
-194	Restaurer les achats
-195	Utilisable partout, réponse directe depuis les notifications, activités en direct pour les agents et builds, plusieurs appareils associés.
-196	Les formules mensuelle et annuelle se renouvellent automatiquement. Résiliez dans Réglages → votre nom → Abonnements, au moins 24 heures avant la période suivante.
-197	Conditions
-198	Confidentialité
-199	Inachevé
-200	Pro annuel
-201	Pro mensuel
-202	Pro à vie
-203	 / an
-204	 / mois
-205	À vous
-206	Ajoutez un widget : maintenez l'écran d'accueil → Modifier → Ajouter un widget → NotchTasks.
-207	Voir et changer de compagnon
-208	Niveau {0} !
-209	{0} a un peu grandi.
-210	Débloqué : {0}.
-211	Super
-212	Tout est débloqué. Les sessions terminées rapportent toujours de l'XP ; abandonner le rend triste.
-213	1 minute de concentration = 1 XP. Niveau {0} : {1}.
-214	Concentration en cours
-215	Strict
-216	Arrêter
-217	Pause
-218	Ensuite : session {0}/{1}
-219	Commencer
-220	Compte ici et sur l'encoche de l'ordinateur
-221	S'affiche sur l'écran verrouillé, prévient à la fin
-222	Démarrer
-223	Démarrer en mode strict
-224	Mode strict : impossible d'arrêter avant la fin.
-225	Activer le mode strict ?
-226	Démarrer en strict
-227	Impossible d'arrêter pendant la concentration, sur les {0} sessions. Les pauses peuvent toujours être arrêtées.
-228	Impossible d'arrêter pendant {0} minutes. Les apps bloquées rouvrent à la fin.
-229	Pomodoro : {0} sessions × {1} min
-230	Session de {0} minutes
-231	Levez-vous et étirez-vous un peu !
-232	Buvez une gorgée d'eau 💧
-233	Reposez vos yeux 20 secondes, regardez au loin.
-234	Relâchez les épaules, respirez profondément.
-235	Faites quelques pas pour vous détendre.
-236	Vous avez bu de l'eau ? Petit rappel 💧
-237	{0} vous rappelle
-238	{0} : retour sur la journée
-239	Combien de temps vous êtes-vous concentré, combien de questions avez-vous examinées ? Ouvrez pour voir.
-240	Fin de la pause
-241	{0} est prêt pour la session {1}/{2}, {3} minutes. Touchez pour commencer.
-242	minutes de concentration
-243	sessions
-244	questions examinées
-245	jours d'affilée
-246	Associez votre ordinateur pour placer votre compagnon sur l'encoche.
-247	Niveau {0}
-248	Touchez pour le placer sur l'encoche. Votre compagnon change de pose selon ce que fait l'ordinateur.
-249	Compagnons sur l'encoche
-250	Ajouter à gauche
-251	Ajouter à droite
-252	Remplacer l'icône {0} à {1}
-253	droite
-254	gauche
-255	Retirer de l'encoche
-256	Concentrez-vous par courtes sessions, avec des pauses entre elles. À la fin d'une pause, la session suivante démarre seule.
-257	Concentration : {0} min
-258	Pause : {0} min
-259	Sessions : {0}
-260	À chaque Pomodoro
-261	{0} minutes de concentration au total. En commençant maintenant, fin à {1}.
-262	Démarrez depuis la carte Concentration de l'accueil.
-263	Les pauses ont les boutons « Commencer » et « Arrêter ».
-264	Vous pouvez choisir le mode strict au démarrage.
-265	Chiffres d'exemple, car il n'y a pas encore de session aujourd'hui.
-266	7 derniers jours · minutes de concentration
-267	Un rappel arrive chaque soir à 21 h.
-268	Débloqué au niveau 3 : la carte Aujourd'hui et une notification à 21 h.
-269	{0} vous a attendu toute la journée. Concentrons-nous ensemble demain !
-270	{0} : {1} minutes aujourd'hui, bon début !
-271	{0} : {1} minutes de concentration, {2} sessions. Bravo !
-272	{0} : {1} minutes ! Vous avez beaucoup travaillé aujourd'hui, pensez à vous reposer.
-273	Félicitations ! 🎉
-274	{0} passe au niveau {1} et débloque :
-275	Activé pour vous. Réglez-le sur la page Compagnons.
-276	Génial
-277	Échec du build
-278	Impossible de créer l'activité en direct : {0}
-279	Session {0}/{1} terminée
-280	Fin de la concentration
-281	Faites une pause de {0} minutes, puis passez à la session suivante.
-282	{0} minutes terminées. Faites une petite pause.
-283	 🎉 Débloqué : {0}.
-284	Autoriser la commande risquée : {0}
-285	Comment stocker les données ?
-286	Stockage
-287	SQLite (recommandé)
-288	Votre MacBook Pro
-289	Modifie NotchView.swift
-290	Exécute les tests
-291	Build pour iPhone 17 Pro
-292	Échec CI : deploy
-293	6 min
-294	CI réussi : test
-295	Aucune encoche trouvée sur l'ordinateur
-296	Mettez NotchTasks à jour sur votre ordinateur, puis ouvrez-le pour personnaliser l'encoche d'ici.
-297	Envoi…
-298	Ordinateur d'exemple : essayez librement
-299	Synchronisé avec {0}
-300	Thème
-301	L'écran verrouillé a ses propres icônes
-302	Icônes de l'écran verrouillé
-303	Choisir
-304	Changer
-305	Retirer
-306	Icônes des outils de build
-307	L'icône affichée sur l'encoche pendant que cet outil compile.
-308	Apparence
-309	Taille
-310	Grande
-311	Ouverture de l'encoche
-312	Survol
-313	Clic
-314	Arrière-plan
-315	Couleur de début
-316	Couleur de fin
-317	Animation
-318	Style d'alerte
-319	Modules
-320	{0} activés
-321	Son et retour haptique
-322	Son
-323	Retour haptique du trackpad
-324	Notifications système
-325	Encoche sur l'écran verrouillé
-326	Écran verrouillé de l'ordinateur
-327	Signaler la fin si l'exécution dure plus de
-328	toutes les tâches
-329	{0} s
-330	Alerte de limite IA à
-331	Icônes de l'encoche
-332	Touchez l'endroit voulu. Touchez de nouveau la même icône pour annuler.
-333	Faites glisser une icône pour l'échanger, touchez pour la déplacer, la changer ou la retirer. Jusqu'à {0} par côté{1}
-334	, 4 avec Pro.
-335	Déplacer
-336	Changer l'icône
-337	Retirer
-338	côté droit
-339	côté gauche
+45	Coucher de soleil
+46	Océan
+47	Supprime des fichiers ou dossiers
+48	S'exécute en administrateur
+49	Écrase l'historique sur le serveur git
+50	Abandonne toutes les modifications non enregistrées
+51	Supprime les fichiers non suivis
+52	Exécute un script téléchargé sur le web
+53	Écrit directement sur un disque
+54	Donne un accès total à tous les fichiers
+55	Supprime des données d'une base
+56	Ignore les vérifications de sécurité
+57	Rappels de pause et d'hydratation
+58	Vous rappelle de vous lever, boire de l'eau et reposer vos yeux 6 fois par journée de travail. Désactivable avec l'interrupteur.
+59	Bilan de fin de journée
+60	Chaque soir à 21 h : combien de temps vous vous êtes concentré, combien de sessions, votre série.
+61	Pomodoro et sessions de 90 minutes
+62	Concentrez-vous par courtes sessions entrecoupées de pauses (4 × 25 minutes, pauses de 5 minutes par défaut). Ajoute une session de 90 minutes.
+63	Couronne de fleurs et écharpe
+64	Votre compagnon grandit et porte une couronne de fleurs et une écharpe.
+65	Sur l'encoche
+66	Placez votre compagnon sur l'encoche de l'ordinateur. Il change de pose selon ce que fait l'ordinateur.
+67	Mode concentration strict
+68	Au début d'une session, choisissez le mode strict : impossible de l'arrêter avant la fin.
+69	Couronne et cape
+70	Votre compagnon porte une couronne, une cape et une auréole.
+71	Normal
+72	Joyeux
+73	Endormi
+74	Affamé
+75	Triste
+76	Concentré
+77	Fatigué
+78	Dort profondément… zzz
+79	Dort… zzz
+80	Je meurs de faim, nourris-moi
+81	Trop fatigué, laisse-moi dormir un peu
+82	Concentré avec vous
+83	Inquiet, votre ordinateur vous attend
+84	Trop fier de vous !
+85	Triste que vous ayez abandonné
+86	Triste, le build a échoué
+87	Je m'ennuie, joue avec moi
+88	Un petit creux
+89	Encourage l'agent
+90	Commence à avoir sommeil
+91	Bonjour !
+92	Gai
+93	Nourrir
+94	Jouer
+95	Endormir
+96	Réveiller
+97	Ordinateur
+98	Associez votre ordinateur pour examiner le travail de vos agents IA et voir les builds ici.
+99	Voir un exemple
+100	Associer l'ordinateur
+101	Type
+102	Compagnons
+103	Boutique
+104	Disponible
+105	Touchez pour choisir un compagnon
+106	, non acheté
+107	Acquis
+108	Le compagnon choisi apparaît partout dans l'app, les widgets et l'écran verrouillé.
+109	{0} choisi
+110	Votre nouveau compagnon apparaîtra sur l'accueil, les widgets et l'écran de blocage.
+111	Achat impossible
+112	Connexion à l'ordinateur impossible : {0}
+113	Cet ordinateur est déjà associé à un autre téléphone. Pro est nécessaire pour en associer davantage.
+114	L'ordinateur a dissocié ce téléphone. Scannez à nouveau le code QR pour l'associer.
+115	Sur votre ordinateur : ouvrez NotchTasks → Panneau de contrôle → Association, cliquez sur Associer un appareil, puis scannez le code QR.
+116	Ou collez un code d'association
+117	Collez un code d'association
+118	Code d'association de l'ordinateur
+119	Associer
+120	Ce n'est pas un code d'association NotchTasks.
+121	Ce code ne fonctionne que pour vos appareils.
+122	Associer un ordinateur
+123	Annuler
+124	données d'exemple
+125	Vous attend
+126	Activité
+127	En attente de {0}…
+128	ordinateur
+129	Ouvrez NotchTasks sur votre ordinateur pour voir ici les agents et leurs questions.
+130	Loin de l'ordinateur · mis à jour {0}
+131	Avec Pro : consultez et répondez aux agents depuis n'importe où.
+132	Attend votre accord
+133	{0} éléments attendent votre accord
+134	 en cours
+135	Un build a échoué
+136	Tout est terminé
+137	L'ordinateur est inactif
+138	L'encoche de votre ordinateur, dans votre main
+139	Examinez le travail de vos agents IA et voyez les builds ici, même sur l'écran verrouillé.
+140	Essayer avec des données d'exemple
+141	Installez NotchTasks sur votre ordinateur, ouvrez **Panneau de contrôle → Association**, puis scannez le code QR.
+142	Répondre
+143	Refuser
+144	Autoriser
+145	Choisissez une ou plusieurs options
+146	Envoyer la réponse
+147	Autoriser cette commande demande Face ID.
+148	Répondre plus tard sur l'ordinateur
+149	Détails
+150	à l'instant
+151	 plus tôt
+152	Frais
+153	Tiède
+154	Chaud
+155	Très chaud
+156	Température
+157	Réinitialisation dans {0}
+158	quelques minutes
+159	{0} j {1} h
+160	{0} jours
+161	{0} h {1} min
+162	{0} heures
+163	{0} min
+164	Autorisé
+165	Refusé
+166	Laisser à l'ordinateur
+167	Choisi : 
+168	Affichage
+169	Données d'exemple
+170	Non associé
+171	Quitter les données d'exemple
+172	Dissocier
+173	Connexion directe sur le même Wi‑Fi
+174	Connexion
+175	Directe par Wi‑Fi
+176	Notifications
+177	Connexion
+178	Même Wi‑Fi : mises à jour instantanées. Ailleurs : passe seul par Internet.
+179	Aperçu de l'activité en direct
+180	Affiche 3 demandes d'exemple. Verrouillez le téléphone pour les voir.
+181	Les activités en direct sont désactivées : activez-les dans Réglages → NotchTasks.
+182	Face ID pour les commandes risquées
+183	Sécurité
+184	Demande Face ID avant d'autoriser une commande pouvant supprimer ou écraser des données.
+185	Informations
+186	Version
+187	Réglages
+188	Pro actif
+189	Pro actif (acheté sur un autre appareil)
+190	Fin de la période en cours
+191	Gérer l'abonnement
+192	Essayer Pro gratuitement 7 jours
+193	Restaurer les achats
+194	Utilisable partout, réponse directe depuis les notifications, activités en direct pour les agents et builds, plusieurs appareils associés.
+195	Les formules mensuelle et annuelle se renouvellent automatiquement. Résiliez dans Réglages → votre nom → Abonnements, au moins 24 heures avant la période suivante.
+196	Conditions
+197	Confidentialité
+198	Inachevé
+199	Pro annuel
+200	Pro mensuel
+201	Pro à vie
+202	 / an
+203	 / mois
+204	À vous
+205	Ajoutez un widget : maintenez l'écran d'accueil → Modifier → Ajouter un widget → NotchTasks.
+206	Voir et changer de compagnon
+207	Niveau {0} !
+208	{0} a un peu grandi.
+209	Débloqué : {0}.
+210	Super
+211	Tout est débloqué. Les sessions terminées rapportent toujours de l'XP ; abandonner le rend triste.
+212	1 minute de concentration = 1 XP. Niveau {0} : {1}.
+213	Concentration en cours
+214	Strict
+215	Arrêter
+216	Pause
+217	Ensuite : session {0}/{1}
+218	Commencer
+219	Compte ici et sur l'encoche de l'ordinateur
+220	S'affiche sur l'écran verrouillé, prévient à la fin
+221	Démarrer
+222	Démarrer en mode strict
+223	Mode strict : impossible d'arrêter avant la fin.
+224	Activer le mode strict ?
+225	Démarrer en strict
+226	Impossible d'arrêter pendant la concentration, sur les {0} sessions. Les pauses peuvent toujours être arrêtées.
+227	Impossible d'arrêter pendant {0} minutes. Les apps bloquées rouvrent à la fin.
+228	Pomodoro : {0} sessions × {1} min
+229	Session de {0} minutes
+230	Levez-vous et étirez-vous un peu !
+231	Buvez une gorgée d'eau 💧
+232	Reposez vos yeux 20 secondes, regardez au loin.
+233	Relâchez les épaules, respirez profondément.
+234	Faites quelques pas pour vous détendre.
+235	Vous avez bu de l'eau ? Petit rappel 💧
+236	{0} vous rappelle
+237	{0} : retour sur la journée
+238	Combien de temps vous êtes-vous concentré, combien de questions avez-vous examinées ? Ouvrez pour voir.
+239	Fin de la pause
+240	{0} est prêt pour la session {1}/{2}, {3} minutes. Touchez pour commencer.
+241	minutes de concentration
+242	sessions
+243	questions examinées
+244	jours d'affilée
+245	Associez votre ordinateur pour placer votre compagnon sur l'encoche.
+246	Niveau {0}
+247	Touchez pour le placer sur l'encoche. Votre compagnon change de pose selon ce que fait l'ordinateur.
+248	Compagnons sur l'encoche
+249	Ajouter à gauche
+250	Ajouter à droite
+251	Remplacer l'icône {0} à {1}
+252	droite
+253	gauche
+254	Retirer de l'encoche
+255	Concentrez-vous par courtes sessions, avec des pauses entre elles. À la fin d'une pause, la session suivante démarre seule.
+256	Concentration : {0} min
+257	Pause : {0} min
+258	Sessions : {0}
+259	À chaque Pomodoro
+260	{0} minutes de concentration au total. En commençant maintenant, fin à {1}.
+261	Démarrez depuis la carte Concentration de l'accueil.
+262	Les pauses ont les boutons « Commencer » et « Arrêter ».
+263	Vous pouvez choisir le mode strict au démarrage.
+264	Chiffres d'exemple, car il n'y a pas encore de session aujourd'hui.
+265	7 derniers jours · minutes de concentration
+266	Un rappel arrive chaque soir à 21 h.
+267	Débloqué au niveau 3 : la carte Aujourd'hui et une notification à 21 h.
+268	{0} vous a attendu toute la journée. Concentrons-nous ensemble demain !
+269	{0} : {1} minutes aujourd'hui, bon début !
+270	{0} : {1} minutes de concentration, {2} sessions. Bravo !
+271	{0} : {1} minutes ! Vous avez beaucoup travaillé aujourd'hui, pensez à vous reposer.
+272	Félicitations ! 🎉
+273	{0} passe au niveau {1} et débloque :
+274	Activé pour vous. Réglez-le sur la page Compagnons.
+275	Génial
+276	Échec du build
+277	Impossible de créer l'activité en direct : {0}
+278	Session {0}/{1} terminée
+279	Fin de la concentration
+280	Faites une pause de {0} minutes, puis passez à la session suivante.
+281	{0} minutes terminées. Faites une petite pause.
+282	 🎉 Débloqué : {0}.
+283	Autoriser la commande risquée : {0}
+284	Comment stocker les données ?
+285	Stockage
+286	SQLite (recommandé)
+287	Votre MacBook Pro
+288	Modifie NotchView.swift
+289	Exécute les tests
+290	Build pour iPhone 17 Pro
+291	Échec CI : deploy
+292	6 min
+293	CI réussi : test
+294	Aucune encoche trouvée sur l'ordinateur
+295	Mettez NotchTasks à jour sur votre ordinateur, puis ouvrez-le pour personnaliser l'encoche d'ici.
+296	Envoi…
+297	Ordinateur d'exemple : essayez librement
+298	Synchronisé avec {0}
+299	Thème
+300	L'écran verrouillé a ses propres icônes
+301	Icônes de l'écran verrouillé
+302	Choisir
+303	Changer
+304	Retirer
+305	Icônes des outils de build
+306	L'icône affichée sur l'encoche pendant que cet outil compile.
+307	Apparence
+308	Taille
+309	Grande
+310	Ouverture de l'encoche
+311	Survol
+312	Clic
+313	Arrière-plan
+314	Couleur de début
+315	Couleur de fin
+316	Animation
+317	Style d'alerte
+318	Modules
+319	{0} activés
+320	Son et retour haptique
+321	Son
+322	Retour haptique du trackpad
+323	Notifications système
+324	Encoche sur l'écran verrouillé
+325	Écran verrouillé de l'ordinateur
+326	Signaler la fin si l'exécution dure plus de
+327	toutes les tâches
+328	{0} s
+329	Alerte de limite IA à
+330	Icônes de l'encoche
+331	Touchez l'endroit voulu. Touchez de nouveau la même icône pour annuler.
+332	Faites glisser une icône pour l'échanger, touchez pour la déplacer, la changer ou la retirer. Jusqu'à {0} par côté{1}
+333	, 4 avec Pro.
+334	Déplacer
+335	Changer l'icône
+336	côté droit
+337	côté gauche

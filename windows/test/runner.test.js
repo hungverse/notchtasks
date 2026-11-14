@@ -75,7 +75,7 @@ test('newest Worker_ log in _diag, and a worker job row from it', () => {
     assert.equal(row.detail, 'build (windows)');
     assert.equal(row.tool, 'GitHub Actions');
     assert.equal(row.working, true);
-    assert.equal(L('Đang chờ runner').length > 0, true);
+    assert.equal(L('Waiting for a runner').length > 0, true);
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }

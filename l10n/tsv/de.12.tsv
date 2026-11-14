@@ -1,19 +1,19 @@
-1119	Problem melden
-1120	Der Kauf wurde abgeschlossen, aber die Gruppe hat kein Pro.
-1121	Dieser Kauf wurde für diese Gruppe nicht akzeptiert.
-1122	Käufe konnten nicht wiederhergestellt werden.
-1123	Problemtyp
-1124	Zahlung
-1125	Mitteilungen und Live-Aktivität
-1126	Was ist passiert?
-1127	E-Mail oder anderer Kontakt (für unsere Antwort)
-1128	Mitgesendete Informationen
-1129	Anonyme Geräte-ID, Gruppen-ID, App-Version, Betriebssystem, Gerätemodell, Sprache, Pro-Status und gegebenenfalls Transaktion. Befehle, Quellcode, Dateipfade, Aufgabentitel und Projektnamen werden nicht gesendet.
-1130	Bericht gespeichert. Er wird bei Verbindung gesendet.
-1131	Gesendet. Berichtscode: {0}
-1132	Bis zu 3 Berichte warten. Versuche es online erneut.
-1133	Zahlung fehlgeschlagen.
-1134	Zahlung nicht abgeschlossen
-1135	Anonyme Geräte-ID, Gruppen-ID, App-Version, Betriebssystem, Gerätemodell, Sprache und Pro-Status. Befehle, Quellcode, Dateipfade, Aufgabentitel und Projektnamen werden nicht gesendet.
-1136	Bericht konnte nicht gesendet werden. Versuche es online erneut.
-1137	Ihre Beschreibung und Kontaktdaten; anonyme Geräte-ID, Gruppen-ID, Kopplungsstatus, Anzahl der Telefone, App-Version, Betriebssystem, Gerätemodell, Sprache, Pro-Status und gegebenenfalls Transaktion. Befehle, Quellcode, Dateipfade, Aufgabentitel und Projektnamen werden nicht automatisch angehängt.
+1102	Problem melden
+1103	Der Kauf wurde abgeschlossen, aber die Gruppe hat kein Pro.
+1104	Dieser Kauf wurde für diese Gruppe nicht akzeptiert.
+1105	Käufe konnten nicht wiederhergestellt werden.
+1106	Problemtyp
+1107	Zahlung
+1108	Mitteilungen und Live-Aktivität
+1109	Was ist passiert?
+1110	E-Mail oder anderer Kontakt (für unsere Antwort)
+1111	Mitgesendete Informationen
+1112	Anonyme Geräte-ID, Gruppen-ID, App-Version, Betriebssystem, Gerätemodell, Sprache, Pro-Status und gegebenenfalls Transaktion. Befehle, Quellcode, Dateipfade, Aufgabentitel und Projektnamen werden nicht gesendet.
+1113	Bericht gespeichert. Er wird bei Verbindung gesendet.
+1114	Gesendet. Berichtscode: {0}
+1115	Bis zu 3 Berichte warten. Versuche es online erneut.
+1116	Zahlung fehlgeschlagen.
+1117	Zahlung nicht abgeschlossen
+1118	Anonyme Geräte-ID, Gruppen-ID, App-Version, Betriebssystem, Gerätemodell, Sprache und Pro-Status. Befehle, Quellcode, Dateipfade, Aufgabentitel und Projektnamen werden nicht gesendet.
+1119	Bericht konnte nicht gesendet werden. Versuche es online erneut.
+1120	Ihre Beschreibung und Kontaktdaten; anonyme Geräte-ID, Gruppen-ID, Kopplungsstatus, Anzahl der Telefone, App-Version, Betriebssystem, Gerätemodell, Sprache, Pro-Status und gegebenenfalls Transaktion. Befehle, Quellcode, Dateipfade, Aufgabentitel und Projektnamen werden nicht automatisch angehängt.

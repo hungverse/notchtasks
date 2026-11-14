@@ -43,298 +43,296 @@
 42	Cermin kamera
 43	Klasik
 44	Kaca
-45	Minimalis
-46	Senja
-47	Samudra
-48	Menghapus file atau folder
-49	Berjalan sebagai administrator
-50	Menimpa riwayat di server git
-51	Membuang semua perubahan yang belum disimpan
-52	Menghapus file yang belum dilacak
-53	Menjalankan skrip yang diunduh dari web
-54	Menulis langsung ke disk
-55	Memberi semua orang akses penuh ke file
-56	Menghapus data dalam database
-57	Melewati pemeriksaan keamanan
-58	Pengingat istirahat & minum
-59	Mengingatkan Anda untuk berdiri, minum air, dan mengistirahatkan mata 6 kali selama hari kerja. Matikan dengan tombol.
-60	Laporan akhir hari
-61	Setiap malam pukul 21.00: lama fokus hari ini, jumlah sesi, dan hari beruntun.
-62	Pomodoro dan sesi 90 menit
-63	Fokus dalam sesi singkat yang diselingi istirahat (biasanya 4 × 25 menit dengan jeda 5 menit). Ada juga sesi 90 menit.
-64	Mahkota bunga & syal
-65	Peliharaan Anda tumbuh lebih besar dan memakai mahkota bunga serta syal.
-66	Di notch
-67	Tempatkan peliharaan di notch komputer. Posenya berubah mengikuti aktivitas komputer.
-68	Mode fokus ketat
-69	Saat memulai sesi, pilih mode ketat: sesi tidak dapat dihentikan hingga waktunya habis.
-70	Mahkota & jubah
-71	Peliharaan Anda memakai mahkota dan jubah, dengan lingkaran cahaya.
-72	Normal
-73	Senang
-74	Tidur
-75	Lapar
-76	Sedih
-77	Fokus
-78	Lelah
-79	Tidur nyenyak… zzz
-80	Sedang tidur… zzz
-81	Lapar sekali, beri aku makan
-82	Lelah sekali, biarkan aku tidur sebentar
-83	Fokus bersamamu
-84	Khawatir, komputermu menunggu
-85	Aku bangga sekali padamu!
-86	Sedih karena kamu menyerah
-87	Sedih karena build gagal
-88	Bosan, ayo bermain denganku
-89	Sedikit lapar
-90	Menyemangati agent
-91	Mulai mengantuk
-92	Selamat pagi!
-93	Ceria
-94	Beri makan
-95	Bermain
-96	Tidurkan
-97	Bangunkan
-98	Komputer
-99	Pasangkan dengan komputer untuk meninjau pekerjaan agent AI dan melihat build di sini.
-100	Lihat contoh
-101	Pasangkan komputer
-102	Jenis
-103	Peliharaan
-104	Toko
-105	Tersedia
-106	Ketuk untuk memilih peliharaan
-107	, belum dibeli
-108	Dimiliki
-109	Peliharaan pilihan Anda muncul di seluruh aplikasi, widget, dan layar terkunci.
-110	Memilih {0}
-111	Peliharaan baru akan muncul di layar utama, widget, dan layar pemblokiran.
-112	Tidak dapat membeli
-113	Tidak dapat terhubung ke komputer: {0}
-114	Komputer ini sudah dipasangkan dengan ponsel lain. Perlu Pro untuk memasangkan lebih banyak.
-115	Komputer membatalkan pasangan dengan ponsel ini. Pindai lagi kode QR untuk memasangkan.
-116	Di komputer: buka NotchTasks → Panel Kontrol → Pemasangan, klik Pasangkan perangkat, lalu pindai kode QR.
-117	Atau tempel kode pemasangan
-118	Tempel kode pemasangan
-119	Kode pemasangan dari komputer
-120	Pasangkan
-121	Ini bukan kode pemasangan NotchTasks.
-122	Kode ini hanya berlaku untuk perangkat Anda.
-123	Pasangkan dengan komputer
-124	Batal
-125	data contoh
-126	Menunggu Anda
-127	Aktivitas
-128	Menunggu {0}…
-129	komputer
-130	Buka NotchTasks di komputer untuk melihat agent dan pertanyaannya di sini.
-131	Jauh dari komputer · diperbarui {0}
-132	Dengan Pro: lihat dan jawab agent dari mana saja.
-133	Menunggu persetujuan Anda
-134	{0} hal menunggu persetujuan Anda
-135	 sedang berjalan
-136	Ada build yang gagal
-137	Semua selesai
-138	Komputer sedang diam
-139	Notch komputer di genggaman Anda
-140	Tinjau pekerjaan agent AI dan lihat build di sini, bahkan di layar terkunci.
-141	Coba dengan data contoh
-142	Instal NotchTasks di komputer, buka **Panel Kontrol → Pemasangan**, lalu pindai kode QR.
-143	Balas
-144	Tolak
-145	Izinkan
-146	Pilih satu atau lebih
-147	Kirim jawaban
-148	Face ID diperlukan untuk mengizinkan perintah ini.
-149	Jawab nanti di komputer
-150	Detail
-151	baru saja
-152	 yang lalu
-153	Sejuk
-154	Hangat
-155	Panas
-156	Sangat panas
-157	Suhu
-158	Diatur ulang dalam {0}
-159	beberapa menit
-160	{0} hr {1} jam
-161	{0} hari
-162	{0} jam {1} mnt
-163	{0} jam
-164	{0} mnt
-165	Diizinkan
-166	Ditolak
-167	Biarkan di komputer
-168	Dipilih: 
-169	Melihat
-170	Data contoh
-171	Belum dipasangkan
-172	Keluar dari data contoh
-173	Lepas pasangan
-174	Terhubung langsung di Wi‑Fi yang sama
-175	Koneksi
-176	Langsung melalui Wi‑Fi
-177	Notifikasi
-178	Koneksi
-179	Wi‑Fi yang sama: pembaruan langsung. Di luar: otomatis beralih ke Internet.
-180	Pratinjau Live Activity
-181	Menampilkan 3 permintaan contoh. Kunci ponsel untuk melihatnya.
-182	Live Activity nonaktif: aktifkan di Pengaturan → NotchTasks.
-183	Face ID untuk perintah berisiko
-184	Keamanan
-185	Wajibkan Face ID sebelum mengizinkan perintah yang dapat menghapus atau menimpa data.
-186	Tentang
-187	Versi
-188	Pengaturan
-189	Pro aktif
-190	Pro aktif (dibeli di perangkat lain)
-191	Periode saat ini berakhir
-192	Kelola langganan
-193	Coba Pro gratis selama 7 hari
-194	Pulihkan pembelian
-195	Gunakan di mana saja, balas langsung dari notifikasi, ikuti agent dan build lewat Live Activity, serta pasangkan beberapa perangkat.
-196	Paket bulanan dan tahunan diperpanjang otomatis. Batalkan di Pengaturan → nama Anda → Langganan paling lambat 24 jam sebelum periode berikutnya.
-197	Ketentuan
-198	Privasi
-199	Belum selesai
-200	Pro tahunan
-201	Pro bulanan
-202	Pro seumur hidup
-203	 / tahun
-204	 / bulan
-205	Milik Anda
-206	Tambahkan widget: tekan lama layar utama → Edit → Tambah Widget → NotchTasks.
-207	Lihat dan ganti peliharaan
-208	Level {0}!
-209	{0} tumbuh sedikit.
-210	Terbuka: {0}.
-211	Bagus
-212	Semua sudah terbuka. Sesi yang diselesaikan tetap menghasilkan XP; menyerah membuat peliharaan sedih.
-213	1 menit fokus = 1 XP. Level {0}: {1}.
-214	Sedang fokus
-215	Ketat
-216	Hentikan
-217	Istirahat
-218	Berikutnya: sesi {0}/{1}
-219	Mulai sekarang
-220	Dihitung di sini dan di notch komputer
-221	Tampil di layar terkunci dan memberi tahu saat waktu habis
-222	Mulai
-223	Mulai mode ketat
-224	Mode ketat: tidak dapat dihentikan hingga waktu habis.
-225	Aktifkan mode ketat?
-226	Mulai ketat
-227	Tidak dapat dihentikan saat fokus selama {0} sesi. Istirahat tetap dapat dihentikan.
-228	Tidak dapat dihentikan selama {0} menit. Aplikasi yang diblokir dapat dibuka lagi setelah waktu habis.
-229	Pomodoro: {0} sesi × {1} mnt
-230	Sesi {0} menit
-231	Berdiri dan lakukan peregangan sebentar!
-232	Minum sedikit air 💧
-233	Istirahatkan mata selama 20 detik dan lihat ke kejauhan.
-234	Lemaskan bahu dan tarik napas dalam.
-235	Berjalanlah beberapa langkah agar tidak pegal.
-236	Sudah minum air? Sekadar mengingatkan 💧
-237	{0} mengingatkan Anda
-238	{0}: lihat kembali hari ini
-239	Berapa lama Anda fokus dan berapa pertanyaan yang ditinjau? Buka untuk melihat.
-240	Istirahat selesai
-241	{0} siap untuk sesi {1}/{2} selama {3} menit. Ketuk untuk memulai.
-242	menit fokus
-243	sesi
-244	pertanyaan ditinjau
-245	hari berturut-turut
-246	Pasangkan dengan komputer untuk menempatkan peliharaan di notch.
-247	Level {0}
-248	Ketuk untuk menempatkannya di notch. Pose peliharaan berubah mengikuti aktivitas komputer.
-249	Peliharaan di notch
-250	Tambah di kiri
-251	Tambah di kanan
-252	Ganti ikon {0} di {1}
-253	kanan
-254	kiri
-255	Hapus dari notch
-256	Fokus dalam sesi singkat dengan jeda istirahat. Setelah istirahat usai, sesi berikutnya dimulai otomatis.
-257	Fokus: {0} mnt
-258	Istirahat: {0} mnt
-259	Jumlah sesi: {0}
-260	Setiap Pomodoro
-261	Total {0} menit fokus. Jika mulai sekarang, selesai pukul {1}.
-262	Mulai dari kartu Fokus di Beranda.
-263	Saat istirahat, tersedia tombol “Mulai sekarang” dan “Hentikan”.
-264	Anda dapat memilih mode ketat saat memulai.
-265	Angka contoh karena hari ini belum ada sesi.
-266	7 hari terakhir · menit fokus
-267	Pengingat untuk melihatnya datang setiap malam pukul 21.00.
-268	Terbuka pada level 3: kartu Hari Ini dan notifikasi pukul 21.00.
-269	{0} menunggu Anda sepanjang hari. Ayo fokus bersama besok!
-270	{0}: {1} menit hari ini, awal yang bagus!
-271	{0}: {1} menit fokus, {2} sesi. Hebat!
-272	{0}: {1} menit! Anda bekerja keras hari ini, jangan lupa beristirahat.
-273	Selamat! 🎉
-274	{0} mencapai level {1} dan membuka:
-275	Sudah diaktifkan. Sesuaikan di halaman Peliharaan.
-276	Luar biasa
-277	Build gagal
-278	Tidak dapat memulai Live Activity: {0}
-279	Sesi {0}/{1} selesai
-280	Waktu fokus habis
-281	Istirahat {0} menit, lalu lanjut ke sesi berikutnya.
-282	{0} menit selesai. Istirahat sebentar.
-283	 🎉 Terbuka: {0}.
-284	Izinkan perintah berisiko: {0}
-285	Bagaimana data disimpan?
-286	Penyimpanan
-287	SQLite (Disarankan)
-288	MacBook Pro Anda
-289	Mengedit NotchView.swift
-290	Menjalankan tes
-291	Mem-build untuk iPhone 17 Pro
-292	CI gagal: deploy
-293	6 mnt
-294	CI lulus: test
-295	Notch komputer tidak ditemukan
-296	Perbarui NotchTasks di komputer ke versi terbaru, lalu buka untuk menyesuaikan notch dari sini.
-297	Mengirim…
-298	Komputer contoh: silakan mencoba
-299	Tersinkron dengan {0}
-300	Tema
-301	Layar terkunci menggunakan ikon tersendiri
-302	Ikon layar terkunci
-303	Pilih
-304	Ubah
-305	Hapus
-306	Ikon alat build
-307	Ikon yang muncul di notch saat alat tersebut sedang mem-build.
-308	Tampilan
-309	Ukuran
-310	Besar
-311	Membuka notch
-312	Arahkan kursor
-313	Klik
-314	Latar belakang
-315	Warna atas
-316	Warna bawah
-317	Gerakan
-318	Gaya peringatan
-319	Modul
-320	{0} aktif
-321	Suara & haptik
-322	Suara
-323	Haptik trackpad
-324	Notifikasi sistem
-325	Notch di layar terkunci
-326	Layar terkunci komputer
-327	Beri tahu selesai jika berjalan lebih dari
-328	setiap tugas
-329	{0} dtk
-330	Peringatkan batas AI pada
-331	Ikon di notch
-332	Ketuk lokasi tujuan. Ketuk ikon yang sama lagi untuk membatalkan.
-333	Seret ikon untuk bertukar tempat; ketuk untuk memindahkan, mengubah, atau menghapus. Maksimal {0} per sisi{1}
-334	, Pro mendapat 4.
-335	Pindahkan
-336	Ganti ikon
-337	Hapus
-338	sisi kanan
-339	sisi kiri
+45	Senja
+46	Samudra
+47	Menghapus file atau folder
+48	Berjalan sebagai administrator
+49	Menimpa riwayat di server git
+50	Membuang semua perubahan yang belum disimpan
+51	Menghapus file yang belum dilacak
+52	Menjalankan skrip yang diunduh dari web
+53	Menulis langsung ke disk
+54	Memberi semua orang akses penuh ke file
+55	Menghapus data dalam database
+56	Melewati pemeriksaan keamanan
+57	Pengingat istirahat & minum
+58	Mengingatkan Anda untuk berdiri, minum air, dan mengistirahatkan mata 6 kali selama hari kerja. Matikan dengan tombol.
+59	Laporan akhir hari
+60	Setiap malam pukul 21.00: lama fokus hari ini, jumlah sesi, dan hari beruntun.
+61	Pomodoro dan sesi 90 menit
+62	Fokus dalam sesi singkat yang diselingi istirahat (biasanya 4 × 25 menit dengan jeda 5 menit). Ada juga sesi 90 menit.
+63	Mahkota bunga & syal
+64	Peliharaan Anda tumbuh lebih besar dan memakai mahkota bunga serta syal.
+65	Di notch
+66	Tempatkan peliharaan di notch komputer. Posenya berubah mengikuti aktivitas komputer.
+67	Mode fokus ketat
+68	Saat memulai sesi, pilih mode ketat: sesi tidak dapat dihentikan hingga waktunya habis.
+69	Mahkota & jubah
+70	Peliharaan Anda memakai mahkota dan jubah, dengan lingkaran cahaya.
+71	Normal
+72	Senang
+73	Tidur
+74	Lapar
+75	Sedih
+76	Fokus
+77	Lelah
+78	Tidur nyenyak… zzz
+79	Sedang tidur… zzz
+80	Lapar sekali, beri aku makan
+81	Lelah sekali, biarkan aku tidur sebentar
+82	Fokus bersamamu
+83	Khawatir, komputermu menunggu
+84	Aku bangga sekali padamu!
+85	Sedih karena kamu menyerah
+86	Sedih karena build gagal
+87	Bosan, ayo bermain denganku
+88	Sedikit lapar
+89	Menyemangati agent
+90	Mulai mengantuk
+91	Selamat pagi!
+92	Ceria
+93	Beri makan
+94	Bermain
+95	Tidurkan
+96	Bangunkan
+97	Komputer
+98	Pasangkan dengan komputer untuk meninjau pekerjaan agent AI dan melihat build di sini.
+99	Lihat contoh
+100	Pasangkan komputer
+101	Jenis
+102	Peliharaan
+103	Toko
+104	Tersedia
+105	Ketuk untuk memilih peliharaan
+106	, belum dibeli
+107	Dimiliki
+108	Peliharaan pilihan Anda muncul di seluruh aplikasi, widget, dan layar terkunci.
+109	Memilih {0}
+110	Peliharaan baru akan muncul di layar utama, widget, dan layar pemblokiran.
+111	Tidak dapat membeli
+112	Tidak dapat terhubung ke komputer: {0}
+113	Komputer ini sudah dipasangkan dengan ponsel lain. Perlu Pro untuk memasangkan lebih banyak.
+114	Komputer membatalkan pasangan dengan ponsel ini. Pindai lagi kode QR untuk memasangkan.
+115	Di komputer: buka NotchTasks → Panel Kontrol → Pemasangan, klik Pasangkan perangkat, lalu pindai kode QR.
+116	Atau tempel kode pemasangan
+117	Tempel kode pemasangan
+118	Kode pemasangan dari komputer
+119	Pasangkan
+120	Ini bukan kode pemasangan NotchTasks.
+121	Kode ini hanya berlaku untuk perangkat Anda.
+122	Pasangkan dengan komputer
+123	Batal
+124	data contoh
+125	Menunggu Anda
+126	Aktivitas
+127	Menunggu {0}…
+128	komputer
+129	Buka NotchTasks di komputer untuk melihat agent dan pertanyaannya di sini.
+130	Jauh dari komputer · diperbarui {0}
+131	Dengan Pro: lihat dan jawab agent dari mana saja.
+132	Menunggu persetujuan Anda
+133	{0} hal menunggu persetujuan Anda
+134	 sedang berjalan
+135	Ada build yang gagal
+136	Semua selesai
+137	Komputer sedang diam
+138	Notch komputer di genggaman Anda
+139	Tinjau pekerjaan agent AI dan lihat build di sini, bahkan di layar terkunci.
+140	Coba dengan data contoh
+141	Instal NotchTasks di komputer, buka **Panel Kontrol → Pemasangan**, lalu pindai kode QR.
+142	Balas
+143	Tolak
+144	Izinkan
+145	Pilih satu atau lebih
+146	Kirim jawaban
+147	Face ID diperlukan untuk mengizinkan perintah ini.
+148	Jawab nanti di komputer
+149	Detail
+150	baru saja
+151	 yang lalu
+152	Sejuk
+153	Hangat
+154	Panas
+155	Sangat panas
+156	Suhu
+157	Diatur ulang dalam {0}
+158	beberapa menit
+159	{0} hr {1} jam
+160	{0} hari
+161	{0} jam {1} mnt
+162	{0} jam
+163	{0} mnt
+164	Diizinkan
+165	Ditolak
+166	Biarkan di komputer
+167	Dipilih: 
+168	Melihat
+169	Data contoh
+170	Belum dipasangkan
+171	Keluar dari data contoh
+172	Lepas pasangan
+173	Terhubung langsung di Wi‑Fi yang sama
+174	Koneksi
+175	Langsung melalui Wi‑Fi
+176	Notifikasi
+177	Koneksi
+178	Wi‑Fi yang sama: pembaruan langsung. Di luar: otomatis beralih ke Internet.
+179	Pratinjau Live Activity
+180	Menampilkan 3 permintaan contoh. Kunci ponsel untuk melihatnya.
+181	Live Activity nonaktif: aktifkan di Pengaturan → NotchTasks.
+182	Face ID untuk perintah berisiko
+183	Keamanan
+184	Wajibkan Face ID sebelum mengizinkan perintah yang dapat menghapus atau menimpa data.
+185	Tentang
+186	Versi
+187	Pengaturan
+188	Pro aktif
+189	Pro aktif (dibeli di perangkat lain)
+190	Periode saat ini berakhir
+191	Kelola langganan
+192	Coba Pro gratis selama 7 hari
+193	Pulihkan pembelian
+194	Gunakan di mana saja, balas langsung dari notifikasi, ikuti agent dan build lewat Live Activity, serta pasangkan beberapa perangkat.
+195	Paket bulanan dan tahunan diperpanjang otomatis. Batalkan di Pengaturan → nama Anda → Langganan paling lambat 24 jam sebelum periode berikutnya.
+196	Ketentuan
+197	Privasi
+198	Belum selesai
+199	Pro tahunan
+200	Pro bulanan
+201	Pro seumur hidup
+202	 / tahun
+203	 / bulan
+204	Milik Anda
+205	Tambahkan widget: tekan lama layar utama → Edit → Tambah Widget → NotchTasks.
+206	Lihat dan ganti peliharaan
+207	Level {0}!
+208	{0} tumbuh sedikit.
+209	Terbuka: {0}.
+210	Bagus
+211	Semua sudah terbuka. Sesi yang diselesaikan tetap menghasilkan XP; menyerah membuat peliharaan sedih.
+212	1 menit fokus = 1 XP. Level {0}: {1}.
+213	Sedang fokus
+214	Ketat
+215	Hentikan
+216	Istirahat
+217	Berikutnya: sesi {0}/{1}
+218	Mulai sekarang
+219	Dihitung di sini dan di notch komputer
+220	Tampil di layar terkunci dan memberi tahu saat waktu habis
+221	Mulai
+222	Mulai mode ketat
+223	Mode ketat: tidak dapat dihentikan hingga waktu habis.
+224	Aktifkan mode ketat?
+225	Mulai ketat
+226	Tidak dapat dihentikan saat fokus selama {0} sesi. Istirahat tetap dapat dihentikan.
+227	Tidak dapat dihentikan selama {0} menit. Aplikasi yang diblokir dapat dibuka lagi setelah waktu habis.
+228	Pomodoro: {0} sesi × {1} mnt
+229	Sesi {0} menit
+230	Berdiri dan lakukan peregangan sebentar!
+231	Minum sedikit air 💧
+232	Istirahatkan mata selama 20 detik dan lihat ke kejauhan.
+233	Lemaskan bahu dan tarik napas dalam.
+234	Berjalanlah beberapa langkah agar tidak pegal.
+235	Sudah minum air? Sekadar mengingatkan 💧
+236	{0} mengingatkan Anda
+237	{0}: lihat kembali hari ini
+238	Berapa lama Anda fokus dan berapa pertanyaan yang ditinjau? Buka untuk melihat.
+239	Istirahat selesai
+240	{0} siap untuk sesi {1}/{2} selama {3} menit. Ketuk untuk memulai.
+241	menit fokus
+242	sesi
+243	pertanyaan ditinjau
+244	hari berturut-turut
+245	Pasangkan dengan komputer untuk menempatkan peliharaan di notch.
+246	Level {0}
+247	Ketuk untuk menempatkannya di notch. Pose peliharaan berubah mengikuti aktivitas komputer.
+248	Peliharaan di notch
+249	Tambah di kiri
+250	Tambah di kanan
+251	Ganti ikon {0} di {1}
+252	kanan
+253	kiri
+254	Hapus dari notch
+255	Fokus dalam sesi singkat dengan jeda istirahat. Setelah istirahat usai, sesi berikutnya dimulai otomatis.
+256	Fokus: {0} mnt
+257	Istirahat: {0} mnt
+258	Jumlah sesi: {0}
+259	Setiap Pomodoro
+260	Total {0} menit fokus. Jika mulai sekarang, selesai pukul {1}.
+261	Mulai dari kartu Fokus di Beranda.
+262	Saat istirahat, tersedia tombol “Mulai sekarang” dan “Hentikan”.
+263	Anda dapat memilih mode ketat saat memulai.
+264	Angka contoh karena hari ini belum ada sesi.
+265	7 hari terakhir · menit fokus
+266	Pengingat untuk melihatnya datang setiap malam pukul 21.00.
+267	Terbuka pada level 3: kartu Hari Ini dan notifikasi pukul 21.00.
+268	{0} menunggu Anda sepanjang hari. Ayo fokus bersama besok!
+269	{0}: {1} menit hari ini, awal yang bagus!
+270	{0}: {1} menit fokus, {2} sesi. Hebat!
+271	{0}: {1} menit! Anda bekerja keras hari ini, jangan lupa beristirahat.
+272	Selamat! 🎉
+273	{0} mencapai level {1} dan membuka:
+274	Sudah diaktifkan. Sesuaikan di halaman Peliharaan.
+275	Luar biasa
+276	Build gagal
+277	Tidak dapat memulai Live Activity: {0}
+278	Sesi {0}/{1} selesai
+279	Waktu fokus habis
+280	Istirahat {0} menit, lalu lanjut ke sesi berikutnya.
+281	{0} menit selesai. Istirahat sebentar.
+282	 🎉 Terbuka: {0}.
+283	Izinkan perintah berisiko: {0}
+284	Bagaimana data disimpan?
+285	Penyimpanan
+286	SQLite (Disarankan)
+287	MacBook Pro Anda
+288	Mengedit NotchView.swift
+289	Menjalankan tes
+290	Mem-build untuk iPhone 17 Pro
+291	CI gagal: deploy
+292	6 mnt
+293	CI lulus: test
+294	Notch komputer tidak ditemukan
+295	Perbarui NotchTasks di komputer ke versi terbaru, lalu buka untuk menyesuaikan notch dari sini.
+296	Mengirim…
+297	Komputer contoh: silakan mencoba
+298	Tersinkron dengan {0}
+299	Tema
+300	Layar terkunci menggunakan ikon tersendiri
+301	Ikon layar terkunci
+302	Pilih
+303	Ubah
+304	Hapus
+305	Ikon alat build
+306	Ikon yang muncul di notch saat alat tersebut sedang mem-build.
+307	Tampilan
+308	Ukuran
+309	Besar
+310	Membuka notch
+311	Arahkan kursor
+312	Klik
+313	Latar belakang
+314	Warna atas
+315	Warna bawah
+316	Gerakan
+317	Gaya peringatan
+318	Modul
+319	{0} aktif
+320	Suara & haptik
+321	Suara
+322	Haptik trackpad
+323	Notifikasi sistem
+324	Notch di layar terkunci
+325	Layar terkunci komputer
+326	Beri tahu selesai jika berjalan lebih dari
+327	setiap tugas
+328	{0} dtk
+329	Peringatkan batas AI pada
+330	Ikon di notch
+331	Ketuk lokasi tujuan. Ketuk ikon yang sama lagi untuk membatalkan.
+332	Seret ikon untuk bertukar tempat; ketuk untuk memindahkan, mengubah, atau menghapus. Maksimal {0} per sisi{1}
+333	, Pro mendapat 4.
+334	Pindahkan
+335	Ganti ikon
+336	sisi kanan
+337	sisi kiri

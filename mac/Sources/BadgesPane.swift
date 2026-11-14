@@ -10,12 +10,12 @@ struct BadgesPane: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            Card(title: L("Màn hình chính"), subtitle: L("Biểu tượng luôn hiện trên notch thu nhỏ.")) {
+            Card(title: L("Main screen"), subtitle: L("Icons always shown on the collapsed notch.")) {
                 ScreenPreview(model: model, lockScreen: false)
                 BadgeBoard(badges: $settings.badges)
             }
 
-            Card(title: L("Màn hình khoá"), subtitle: L("Chỉ để xem: không mở rộng, không bấm được."), isOn: $settings.lockScreen) {
+            Card(title: L("Lock screen"), subtitle: L("View only: doesn't expand, can't be clicked."), isOn: $settings.lockScreen) {
                 if settings.lockScreen {
                     ScreenPreview(model: model, lockScreen: true)
                     VStack(spacing: 0) {
@@ -27,8 +27,8 @@ struct BadgesPane: View {
                         Divider()
                         option(.badge) {
                             Picker("", selection: $settings.lockOwnBadges) {
-                                Text(L("Như màn hình chính")).tag(false)
-                                Text(L("Riêng")).tag(true)
+                                Text(L("Same as main screen")).tag(false)
+                                Text(L("Separate")).tag(true)
                             }
                             .pickerStyle(.segmented).labelsHidden().fixedSize()
                         }
@@ -36,8 +36,8 @@ struct BadgesPane: View {
                         HStack(spacing: 10) {
                             Image(systemName: "lock.trianglebadge.exclamationmark").frame(width: 18).foregroundStyle(.secondary)
                             VStack(alignment: .leading, spacing: 1) {
-                                Text(L("Báo khi mở khoá sai"))
-                                Text(L("Notch rung đỏ khi sai mật khẩu hoặc vân tay. Mở máy xong sẽ báo có mấy lần sai."))
+                                Text(L("Alert on failed unlocks"))
+                                Text(L("The notch shakes red on a wrong password or fingerprint. After unlocking it tells you how many attempts failed."))
                                     .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                             }
                             Spacer()
@@ -69,8 +69,8 @@ struct BadgesPane: View {
 
     func sidePicker(_ right: Binding<Bool>) -> some View {
         Picker("", selection: right) {
-            Text(L("Trái")).tag(false)
-            Text(L("Phải")).tag(true)
+            Text(L("Left")).tag(false)
+            Text(L("Right")).tag(true)
         }
         .pickerStyle(.segmented).labelsHidden().fixedSize()
     }
@@ -142,15 +142,15 @@ struct BadgeBoard: View {
                     .overlay(Circle().fill(Color(white: 0.15)).frame(width: 6))
                 side(right: true).frame(maxWidth: .infinity, alignment: .leading)
             }
-            Text(L("Bấm + để thêm, bấm để sửa, kéo để đổi chỗ. Mỗi bên tối đa {0}{1}", Badge.perSide, Badge.pro ? "." : L(", Pro được 4.")))
+            Text(L("Click + to add, click to edit, drag to swap places. Up to {0} per side{1}", Badge.perSide, Badge.pro ? "." : L(", Pro gets 4.")))
                 .font(.caption).foregroundStyle(.secondary)
             HStack(spacing: 8) {
                 Button { NotificationCenter.default.post(name: .openPane, object: Pane.store.rawValue) } label: {
-                    Label(L("Thêm từ Kho biểu tượng"), systemImage: "sparkles.rectangle.stack")
+                    Label(L("Add from Icon Library"), systemImage: "sparkles.rectangle.stack")
                 }
                 if badges.contains(where: \.animated) {
-                    Button { Animations.sync() } label: { Label(L("Đồng bộ chuyển động"), systemImage: "arrow.triangle.2.circlepath") }
-                        .help(L("Cho mọi biểu tượng động chạy lại từ đầu cùng lúc"))
+                    Button { Animations.sync() } label: { Label(L("Sync motion"), systemImage: "arrow.triangle.2.circlepath") }
+                        .help(L("Restart every animated icon at once"))
                 }
             }
             .controlSize(.small)
@@ -160,8 +160,8 @@ struct BadgeBoard: View {
             if n.object as? String == "edit-badge", let b = badges.first { editing = EditingID(id: b.id) }
         }
         .sheet(item: $editing) { e in
-            BadgeEditor(badge: binding(e.id), title: L("Biểu tượng cố định"),
-                        subtitle: binding(e.id).wrappedValue.right ? L("Bên phải notch") : L("Bên trái notch"),
+            BadgeEditor(badge: binding(e.id), title: L("Pinned icon"),
+                        subtitle: binding(e.id).wrappedValue.right ? L("Right of the notch") : L("Left of the notch"),
                         discard: Self.discard, delete: { remove(e.id) }, done: { editing = nil })
         }
     }
@@ -184,7 +184,7 @@ struct BadgeBoard: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .help(right ? L("Thêm bên phải") : L("Thêm bên trái"))
+        .help(right ? L("Add on the right") : L("Add on the left"))
         .dropDestination(for: String.self) { items, _ in
             guard let id = items.first.flatMap(UUID.init(uuidString:)) else { return false }
             badges.moveBadge(id, right: right)
@@ -244,7 +244,7 @@ struct BadgeBoard: View {
 /// Used for fixed icons, watched apps and detected build tools.
 struct BadgeEditor: View {
     @Binding var badge: Badge
-    var title = L("Biểu tượng")
+    var title = L("Symbol")
     var subtitle: String?
     var discard: (String?) -> Void = { _ in }
     var delete: (() -> Void)?
@@ -270,10 +270,10 @@ struct BadgeEditor: View {
         }
         var hint: String {
             switch self {
-            case .symbol: return L("Hơn 8.000 biểu tượng của Apple")
-            case .text: return L("Vài ký tự hoặc emoji")
-            case .image: return L("Ảnh của bạn")
-            case .motion: return L("Nhân vật chuyển động, GIF")
+            case .symbol: return L("Over 8,000 Apple symbols")
+            case .text: return L("A few characters or emoji")
+            case .image: return L("Your picture")
+            case .motion: return L("Animated characters, GIFs")
             }
         }
     }
@@ -322,7 +322,7 @@ struct BadgeEditor: View {
             }
             .padding(.horizontal, 12).frame(height: 30)
             .background(UnevenRoundedRectangle(bottomLeadingRadius: 12, bottomTrailingRadius: 12).fill(.black))
-            .help(L("Trên notch"))
+            .help(L("On the notch"))
         }
         .padding(16)
     }
@@ -360,12 +360,12 @@ struct BadgeEditor: View {
         case .text:
             VStack(alignment: .leading, spacing: 14) {
                 HStack {
-                    TextField("", text: Binding(get: { badge.text ?? "" }, set: { useText(String($0.prefix(8))) }), prompt: Text(L("Gõ tối đa 8 ký tự")))
+                    TextField("", text: Binding(get: { badge.text ?? "" }, set: { useText(String($0.prefix(8))) }), prompt: Text(L("Type up to 8 characters")))
                         .textFieldStyle(.roundedBorder).font(.system(size: 18)).controlSize(.large)
                     Button { NSApp.orderFrontCharacterPalette(nil) } label: { Label("Emoji", systemImage: "face.smiling") }
                         .controlSize(.large)
                 }
-                Text(L("Chọn nhanh")).font(.caption).foregroundStyle(.secondary)
+                Text(L("Quick picks")).font(.caption).foregroundStyle(.secondary)
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 8), spacing: 8) {
                     ForEach(Self.emoji, id: \.self) { e in
                         Button { useText(e) } label: {
@@ -377,7 +377,7 @@ struct BadgeEditor: View {
                 }
             }
         case .image:
-            dropZone(text: content == .image ? L("Kéo ảnh khác vào đây") : L("Kéo ảnh vào đây"), button: L("Chọn ảnh…"), types: [.image]) { path in
+            dropZone(text: content == .image ? L("Drop another picture here") : L("Drop a picture here"), button: L("Choose picture…"), types: [.image]) { path in
                 replaceImage(path); badge.sprite = nil; badge.frames = nil; badge.fps = nil; badge.text = nil
             }
         case .motion:
@@ -390,7 +390,7 @@ struct BadgeEditor: View {
                         done()
                         NotificationCenter.default.post(name: .openPane, object: Pane.store.rawValue)
                     } label: { Label("Kho", systemImage: "sparkles.rectangle.stack") }
-                    .help(L("Mở Kho biểu tượng"))
+                    .help(L("Open Icon Library"))
                 }
                 ScrollView {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 74), spacing: 8)], spacing: 8) {
@@ -410,13 +410,13 @@ struct BadgeEditor: View {
                 }
                 HStack {
                     Button { if let path = Self.pickImage(types: [.gif, .png]) { useAnimation(path) } } label: {
-                        Label(L("GIF hoặc spritesheet của bạn…"), systemImage: "film.stack")
+                        Label(L("Your GIF or spritesheet…"), systemImage: "film.stack")
                     }
                     if badge.sprite == nil, let n = badge.frames {
                         Spacer()
                         Stepper("\(n) khung", value: Binding(get: { n }, set: { badge.frames = max(1, $0) }), in: 1...120).fixedSize()
                         Slider(value: Binding(get: { badge.fps ?? 10 }, set: { badge.fps = $0.rounded() }), in: 1...30).frame(width: 90)
-                        Text(L("{0}/giây", Int(badge.fps ?? 10))).monospacedDigit().foregroundStyle(.secondary)
+                        Text(L("{0}/sec", Int(badge.fps ?? 10))).monospacedDigit().foregroundStyle(.secondary)
                     }
                 }
             }
@@ -432,7 +432,7 @@ struct BadgeEditor: View {
             }
             Text(text).foregroundStyle(.secondary)
             Button(button) { if let p = Self.pickImage(types: types) { use(p) } }.controlSize(.large)
-            Text(L("PNG, JPG, HEIC… Ảnh vuông trông đẹp nhất.")).font(.caption).foregroundStyle(.tertiary)
+            Text(L("PNG, JPG, HEIC… Square pictures look best.")).font(.caption).foregroundStyle(.tertiary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(RoundedRectangle(cornerRadius: 14).strokeBorder(dropping ? Color.accentColor : Color.secondary.opacity(0.4),
@@ -451,21 +451,21 @@ struct BadgeEditor: View {
     var styleBar: some View {
         Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 10) {
             GridRow {
-                label(L("Hình dạng"))
+                label(L("Shape"))
                 HStack(spacing: 12) {
                     Picker("", selection: $badge.shape) {
-                        Label(L("Tròn"), systemImage: "circle").tag(BadgeShape.circle)
-                        Label(L("Vuông"), systemImage: "square").tag(BadgeShape.rounded)
+                        Label(L("Circle"), systemImage: "circle").tag(BadgeShape.circle)
+                        Label(L("Square"), systemImage: "square").tag(BadgeShape.rounded)
                     }
                     .pickerStyle(.segmented).labelsHidden().fixedSize()
                     Spacer(minLength: 12)
-                    Text(L("Viền")).foregroundStyle(.secondary).fixedSize()
+                    Text(L("Border")).foregroundStyle(.secondary).fixedSize()
                     Toggle("", isOn: $badge.border).toggleStyle(.switch).labelsHidden()
                 }
             }
-            GridRow { label(L("Nền")); fillSwatches }
+            GridRow { label(L("Background")); fillSwatches }
             if paintsInk {
-                GridRow { label(content == .text ? L("Màu chữ") : L("Màu biểu tượng")); inkSwatches }
+                GridRow { label(content == .text ? L("Text color") : L("Symbol color")); inkSwatches }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -476,9 +476,9 @@ struct BadgeEditor: View {
     var footer: some View {
         HStack {
             if let delete {
-                Button(role: .destructive, action: delete) { Label(L("Xoá biểu tượng"), systemImage: "trash") }
+                Button(role: .destructive, action: delete) { Label(L("Remove icon"), systemImage: "trash") }
             }
-            if let reset { Button(L("Dùng biểu tượng mặc định"), action: reset) }
+            if let reset { Button(L("Use the default icon"), action: reset) }
             Spacer()
             Button("Xong", action: done).keyboardShortcut(.defaultAction).controlSize(.large)
         }
@@ -487,7 +487,7 @@ struct BadgeEditor: View {
     /// "No fill" first, then the colors; picking a color turns the fill back on.
     var fillSwatches: some View {
         HStack(spacing: 4) {
-            swatch(selected: badge.plain == true, help: L("Không nền")) {
+            swatch(selected: badge.plain == true, help: L("No background")) {
                 Image(systemName: "circle.slash").font(.system(size: 16)).foregroundStyle(.secondary)
             } action: { badge.plain = true }
             ForEach(Self.swatches, id: \.self) { h in
@@ -521,7 +521,7 @@ struct BadgeEditor: View {
     /// Any other color, from the system color panel.
     func customSwatch(_ hex: Binding<String?>) -> some View {
         let isCustom = hex.wrappedValue.map { !Self.swatches.contains($0) } ?? false
-        return swatch(selected: isCustom, help: L("Màu khác")) {
+        return swatch(selected: isCustom, help: L("Other color")) {
             Circle().fill(AngularGradient(colors: [.red, .yellow, .green, .cyan, .blue, .purple, .red], center: .center))
         } action: {
             ColorPanel.open(hex.wrappedValue.flatMap { Color(hex: $0) } ?? .white) { hex.wrappedValue = $0 }
@@ -606,12 +606,12 @@ enum SymbolLibrary {
         return (k, i)
     }
     static let pickerCategories = [("suggested", "star.circle")] + categories
-    static var titles: [String: String] { ["suggested": L("Gợi ý"), "all": L("Tất cả"), "communication": L("Liên lạc"), "weather": L("Thời tiết"), "maps": L("Bản đồ"), "objectsandtools": L("Đồ vật"),
-                         "devices": L("Thiết bị"), "cameraandphotos": L("Ảnh"), "gaming": L("Trò chơi"), "connectivity": L("Kết nối"), "transportation": L("Đi lại"),
-                         "automotive": "Xe", "accessibility": L("Trợ năng"), "privacyandsecurity": L("Bảo mật"), "human": L("Con người"), "home": L("Nhà"),
-                         "fitness": L("Thể thao"), "nature": L("Thiên nhiên"), "editing": L("Chỉnh sửa"), "textformatting": L("Văn bản"), "media": L("Đa phương tiện"),
-                         "keyboard": L("Bàn phím"), "commerce": L("Mua bán"), "time": L("Thời gian"), "health": L("Sức khoẻ"), "shapes": L("Hình"), "arrows": L("Mũi tên"),
-                         "indices": L("Số, chữ"), "math": L("Toán")] }
+    static var titles: [String: String] { ["suggested": L("Suggested"), "all": L("All"), "communication": L("Communication"), "weather": L("Weather"), "maps": L("Maps"), "objectsandtools": L("Objects"),
+                         "devices": L("Devices"), "cameraandphotos": L("Photos"), "gaming": L("Games"), "connectivity": L("Connection"), "transportation": L("Transport"),
+                         "automotive": "Xe", "accessibility": L("Accessibility"), "privacyandsecurity": L("Security"), "human": L("People"), "home": L("Home"),
+                         "fitness": L("Sports"), "nature": L("Nature"), "editing": L("Editing"), "textformatting": L("Text"), "media": L("Media"),
+                         "keyboard": L("Keyboard"), "commerce": L("Commerce"), "time": L("Time"), "health": L("Health"), "shapes": L("Shapes"), "arrows": L("Arrows"),
+                         "indices": L("Numbers & letters"), "math": L("Math")] }
 
     static func search(_ query: String, in category: String) -> [String] {
         let q = query.trimmingCharacters(in: .whitespaces).lowercased()
@@ -632,7 +632,7 @@ struct SymbolPicker: View {
     var body: some View {
         let results = SymbolLibrary.search(query, in: category)
         VStack(alignment: .leading, spacing: 10) {
-            TextField("", text: $query, prompt: Text(L("Tìm bằng tiếng Anh: star, cloud, cat, hammer…"))).textFieldStyle(.roundedBorder)
+            TextField("", text: $query, prompt: Text(L("Search in English: star, cloud, cat, hammer…"))).textFieldStyle(.roundedBorder)
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 4) {
                     ForEach(SymbolLibrary.pickerCategories, id: \.0) { c in
@@ -656,7 +656,7 @@ struct SymbolPicker: View {
                     }
                 }
             }
-            Text(query.isEmpty ? L("{0} · {1} biểu tượng", SymbolLibrary.titles[category] ?? category, results.count) : L("{0} kết quả", results.count))
+            Text(query.isEmpty ? L("{0} · {1} symbols", SymbolLibrary.titles[category] ?? category, results.count) : L("{0} results", results.count))
                 .font(.caption).foregroundStyle(.secondary)
         }
     }
@@ -699,28 +699,28 @@ struct IconStore: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .firstTextBaseline, spacing: 10) {
-                Text(L("Có sẵn")).font(.title3.bold())
-                Text(L("{0} biểu tượng động · Miễn phí", SpriteLibrary.all.filter { $0.category != "pets" }.count))
+                Text(L("Available")).font(.title3.bold())
+                Text(L("{0} animated icons · Free", SpriteLibrary.all.filter { $0.category != "pets" }.count))
                     .font(.callout).foregroundStyle(.secondary)
                 Spacer(minLength: 8)
-                TextField(L("Tìm"), text: $search).textFieldStyle(.roundedBorder).frame(width: 140)
+                TextField(L("Search"), text: $search).textFieldStyle(.roundedBorder).frame(width: 140)
                 Button { Animations.sync() } label: { Image(systemName: "arrow.triangle.2.circlepath") }
-                    .buttonStyle(.borderless).help(L("Cho mọi biểu tượng động chạy lại từ đầu cùng lúc"))
+                    .buttonStyle(.borderless).help(L("Restart every animated icon at once"))
             }
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 6) {
-                    chip(L("Tất cả"), "")
+                    chip(L("All"), "")
                     ForEach(SpriteLibrary.categories, id: \.self) { chip(L($0), $0) }
                 }
             }
             if shown.isEmpty {
-                Text(L("Không có biểu tượng nào khớp “{0}”.", search)).foregroundStyle(.secondary).frame(maxWidth: .infinity).padding(24)
+                Text(L("No icons match “{0}”.", search)).foregroundStyle(.secondary).frame(maxWidth: .infinity).padding(24)
             } else {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 84), spacing: 8)], spacing: 8) {
                     ForEach(shown) { tile($0) }
                 }
             }
-            Label(L("Gói của cộng đồng: sắp có."), systemImage: "person.3").font(.caption).foregroundStyle(.secondary)
+            Label(L("Community packs: coming soon."), systemImage: "person.3").font(.caption).foregroundStyle(.secondary)
         }
     }
 
@@ -749,7 +749,7 @@ struct IconStore: View {
                 }
                 .frame(height: 56)
                 .overlay(alignment: .topTrailing) {
-                    if used { Circle().fill(Color.accentColor).frame(width: 7, height: 7).padding(6).help(L("Đang dùng")) }
+                    if used { Circle().fill(Color.accentColor).frame(width: 7, height: 7).padding(6).help(L("In use")) }
                 }
                 Text(e.name).font(.caption).lineLimit(1).foregroundStyle(.primary)
             }
@@ -765,19 +765,19 @@ struct IconStore: View {
     @ViewBuilder func useMenu(_ e: SpriteLibrary.Entry) -> some View {
         let icon = Badge(plain: true, sprite: e.id)
         let full = { (right: Bool) in settings.badges.filter { $0.right == right }.count >= Badge.perSide }
-        Section(L("Biểu tượng cố định trên notch")) {
-            Button(L("Thêm bên trái")) { add(e, right: false) }.disabled(full(false))
-            Button(L("Thêm bên phải")) { add(e, right: true) }.disabled(full(true))
+        Section(L("Pinned icon on the notch")) {
+            Button(L("Add on the left")) { add(e, right: false) }.disabled(full(false))
+            Button(L("Add on the right")) { add(e, right: true) }.disabled(full(true))
         }
         if !model.items.isEmpty {
-            Section(L("Đặt cho ứng dụng đang theo dõi")) {
+            Section(L("Set for a watched app")) {
                 ForEach(model.items) { item in
                     Button(item.name) { model.items[model.items.firstIndex { $0.id == item.id }!].icon = icon; flash(e) }
                 }
             }
         }
         if !settings.seenTools.isEmpty {
-            Section(L("Đặt cho công cụ build")) {
+            Section(L("Set for a build tool")) {
                 ForEach(settings.seenTools, id: \.self) { t in Button(t) { settings.toolIcons[t] = icon; flash(e) } }
             }
         }

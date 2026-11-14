@@ -108,7 +108,7 @@ function execConst(file, args, opts, cb) {
 
 /** "5 giây", "3 phút", "2 giờ": how long ago, in the app's words. */
 function ago(s) {
-  return s < 60 ? L('{0} giây', Math.trunc(s)) : s < 3600 ? L('{0} phút', Math.trunc(s / 60)) : L('{0} giờ', Math.trunc(s / 3600));
+  return s < 60 ? L('{0} sec', Math.trunc(s)) : s < 3600 ? L('{0} min', Math.trunc(s / 60)) : L('{0} hours', Math.trunc(s / 3600));
 }
 
 function parseIso(s) {
@@ -481,9 +481,9 @@ class CodexScanner {
       const age = (now - e.status.at) / 1000;
       const id = path.basename(f.path);
       if (e.status.working) {
-        out.push({ id, title: e.title, detail: L('Đang chạy · {0}', ago(age)), working: true });
+        out.push({ id, title: e.title, detail: L('Running · {0}', ago(age)), working: true });
       } else if (age < 600) {
-        out.push({ id, title: e.title, detail: L('Xong · {0} trước', ago(age)), working: false });
+        out.push({ id, title: e.title, detail: L('Done · {0} ago', ago(age)), working: false });
       }
     }
     return out;
@@ -628,7 +628,7 @@ class AntigravityScanner {
       if (!(e.active || held)) continue;
       const since = run?.since ?? now;
       live.set(name, { since, seen: e.active ? now : run?.seen ?? now });
-      out.push({ id: name, title: e.title, detail: L('Đang chạy · {0}', ago((now - since) / 1000)), working: true });
+      out.push({ id: name, title: e.title, detail: L('Running · {0}', ago((now - since) / 1000)), working: true });
     }
     this.runs = live;
     return out;

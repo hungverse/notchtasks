@@ -21,7 +21,7 @@ const LIVE_JOB_MS = 300 * 1000; // a finished build stays on the phone this long
 
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 const ms = (d) => (d ? new Date(d).getTime() : 0);
-const BARE = /\s·\s(\d+:\d{2}(?::\d{2})?|≈[^·]*|\d+\s(?:giây|phút|giờ)[^·]*)/g;
+const BARE = /\s·\s(\d+:\d{2}(?::\d{2})?|≈[^·]*|\d+\s(?:giây|phút|giờ|sec|min|hours)[^·]*)/g;
 
 /** The Live Activity counts the time itself: the clock and the estimate come out of the detail. */
 function bare(detail) {
@@ -51,9 +51,9 @@ function isPro(e, nowMs) {
 
 function proNoteText(why) {
   switch (why) {
-    case 'moved': return L('Pro của nhóm đã chuyển sang máy tính khác');
-    case 'refunded': return L('Gói Pro của nhóm đã được hoàn tiền');
-    case 'expired': return L('Gói Pro của nhóm đã hết hạn');
+    case 'moved': return L('The group’s Pro moved to another computer');
+    case 'refunded': return L('The group’s Pro plan was refunded');
+    case 'expired': return L('The group’s Pro plan has expired');
     default: return null;
   }
 }
@@ -191,7 +191,7 @@ function createSync(deps = {}) {
         if (deps.saveGroup) deps.saveGroup(g);
         track('pair_code_created');
       } catch (e) {
-        setProblem(L('Không tạo được mã ghép: {0}', e.message));
+        setProblem(L('Couldn\'t create a pairing code: {0}', e.message));
         throw e;
       }
       problem = null;
@@ -210,7 +210,7 @@ function createSync(deps = {}) {
       if (all && typeof all === 'object') {
         phones = {};
         for (const [uid, m] of Object.entries(all)) {
-          if (m && m.role === 'phone') phones[uid] = typeof m.name === 'string' ? m.name : L('Điện thoại');
+          if (m && m.role === 'phone') phones[uid] = typeof m.name === 'string' ? m.name : L('Phone');
         }
       }
     } catch (e) {
@@ -424,7 +424,7 @@ function createSync(deps = {}) {
       sentAway = away;
       if (problem) setProblem(null);
     } catch (e) {
-      setProblem(L('Không gửi được sang điện thoại: {0}', e.message));
+      setProblem(L('Couldn\'t send to the phone: {0}', e.message));
     }
   }
 
@@ -476,7 +476,7 @@ function createSync(deps = {}) {
       } catch (e) {
         if (signal.aborted) return;
         fails++;
-        setProblem(L('Mất kết nối với điện thoại, đang thử lại…'));
+        setProblem(L('Lost connection to the phone, retrying…'));
       }
       if (signal.aborted) return;
       await sleep(Math.min(60000, 5000 * 2 ** Math.max(fails - 1, 0)), signal);

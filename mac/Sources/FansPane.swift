@@ -10,7 +10,7 @@ struct FanPane: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(L("Quạt & nhiệt độ")).font(.title2.bold())
+            Text(L("Fans & temperature")).font(.title2.bold())
             HStack(spacing: 12) {
                 if let hottest = Thermals.hottest(model.thermals) {
                     Label("\(Int(hottest.celsius.rounded()))°", systemImage: "thermometer.medium")
@@ -24,16 +24,16 @@ struct FanPane: View {
                 }
             }.font(.system(size: 13, weight: .semibold, design: .rounded)).monospacedDigit()
             VStack(alignment: .leading, spacing: 8) {
-                Text(L("Quạt")).font(.headline)
-                if model.fans.isEmpty { Text(L("Máy này không báo quạt qua SMC; chỉ đọc nhiệt độ vẫn hoạt động.")).foregroundStyle(.secondary) }
+                Text(L("Fans")).font(.headline)
+                if model.fans.isEmpty { Text(L("This Mac does not report fans through SMC; temperature reading still works.")).foregroundStyle(.secondary) }
                 else { NotchFanPanel(model: model, pane: true) }
             }.settingsCard()
             VStack(alignment: .leading, spacing: 6) {
                 Button { sensorsOpen.toggle() } label: {
-                    Label(L("Cảm biến") + " (\(model.thermals.count))", systemImage: sensorsOpen ? "chevron.down" : "chevron.right")
+                    Label(L("Sensors") + " (\(model.thermals.count))", systemImage: sensorsOpen ? "chevron.down" : "chevron.right")
                 }.buttonStyle(.plain).font(.headline)
                 if sensorsOpen {
-                    if model.thermals.isEmpty { Text(L("Không đọc được cảm biến nhiệt độ.")).foregroundStyle(.secondary) }
+                    if model.thermals.isEmpty { Text(L("Could not read temperature sensors.")).foregroundStyle(.secondary) }
                     ForEach(Thermals.grouped(model.thermals), id: \.name) { sensor in
                         HStack { Text(sensor.name).lineLimit(1); Spacer(); Text(sensor.value).monospacedDigit() }
                             .font(.caption).help(sensor.details)
@@ -56,37 +56,37 @@ struct FanEnableControl: View {
             if footer {
                 HStack(spacing: 8) {
                     Circle().fill(control.enabled && control.available ? Color.green : Color.gray).frame(width: 6, height: 6)
-                    Text(control.enabled ? control.available ? L("Trợ lý quạt đang bật") : control.needsApproval ? L("Trợ lý quạt cần được cho phép") : L("Trợ lý quạt chưa sẵn sàng") : L("Trợ lý quạt đang tắt"))
+                    Text(control.enabled ? control.available ? L("Fan helper is on") : control.needsApproval ? L("Fan helper needs approval") : L("Fan helper is not ready") : L("Fan helper is off"))
                         .foregroundStyle(.secondary)
                     if !control.status.isEmpty { Text(control.status).foregroundStyle(.secondary).lineLimit(2).help(control.status) }
                     Spacer()
-                    if control.enabled && control.available { Button(L("Tắt")) { control.disable() } }
-                    else if control.enabled && control.needsApproval { Button(L("Mở Cài đặt hệ thống")) { SMAppService.openSystemSettingsLoginItems() } }
-                    else if control.enabled { Button(L("Bật trợ lý quạt")) { control.register() } }
-                    else if consent != .confirming { Button(L("Bật trợ lý quạt")) { consent = consent.advanced() } }
+                    if control.enabled && control.available { Button(L("Off")) { control.disable() } }
+                    else if control.enabled && control.needsApproval { Button(L("Open System Settings")) { SMAppService.openSystemSettingsLoginItems() } }
+                    else if control.enabled { Button(L("Enable fan helper")) { control.register() } }
+                    else if consent != .confirming { Button(L("Enable fan helper")) { consent = consent.advanced() } }
                 }
             }
             if !control.enabled {
                 if !footer || consent == .confirming {
-                    Text(L("Điều khiển quạt có thể làm hỏng phần cứng nếu dùng sai.")).foregroundStyle(.orange).fixedSize(horizontal: false, vertical: true)
+                    Text(L("Fan control can damage hardware when used incorrectly.")).foregroundStyle(.orange).fixedSize(horizontal: false, vertical: true)
                 }
                 if consent == .confirming {
-                    Text(L("Trợ lý luôn giới hạn tốc độ theo mức tối thiểu và tối đa máy báo, và tự về tự động khi mất kết nối hoặc máy quá nóng."))
+                    Text(L("The helper always keeps speeds within the machine-reported minimum and maximum, and returns to automatic when it loses its connection or the Mac is too hot."))
                         .fixedSize(horizontal: false, vertical: true)
                     HStack {
-                        Button(L("Huỷ")) { consent = consent.cancelled() }
-                        Button(L("Tôi hiểu, bật")) { consent = consent.advanced(); control.enable() }
+                        Button(L("Cancel")) { consent = consent.cancelled() }
+                        Button(L("I understand, enable")) { consent = consent.advanced(); control.enable() }
                             .buttonStyle(.borderedProminent)
                     }
                 } else if !footer {
-                    Button(L("Bật trợ lý quạt")) { consent = consent.advanced() }
+                    Button(L("Enable fan helper")) { consent = consent.advanced() }
                 }
             } else if !control.available && !footer {
                 if control.needsApproval {
-                    Text(L("Hãy cho phép trợ lý trong Mục đăng nhập của Cài đặt hệ thống.")).foregroundStyle(.orange)
-                    Button(L("Mở Cài đặt hệ thống")) { SMAppService.openSystemSettingsLoginItems() }
+                    Text(L("Allow the helper in Login Items in System Settings.")).foregroundStyle(.orange)
+                    Button(L("Open System Settings")) { SMAppService.openSystemSettingsLoginItems() }
                 } else {
-                    Button(L("Bật trợ lý quạt")) { control.register() }
+                    Button(L("Enable fan helper")) { control.register() }
                 }
             }
         }

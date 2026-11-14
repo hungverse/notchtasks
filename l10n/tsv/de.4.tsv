@@ -1,24 +1,24 @@
-1012	Aktualisieren
-1013	Version
-1014	Wird geladen… {0}%
-1015	Wird überprüft…
-1016	Laden und installieren
-1017	Kein Update verfügbar. Zuletzt geprüft: {0}
-1018	Wird geprüft…
-1019	Jetzt prüfen
-1020	Keine Hinweise.
-1021	Die Update-Informationen sind ungültig.
-1022	Das Update konnte nicht geladen werden.
-1023	Die geladene Datei stimmt nicht mit ihrer Prüfsumme überein.
-1024	Das Disk-Image enthält NotchTasks.app nicht.
-1025	Die Update-Signatur stimmt nicht mit dieser App überein.
-1026	Das Update ist nicht neuer als die laufende App.
-1027	In {0} kann nicht geschrieben werden. Ziehe die App aus dem Disk-Image nach Programme.
-1028	Ein anderes Update ist noch nicht abgeschlossen. Versuche es später erneut.
-1029	Neue Version {0}
-1030	Das Update-Disk-Image konnte nicht geöffnet werden.
-1055	Jetzt benötigt
-1056	Gewährt
-1057	Nicht verwendet
-1058	Lüfterhelfer
-1059	Chip
+996	Aktualisieren
+997	Version
+998	Wird geladen… {0}%
+999	Wird überprüft…
+1000	Laden und installieren
+1001	Kein Update verfügbar. Zuletzt geprüft: {0}
+1002	Wird geprüft…
+1003	Jetzt prüfen
+1004	Keine Hinweise.
+1005	Die Update-Informationen sind ungültig.
+1006	Das Update konnte nicht geladen werden.
+1007	Die geladene Datei stimmt nicht mit ihrer Prüfsumme überein.
+1008	Das Disk-Image enthält NotchTasks.app nicht.
+1009	Die Update-Signatur stimmt nicht mit dieser App überein.
+1010	Das Update ist nicht neuer als die laufende App.
+1011	In {0} kann nicht geschrieben werden. Ziehe die App aus dem Disk-Image nach Programme.
+1012	Ein anderes Update ist noch nicht abgeschlossen. Versuche es später erneut.
+1013	Neue Version {0}
+1014	Das Update-Disk-Image konnte nicht geöffnet werden.
+1039	Jetzt benötigt
+1040	Gewährt
+1041	Nicht verwendet
+1042	Lüfterhelfer
+1043	Chip

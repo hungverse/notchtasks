@@ -123,8 +123,8 @@ test('TaskHistory: median of the last runs, progress and label', () => {
   h.record('k', 200);
   assert.deepEqual(h.runs.k, [100, 60, 61, 90, 200], 'keeps the last 5');
   assert.equal(saved.length, 2);
-  assert.deepEqual(D.TaskHistory.estimate(30, 60), [0.5, '0:30 · ≈ 30s' + L(' nữa')]);
-  assert.deepEqual(D.TaskHistory.estimate(70, 60), [0.99, '1:10' + L(' · lâu hơn thường lệ')]);
+  assert.deepEqual(D.TaskHistory.estimate(30, 60), [0.5, '0:30 · ≈ 30s' + L(' left')]);
+  assert.deepEqual(D.TaskHistory.estimate(70, 60), [0.99, '1:10' + L(' · longer than usual')]);
   assert.deepEqual(D.TaskHistory.estimate(5, null), [null, '0:05']);
 });
 
@@ -207,7 +207,7 @@ test('WatchItems: .exe and case are ignored when matching processes', () => {
 test('WatchItems: presets include Windows build tools and summaries read', () => {
   assert.ok(W.buildPresets.some((i) => i.process === 'msbuild' && i.build));
   assert.ok(W.buildPresets.some((i) => i.name === 'Visual Studio'));
-  assert.equal(W.summary(W.item({ name: 'x', kind: 'app', threshold: 30 })), L('Ứng dụng · {0}', 'CPU > 30%'));
+  assert.equal(W.summary(W.item({ name: 'x', kind: 'app', threshold: 30 })), L('App · {0}', 'CPU > 30%'));
   assert.equal(W.inBuild(W.buildItem), true);
 });
 
@@ -220,7 +220,7 @@ test('FileProgressWatcher: partial download appears, speed from growth, gone whe
     const w = new D.FileProgressWatcher({ folders: [dir], now: () => t });
     const first = w.jobs();
     assert.equal(first.length, 1, 'a 6 MB partial file is a transfer');
-    assert.equal(first[0].title, L('Tải xuống') + ' · setup.exe.crdownload');
+    assert.equal(first[0].title, L('Downloads') + ' · setup.exe.crdownload');
     assert.equal(first[0].detail, '6.0 MB');
     fs.appendFileSync(f, Buffer.alloc(1e6));
     t += 1000;

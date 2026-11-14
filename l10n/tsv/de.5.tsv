@@ -1,22 +1,22 @@
-1031	Lüfter
-1032	Lüfter & Temperatur
-1033	Temperatur und Lüfterdrehzahlen werden von diesem Mac gelesen. Die Steuerung wird erst nach Annahme der Warnung aktiviert.
-1034	Eine falsche Lüftersteuerung kann Hardware beschädigen.
-1035	Lüfterhelfer aktivieren
-1036	Der Helfer begrenzt die Drehzahl auf die vom Mac gemeldeten Werte und schaltet bei Verbindungsverlust oder Überhitzung auf Automatik zurück.
-1037	Sensoren
-1038	Temperatursensoren konnten nicht gelesen werden.
-1039	Erlaube den Helfer unter Anmeldeobjekte in den Systemeinstellungen.
-1040	Dieser Mac meldet keine Lüfter über SMC; die Temperaturmessung funktioniert weiter.
-1041	Lüfter {0}
-1042	Erzwungen
-1043	Modus
-1044	Feste Drehzahl
-1045	Nach Sensor
-1046	Start {0}°C
-1047	Maximum {0}°C
-1048	Lüfter wegen zu hoher Mac-Temperatur auf Automatik zurückgesetzt
-1049	Lüfterhelfer konnte nicht registriert werden: {0}
-1050	Keine Verbindung zum Lüfterhelfer: {0}
-1051	Halb
-1052	Maximum
+1015	Lüfter
+1016	Lüfter & Temperatur
+1017	Temperatur und Lüfterdrehzahlen werden von diesem Mac gelesen. Die Steuerung wird erst nach Annahme der Warnung aktiviert.
+1018	Eine falsche Lüftersteuerung kann Hardware beschädigen.
+1019	Lüfterhelfer aktivieren
+1020	Der Helfer begrenzt die Drehzahl auf die vom Mac gemeldeten Werte und schaltet bei Verbindungsverlust oder Überhitzung auf Automatik zurück.
+1021	Sensoren
+1022	Temperatursensoren konnten nicht gelesen werden.
+1023	Erlaube den Helfer unter Anmeldeobjekte in den Systemeinstellungen.
+1024	Dieser Mac meldet keine Lüfter über SMC; die Temperaturmessung funktioniert weiter.
+1025	Lüfter {0}
+1026	Erzwungen
+1027	Modus
+1028	Feste Drehzahl
+1029	Nach Sensor
+1030	Start {0}°C
+1031	Maximum {0}°C
+1032	Lüfter wegen zu hoher Mac-Temperatur auf Automatik zurückgesetzt
+1033	Lüfterhelfer konnte nicht registriert werden: {0}
+1034	Keine Verbindung zum Lüfterhelfer: {0}
+1035	Halb
+1036	Maximum

@@ -1,10 +1,11 @@
-"""Builds l10n-<code>.json (key -> text) from l10n/tsv/<code>.*.tsv ("index<TAB>text", \\n for a new line),
-checks each text keeps its key's placeholders ({0}, %.1f…) and edge spaces, and writes it for both apps:
-mac/Sources (the Mac app; the Windows app packs the same files). Run from the repo root."""
-import glob, json, re, sys
+"""Builds l10n-<code>.json (key -> text) from l10n/tsv/<code>.*.tsv ("index<TAB>text", \\n for a new line).
+The key is the English text (l10n/keys.json, by index), so en has no table: every other code, vi included, does.
+Checks each text keeps its key's placeholders ({0}, %.1f…) and edge spaces, and writes mac/Sources/l10n-<code>.json
+(the Mac app; the Windows app packs the same files). Run from the repo root."""
+import glob, json, re, shutil, sys
 keys = json.load(open('l10n/keys.json'))
 PH = re.compile(r'\{\d+\}|%[.\d]*[a-z@]')
-codes = sorted({p.split('/')[-1].split('.')[0] for p in glob.glob('l10n/tsv/*.tsv')})
+codes = sorted({p.split('/')[-1].split('.')[0] for p in glob.glob('l10n/tsv/*.tsv')} - {'en'})
 bad = 0
 for code in codes:
     table = {}
@@ -25,4 +26,7 @@ for code in codes:
     print(f'{code}: {len(table)}/{len(keys)}' + (f', missing {missing[:12]}' if missing else ''))
     for d in ('mac/Sources',):
         json.dump(table, open(f'{d}/l10n-{code}.json', 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
+# the Vietnamese -> English map (rekey.py's legacy-vi.json): a Vietnamese text, from a saved value or old data, is
+# looked up through it first. Not a language: L10n and the Windows port load it by name, never from a list of codes.
+shutil.copy('l10n/legacy-vi.json', 'mac/Sources/l10n-legacy.json')
 sys.exit(1 if bad else 0)

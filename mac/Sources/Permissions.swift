@@ -13,11 +13,11 @@ enum PermState: Equatable {
 
     var label: String {
         switch self {
-        case .granted: return L("Đã cho phép")
-        case .denied: return L("Đã từ chối")
-        case .notAsked: return L("Chưa cấp")
-        case .checking: return L("Đang kiểm tra…")
-        case .needsApp: return L("Chưa kiểm tra")
+        case .granted: return L("Allowed")
+        case .denied: return L("Denied")
+        case .notAsked: return L("Not granted")
+        case .checking: return L("Checking…")
+        case .needsApp: return L("Not checked")
         }
     }
     var color: Color {
@@ -96,35 +96,35 @@ struct PermItem: Identifiable, Equatable {
     func refresh() {
         var list: [PermItem] = []
         let previous = Dictionary(uniqueKeysWithValues: items.map { ($0.id, $0.state) })
-        list.append(PermItem(id: "notifications", title: L("Thông báo"), detail: L("Báo khi tác vụ xong hoặc có lỗi."),
+        list.append(PermItem(id: "notifications", title: L("Notifications"), detail: L("Alerts when a task finishes or fails."),
                              symbol: "bell.badge.fill", module: nil,
                              state: previous["notifications"] ?? .notAsked,
                              pane: "x-apple.systempreferences:com.apple.Notifications-Settings.extension", tccService: nil))
         let cal = EKEventStore.authorizationStatus(for: .event)
-        list.append(PermItem(id: "calendar", title: L("Lịch"), detail: L("Hiện sự kiện sắp tới."),
+        list.append(PermItem(id: "calendar", title: L("Calendar"), detail: L("Shows upcoming events."),
                              symbol: "calendar", module: .calendar,
                              state: cal == .fullAccess ? .granted : cal == .notDetermined ? .notAsked : .denied,
                              pane: Self.privacy + "Privacy_Calendars", tccService: "Calendar"))
         let camera = AVCaptureDevice.authorizationStatus(for: .video)
-        list.append(PermItem(id: "camera", title: L("Gương camera"), detail: L("Xem camera trước khi vào họp"),
+        list.append(PermItem(id: "camera", title: L("Camera mirror"), detail: L("Check the camera before joining a meeting"),
                              symbol: "camera.fill", module: .mirror,
                              state: camera == .authorized ? .granted : camera == .notDetermined ? .notAsked : .denied,
                              pane: Self.privacy + "Privacy_Camera", tccService: "Camera"))
-        list.append(PermItem(id: "accessibility", title: L("Trợ năng"), detail: L("Điều khiển nhạc trong trình duyệt."),
+        list.append(PermItem(id: "accessibility", title: L("Accessibility"), detail: L("Controls music in the browser."),
                              symbol: "accessibility", module: .media, state: AXIsProcessTrusted() ? .granted : .notAsked,
                              pane: Self.privacy + "Privacy_Accessibility", tccService: "Accessibility"))
         for t in Self.automationTargets where NSWorkspace.shared.urlForApplication(withBundleIdentifier: t.id) != nil {
-            list.append(PermItem(id: "ae." + t.id, title: L("Điều khiển {0}", t.name), detail: L("Đọc và điều khiển bài đang phát."),
+            list.append(PermItem(id: "ae." + t.id, title: L("Control {0}", t.name), detail: L("Reads and controls what's playing."),
                                  symbol: "music.note", module: .media,
                                  state: automationInFlight.contains(t.id) ? previous["ae." + t.id] ?? .checking : .checking,
                                  pane: Self.privacy + "Privacy_Automation", tccService: "AppleEvents"))
         }
         for b in BrowserJS.installed {
-            list.append(PermItem(id: "js." + b.bid, title: L("Nhạc trong {0}", b.name), detail: L("Dừng, phát, chuyển bài ngay trong tab."),
+            list.append(PermItem(id: "js." + b.bid, title: L("Music in {0}", b.name), detail: L("Pause, play and skip right in the tab."),
                                  symbol: "play.rectangle.fill", module: .media, state: BrowserJS.allowed(b) ? .granted : .notAsked,
                                  pane: "", tccService: nil))
         }
-        list.append(PermItem(id: "login", title: L("Mở cùng macOS"), detail: L("Tự chạy khi đăng nhập."),
+        list.append(PermItem(id: "login", title: L("Open at login"), detail: L("Starts when you log in."),
                              symbol: "power", module: nil, state: SMAppService.mainApp.status == .enabled ? .granted : .notAsked,
                              pane: "x-apple.systempreferences:com.apple.LoginItems-Settings.extension", tccService: nil))
         if list != items {
@@ -215,8 +215,8 @@ struct PermItem: Identifiable, Equatable {
         if p.id.hasPrefix("js."), let b = BrowserJS.browser(String(p.id.dropFirst(3))) {
             // a switch inside the browser: only the browser can turn it off
             let alert = NSAlert()
-            alert.messageText = L("Tắt trong {0}", b.name)
-            alert.informativeText = L("Bỏ chọn cùng mục đó:\n") + BrowserJS.steps(b)
+            alert.messageText = L("Turn off in {0}", b.name)
+            alert.informativeText = L("Uncheck the same item:\n") + BrowserJS.steps(b)
             alert.runModal()
             return
         }

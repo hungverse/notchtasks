@@ -147,7 +147,7 @@ import AVFoundation
         }
         // local model runners found on this Mac join the list once too
         if !UserDefaults.standard.bool(forKey: "addedLocalModels") {
-            for p in presetGroups.first(where: { $0.title == L("Model chạy trên máy") })?.items ?? []
+            for p in presetGroups.first(where: { $0.title == L("Model running locally") })?.items ?? []
             where p.isInstalled && !items.contains(where: { $0.bundleID == p.bundleID && $0.process == p.process }) {
                 items.append(p)
             }
@@ -240,15 +240,15 @@ import AVFoundation
                     guard let self, self.netMonitor.currentPath.status == .satisfied ? online : !online, self.netOnline != online else { return }
                     self.netOnline = online
                     self.announce(online
-                        ? Toast(symbol: wifi ? "wifi" : "network", tint: .green, title: L("Đã có mạng lại"), subtitle: wifi ? L("Wi‑Fi đã kết nối") : L("Đã kết nối"),
+                        ? Toast(symbol: wifi ? "wifi" : "network", tint: .green, title: L("Back online"), subtitle: wifi ? L("Wi‑Fi connected") : L("Connected"),
                                 event: .netUp, compact: true)
-                        : Toast(symbol: "wifi.slash", tint: .red, title: L("Mất kết nối mạng"), subtitle: L("Kiểm tra Wi‑Fi hoặc dây mạng"), event: .netDown),
+                        : Toast(symbol: "wifi.slash", tint: .red, title: L("Network disconnected"), subtitle: L("Check Wi‑Fi or the network cable"), event: .netDown),
                         notify: !online)
                 }
             }
         } else if let v = vpnOn, v != vpn {
-            announce(Toast(symbol: vpn ? "lock.shield.fill" : "lock.open.fill", tint: vpn ? .blue : .gray, title: vpn ? L("VPN đã bật") : L("VPN đã tắt"),
-                           subtitle: vpn ? L("VPN đã bật") : L("VPN đã tắt"), event: .netUp, compact: true), notify: false)
+            announce(Toast(symbol: vpn ? "lock.shield.fill" : "lock.open.fill", tint: vpn ? .blue : .gray, title: vpn ? L("VPN on") : L("VPN off"),
+                           subtitle: vpn ? L("VPN on") : L("VPN off"), event: .netUp, compact: true), notify: false)
         }
     }
 
@@ -272,7 +272,7 @@ import AVFoundation
             // moved in from elsewhere long ago (an old file dragged in) isn't a download that just finished
             let made = (try? url.resourceValues(forKeys: [.creationDateKey]))?.creationDate ?? .distantPast
             guard Date().timeIntervalSince(made) < 30 * 60 else { continue }
-            announce(Toast(symbol: "arrow.down.circle.fill", tint: .blue, title: L("Đã tải xong"), subtitle: name, event: .downloadDone, url: url, action: L("Mở nơi lưu")))
+            announce(Toast(symbol: "arrow.down.circle.fill", tint: .blue, title: L("Download finished"), subtitle: name, event: .downloadDone, url: url, action: L("Show in folder")))
         }
     }
 
@@ -291,9 +291,9 @@ import AVFoundation
         let gb = Double(free) / 1e9
         if gb < 10, !diskWarned {
             diskWarned = true
-            announce(Toast(symbol: "internaldrive.fill", tint: .orange, title: L("Ổ đĩa sắp đầy"),
-                           subtitle: String(format: L("Còn %.1f GB trống"), locale: Locale(identifier: "vi_VN"), gb), event: .warning,
-                           url: URL(string: "x-apple.systempreferences:com.apple.settings.Storage"), action: L("Dọn ổ đĩa")))
+            announce(Toast(symbol: "internaldrive.fill", tint: .orange, title: L("Disk almost full"),
+                           subtitle: String(format: L("%.1f GB free"), locale: Locale(identifier: "vi_VN"), gb), event: .warning,
+                           url: URL(string: "x-apple.systempreferences:com.apple.settings.Storage"), action: L("Free up space")))
         } else if gb > 15 { diskWarned = false }  // warn again only after it had room
     }
 
@@ -304,10 +304,10 @@ import AVFoundation
         // just the tool's name ("Gradle", not "Gradle · project"): the subtitle has one line
         let top = states.flatMap(\.jobs).first(where: \.working)?.title.components(separatedBy: " · ").first
         announce(Toast(symbol: "thermometer.high", tint: state == .critical ? .red : .orange,
-                       title: state == .critical ? L("Máy đang rất nóng") : L("Máy đang nóng"),
-                       subtitle: top.map { L("{0} đang chạy nặng", $0) } ?? L("Nên đóng bớt ứng dụng nặng"),
+                       title: state == .critical ? L("Computer is very hot") : L("Computer is warm"),
+                       subtitle: top.map { L("{0} is working hard", $0) } ?? L("Consider closing heavy apps"),
                        event: .warning,
-                       url: URL(fileURLWithPath: "/System/Applications/Utilities/Activity Monitor.app"), action: L("Xem ứng dụng"), toPhone: true))
+                       url: URL(fileURLWithPath: "/System/Applications/Utilities/Activity Monitor.app"), action: L("See apps"), toPhone: true))
     }
 
     /// HID/SMC reads may block briefly, so the timer only starts them and the result returns to this actor.
@@ -335,7 +335,7 @@ import AVFoundation
         fanOverheatWarned = true
         fanControl.setHot(true)
         fanControl.stop(fans)
-        announce(Toast(symbol: "thermometer.high", tint: .red, title: L("Quạt đã về tự động vì máy quá nóng"), event: .warning), notify: false)
+        announce(Toast(symbol: "thermometer.high", tint: .red, title: L("Fans returned to automatic because the Mac is too hot"), event: .warning), notify: false)
     }
 
     private func refreshFansAfterCommand() {
@@ -403,7 +403,7 @@ import AVFoundation
                 call = CallInfo(app: app, since: resumed ? (lastCallStart ?? now) : now, video: next.camera, muted: next.micMuted)
                 if !resumed {
                     lastCallStart = now
-                    announce(Toast(symbol: "phone.fill", tint: .green, title: L("Đang gọi"), subtitle: Sensors.name(app),
+                    announce(Toast(symbol: "phone.fill", tint: .green, title: L("On a call"), subtitle: Sensors.name(app),
                                    event: .callStart, compact: true), notify: false)
                 }
             } else if call?.app != app || call?.video != next.camera || call?.muted != next.micMuted {
@@ -415,7 +415,7 @@ import AVFoundation
             if let e = callEnded, now.timeIntervalSince(e) >= 8 {
                 call = nil
                 callEnded = nil
-                announce(Toast(symbol: "phone.down.fill", tint: .red, title: L("Đã kết thúc"), subtitle: mmss(e.timeIntervalSince(c.since)),
+                announce(Toast(symbol: "phone.down.fill", tint: .red, title: L("Ended"), subtitle: mmss(e.timeIntervalSince(c.since)),
                                event: .callEnd, compact: true), notify: false)
             }
         }
@@ -423,9 +423,9 @@ import AVFoundation
         guard settings.on(.privacy), call == nil, app == nil else { return }
         let newMic = next.micApps.filter { !prev.micApps.contains($0) }
         if let id = newMic.first {
-            announce(Toast(symbol: "mic.fill", tint: .orange, title: L("Micro đang bật"), subtitle: Sensors.name(id), event: .sensorOn, compact: true), notify: false)
+            announce(Toast(symbol: "mic.fill", tint: .orange, title: L("Microphone on"), subtitle: Sensors.name(id), event: .sensorOn, compact: true), notify: false)
         } else if next.camera && !prev.camera {
-            announce(Toast(symbol: "video.fill", tint: .green, title: L("Camera đang bật"), subtitle: next.micApps.first.map(Sensors.name) ?? "Camera",
+            announce(Toast(symbol: "video.fill", tint: .green, title: L("Camera on"), subtitle: next.micApps.first.map(Sensors.name) ?? "Camera",
                            event: .sensorOn, compact: true), notify: false)
         }
     }
@@ -434,7 +434,7 @@ import AVFoundation
     func toggleMute() {
         guard let c = call else { return }
         if Sensors.setInputMuted(!c.muted) { call?.muted = !c.muted; sensors.micMuted = !c.muted }
-        else { announce(Toast(symbol: "mic.slash", tint: .orange, title: L("Không tắt được mic"), subtitle: L("Hãy dùng nút trong {0}", c.name), event: nil, compact: true), notify: false) }
+        else { announce(Toast(symbol: "mic.slash", tint: .orange, title: L("Couldn't mute"), subtitle: L("Use the button in {0}", c.name), event: nil, compact: true), notify: false) }
     }
 
     func openCallApp() {
@@ -475,7 +475,7 @@ import AVFoundation
     private func modelLine(_ item: WatchItem) -> String? {
         guard let key = localKey(item) else { return nil }
         let names = localModels[key] ?? []
-        return names.isEmpty ? L("Chưa nạp model") : L("Đã nạp ") + names.joined(separator: ", ")
+        return names.isEmpty ? L("No model loaded") : L("Loaded ") + names.joined(separator: ", ")
     }
 
     /// A local runner's row is named after the model it has loaded (its folder means nothing).
@@ -484,7 +484,7 @@ import AVFoundation
         return names.joined(separator: ", ")
     }
 
-    private func modelBusy(_ item: WatchItem) -> String? { modelTitle(item) == nil ? nil : L("Đang chạy") }
+    private func modelBusy(_ item: WatchItem) -> String? { modelTitle(item) == nil ? nil : L("Running") }
 
     private func refreshLocalModels() {
         let keys = Set(items.filter(\.enabled).compactMap(localKey))
@@ -516,7 +516,7 @@ import AVFoundation
         if !gone.isEmpty { dropAskToasts(gone) }
         for a in fresh {
             announce(Toast(symbol: a.isQuestion ? "questionmark.bubble.fill" : "hand.raised.fill", tint: .orange,
-                           title: a.kind.name + (a.isQuestion ? L(" đang hỏi") : L(" cần bạn duyệt")),
+                           title: a.kind.name + (a.isQuestion ? L(" is asking") : L(" needs your approval")),
                            subtitle: a.session + " · " + (a.isQuestion ? a.summary : "\(a.action): \(a.summary)"),
                            icon: a.kind.item(in: items), event: .agentAsk, sticky: true, ask: a))
         }
@@ -614,7 +614,7 @@ import AVFoundation
             let panel = NSOpenPanel()
             panel.allowsMultipleSelection = true
             panel.canChooseDirectories = true
-            panel.prompt = L("Thêm vào khay")
+            panel.prompt = L("Add to shelf")
             guard panel.runModal() == .OK else { return }
             self.addToShelf(panel.urls)
         }
@@ -713,8 +713,8 @@ import AVFoundation
             BrowserGuide.show(b) { [weak self] in
                 Track.event("browser_control_on", ["browser": b.name])
                 self?.browserBlocked.remove(bid)
-                self?.announce(Toast(symbol: "checkmark.circle.fill", tint: .green, title: L("Đã bật điều khiển {0}", b.name),
-                                     subtitle: L("Giờ notch điều khiển được nhạc trong tab"), event: nil), notify: false)
+                self?.announce(Toast(symbol: "checkmark.circle.fill", tint: .green, title: L("{0} controls on", b.name),
+                                     subtitle: L("The notch can now control music in the tab"), event: nil), notify: false)
             }
         }
     }
@@ -767,9 +767,9 @@ import AVFoundation
         // jobs that just left the running list: announce how they ended
         for gone in runnerJobs where !running.contains(where: { $0.id == gone.id }) {
             if failed.contains(where: { $0.id == gone.id }) {
-                announce(Toast(symbol: "xmark.octagon.fill", tint: .red, title: L("CI lỗi: {0}", gone.name), subtitle: gone.project, event: .ciFailed, url: gone.url, action: L("Xem log")))
+                announce(Toast(symbol: "xmark.octagon.fill", tint: .red, title: L("CI failed: {0}", gone.name), subtitle: gone.project, event: .ciFailed, url: gone.url, action: L("View log")))
             } else if succeeded.contains(gone.id) {
-                announce(Toast(symbol: "checkmark.seal.fill", tint: .green, title: L("CI đạt: {0}", gone.name), subtitle: gone.project, event: .ciPassed, url: gone.url))
+                announce(Toast(symbol: "checkmark.seal.fill", tint: .green, title: L("CI passed: {0}", gone.name), subtitle: gone.project, event: .ciPassed, url: gone.url))
             }
         }
         runnerJobs = running
@@ -795,9 +795,9 @@ import AVFoundation
         let dismissed = Set(UserDefaults.standard.stringArray(forKey: "dismissedJobs") ?? [])
         for r in runs {
             if r.conclusion == "success" {
-                announce(Toast(symbol: "checkmark.seal.fill", tint: .green, title: L("CI đạt: {0}", r.workflow), subtitle: r.repo, event: .ciPassed, url: r.url))
+                announce(Toast(symbol: "checkmark.seal.fill", tint: .green, title: L("CI passed: {0}", r.workflow), subtitle: r.repo, event: .ciPassed, url: r.url))
             } else if ["failure", "timed_out", "startup_failure"].contains(r.conclusion ?? "") {
-                announce(Toast(symbol: "xmark.octagon.fill", tint: .red, title: L("CI lỗi: {0}", r.workflow), subtitle: r.repo, event: .ciFailed, url: r.url, action: L("Xem log")))
+                announce(Toast(symbol: "xmark.octagon.fill", tint: .red, title: L("CI failed: {0}", r.workflow), subtitle: r.repo, event: .ciFailed, url: r.url, action: L("View log")))
                 let a = JobAlert(id: "gh-\(r.id)", name: r.workflow, project: r.repo, reason: r.title.isEmpty ? "failure" : r.title, url: r.url)
                 if !dismissed.contains(a.id) { githubAlerts.insert(a, at: 0) }
             }
@@ -864,7 +864,7 @@ import AVFoundation
             let working = busy[key] != nil
             let pct = "\(Int(total.rounded()))% CPU"
             // a local model runner says which model is generating, not which helper process
-            let detail = working ? busyText.map { "\($0) · \(pct)" } ?? top.map { "▶ \($0) · \(pct)" } ?? L("Đang làm việc · {0}", pct) : idle
+            let detail = working ? busyText.map { "\($0) · \(pct)" } ?? top.map { "▶ \($0) · \(pct)" } ?? L("Working · {0}", pct) : idle
             return Job(id: key, title: title, detail: detail, working: working)
         }
 
@@ -932,7 +932,7 @@ import AVFoundation
                     }
                 } else {
                     for c in children {
-                        let j = job(c.pid, title: c.name, threshold: 0.5, idle: L("Đang chờ"))
+                        let j = job(c.pid, title: c.name, threshold: 0.5, idle: L("Waiting"))
                         // project + job name from the job's CI_* env, else from the builds path
                         let ci = ciEnv(under: c.pid)
                         let name = ci["CI_JOB_NAME"].map { [ci["CI_JOB_STAGE"], $0].compactMap { $0 }.joined(separator: " › ") + " · " } ?? ""
@@ -948,7 +948,7 @@ import AVFoundation
                 let ok = result == "Succeeded"
                 if let result {
                     announce(Toast(symbol: ok ? "checkmark.seal.fill" : "xmark.octagon.fill", tint: ok ? .green : .red,
-                                   title: (ok ? L("CI đạt: ") : L("CI lỗi: ")) + w.job.detail, subtitle: w.job.title, event: ok ? .ciPassed : .ciFailed))
+                                   title: (ok ? L("CI passed: ") : L("CI failed: ")) + w.job.detail, subtitle: w.job.title, event: ok ? .ciPassed : .ciFailed))
                 }
             }
             ghWorkers = ghWorkers.filter { workers.contains($0.key) }
@@ -976,15 +976,15 @@ import AVFoundation
                     alive = true
                     if item.childTasks {
                         for c in kids[p.pid] ?? [] {
-                            jobs.append(job(c.pid, title: Proc.folder(c.pid) ?? c.name, threshold: item.cpuThreshold, idle: L("Đang chờ")))
+                            jobs.append(job(c.pid, title: Proc.folder(c.pid) ?? c.name, threshold: item.cpuThreshold, idle: L("Waiting")))
                         }
                     } else {
-                        jobs.append(job(p.pid, title: modelTitle(item) ?? Proc.folder(p.pid) ?? item.name, threshold: item.cpuThreshold, idle: modelLine(item) ?? L("Đang chờ"), busy: modelBusy(item)))
+                        jobs.append(job(p.pid, title: modelTitle(item) ?? Proc.folder(p.pid) ?? item.name, threshold: item.cpuThreshold, idle: modelLine(item) ?? L("Waiting"), busy: modelBusy(item)))
                     }
                 }
             case .app:
                 for app in NSWorkspace.shared.runningApplications where app.bundleIdentifier == item.bundleID {
-                    jobs.append(job(app.processIdentifier, title: modelTitle(item) ?? app.localizedName ?? item.name, threshold: item.cpuThreshold, idle: modelLine(item) ?? L("Đang mở"), busy: modelBusy(item)))
+                    jobs.append(job(app.processIdentifier, title: modelTitle(item) ?? app.localizedName ?? item.name, threshold: item.cpuThreshold, idle: modelLine(item) ?? L("Open"), busy: modelBusy(item)))
                 }
             case .codex:
                 jobs = codex.jobs(now: now)
@@ -996,7 +996,7 @@ import AVFoundation
                     let busy = s.status == "busy"
                     let since = ago(now.timeIntervalSince1970 - (s.statusUpdatedAt ?? 0) / 1000)
                     let top = busy ? tree(s.pid).top : nil
-                    let detail = top.map { "▶ \($0) · \(since)" } ?? (busy ? L("Đang làm việc · {0}", since) : L("Đang chờ"))
+                    let detail = top.map { "▶ \($0) · \(since)" } ?? (busy ? L("Working · {0}", since) : L("Waiting"))
                     let title = s.name ?? s.cwd.map { ($0 as NSString).lastPathComponent } ?? "Claude"
                     jobs.append(Job(id: "\(s.pid)", title: title, detail: detail, working: busy))
                 }
@@ -1057,10 +1057,10 @@ import AVFoundation
                 guard warnedLimits.insert(key).inserted else { continue }
                 let at = w.resetText()
                 let left = Int(max(0, w.resets.timeIntervalSinceNow) / 60)
-                let wait = left >= 60 ? L("{0} giờ {1} phút", left / 60, left % 60) : L("{0} phút", left)
+                let wait = left >= 60 ? L("{0}h {1}m", left / 60, left % 60) : L("{0} min", left)
                 announce(Toast(symbol: step == 100 ? "hourglass" : "gauge.with.dots.needle.100percent", tint: step >= 95 ? .red : .orange,
-                               title: step == 100 ? L("{0} đã hết giới hạn {1}", p.name, w.label) : L("{0} đã dùng {1}% giới hạn {2}", p.name, Int(w.used), w.label),
-                               subtitle: step == 100 ? L("Chờ đến {0} (còn {1})", at, wait) : L("Đặt lại lúc {0}", at),
+                               title: step == 100 ? L("{0} reached its {1} limit", p.name, w.label) : L("{0} used {1}% of its {2} limit", p.name, Int(w.used), w.label),
+                               subtitle: step == 100 ? L("Wait until {0} ({1} left)", at, wait) : L("Resets at {0}", at),
                                event: .limitWarn, sticky: true))
             }
         }
@@ -1117,7 +1117,7 @@ import AVFoundation
             let took = now.timeIntervalSince(w.since)
             guard took >= settings.doneAfter else { continue }
             // dev tasks name the tool ("Gradle · app done"); the exit code of a process we didn't start isn't readable
-            let title = L("{0} xong", w.item.kind == .dev ? w.title : w.item.name)
+            let title = L("{0} done", w.item.kind == .dev ? w.title : w.item.name)
             announce(Toast(symbol: "checkmark.circle.fill", tint: .green, title: title, subtitle: w.item.kind == .dev ? ago(took) : "\(w.title) · \(ago(took))",
                            icon: w.item.kind == .dev ? nil : w.item, event: .taskDone, toPhone: true))
         }
@@ -1144,18 +1144,18 @@ import AVFoundation
         if devicesScanned {  // the first scan is the baseline, not news
             let tint = settings.color(for: .devices) ?? .blue
             for d in found where !devices.contains(where: { $0.id == d.id }) {
-                announce(Toast(symbol: d.symbol, tint: tint, title: L("{0} đã kết nối", d.name), subtitle: d.battery ?? L("Sẵn sàng"), event: .deviceOn,
+                announce(Toast(symbol: d.symbol, tint: tint, title: L("{0} connected", d.name), subtitle: d.battery ?? L("Ready"), event: .deviceOn,
                                art: .device(art: d.art, symbol: d.symbol, connected: true)), notify: false)
             }
             for d in devices where !found.contains(where: { $0.id == d.id }) {
-                announce(Toast(symbol: d.symbol, tint: .gray, title: L("{0} đã ngắt kết nối", d.name), event: .deviceOff,
+                announce(Toast(symbol: d.symbol, tint: .gray, title: L("{0} disconnected", d.name), event: .deviceOff,
                                art: .device(art: d.art, symbol: d.symbol, connected: false)), notify: false)
             }
         }
         for d in found {
             guard let low = d.lowest else { continue }
             if low <= 15, lowDevices.insert(d.id).inserted {
-                announce(Toast(symbol: "battery.25percent", tint: .red, title: L("Pin {0} yếu", d.name), subtitle: d.battery ?? "", event: .lowBattery))
+                announce(Toast(symbol: "battery.25percent", tint: .red, title: L("{0} battery low", d.name), subtitle: d.battery ?? "", event: .lowBattery))
             } else if low > 30 {
                 lowDevices.remove(d.id)
             }
@@ -1169,13 +1169,13 @@ import AVFoundation
         guard let b = BatteryState.read() else { return }
         if let old = battery, old.plugged != b.plugged {
             announce(Toast(symbol: b.plugged ? "bolt.fill" : "powerplug.portrait", tint: b.plugged ? .green : .gray,
-                           title: b.plugged ? L("Đang sạc") : L("Đã rút sạc"), subtitle: "\(b.percent)%", event: b.plugged ? .charging : .unplugged, compact: true,
+                           title: b.plugged ? L("Charging") : L("Unplugged"), subtitle: "\(b.percent)%", event: b.plugged ? .charging : .unplugged, compact: true,
                            art: .charge(percent: b.percent, plugged: b.plugged)), notify: false)
         }
         if b.plugged { lowBatteryWarned = false }
         if !b.plugged && b.percent <= 20 && !lowBatteryWarned {
             lowBatteryWarned = true
-            announce(Toast(symbol: "battery.25percent", tint: .red, title: L("Pin yếu"), subtitle: L("Còn {0}%", b.percent), event: .lowBattery))
+            announce(Toast(symbol: "battery.25percent", tint: .red, title: L("Low battery"), subtitle: L("{0}% left", b.percent), event: .lowBattery))
         }
         if b != battery { battery = b }
     }
@@ -1199,7 +1199,7 @@ import AVFoundation
             if let e = visibleEvents.first(where: { !$0.allDay && (0...300).contains($0.start.timeIntervalSince(now)) }),
                remindedEvents.insert(e.id).inserted {
                 announce(Toast(symbol: "calendar", tint: e.color, title: e.title,
-                               subtitle: L("Lúc ") + e.start.formatted(date: .omitted, time: .shortened), event: .meeting, url: e.link))
+                               subtitle: L("At ") + e.start.formatted(date: .omitted, time: .shortened), event: .meeting, url: e.link))
             }
         } else if !events.isEmpty {
             events = []
@@ -1207,7 +1207,7 @@ import AVFoundation
 
         if let end = timerEnd, now >= end {
             timerEnd = nil
-            announce(Toast(symbol: "timer", tint: .orange, title: L("Hết giờ"), subtitle: L("{0} phút", Int(timerTotal / 60)), event: .timerDone))
+            announce(Toast(symbol: "timer", tint: .orange, title: L("Time's up"), subtitle: L("{0} min", Int(timerTotal / 60)), event: .timerDone))
         }
     }
 }

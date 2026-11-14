@@ -226,23 +226,23 @@ function classify(name, argv) {
       return { tool: 'Git', action: v, symbol: symbol(v), subject };
     }
     case 'rsync': case 'scp': case 'rclone': case 'ditto': case 'robocopy':
-      return { tool: name, action: L('sao chép'), symbol: 'arrow.left.arrow.right', subject: words.length ? base(words[words.length - 1]) : undefined };
+      return { tool: name, action: L('copying'), symbol: 'arrow.left.arrow.right', subject: words.length ? base(words[words.length - 1]) : undefined };
     case 'aria2c': case 'yt-dlp': case 'wget':
-      return { tool: name, action: L('tải xuống'), symbol: 'arrow.down.circle.fill', subject: words.length ? base(words[words.length - 1]) : undefined };
+      return { tool: name, action: L('downloading'), symbol: 'arrow.down.circle.fill', subject: words.length ? base(words[words.length - 1]) : undefined };
     case 'curl': {
       // only real downloads to a file; API calls from scripts are filtered by the minimum duration too
       const out = opt('-o', '--output') || ((a.includes('-O') || a.includes('-LO')) && words.length ? base(words[words.length - 1]) : null);
       if (!out) return null;
-      return { tool: 'curl', action: L('tải xuống'), symbol: 'arrow.down.circle.fill', subject: base(out) };
+      return { tool: 'curl', action: L('downloading'), symbol: 'arrow.down.circle.fill', subject: base(out) };
     }
     case 'zip': case 'unzip': case 'tar': case 'bsdtar': case '7z': case '7zz': case 'xz': case 'zstd':
-      return { tool: name, action: L('nén / giải nén'), symbol: 'archivebox.fill', subject: words.length ? base(words[words.length - 1]) : undefined };
+      return { tool: name, action: L('compressing / extracting'), symbol: 'archivebox.fill', subject: words.length ? base(words[words.length - 1]) : undefined };
     case 'hdiutil': return verb(['create', 'convert', 'makehybrid', 'compact'], 'hdiutil');
     case 'ffmpeg': {
       const inp = opt('-i');
       const input = inp && !inp.includes('=') ? base(inp) : null;  // lavfi/stream inputs aren't file names
       const last = a.length ? base(a[a.length - 1]) : null;
-      return { tool: 'ffmpeg', action: L('xử lý video'), symbol: 'film.stack', subject: [input, last].filter(Boolean).join(' → ') };
+      return { tool: 'ffmpeg', action: L('processing video'), symbol: 'film.stack', subject: [input, last].filter(Boolean).join(' → ') };
     }
     case 'handbrakecli':
       return { tool: 'HandBrake', action: 'encode', symbol: 'film.stack', icon: 'fr.handbrake.HandBrake', subject: opt('-i', '--input') ? base(opt('-i', '--input')) : undefined };
@@ -253,9 +253,9 @@ function classify(name, argv) {
       return { tool: 'Blender', action: frames, symbol: 'cube.transparent.fill', icon: 'org.blenderfoundation.blender', subject: blend ? base(blend) : undefined };
     }
     case 'magick': case 'convert': case 'mogrify':
-      return { tool: 'ImageMagick', action: L('xử lý ảnh'), symbol: 'photo.stack.fill', subject: words.length ? base(words[words.length - 1]) : undefined };
+      return { tool: 'ImageMagick', action: L('processing images'), symbol: 'photo.stack.fill', subject: words.length ? base(words[words.length - 1]) : undefined };
     case 'whisper': case 'whisper-cli':
-      return { tool: 'Whisper', action: L('chép lời'), symbol: 'waveform', subject: words.length ? base(words[words.length - 1]) : undefined };
+      return { tool: 'Whisper', action: L('transcribing'), symbol: 'waveform', subject: words.length ? base(words[words.length - 1]) : undefined };
     case 'ollama': return verb(['pull', 'create', 'push'], 'Ollama', { icon: 'com.electron.ollama' });
     case 'terraform': case 'tofu': return verb(['apply', 'plan', 'init', 'destroy'], 'Terraform');
     case 'pulumi': return verb(['up', 'preview', 'destroy', 'refresh'], 'Pulumi');
@@ -414,9 +414,9 @@ class TaskHistory {
     const time = mmss(elapsed);
     if (expected == null || expected < 10) return [null, time];
     const left = expected - elapsed;
-    if (left <= 0) return [0.99, time + L(' · lâu hơn thường lệ')];
-    const rest = left < 60 ? `${Math.trunc(left)}s` : L('{0} phút', Math.trunc(left / 60) + 1);
-    return [Math.min(elapsed / expected, 0.99), `${time} · ≈ ${rest}${L(' nữa')}`];
+    if (left <= 0) return [0.99, time + L(' · longer than usual')];
+    const rest = left < 60 ? `${Math.trunc(left)}s` : L('{0} min', Math.trunc(left / 60) + 1);
+    return [Math.min(elapsed / expected, 0.99), `${time} · ≈ ${rest}${L(' left')}`];
   }
 }
 
@@ -541,7 +541,7 @@ class DevScanner {
       const busy = load > 150;
       const since = busy ? (prev ? prev.since : now) : prev && prev.since;
       if (since == null || !(busy || (prev && prev.lastBusy != null && now - prev.lastBusy < 8000))) continue;
-      const m = { tool: app.name, action: L('đang xử lý · {0}% CPU', Math.trunc(load)), symbol: 'film.stack', icon: app.icon, busyOnly: true };
+      const m = { tool: app.name, action: L('working · {0}% CPU', Math.trunc(load)), symbol: 'film.stack', icon: app.icon, busyOnly: true };
       keep(id, m, { title: app.name, since, key: `app|${app.icon}`, busy });
     }
 
@@ -607,7 +607,7 @@ class FileProgressWatcher {
         this.seen.set(full, { size: st.size, at: t, lastChange, speed });
         if (st.size < MIN_TRANSFER || lastChange == null || t - lastChange >= STALL_MS) continue;
         out.push({
-          id: `file:${full}`, title: `${partial ? L('Tải xuống') : L('Sao chép')} · ${name}`,
+          id: `file:${full}`, title: `${partial ? L('Downloads') : L('Copy')} · ${name}`,
           detail: `${sizeText(st.size)}${speed > 0 ? ` · ${sizeText(speed)}/s` : ''}`,
           working: true, progress: null, estimated: false,
           symbol: partial ? 'arrow.down.circle.fill' : 'doc.on.doc.fill', tool: 'Tải file',

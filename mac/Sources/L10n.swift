@@ -1,8 +1,8 @@
 import Foundation
 
 /// The app's languages. English is the default; until you pick one, the device's own language is followed.
-/// Texts are written in Vietnamese in the code and those are the keys: each language is a table "l10n-<code>.json"
-/// next to the code (copied into the app, its widgets and extensions). A missing text falls back to English.
+/// Texts are written in English in the code and those are the keys: each language other than English is a table
+/// "l10n-<code>.json" next to the code (copied into the app, its widgets and extensions). A missing text shows the key.
 enum L10n {
     static let languages: [(code: String, name: String)] = [
         ("en", "English"), ("vi", "Tiếng Việt"), ("zh-Hans", "简体中文"), ("zh-Hant", "繁體中文"), ("ja", "日本語"),
@@ -26,9 +26,9 @@ enum L10n {
             NotificationCenter.default.post(name: changed, object: nil)
         }
     }
-    /// Self-tests check the texts as written (the keys).
+    /// Self-tests check the texts as written, which are English (the keys).
     nonisolated(unsafe) static var testing = false
-    static var code: String { testing ? "vi" : choice.isEmpty ? device : choice }
+    static var code: String { testing ? "en" : choice.isEmpty ? device : choice }
     static var locale: Locale { Locale(identifier: code) }
     static var device: String { match(Locale.preferredLanguages) }
 
@@ -60,15 +60,20 @@ enum L10n {
         return t
     }
 
+    /// Vietnamese text (old keys, saved values, data) -> its English key; see l10n-legacy.json (made by rekey.py).
+    static var legacy: [String: String] { table("legacy") }
+
     static func text(_ key: String, in code: String) -> String {
-        if code == "vi" { return key }
-        return table(code)[key] ?? table("en")[key] ?? key
+        let k = legacy[key] ?? key
+        if code == "en" { return k }
+        return table(code)[k] ?? k
     }
 
     static func selfTest() {
         assert(match(["fr-CA"]) == "fr" && match(["zh-Hant-TW"]) == "zh-Hant" && match(["zh-CN"]) == "zh-Hans", "device language")
         assert(match(["pt-PT"]) == "pt-BR" && match(["sw"]) == "en" && match(["sw", "vi-VN"]) == "vi", "fallbacks")
         assert(fill("{1} và {0}", ["a", 2]) == "2 và a", "placeholders")
+        precondition(text("Đang chờ bạn", in: "fr") == text("Waiting for you", in: "fr"), "a Vietnamese text maps to its English key")
     }
 
     static func fill(_ s: String, _ args: [Any]) -> String {
@@ -96,12 +101,12 @@ struct LocalizedRoot<Content: View>: View {
     }
 }
 
-/// "Ngôn ngữ": follow the device, or one of the app's languages (each shown in its own words).
+/// "Language": follow the device, or one of the app's languages (each shown in its own words).
 struct LanguagePicker: View {
     @State private var lang = L10n.choice
     var body: some View {
-        Picker(L("Ngôn ngữ"), selection: Binding(get: { lang }, set: { lang = $0; L10n.choice = $0 })) {
-            Text(L("Theo máy") + " · " + (L10n.languages.first { $0.code == L10n.device }?.name ?? "English")).tag("")
+        Picker(L("Language"), selection: Binding(get: { lang }, set: { lang = $0; L10n.choice = $0 })) {
+            Text(L("Device") + " · " + (L10n.languages.first { $0.code == L10n.device }?.name ?? "English")).tag("")
             Divider()
             ForEach(L10n.languages, id: \.code) { Text($0.name).tag($0.code) }
         }

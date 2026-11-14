@@ -70,11 +70,11 @@ test('askDir: %APPDATA%\\NotchTasks\\Asks, else ~/.notchtasks/Asks', () => {
 });
 
 test('actionLabel: words for tools, mcp tools by their last part', () => {
-  assert.equal(A.actionLabel('Bash'), L('Chạy lệnh'));
-  assert.equal(A.actionLabel('write_file'), L('Sửa file'));
-  assert.equal(A.actionLabel('view_file'), L('Đọc file'));
-  assert.equal(A.actionLabel('WebFetch'), L('Truy cập web'));
-  assert.equal(A.actionLabel('mcp__github__create_issue'), L('Dùng công cụ ') + 'issue');
+  assert.equal(A.actionLabel('Bash'), L('Run command'));
+  assert.equal(A.actionLabel('write_file'), L('Edit file'));
+  assert.equal(A.actionLabel('view_file'), L('Read file'));
+  assert.equal(A.actionLabel('WebFetch'), L('Web access'));
+  assert.equal(A.actionLabel('mcp__github__create_issue'), L('Use tool ') + 'issue');
   assert.equal(A.actionLabel('AskUserQuestion'), 'AskUserQuestion');
 });
 
@@ -87,7 +87,7 @@ test('claude Bash payload: tool, summary from the command, session from the fold
   assert.equal(ask.session, 'notchtasks', 'Windows path: last folder, either separator');
   assert.deepEqual(ask.questions, []);
   assert.equal(ask.agent, 'claude');
-  assert.equal(A.actionLabel(ask.tool), L('Chạy lệnh'));
+  assert.equal(A.actionLabel(ask.tool), L('Run command'));
 });
 
 test('claude AskUserQuestion payload: two questions, multiSelect, options as labels', async () => {
@@ -186,7 +186,7 @@ test('antigravity: allow grants this one call, pass means ask', async () => {
 test('cursor: permission allow / deny (with the notch message) / ask', async () => {
   assert.equal((await hook('cursor', 'cursor-shell', { answer: { kind: 'allow' } })).stdout, '{"permission":"allow"}\n');
   assert.equal((await hook('cursor', 'cursor-shell', { answer: { kind: 'deny' } })).stdout,
-    `${JSON.stringify({ permission: 'deny', user_message: L('Đã từ chối trên notch'), agent_message: DENY })}\n`);
+    `${JSON.stringify({ permission: 'deny', user_message: L('Denied on the notch'), agent_message: DENY })}\n`);
   assert.equal((await hook('cursor', 'cursor-shell', { answer: { kind: 'answers', answers: ANSWERS } })).stdout, '{"permission":"allow"}\n');
   assert.equal((await hook('cursor', 'cursor-shell', { answer: { kind: 'pass' } })).stdout, '{"permission":"ask"}\n');
 });

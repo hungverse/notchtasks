@@ -33,7 +33,7 @@ struct MacReport {
 struct MacReportSheet: View {
     @ObservedObject var sync: SyncHub
     @Environment(\.dismiss) private var dismiss
-    @State private var topic = L("Khác")
+    @State private var topic = L("Other")
     @State private var text = ""
     @State private var contact = ""
     @State private var code: String?
@@ -42,29 +42,29 @@ struct MacReportSheet: View {
 
     var body: some View {
         Form {
-            Picker(L("Loại vấn đề"), selection: $topic) {
-                ForEach([L("Ghép nối"), L("Quyền"), L("Quạt & nhiệt độ"), L("Cập nhật"), L("Khác")], id: \.self) { Text($0) }
+            Picker(L("Issue type"), selection: $topic) {
+                ForEach([L("Pairing"), L("Permissions"), L("Fans & temperature"), L("Update"), L("Other")], id: \.self) { Text($0) }
             }
-            TextField(L("Chuyện gì đã xảy ra?"), text: $text, axis: .vertical).lineLimit(3...6)
-            TextField(L("Email hoặc cách liên hệ (để chúng tôi trả lời)"), text: $contact)
-            DisclosureGroup(L("Thông tin gửi kèm")) {
-                Text(L("Nội dung và liên hệ bạn nhập; mã thiết bị ẩn danh, mã nhóm, tình trạng ghép nối, số điện thoại, phiên bản ứng dụng, hệ điều hành, mẫu thiết bị, ngôn ngữ, trạng thái Pro và giao dịch nếu có. Không tự động gửi lệnh, mã nguồn, đường dẫn, tên công việc hay tên dự án."))
+            TextField(L("What happened?"), text: $text, axis: .vertical).lineLimit(3...6)
+            TextField(L("Email or other contact (so we can reply)"), text: $contact)
+            DisclosureGroup(L("Information included")) {
+                Text(L("Your description and contact; anonymous device ID, group ID, pairing status, number of phones, app version, OS, device model, language, Pro status and transaction if available. Commands, source code, file paths, task titles and project names are not attached automatically."))
             }
             if let code {
                 HStack {
-                    Text(L("Đã gửi. Mã báo lỗi: {0}", String(code.suffix(6))))
-                    Button(L("Sao chép")) { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(String(code.suffix(6)), forType: .string) }
+                    Text(L("Sent. Report code: {0}", String(code.suffix(6))))
+                    Button(L("Copy")) { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(String(code.suffix(6)), forType: .string) }
                 }
             }
             if let problem { Text(problem).foregroundStyle(.orange) }
             HStack {
-                Button(L("Đóng")) { dismiss() }
+                Button(L("Close")) { dismiss() }
                 Spacer()
-                Button(L("Gửi")) {
+                Button(L("Send")) {
                     busy = true
                     Task {
                         do { code = try await sync.sendReport(topic: topic, text: text, contact: contact) }
-                        catch { problem = L("Không gửi được báo lỗi. Thử lại khi có mạng.") }
+                        catch { problem = L("Could not send the report. Try again when online.") }
                         busy = false
                     }
                 }.disabled(text.isEmpty || busy || code != nil)

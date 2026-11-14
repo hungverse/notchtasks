@@ -1,0 +1,22 @@
+1015	Quạt
+1016	Quạt & nhiệt độ
+1017	Nhiệt độ và tốc độ quạt được đọc từ máy. Điều khiển quạt chỉ bật sau khi bạn chấp nhận cảnh báo.
+1018	Điều khiển quạt có thể làm hỏng phần cứng nếu dùng sai.
+1019	Bật trợ lý quạt
+1020	Trợ lý luôn giới hạn tốc độ theo mức tối thiểu và tối đa máy báo, và tự về tự động khi mất kết nối hoặc máy quá nóng.
+1021	Cảm biến
+1022	Không đọc được cảm biến nhiệt độ.
+1023	Hãy cho phép trợ lý trong Mục đăng nhập của Cài đặt hệ thống.
+1024	Máy này không báo quạt qua SMC; chỉ đọc nhiệt độ vẫn hoạt động.
+1025	Quạt {0}
+1026	Đang ép
+1027	Chế độ
+1028	Tốc độ cố định
+1029	Theo cảm biến
+1030	Bắt đầu {0}°C
+1031	Tối đa {0}°C
+1032	Quạt đã về tự động vì máy quá nóng
+1033	Không đăng ký được trợ lý quạt: {0}
+1034	Không kết nối được trợ lý quạt: {0}
+1035	Một nửa
+1036	Tối đa

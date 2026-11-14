@@ -1,360 +1,349 @@
-340	Sağa simge ekle
-341	Sola simge ekle
-342	Simge ekle: Pro gerekir
-343	Animasyonunuz
-344	Resminiz
-345	Sembol
-346	Tema {0}
-347	Vurgu rengi
-348	Özel
-349	Sıralamak için sürükleyin.
-350	{0} animasyonlu simge · Ücretsiz
-351	Çentiğe koymak için bir simgeye dokunun.
-352	Simge seç
-353	Bu simgeyi çentikte kullanmak için bilgisayarla eşleştirin.
-354	Bu simgeyi çentikte kullan.
-355	App Store'a ulaşılamadı. Daha sonra tekrar deneyin.
-356	App Store bu satın alımı doğrulayamadı.
-357	Satın alım onay bekliyor. Onaylanır onaylanmaz erişebileceksiniz.
-358	Simülatör gerçek uygulamaları engellemez.
-359	İzin verilmedi. Ayarlar'dan iCloud'a giriş yapın.
-360	Uygulama engellemeye henüz izin verilmedi.
-361	Engel kaldırma planlanamadı. Oturumdan sonra uygulamayı açarak engellenen uygulamaları açın.
-362	Odaklanırken diğer uygulamaları engelle
-363	Oturumdan sonra değiştirilebilir.
-364	Yalnızca izin verdiğiniz uygulamalar açılabilir.
-365	İzin verilen uygulamaları seç
-366	{0} öğeye izin veriliyor
-367	Ana Sayfa
-368	Kapalı
-369	İncelemek için aç
-370	Kaydediliyor…
-371	Kapalı: Ayarlar'dan açın
-372	Açılamadı, daha sonra deneyin
-373	Açılıyor…
-374	Hata: FCM token vermedi
-375	Açık
-376	{0} XP · seviye {2} için {1} XP daha
-377	Bugün
-378	Önizlemek için dokunun
-379	Sahip olunmuyor
-380	, önizleme
-381	Seviyeye göre açılır
-382	En yüksek seviyeye göre: {0}
-383	Açıklama: {0}
-384	Seviye {0} · açıldı
-385	Seviye {0} olduğunda açılır
-386	Raporu önizle
-387	Yavru
-388	Seviye 5
-389	Seviye 10
-390	Seviye {0} · {1}
-391	Sahip olunmuyor · önizleme
-392	Aşama
-393	Seçili
-394	{0} seç
-395	Evcil Dostlar paketini satın al · {0}
-396	Uzaktan bağlantı
-397	Her yerden kullanın, ortak Wi‑Fi gerekmez
-398	Bildirimlerden yanıtla
-399	Uygulamayı açmadan hemen izin verin veya reddedin
-400	Kilit ekranında ve Dynamic Island'da agent'lar ve build'ler
-401	Build ve CI uyarıları
-402	Build tamamlanır tamamlanmaz veya başarısız olursa öğrenin
-403	Birden çok aygıt
-404	Bir bilgisayara birden çok telefon eşleştirin
-405	Çentikte daha çok simge
-406	Her yanda en fazla 4 simge
-407	Bilgisayarınız, her yerde.
-408	7 gün ücretsiz deneyin
-409	sonra {0}{1}
-410	Aynı Wi‑Fi'de kullanım ücretsiz kalır. Bir kez satın alın, eşleşen tüm aygıtlarda kullanın.
-411	Kapat
-412	7 gün ücretsiz
-413	Bir kez ödeyin, hep kullanın
-414	Kurbağa, panda, tavşan ve baykuş
-415	Boşta
-416	Çalışıyor
-417	Sizi bekliyor
-418	Hata
-419	Tilki
-420	Tok
-421	Enerji
-422	{0} {1} yüzde
-423	Seviye {0}, sonraki seviyeye %{1}
-424	Çentik önizlemesi
-425	{0} iş çalışıyor
-426	Odaklanmaya dön
-427	{0} saatinde yeniden açılır
-428	Odaklanma süresi devam ediyor
-429	{0}. Odaklanma oturumunu bitirin, {1} daha fazla XP kazansın (şu an seviye {2}).
-430	Evcil dostunuz, iş gününüze göre mutlu veya üzgün.
-431	25 veya 50 dakikalık odaklanma başlatın.
-432	Sıradaki: {0}/{1}. oturum
-433	{0}/{1}. oturumu başlat
-434	Bitir
-435	KATI
-436	Durdurulamaz
-437	KATI MOD
-438	Süre bitene kadar durdurulamaz
-439	Bitti!
-440	{0} dk. odaklanma · +{1} XP
-441	Katı · durdurulamaz
-442	Sıradaki: {0}. oturum
-443	Bilgisayar özeti
-444	Bilgisayarınızdaki onay bekleyen öğeler, agent'lar ve build'ler.
-445	Claude onayınızı istiyor
-446	ve {0} soru daha
-447	sizi bekliyor
-448	İncelemek için uygulamayı açın
-449	Bilgisayar eşleştirmek için NotchTasks'i açın
-450	İncelenecek {0} öğe
-451	onayınızı bekliyor
-452	Tüm agent'lar dinleniyor
-453	{0} bekliyor
-454	İncele
-455	Build yapılıyor
-456	Bir agent sizi bekliyor
-457	İsteği görmek için NotchTasks'i açın.
-458	Yanıt seçmek için uygulamayı açın
-459	Uygulamada incele
-460	{0} agent çalışıyor
-461	Agent çalışıyor
-462	Çentiğin izledikleri. Çentikte yalnızca çalışanlar gösterilir.
-463	Düzenle
-464	Açık
-465	 (eklendi)
-466	Açık uygulamalar
-467	Başka uygulama seç…
-468	İşlem adı gir…
-469	İzlenecek öğe ekle
-470	Bir agent, açık uygulama seçin veya işlem adı yazın.
-471	Agent'ları çentikte yanıtla
-472	Bir agent soru sorduğunda yanıt düğmeleri çentikte görünür.
-473	Hazır
-474	{0} ayarları düzenlenemedi: {1}
-475	Agent bir sonraki kez başladığında geçerli olur.
-476	Komutları ve dosya değişikliklerini incele, soruları yanıtla
-477	Komutları ve dosya değişikliklerini incele
-478	Komutları reddeder. Yalnızca Cursor komutları kendi başına çalıştırırken izin verir
-479	Komutları, dosya değişikliklerini ve web erişimini incele
-480	İzlenen öğe
-481	Görünen ad
-482	Şurada göster
-483	Simgeyi değiştir
-484	Değiştir…
-485	{0} çalışma oturumu başına izlenir. Başka ayar gerekmez.
-486	İşlem adı
-487	Komut satırı şunu içeriyor
-488	isteğe bağlı, örn. gemini-cli
-489	Algılama
-490	Activity Monitor'daki gibi işlem adı.
-491	Çentikteki her satır
-492	Her çalıştırma
-493	Her alt işlem (runner, worker)
-494	CPU şu değerin üzerindeyken çalışıyor say
-495	Boştayken görünüyorsa artırın, işleri kaçırıyorsa azaltın.
-496	Uygulama açık değil.
-497	Bulunamadı. Aracı açıp Yeniden denetle'ye tıklayın.
-498	Eşleşen: {0}
-499	Yeniden denetle
-500	Ekle
-501	Kaydet
-502	Tüm araçları göster
-503	Henüz build görülmedi. Simgeleri önceden ayarlamak için “Tümünü göster”i açın.
-504	Eklemeye gerek yok: çalışan her araç görünür. Simgesini değiştirmek için tıklayın.
-505	Değiştirildi
-506	Model bilgisayarda çalışıyor
-507	Yeniden çevrimiçi
-508	Wi‑Fi bağlı
-509	Bağlandı
-510	Ağ bağlantısı kesildi
-511	Wi‑Fi veya ağ kablosunu denetleyin
-512	VPN açık
-513	VPN kapalı
-514	İndirme tamamlandı
-515	Klasörde göster
-516	Disk neredeyse dolu
-517	%.1f GB boş
-518	Yer aç
-519	Bilgisayar çok sıcak
-520	Bilgisayar ısınıyor
-521	{0} yoğun çalışıyor
-522	Ağır uygulamaları kapatmayı düşünün
-523	Uygulamaları gör
-524	Aramada
-525	Sona erdi
-526	Mikrofon açık
-527	Kamera açık
-528	Mikrofon kapatılamadı
-529	{0} içindeki düğmeyi kullanın
-530	Yüklü model yok
-531	Yüklendi 
-532	Rafa ekle
-533	{0} denetimleri açık
-534	Artık müziği çentikten sekme içinde kontrol edebilirsiniz
-535	CI başarısız: {0}
-536	Günlüğü gör
-537	CI başarılı: {0}
-538	Çalışıyor · {0}
-539	Bekleniyor
-540	CI başarılı: 
-541	CI başarısız: 
-542	Açık
-543	{0}, {1} sınırına ulaştı
-544	{0}, {2} sınırının %{1} kadarını kullandı
-545	{0} saatine kadar bekleyin ({1} kaldı)
-546	{0} saatinde sıfırlanır
-547	{0} bağlandı
-548	{0} bağlantısı kesildi
-549	{0} pili az
-550	Şarj oluyor
-551	Şarjdan çıkarıldı
-552	Pil az
-553	%{0} kaldı
-554	Saat 
-555	Süre doldu
-556	Ana ekran
-557	Sabit simgeler daraltılmış çentikte daima görünür.
-558	Kilit ekranı
-559	Yalnızca görüntüleme: genişlemez, tıklanamaz.
-560	Ana ekranla aynı
-561	Ayrı
-562	Hatalı kilit açma girişimlerini bildir
-563	Parola veya parmak izi yanlış olduğunda çentik kırmızı renkte titrer. Kilit açılınca kaç denemenin başarısız olduğunu söyler.
-564	Sol
-565	Sağ
-566	Eklemek için +, düzenlemek için tıklayın, yer değiştirmek için sürükleyin. Her yanda en fazla {0}{1}
-567	Simge Kitaplığı'ndan ekle
-568	Animasyonları eşzamanla
-569	Tüm animasyonlu simgeleri aynı anda yeniden başlat
-570	Sabit simge
-571	Çentiğin sağında
-572	Çentiğin solunda
-573	8.000'den fazla Apple sembolü
-574	Birkaç karakter veya emoji
-575	Animasyonlu karakterler, GIF'ler
-576	Çentikte
-577	En fazla 8 karakter yazın
-578	Hızlı seçimler
-579	Başka resmi buraya bırakın
-580	Resmi buraya bırakın
-581	Resim seç…
-582	Simge Kitaplığı'nı aç
-583	GIF veya spritesheet'iniz…
-584	{0}/sn.
-585	PNG, JPG, HEIC… Kare resimler en iyi görünür.
-586	Şekil
-587	Daire
-588	Kare
-589	Kenar
-590	Metin rengi
-591	Sembol rengi
-592	Simgeyi kaldır
-593	Varsayılan simgeyi kullan
-594	Arka plansız
-595	Diğer renk
-596	Önerilenler
-597	Tümü
-598	İletişim
-599	Hava durumu
-600	Haritalar
-601	Nesneler
-602	Fotoğraflar
-603	Oyunlar
-604	Ulaşım
-605	Erişilebilirlik
-606	Kişiler
-607	Ev
-608	Spor
-609	Doğa
-610	Düzenleme
-611	Metin
-612	Medya
-613	Klavye
-614	Ticaret
-615	Zaman
-616	Sağlık
-617	Şekiller
-618	Oklar
-619	Sayılar ve harfler
-620	Matematik
-621	İngilizce arayın: star, cloud, cat, hammer…
-622	{0} · {1} sembol
-623	{0} sonuç
-624	{0} animasyonlu simge · Ücretsiz
-625	Ara
-626	“{0}” ile eşleşen simge yok.
-627	Topluluk paketleri: yakında.
-628	Kullanımda
-629	Çentikteki sabit simge
-630	İzlenen uygulama için ayarla
-631	Build aracı için ayarla
-632	Aç
-633	kadar 
-634	Etkinlikler
-635	Genel bakış
-636	İzleme
-637	Eşleştirme
-638	Simgeler ve kilit
-639	Simge Kitaplığı
-640	Davranış
-641	İzinler
-642	Çentik çalışanları gösterir, hiçbir şey çalışmıyorsa sessiz kalır.
-643	CI hataları
-644	Kılavuzu gör
-645	Çentikte yeniden sıralamak için sürükleyin.
-646	Daraltıldığında konum
-647	Renk
-648	{0} izni gerekiyor
-649	Varsayılan renge dön
-650	Uyarıyı dene
-651	Üst renk
-652	Alt renk
-653	Stil
-654	Özel renk
-655	Dışa aktar…
-656	İçe aktar…
-657	Ayarları yedekle
-658	Tüm özelleştirmeleriniz tek bir .json dosyasında.
-659	Bu ekranda çentik var: çentik kamerayı sarar.
-660	Bu ekranda çentik yok: kayan bir Dynamic Island olarak görünür.
-661	Görev tamamlandı
-662	Deneme uyarısı
-663	Ses düzeyi
-664	Ses paketi
-665	Yedekle ve paylaş
-666	Paketi dışa aktar…
-667	Paketi içe aktar…
-668	Sesler ayrı tutulur, görünümü değiştirmek onları silmez. Başka bilgisayara taşımak için paketi dışa aktarın.
-669	NotchTasks Sesleri.notchsounds
-670	Ses paketi dışa aktarılamadı
-671	Ses paketi dosyası seçin (.notchsounds)
-672	Ses paketi içe aktarılamadı
-673	Nasıl açılır
-674	Gecikme {0} ms
-675	Dokunsal geri bildirim
-676	Genişletildiğinde CPU ve RAM
-677	En az {0} sn. çalıştıysa bitince bildir
-678	Sınırları %{0} düzeyinde uyar
-679	Diğer
-680	Menü çubuğu simgesi
-681	Yalnızca kullandığınız özelliklere izin verin. Bir özelliği Modüller sayfasında tamamen kapatabilirsiniz.
-682	Yenile
-683	Bazı izinler yalnızca ilgili uygulama açıkken denetlenebilir.
-684	İzni kaldır
-685	Sıfırla
-686	Ayarlar'daki eski NotchTasks kaydını silip izni yeniden isteyin
-687	Ayarları aç
-688	Uygulamayı aç
-689	Hayır
-690	Dosyanızı seçin…
-691	Önizle
-692	Eşleştirme kodu oluşturulamadı: {0}
-693	Telefon
-694	Telefona gönderilemedi: {0}
-695	Telefonla bağlantı kesildi, yeniden deneniyor…
-696	Agent'ları yanıtlayın ve çalışan işleri telefonunuzda görün. Veriler aygıtlarınız arasında şifrelenir.
-697	Telefonda NotchTasks → Bilgisayarla eşleştir bölümünü açıp bu kodu tarayın.
-698	Bu koda sahip herkes agent'larınızın sorularını okuyabilir: paylaşmayın.
-699	Kodu kopyala
+338	Sağa simge ekle
+339	Sola simge ekle
+340	Simge ekle: Pro gerekir
+341	Animasyonunuz
+342	Resminiz
+343	Sembol
+344	Tema {0}
+345	Vurgu rengi
+346	Özel
+347	Sıralamak için sürükleyin.
+348	{0} animasyonlu simge · Ücretsiz
+349	Çentiğe koymak için bir simgeye dokunun.
+350	Simge seç
+351	Bu simgeyi çentikte kullanmak için bilgisayarla eşleştirin.
+352	Bu simgeyi çentikte kullan.
+353	App Store'a ulaşılamadı. Daha sonra tekrar deneyin.
+354	App Store bu satın alımı doğrulayamadı.
+355	Satın alım onay bekliyor. Onaylanır onaylanmaz erişebileceksiniz.
+356	Simülatör gerçek uygulamaları engellemez.
+357	İzin verilmedi. Ayarlar'dan iCloud'a giriş yapın.
+358	Uygulama engellemeye henüz izin verilmedi.
+359	Engel kaldırma planlanamadı. Oturumdan sonra uygulamayı açarak engellenen uygulamaları açın.
+360	Odaklanırken diğer uygulamaları engelle
+361	Oturumdan sonra değiştirilebilir.
+362	Yalnızca izin verdiğiniz uygulamalar açılabilir.
+363	İzin verilen uygulamaları seç
+364	{0} öğeye izin veriliyor
+365	Ana Sayfa
+366	Kapalı
+367	İncelemek için aç
+368	Kaydediliyor…
+369	Kapalı: Ayarlar'dan açın
+370	Açılamadı, daha sonra deneyin
+371	Açılıyor…
+372	Hata: FCM token vermedi
+373	Açık
+374	{0} XP · seviye {2} için {1} XP daha
+375	Bugün
+376	Önizlemek için dokunun
+377	Sahip olunmuyor
+378	, önizleme
+379	Seviyeye göre açılır
+380	En yüksek seviyeye göre: {0}
+381	Açıklama: {0}
+382	Seviye {0} · açıldı
+383	Seviye {0} olduğunda açılır
+384	Raporu önizle
+385	Yavru
+386	Seviye 5
+387	Seviye 10
+388	Seviye {0} · {1}
+389	Sahip olunmuyor · önizleme
+390	Aşama
+391	Seçili
+392	{0} seç
+393	Evcil Dostlar paketini satın al · {0}
+394	Uzaktan bağlantı
+395	Her yerden kullanın, ortak Wi‑Fi gerekmez
+396	Bildirimlerden yanıtla
+397	Uygulamayı açmadan hemen izin verin veya reddedin
+398	Kilit ekranında ve Dynamic Island'da agent'lar ve build'ler
+399	Build ve CI uyarıları
+400	Build tamamlanır tamamlanmaz veya başarısız olursa öğrenin
+401	Birden çok aygıt
+402	Bir bilgisayara birden çok telefon eşleştirin
+403	Çentikte daha çok simge
+404	Her yanda en fazla 4 simge
+405	Bilgisayarınız, her yerde.
+406	7 gün ücretsiz deneyin
+407	sonra {0}{1}
+408	Aynı Wi‑Fi'de kullanım ücretsiz kalır. Bir kez satın alın, eşleşen tüm aygıtlarda kullanın.
+409	Kapat
+410	7 gün ücretsiz
+411	Bir kez ödeyin, hep kullanın
+412	Kurbağa, panda, tavşan ve baykuş
+413	Boşta
+414	Çalışıyor
+415	Hata
+416	Tilki
+417	Tok
+418	Enerji
+419	{0} {1} yüzde
+420	Seviye {0}, sonraki seviyeye %{1}
+421	Çentik önizlemesi
+422	{0} iş çalışıyor
+423	Odaklanmaya dön
+424	{0} saatinde yeniden açılır
+425	Odaklanma süresi devam ediyor
+426	{0}. Odaklanma oturumunu bitirin, {1} daha fazla XP kazansın (şu an seviye {2}).
+427	Evcil dostunuz, iş gününüze göre mutlu veya üzgün.
+428	25 veya 50 dakikalık odaklanma başlatın.
+429	{0}/{1}. oturumu başlat
+430	Bitir
+431	KATI
+432	Durdurulamaz
+433	KATI MOD
+434	Süre bitene kadar durdurulamaz
+435	Bitti!
+436	{0} dk. odaklanma · +{1} XP
+437	Katı · durdurulamaz
+438	Sıradaki: {0}. oturum
+439	Bilgisayar özeti
+440	Bilgisayarınızdaki onay bekleyen öğeler, agent'lar ve build'ler.
+441	Claude onayınızı istiyor
+442	ve {0} soru daha
+443	sizi bekliyor
+444	İncelemek için uygulamayı açın
+445	Bilgisayar eşleştirmek için NotchTasks'i açın
+446	İncelenecek {0} öğe
+447	onayınızı bekliyor
+448	Tüm agent'lar dinleniyor
+449	{0} bekliyor
+450	İncele
+451	Build yapılıyor
+452	Bir agent sizi bekliyor
+453	İsteği görmek için NotchTasks'i açın.
+454	Yanıt seçmek için uygulamayı açın
+455	Uygulamada incele
+456	{0} agent çalışıyor
+457	Agent çalışıyor
+458	Çentiğin izledikleri. Çentikte yalnızca çalışanlar gösterilir.
+459	Düzenle
+460	 (eklendi)
+461	Açık uygulamalar
+462	Başka uygulama seç…
+463	İşlem adı gir…
+464	İzlenecek öğe ekle
+465	Bir agent, açık uygulama seçin veya işlem adı yazın.
+466	Agent'ları çentikte yanıtla
+467	Bir agent soru sorduğunda yanıt düğmeleri çentikte görünür.
+468	Hazır
+469	{0} ayarları düzenlenemedi: {1}
+470	Agent bir sonraki kez başladığında geçerli olur.
+471	Komutları ve dosya değişikliklerini incele, soruları yanıtla
+472	Komutları ve dosya değişikliklerini incele
+473	Komutları reddeder. Yalnızca Cursor komutları kendi başına çalıştırırken izin verir
+474	Komutları, dosya değişikliklerini ve web erişimini incele
+475	İzlenen öğe
+476	Görünen ad
+477	Şurada göster
+478	Değiştir…
+479	{0} çalışma oturumu başına izlenir. Başka ayar gerekmez.
+480	İşlem adı
+481	Komut satırı şunu içeriyor
+482	isteğe bağlı, örn. gemini-cli
+483	Algılama
+484	Activity Monitor'daki gibi işlem adı.
+485	Çentikteki her satır
+486	Her çalıştırma
+487	Her alt işlem (runner, worker)
+488	CPU şu değerin üzerindeyken çalışıyor say
+489	Boştayken görünüyorsa artırın, işleri kaçırıyorsa azaltın.
+490	Uygulama açık değil.
+491	Bulunamadı. Aracı açıp Yeniden denetle'ye tıklayın.
+492	Eşleşen: {0}
+493	Yeniden denetle
+494	Ekle
+495	Kaydet
+496	Tüm araçları göster
+497	Henüz build görülmedi. Simgeleri önceden ayarlamak için “Tümünü göster”i açın.
+498	Eklemeye gerek yok: çalışan her araç görünür. Simgesini değiştirmek için tıklayın.
+499	Değiştirildi
+500	Model bilgisayarda çalışıyor
+501	Yeniden çevrimiçi
+502	Wi‑Fi bağlı
+503	Bağlandı
+504	Ağ bağlantısı kesildi
+505	Wi‑Fi veya ağ kablosunu denetleyin
+506	VPN açık
+507	VPN kapalı
+508	İndirme tamamlandı
+509	Klasörde göster
+510	Disk neredeyse dolu
+511	%.1f GB boş
+512	Yer aç
+513	Bilgisayar çok sıcak
+514	Bilgisayar ısınıyor
+515	{0} yoğun çalışıyor
+516	Ağır uygulamaları kapatmayı düşünün
+517	Uygulamaları gör
+518	Aramada
+519	Sona erdi
+520	Mikrofon açık
+521	Kamera açık
+522	Mikrofon kapatılamadı
+523	{0} içindeki düğmeyi kullanın
+524	Yüklü model yok
+525	Yüklendi 
+526	Rafa ekle
+527	{0} denetimleri açık
+528	Artık müziği çentikten sekme içinde kontrol edebilirsiniz
+529	CI başarısız: {0}
+530	Günlüğü gör
+531	CI başarılı: {0}
+532	Çalışıyor · {0}
+533	Bekleniyor
+534	CI başarılı: 
+535	CI başarısız: 
+536	Açık
+537	{0}, {1} sınırına ulaştı
+538	{0}, {2} sınırının %{1} kadarını kullandı
+539	{0} saatine kadar bekleyin ({1} kaldı)
+540	{0} saatinde sıfırlanır
+541	{0} bağlandı
+542	{0} bağlantısı kesildi
+543	{0} pili az
+544	Şarj oluyor
+545	Şarjdan çıkarıldı
+546	Pil az
+547	%{0} kaldı
+548	Saat 
+549	Süre doldu
+550	Ana ekran
+551	Sabit simgeler daraltılmış çentikte daima görünür.
+552	Kilit ekranı
+553	Yalnızca görüntüleme: genişlemez, tıklanamaz.
+554	Ana ekranla aynı
+555	Ayrı
+556	Hatalı kilit açma girişimlerini bildir
+557	Parola veya parmak izi yanlış olduğunda çentik kırmızı renkte titrer. Kilit açılınca kaç denemenin başarısız olduğunu söyler.
+558	Sol
+559	Sağ
+560	Eklemek için +, düzenlemek için tıklayın, yer değiştirmek için sürükleyin. Her yanda en fazla {0}{1}
+561	Simge Kitaplığı'ndan ekle
+562	Animasyonları eşzamanla
+563	Tüm animasyonlu simgeleri aynı anda yeniden başlat
+564	Sabit simge
+565	Çentiğin sağında
+566	Çentiğin solunda
+567	8.000'den fazla Apple sembolü
+568	Birkaç karakter veya emoji
+569	Animasyonlu karakterler, GIF'ler
+570	En fazla 8 karakter yazın
+571	Hızlı seçimler
+572	Başka resmi buraya bırakın
+573	Resmi buraya bırakın
+574	Resim seç…
+575	Simge Kitaplığı'nı aç
+576	GIF veya spritesheet'iniz…
+577	{0}/sn.
+578	PNG, JPG, HEIC… Kare resimler en iyi görünür.
+579	Şekil
+580	Daire
+581	Kare
+582	Kenar
+583	Metin rengi
+584	Sembol rengi
+585	Simgeyi kaldır
+586	Varsayılan simgeyi kullan
+587	Arka plansız
+588	Diğer renk
+589	Önerilenler
+590	Tümü
+591	İletişim
+592	Hava durumu
+593	Haritalar
+594	Nesneler
+595	Fotoğraflar
+596	Oyunlar
+597	Ulaşım
+598	Erişilebilirlik
+599	Kişiler
+600	Spor
+601	Doğa
+602	Düzenleme
+603	Metin
+604	Medya
+605	Klavye
+606	Ticaret
+607	Zaman
+608	Sağlık
+609	Şekiller
+610	Oklar
+611	Sayılar ve harfler
+612	Matematik
+613	İngilizce arayın: star, cloud, cat, hammer…
+614	{0} · {1} sembol
+615	{0} sonuç
+616	Ara
+617	“{0}” ile eşleşen simge yok.
+618	Topluluk paketleri: yakında.
+619	Kullanımda
+620	Çentikteki sabit simge
+621	İzlenen uygulama için ayarla
+622	Build aracı için ayarla
+623	kadar 
+624	Etkinlikler
+625	Genel bakış
+626	İzleme
+627	Eşleştirme
+628	Simgeler ve kilit
+629	Simge Kitaplığı
+630	Davranış
+631	İzinler
+632	Çentik çalışanları gösterir, hiçbir şey çalışmıyorsa sessiz kalır.
+633	CI hataları
+634	Kılavuzu gör
+635	Çentikte yeniden sıralamak için sürükleyin.
+636	Daraltıldığında konum
+637	Renk
+638	{0} izni gerekiyor
+639	Varsayılan renge dön
+640	Uyarıyı dene
+641	Stil
+642	Özel renk
+643	Dışa aktar…
+644	İçe aktar…
+645	Ayarları yedekle
+646	Tüm özelleştirmeleriniz tek bir .json dosyasında.
+647	Bu ekranda çentik var: çentik kamerayı sarar.
+648	Bu ekranda çentik yok: kayan bir Dynamic Island olarak görünür.
+649	Görev tamamlandı
+650	Ses düzeyi
+651	Ses paketi
+652	Yedekle ve paylaş
+653	Paketi dışa aktar…
+654	Paketi içe aktar…
+655	Sesler ayrı tutulur, görünümü değiştirmek onları silmez. Başka bilgisayara taşımak için paketi dışa aktarın.
+656	NotchTasks Sesleri.notchsounds
+657	Ses paketi dışa aktarılamadı
+658	Ses paketi dosyası seçin (.notchsounds)
+659	Ses paketi içe aktarılamadı
+660	Nasıl açılır
+661	Gecikme {0} ms
+662	Dokunsal geri bildirim
+663	Genişletildiğinde CPU ve RAM
+664	En az {0} sn. çalıştıysa bitince bildir
+665	Sınırları %{0} düzeyinde uyar
+666	Diğer
+667	Menü çubuğu simgesi
+668	Yalnızca kullandığınız özelliklere izin verin. Bir özelliği Modüller sayfasında tamamen kapatabilirsiniz.
+669	Yenile
+670	Bazı izinler yalnızca ilgili uygulama açıkken denetlenebilir.
+671	İzni kaldır
+672	Sıfırla
+673	Ayarlar'daki eski NotchTasks kaydını silip izni yeniden isteyin
+674	Ayarları aç
+675	Uygulamayı aç
+676	Hayır
+677	Dosyanızı seçin…
+678	Önizle
+679	Eşleştirme kodu oluşturulamadı: {0}
+680	Telefon
+681	Telefona gönderilemedi: {0}
+682	Telefonla bağlantı kesildi, yeniden deneniyor…
+683	Agent'ları yanıtlayın ve çalışan işleri telefonunuzda görün. Veriler aygıtlarınız arasında şifrelenir.
+684	Telefonda NotchTasks → Bilgisayarla eşleştir bölümünü açıp bu kodu tarayın.
+685	Bu koda sahip herkes agent'larınızın sorularını okuyabilir: paylaşmayın.
+686	Kodu kopyala

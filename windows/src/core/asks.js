@@ -105,11 +105,11 @@ const READ_TOOLS = ['Read', 'read_file', 'view_file'];
 const WEB_TOOLS = ['WebFetch', 'WebSearch', 'web_fetch', 'FetchUrl', 'webfetch'];
 
 function actionLabel(tool) {
-  if (RUN_TOOLS.includes(tool)) return L('Chạy lệnh');
-  if (EDIT_TOOLS.includes(tool)) return L('Sửa file');
-  if (READ_TOOLS.includes(tool)) return L('Đọc file');
-  if (WEB_TOOLS.includes(tool)) return L('Truy cập web');
-  if (tool.startsWith('mcp__')) return L('Dùng công cụ ') + (tool.split('_').filter(Boolean).pop() ?? '');
+  if (RUN_TOOLS.includes(tool)) return L('Run command');
+  if (EDIT_TOOLS.includes(tool)) return L('Edit file');
+  if (READ_TOOLS.includes(tool)) return L('Read file');
+  if (WEB_TOOLS.includes(tool)) return L('Web access');
+  if (tool.startsWith('mcp__')) return L('Use tool ') + (tool.split('_').filter(Boolean).pop() ?? '');
   return tool;
 }
 
@@ -198,7 +198,7 @@ function output(reply, input, kind) {
     }
     case 'cursor':
       if (r === 'allow' || r === 'answers') out = { permission: 'allow' };
-      else if (r === 'deny') out = { permission: 'deny', user_message: L('Đã từ chối trên notch'), agent_message: DENIED };
+      else if (r === 'deny') out = { permission: 'deny', user_message: L('Denied on the notch'), agent_message: DENIED };
       else out = { permission: 'ask' };
       break;
     case 'opencode':
@@ -589,10 +589,10 @@ function geminiSignedIn(home = os.homedir(), env = process.env) {
 /** The step still left before the pill can answer this agent: what is missing, the button, and the command for it. */
 function setupStep(kind, { home = os.homedir(), env = process.env } = {}) {
   if (kind === 'codex' && isInstalled('codex', { home }) && !codexTrusted(home)) {
-    return { missing: L('Chưa Trust trong Codex'), button: L('Mở Codex'), command: 'codex' };
+    return { missing: L('Not trusted in Codex yet'), button: L('Open Codex'), command: 'codex' };
   }
   if (kind === 'gemini' && present('gemini', { home }) && !geminiSignedIn(home, env)) {
-    return { missing: L('Chưa đăng nhập'), button: L('Đăng nhập'), command: 'gemini' };
+    return { missing: L('Not signed in'), button: L('Sign in'), command: 'gemini' };
   }
   return null;
 }

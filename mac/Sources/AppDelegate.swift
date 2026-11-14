@@ -60,8 +60,8 @@ final class ClosureMenuItem: NSMenuItem {
         model.showSettings = { [weak self] in self?.showSettings() }
         updater.pendingChanged = { [weak self] pending in self?.model.updatePending = pending }
         updater.start { [weak self] update in
-            self?.model.announce(Toast(symbol: "arrow.down.circle.fill", tint: .blue, title: L("Có bản mới {0}", update.version),
-                                       event: nil, action: L("Bảng điều khiển"), pane: "overview"), notify: false)
+            self?.model.announce(Toast(symbol: "arrow.down.circle.fill", tint: .blue, title: L("New version {0}", update.version),
+                                       event: nil, action: L("Control Panel"), pane: "overview"), notify: false)
         }
         layout()
         panel.orderFrontRegardless()
@@ -126,26 +126,26 @@ final class ClosureMenuItem: NSMenuItem {
                     let now = Date(), soon = (n.object as? String) == "event"
                     self.model.debugEvents = true
                     self.model.events = [
-                        CalEvent(id: "d0", title: L("Sinh nhật Lan"), start: Calendar.current.startOfDay(for: now), end: Calendar.current.startOfDay(for: now).addingTimeInterval(86400),
-                                 color: .pink, link: nil, allDay: true, calendar: L("Gia đình")),
-                        CalEvent(id: "d5", title: L("Nghỉ phép"), start: Calendar.current.startOfDay(for: now), end: Calendar.current.startOfDay(for: now).addingTimeInterval(3 * 86400),
-                                 color: .teal, link: nil, allDay: true, calendar: L("Công việc")),
-                        CalEvent(id: "d1", title: L("Viết báo cáo"), start: now.addingTimeInterval(-20 * 60), end: now.addingTimeInterval(25 * 60), color: .orange, link: nil),
-                        CalEvent(id: "d2\(soon)", title: L("Họp sprint"), start: now.addingTimeInterval(soon ? 4 * 60 + 5 : 50 * 60), end: now.addingTimeInterval(soon ? 34 * 60 : 80 * 60),
+                        CalEvent(id: "d0", title: L("Lan's birthday"), start: Calendar.current.startOfDay(for: now), end: Calendar.current.startOfDay(for: now).addingTimeInterval(86400),
+                                 color: .pink, link: nil, allDay: true, calendar: L("Family")),
+                        CalEvent(id: "d5", title: L("Time off"), start: Calendar.current.startOfDay(for: now), end: Calendar.current.startOfDay(for: now).addingTimeInterval(3 * 86400),
+                                 color: .teal, link: nil, allDay: true, calendar: L("Work")),
+                        CalEvent(id: "d1", title: L("Write report"), start: now.addingTimeInterval(-20 * 60), end: now.addingTimeInterval(25 * 60), color: .orange, link: nil),
+                        CalEvent(id: "d2\(soon)", title: L("Sprint meeting"), start: now.addingTimeInterval(soon ? 4 * 60 + 5 : 50 * 60), end: now.addingTimeInterval(soon ? 34 * 60 : 80 * 60),
                                  color: .blue, link: URL(string: "https://meet.google.com/")),
-                        CalEvent(id: "d3", title: L("Ăn trưa với team"), start: now.addingTimeInterval(95 * 60), end: now.addingTimeInterval(155 * 60), color: .green, link: nil),
-                        CalEvent(id: "d4", title: L("Gọi khách hàng"), start: now.addingTimeInterval(180 * 60), end: now.addingTimeInterval(200 * 60), color: .purple,
+                        CalEvent(id: "d3", title: L("Team lunch"), start: now.addingTimeInterval(95 * 60), end: now.addingTimeInterval(155 * 60), color: .green, link: nil),
+                        CalEvent(id: "d4", title: L("Customer call"), start: now.addingTimeInterval(180 * 60), end: now.addingTimeInterval(200 * 60), color: .purple,
                                  link: URL(string: "https://zoom.us/j/1")),
                     ]
                 case "plug", "unplug":
                     let on = (n.object as? String) == "plug", pct = self.model.battery?.percent ?? 64
-                    self.model.announce(Toast(symbol: on ? "bolt.fill" : "powerplug.portrait", tint: on ? .green : .gray, title: on ? L("Đang sạc") : L("Đã rút sạc"),
+                    self.model.announce(Toast(symbol: on ? "bolt.fill" : "powerplug.portrait", tint: on ? .green : .gray, title: on ? L("Charging") : L("Unplugged"),
                                               subtitle: "\(pct)%", event: on ? .charging : .unplugged, compact: true, art: .charge(percent: pct, plugged: on)), notify: false)
                 case "airpods-on", "airpods-off", "mouse-on":
                     let k = n.object as? String ?? "", on = !k.hasSuffix("off"), mouse = k.hasPrefix("mouse")
                     let name = mouse ? "X3 Mouse" : "AirPods Pro"
-                    self.model.announce(Toast(symbol: mouse ? "computermouse" : "airpodspro", tint: on ? .blue : .gray, title: name + (on ? L(" đã kết nối") : L(" đã ngắt kết nối")),
-                                              subtitle: on ? (mouse ? L("Sẵn sàng") : L("L 100% · R 98% · Hộp 62%")) : "", event: on ? .deviceOn : .deviceOff,
+                    self.model.announce(Toast(symbol: mouse ? "computermouse" : "airpodspro", tint: on ? .blue : .gray, title: name + (on ? L(" connected") : L(" disconnected")),
+                                              subtitle: on ? (mouse ? L("Ready") : L("L 100% · R 98% · Case 62%")) : "", event: on ? .deviceOn : .deviceOff,
                                               art: .device(art: mouse ? nil : "banner:Banner-PID-8212", symbol: mouse ? "computermouse" : "airpodspro", connected: on)), notify: false)
                 case "guide":
                     if let b = BrowserJS.browser("com.google.Chrome") { BrowserGuide.show(b) {} }
@@ -281,8 +281,8 @@ final class ClosureMenuItem: NSMenuItem {
         model.failedUnlocks = []
         guard wasLocked, let last = fails.last else { return }
         model.announce(Toast(symbol: "lock.trianglebadge.exclamationmark.fill", tint: .orange,
-                             title: fails.count == 1 ? L("1 lần mở khoá sai") : L("{0} lần mở khoá sai", fails.count),
-                             subtitle: L("Lần cuối lúc {0} khi máy đang khoá", last.formatted(date: .omitted, time: .shortened)), event: nil))
+                             title: fails.count == 1 ? L("1 failed unlock") : L("{0} failed unlocks", fails.count),
+                             subtitle: L("Last at {0} while locked", last.formatted(date: .omitted, time: .shortened)), event: nil))
     }
 
     /// A `.notchsounds` file opened from Finder: its sounds replace the current ones at once.
@@ -290,10 +290,10 @@ final class ClosureMenuItem: NSMenuItem {
         for url in urls where url.pathExtension.lowercased() == "notchsounds" {
             let name = url.deletingPathExtension().lastPathComponent
             if let why = settings.importSounds(url) {
-                model.announce(Toast(symbol: "speaker.slash.fill", tint: .red, title: L("Không nhập được gói âm thanh"), subtitle: why, event: nil), notify: false)
+                model.announce(Toast(symbol: "speaker.slash.fill", tint: .red, title: L("Couldn't import the sound pack"), subtitle: why, event: nil), notify: false)
             } else {
                 // its own "done" sound announces it: you hear the new pack straight away
-                model.announce(Toast(symbol: "speaker.wave.2.fill", tint: .green, title: L("Đã dùng gói âm thanh"), subtitle: name, event: .taskDone), notify: false)
+                model.announce(Toast(symbol: "speaker.wave.2.fill", tint: .green, title: L("Sound pack applied"), subtitle: name, event: .taskDone), notify: false)
             }
         }
     }
@@ -369,15 +369,15 @@ final class ClosureMenuItem: NSMenuItem {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         item.button?.image = NSImage(systemSymbolName: "rectangle.topthird.inset.filled", accessibilityDescription: "NotchTasks")
         let menu = NSMenu()
-        menu.addItem(ClosureMenuItem(L("Bảng điều khiển…"), "slider.horizontal.3") { [weak self] in self?.showSettings() })
-        menu.addItem(ClosureMenuItem(L("Hướng dẫn…"), "book") { [weak self] in self?.showOnboarding() })
+        menu.addItem(ClosureMenuItem(L("Control Panel…"), "slider.horizontal.3") { [weak self] in self?.showSettings() })
+        menu.addItem(ClosureMenuItem(L("Guide…"), "book") { [weak self] in self?.showOnboarding() })
         menu.addItem(.separator())
         for m in [5, 15, 25, 45] {
-            menu.addItem(ClosureMenuItem(L("Hẹn giờ {0} phút", m), "timer") { [weak self] in self?.model.startTimer(minutes: m) })
+            menu.addItem(ClosureMenuItem(L("{0}-minute timer", m), "timer") { [weak self] in self?.model.startTimer(minutes: m) })
         }
-        menu.addItem(ClosureMenuItem(L("Dừng hẹn giờ"), "stop.circle") { [weak self] in self?.model.stopTimer() })
+        menu.addItem(ClosureMenuItem(L("Stop timer"), "stop.circle") { [weak self] in self?.model.stopTimer() })
         menu.addItem(.separator())
-        menu.addItem(ClosureMenuItem(L("Thoát NotchTasks"), "power") { NSApp.terminate(nil) })
+        menu.addItem(ClosureMenuItem(L("Quit NotchTasks"), "power") { NSApp.terminate(nil) })
         item.menu = menu
         statusItem = item
     }

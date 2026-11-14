@@ -1,24 +1,24 @@
-1012	Mettre à jour
-1013	Version
-1014	Téléchargement… {0}%
-1015	Vérification…
-1016	Télécharger et installer
-1017	Aucune mise à jour disponible. Dernière vérification : {0}
-1018	Vérification…
-1019	Vérifier maintenant
-1020	Aucune note.
-1021	Les informations de mise à jour ne sont pas valides.
-1022	Impossible de télécharger la mise à jour.
-1023	Le fichier téléchargé ne correspond pas à sa somme de contrôle.
-1024	L’image disque ne contient pas NotchTasks.app.
-1025	La signature de la mise à jour ne correspond pas à cette app.
-1026	La mise à jour n’est pas plus récente que l’app en cours.
-1027	Impossible d’écrire dans {0}. Glissez l’app de l’image disque vers Applications.
-1028	Une autre mise à jour n’est pas terminée. Réessayez plus tard.
-1029	Nouvelle version {0}
-1030	Impossible d’ouvrir l’image disque de mise à jour.
-1055	Nécessaires
-1056	Accordées
-1057	Non utilisées
-1058	Assistant du ventilateur
-1059	Puce
+996	Mettre à jour
+997	Version
+998	Téléchargement… {0}%
+999	Vérification…
+1000	Télécharger et installer
+1001	Aucune mise à jour disponible. Dernière vérification : {0}
+1002	Vérification…
+1003	Vérifier maintenant
+1004	Aucune note.
+1005	Les informations de mise à jour ne sont pas valides.
+1006	Impossible de télécharger la mise à jour.
+1007	Le fichier téléchargé ne correspond pas à sa somme de contrôle.
+1008	L’image disque ne contient pas NotchTasks.app.
+1009	La signature de la mise à jour ne correspond pas à cette app.
+1010	La mise à jour n’est pas plus récente que l’app en cours.
+1011	Impossible d’écrire dans {0}. Glissez l’app de l’image disque vers Applications.
+1012	Une autre mise à jour n’est pas terminée. Réessayez plus tard.
+1013	Nouvelle version {0}
+1014	Impossible d’ouvrir l’image disque de mise à jour.
+1039	Nécessaires
+1040	Accordées
+1041	Non utilisées
+1042	Assistant du ventilateur
+1043	Puce

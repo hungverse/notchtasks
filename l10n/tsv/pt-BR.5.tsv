@@ -1,22 +1,22 @@
-1031	Ventoinhas
-1032	Ventoinhas e temperatura
-1033	A temperatura e as velocidades das ventoinhas são lidas deste Mac. O controle só liga depois que você aceitar o aviso.
-1034	O controle incorreto das ventoinhas pode danificar o hardware.
-1035	Ativar assistente de ventoinhas
-1036	O assistente limita as velocidades aos valores da máquina e volta ao automático ao perder a conexão ou se o Mac ficar muito quente.
-1037	Sensores
-1038	Não foi possível ler os sensores de temperatura.
-1039	Permita o assistente em Itens de Início nos Ajustes do Sistema.
-1040	Este Mac não informa ventoinhas pelo SMC; a leitura de temperatura continua funcionando.
-1041	Ventoinha {0}
-1042	Forçada
-1043	Modo
-1044	Velocidade fixa
-1045	Por sensor
-1046	Início {0}°C
-1047	Máximo {0}°C
-1048	As ventoinhas voltaram ao automático porque o Mac está muito quente
-1049	Não foi possível registrar o assistente de ventoinhas: {0}
-1050	Não foi possível conectar ao assistente de ventoinhas: {0}
-1051	Metade
-1052	Máximo
+1015	Ventoinhas
+1016	Ventoinhas e temperatura
+1017	A temperatura e as velocidades das ventoinhas são lidas deste Mac. O controle só liga depois que você aceitar o aviso.
+1018	O controle incorreto das ventoinhas pode danificar o hardware.
+1019	Ativar assistente de ventoinhas
+1020	O assistente limita as velocidades aos valores da máquina e volta ao automático ao perder a conexão ou se o Mac ficar muito quente.
+1021	Sensores
+1022	Não foi possível ler os sensores de temperatura.
+1023	Permita o assistente em Itens de Início nos Ajustes do Sistema.
+1024	Este Mac não informa ventoinhas pelo SMC; a leitura de temperatura continua funcionando.
+1025	Ventoinha {0}
+1026	Forçada
+1027	Modo
+1028	Velocidade fixa
+1029	Por sensor
+1030	Início {0}°C
+1031	Máximo {0}°C
+1032	As ventoinhas voltaram ao automático porque o Mac está muito quente
+1033	Não foi possível registrar o assistente de ventoinhas: {0}
+1034	Não foi possível conectar ao assistente de ventoinhas: {0}
+1035	Metade
+1036	Máximo

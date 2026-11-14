@@ -24,7 +24,7 @@ struct WatchListView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text(L("Những gì notch theo dõi. Chỉ cái đang làm việc mới hiện lên notch."))
+            Text(L("What the notch watches. Only what's working shows on the notch."))
                 .font(.callout).foregroundStyle(.secondary)
             List {
                 ForEach($model.items) { $item in
@@ -35,10 +35,10 @@ struct WatchListView: View {
                             Text((item.inBuild ? "Build & CI · " : "AI agent · ") + item.summary).font(.caption).foregroundStyle(.secondary).lineLimit(1)
                         }
                         Spacer()
-                        Button(L("Sửa")) { isNew = false; editing = item }.controlSize(.small)
-                        Toggle(L("Bật"), isOn: $item.enabled).labelsHidden().toggleStyle(.switch).controlSize(.small)
+                        Button(L("Edit")) { isNew = false; editing = item }.controlSize(.small)
+                        Toggle(L("On"), isOn: $item.enabled).labelsHidden().toggleStyle(.switch).controlSize(.small)
                         Button { model.items.removeAll { $0.id == item.id } } label: { Image(systemName: "trash") }
-                            .buttonStyle(.borderless).help(L("Xoá"))
+                            .buttonStyle(.borderless).help(L("Remove"))
                     }
                     .frame(height: 44)
                 }
@@ -54,29 +54,29 @@ struct WatchListView: View {
                                 Section(group.title) {
                                     // installed tools first, each marked; ones already in the list can't be added twice
                                     ForEach(group.items.sorted { $0.isInstalled && !$1.isInstalled }) { p in
-                                        Button((p.isInstalled ? "✓ " : "") + p.name + (added(p) ? L(" (đã thêm)") : "")) { model.add(p) }
+                                        Button((p.isInstalled ? "✓ " : "") + p.name + (added(p) ? L(" (added)") : "")) { model.add(p) }
                                             .disabled(added(p))
                                     }
                                 }
                             }
                             Divider()
-                            Menu(L("Ứng dụng đang mở")) {
+                            Menu(L("Open apps")) {
                                 ForEach(runningApps, id: \.processIdentifier) { app in
                                     Button(app.localizedName ?? app.bundleIdentifier!) {
                                         model.add(WatchItem(name: app.localizedName ?? "App", kind: .app, bundleID: app.bundleIdentifier))
                                     }
                                 }
                             }
-                            Button(L("Chọn ứng dụng khác…"), action: pickApp)
-                            Button(L("Tự nhập tiến trình…")) {
+                            Button(L("Choose another app…"), action: pickApp)
+                            Button(L("Enter a process…")) {
                                 isNew = true
                                 editing = WatchItem(name: "", kind: .process)
                             }
                     } label: {
-                        Label(L("Thêm mục theo dõi"), systemImage: "plus.circle.fill")
+                        Label(L("Add item to watch"), systemImage: "plus.circle.fill")
                     }
                     .fixedSize()
-                    Text(L("Chọn agent, ứng dụng đang mở, hoặc nhập tên tiến trình."))
+                    Text(L("Choose an agent, an open app, or type a process name."))
                         .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                 }
                 .padding(6)
@@ -86,8 +86,8 @@ struct WatchListView: View {
                     HStack(alignment: .top, spacing: 10) {
                         Image(systemName: "hand.raised.fill").foregroundStyle(.orange).frame(width: 26).padding(.top, 1)
                         VStack(alignment: .leading, spacing: 3) {
-                            Text(L("Trả lời agent trên notch")).font(.body.weight(.medium))
-                            Text(L("Khi agent hỏi, notch hiện sẵn nút trả lời."))
+                            Text(L("Answer agents on the notch")).font(.body.weight(.medium))
+                            Text(L("When an agent asks, the notch shows answer buttons."))
                                 .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                         }
                     }
@@ -109,11 +109,11 @@ struct WatchListView: View {
                                 Text(step.missing).font(.caption).foregroundStyle(.orange)
                                 Button(step.button) { AgentAsks.openInTerminal(step.command) }.controlSize(.small)
                             } else if asksOn[k] == true {
-                                Label(L("Sẵn sàng"), systemImage: "checkmark.circle.fill").font(.caption).foregroundStyle(.green)
+                                Label(L("Ready"), systemImage: "checkmark.circle.fill").font(.caption).foregroundStyle(.green)
                             }
                             Toggle("", isOn: Binding(get: { asksOn[k] ?? false }, set: { on in
                                 do { try AgentAsks.setInstalled(on, k); asksError = nil }
-                                catch { asksError = L("Không sửa được cấu hình {0}: {1}", k.name, error.localizedDescription) }
+                                catch { asksError = L("Couldn't edit {0}'s settings: {1}", k.name, error.localizedDescription) }
                                 asksOn[k] = AgentAsks.installed(k)
                                 // just switched on and one step is left: go straight to it
                                 if on, asksOn[k] == true, let step = k.setupStep { AgentAsks.openInTerminal(step.command) }
@@ -123,7 +123,7 @@ struct WatchListView: View {
                         .frame(height: 44)
                     }
                     Divider()
-                    Text(L("Có hiệu lực từ lần mở agent tiếp theo."))
+                    Text(L("Takes effect the next time the agent starts."))
                         .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                         .padding(.top, 8)
                     if let asksError { Text(asksError).font(.caption).foregroundStyle(.red).padding(.top, 4) }
@@ -149,10 +149,10 @@ struct WatchListView: View {
     /// What each agent can do from the notch, and the one step some need.
     func note(_ k: AgentKind) -> String {
         switch k {
-        case .claude, .gemini, .antigravity: return L("Duyệt lệnh, sửa file, trả lời câu hỏi")
-        case .codex: return L("Duyệt lệnh, sửa file")
-        case .cursor: return L("Từ chối lệnh. Cho phép chỉ khi Cursor đang tự chạy lệnh")
-        case .opencode: return L("Duyệt lệnh, sửa file, truy cập web")
+        case .claude, .gemini, .antigravity: return L("Review commands, file edits, answer questions")
+        case .codex: return L("Review commands, file edits")
+        case .cursor: return L("Denies commands. Allows only while Cursor runs commands on its own")
+        case .opencode: return L("Review commands, file edits, web access")
         }
     }
 
@@ -187,7 +187,7 @@ struct ItemEditor: View {
             HStack(spacing: 12) {
                 ItemIcon(item: item, size: 36)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(isNew ? L("Thêm mục theo dõi") : (item.name.isEmpty ? L("Mục theo dõi") : item.name)).font(.headline)
+                    Text(isNew ? L("Add item to watch") : (item.name.isEmpty ? L("Watched item") : item.name)).font(.headline)
                     Text(item.inBuild ? "Build & CI" : "AI agent").font(.caption).foregroundStyle(.secondary)
                 }
                 Spacer()
@@ -195,9 +195,9 @@ struct ItemEditor: View {
             .padding(.horizontal, 20).padding(.top, 18).padding(.bottom, 4)
             Form {
                 Section {
-                    TextField(L("Tên hiển thị"), text: $item.name, prompt: Text("vd: My Agent"))
+                    TextField(L("Display name"), text: $item.name, prompt: Text("vd: My Agent"))
                     if configurable {
-                        Picker(L("Hiện trong"), selection: Binding(get: { item.build == true }, set: { item.build = $0 ? true : nil })) {
+                        Picker(L("Show in"), selection: Binding(get: { item.build == true }, set: { item.build = $0 ? true : nil })) {
                             Text("AI agent").tag(false)
                             Text("Build & CI").tag(true)
                         }
@@ -205,41 +205,41 @@ struct ItemEditor: View {
                     }
                     // one row: the icon window (the same one fixed icons use) opens on top
                     HStack(spacing: 12) {
-                        Text(L("Biểu tượng"))
+                        Text(L("Symbol"))
                         Spacer()
-                        Button { editIcon() } label: { ItemIcon(item: item, size: 28) }.buttonStyle(.plain).help(L("Đổi biểu tượng"))
-                        Button(L("Đổi…"), action: editIcon)
+                        Button { editIcon() } label: { ItemIcon(item: item, size: 28) }.buttonStyle(.plain).help(L("Change icon"))
+                        Button(L("Change…"), action: editIcon)
                     }
                     .sheet(isPresented: $editingIcon) {
                         BadgeEditor(badge: Binding(get: { item.icon ?? Badge() }, set: { item.icon = $0 }),
-                                    title: L("Biểu tượng"), subtitle: item.name.isEmpty ? nil : item.name,
+                                    title: L("Symbol"), subtitle: item.name.isEmpty ? nil : item.name,
                                     reset: { item.icon = nil; editingIcon = false }, done: { editingIcon = false })
                     }
                 } footer: {
                     if item.kind == .claude || item.kind == .codex {
-                        Text(L("{0} được theo dõi theo từng phiên làm việc, không cần chỉnh gì thêm.", item.kind == .claude ? "Claude" : "Codex"))
+                        Text(L("{0} is tracked per work session, nothing else to set.", item.kind == .claude ? "Claude" : "Codex"))
                     }
                 }
                 if item.kind == .process {
                     Section {
                         HStack {
-                            TextField(L("Tên tiến trình"), text: $item.process, prompt: Text("vd: node"))
-                            Menu(L("Chọn")) {
+                            TextField(L("Process name"), text: $item.process, prompt: Text("vd: node"))
+                            Menu(L("Choose")) {
                                 ForEach(runningNames, id: \.self) { n in Button(n) { item.process = n; refresh() } }
                             }
                             .fixedSize()
                         }
-                        TextField(L("Dòng lệnh có chứa"), text: Binding(get: { item.args ?? "" }, set: { item.args = $0.isEmpty ? nil : $0 }),
-                                  prompt: Text(L("tuỳ chọn, vd: gemini-cli")))
+                        TextField(L("Command line contains"), text: Binding(get: { item.args ?? "" }, set: { item.args = $0.isEmpty ? nil : $0 }),
+                                  prompt: Text(L("optional, e.g. gemini-cli")))
                     } header: {
-                        Text(L("Nhận diện"))
+                        Text(L("Detection"))
                     } footer: {
-                        Text(L("Tên tiến trình, như trong Activity Monitor."))
+                        Text(L("Process name, as in Activity Monitor."))
                     }
-                    Section(L("Mỗi dòng trên notch là")) {
+                    Section(L("Each line on the notch is")) {
                         Picker("", selection: $item.childTasks) {
-                            Text(L("Mỗi lần chạy")).tag(false)
-                            Text(L("Mỗi lệnh con (runner, worker)")).tag(true)
+                            Text(L("Each run")).tag(false)
+                            Text(L("Each subprocess (runner, worker)")).tag(true)
                         }
                         .pickerStyle(.radioGroup).labelsHidden()
                     }
@@ -251,13 +251,13 @@ struct ItemEditor: View {
                             Text("\(item.cpuThreshold.formatted(.number.precision(.fractionLength(0...1))))%").monospacedDigit().frame(width: 44, alignment: .trailing)
                         }
                     } header: {
-                        Text(L("Đang làm việc khi CPU trên"))
+                        Text(L("Working when CPU is above"))
                     } footer: {
-                        Text(L("Tăng nếu hiện cả lúc rảnh, giảm nếu bỏ sót."))
+                        Text(L("Raise if it shows while idle, lower if it misses work."))
                     }
                     Section {
                         if matches.isEmpty {
-                            Text(item.kind == .app ? L("Ứng dụng chưa mở.") : L("Chưa thấy. Mở công cụ rồi bấm Kiểm tra lại."))
+                            Text(item.kind == .app ? L("App isn't open.") : L("Not found. Open the tool, then click Check again."))
                                 .foregroundStyle(.secondary)
                         }
                         ForEach(matches, id: \.pid) { m in
@@ -268,9 +268,9 @@ struct ItemEditor: View {
                         }
                     } header: {
                         HStack {
-                            Text(L("Đang khớp: {0}", matches.count))
+                            Text(L("Matching: {0}", matches.count))
                             Spacer()
-                            Button(L("Kiểm tra lại"), action: refresh).controlSize(.small)
+                            Button(L("Check again"), action: refresh).controlSize(.small)
                         }
                     }
                 }
@@ -278,8 +278,8 @@ struct ItemEditor: View {
             .formStyle(.grouped)
             HStack {
                 Spacer()
-                Button(L("Huỷ"), action: cancel).keyboardShortcut(.cancelAction)
-                Button(isNew ? L("Thêm") : L("Lưu")) {
+                Button(L("Cancel"), action: cancel).keyboardShortcut(.cancelAction)
+                Button(isNew ? L("Add") : L("Save")) {
                     item.name = item.name.trimmingCharacters(in: .whitespaces)
                     item.process = item.process.trimmingCharacters(in: .whitespaces)
                     save(item)
@@ -342,10 +342,10 @@ struct BuildToolsBox: View {
                 HStack {
                     Text("Build & CI").font(.headline)
                     Spacer()
-                    Toggle(L("Hiện tất cả công cụ"), isOn: $showAll).toggleStyle(.checkbox)
+                    Toggle(L("Show all tools"), isOn: $showAll).toggleStyle(.checkbox)
                 }
-                Text(settings.seenTools.isEmpty && !showAll ? L("Chưa thấy lần build nào. Bật \"Hiện tất cả\" để đặt biểu tượng trước.")
-                                                           : L("Không cần thêm: công cụ nào chạy là hiện. Bấm một công cụ để đổi biểu tượng."))
+                Text(settings.seenTools.isEmpty && !showAll ? L("No builds seen yet. Turn on \"Show all\" to set icons ahead of time.")
+                                                           : L("Nothing to add: any running tool shows up. Click a tool to change its icon."))
                     .font(.caption).foregroundStyle(.secondary)
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 128), spacing: 8)], spacing: 8) {
                     ForEach(tools, id: \.self) { t in
@@ -355,7 +355,7 @@ struct BuildToolsBox: View {
                                         tint: .accentColor, size: 20)
                                 Text(t).font(.callout).lineLimit(1)
                                 Spacer(minLength: 0)
-                                if settings.toolIcons[t] != nil { Circle().fill(Color.accentColor).frame(width: 5, height: 5).help(L("Đã đổi")) }
+                                if settings.toolIcons[t] != nil { Circle().fill(Color.accentColor).frame(width: 5, height: 5).help(L("Changed")) }
                             }
                             .padding(.horizontal, 8).padding(.vertical, 6)
                             .background(RoundedRectangle(cornerRadius: 8).fill(.quaternary.opacity(0.5)))
@@ -369,7 +369,7 @@ struct BuildToolsBox: View {
         }
         .sheet(item: $editing) { t in
             BadgeEditor(badge: Binding(get: { settings.toolIcons[t.id] ?? Badge() }, set: { settings.toolIcons[t.id] = $0 }),
-                        title: L("Biểu tượng"), subtitle: t.id,
+                        title: L("Symbol"), subtitle: t.id,
                         reset: { settings.toolIcons[t.id] = nil; editing = nil }, done: { editing = nil })
         }
     }

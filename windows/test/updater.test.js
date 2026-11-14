@@ -47,7 +47,7 @@ test('release notes fall back to English, then to the empty note', () => {
     minOS: '10.0', notes: { en: 'English' } });
   assert.equal(u.noteFor(m, 'en'), 'English');
   assert.equal(u.noteFor(m, 'fr'), 'English');
-  assert.equal(u.noteFor({ ...m, notes: {} }, 'fr'), L('Không có ghi chú.'));
+  assert.equal(u.noteFor({ ...m, notes: {} }, 'fr'), L('No notes.'));
 });
 
 // A local feed and installer: the feed points at the installer, so the whole path runs over real HTTP.

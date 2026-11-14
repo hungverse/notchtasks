@@ -26,7 +26,7 @@ final class AntigravityScanner {
             guard e.active || held else { continue }
             let since = run?.since ?? now
             live[id] = (since, e.active ? now : run?.seen ?? now)
-            out.append(Job(id: id, title: e.title, detail: L("Đang chạy · {0}", ago(now.timeIntervalSince(since))), working: true))
+            out.append(Job(id: id, title: e.title, detail: L("Running · {0}", ago(now.timeIntervalSince(since))), working: true))
         }
         runs = live
         return out

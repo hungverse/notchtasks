@@ -28,7 +28,7 @@ struct TimerCard: View {
                     VStack(alignment: .leading, spacing: 1) {
                         Text(mmss(left)).font(.system(size: 20, weight: .semibold, design: .rounded)).monospacedDigit().foregroundStyle(.white)
                             .contentTransition(.numericText(countsDown: true))
-                        Text(L("Hẹn giờ {0} phút", Int(model.timerTotal / 60))).font(.system(size: 11)).foregroundStyle(.gray)
+                        Text(L("{0}-minute timer", Int(model.timerTotal / 60))).font(.system(size: 11)).foregroundStyle(.gray)
                     }
                     Spacer()
                     pill("+1′") { model.extendTimer(minutes: 1) }
@@ -37,7 +37,7 @@ struct TimerCard: View {
                         Image(systemName: "stop.fill").font(.system(size: 11, weight: .bold)).foregroundStyle(.white).frame(width: 26, height: 26)
                             .background(Circle().fill(.red.opacity(0.7)))
                     }
-                    .buttonStyle(.plain).help(L("Dừng hẹn giờ"))
+                    .buttonStyle(.plain).help(L("Stop timer"))
                 }
             }
             .padding(10)
@@ -88,7 +88,7 @@ struct NotchFanPanel: View {
                 }
                 if !pane { FanEnableControl(control: control, compact: true) }
             }
-            if !pane && !control.status.isEmpty && control.status != L("Quạt đã về tự động vì máy quá nóng") {
+            if !pane && !control.status.isEmpty && control.status != L("Fans returned to automatic because the Mac is too hot") {
                 Text(control.status).foregroundStyle(.orange).padding(.top, 4)
             }
         }
@@ -103,12 +103,12 @@ struct NotchFanPanel: View {
         let selected = FanNotch.preset(fans: model.fans, choices: control.choices)
         return HStack(spacing: 5) {
             Spacer(minLength: 0)
-            preset(.automatic, L("Tự động"), selected: selected) { setAll { _ in .automatic } }
+            preset(.automatic, L("Automatic"), selected: selected) { setAll { _ in .automatic } }
             Rectangle().fill(.white.opacity(0.2)).frame(width: 1, height: 9)
-            preset(.half, L("Một nửa"), selected: selected) { setAll { .fixed(FanNotch.half($0)) } }
+            preset(.half, L("Half"), selected: selected) { setAll { .fixed(FanNotch.half($0)) } }
                 .disabled(control.hot)
             Rectangle().fill(.white.opacity(0.2)).frame(width: 1, height: 9)
-            preset(.maximum, L("Tối đa"), selected: selected) { setAll { .fixed($0.maximum) } }
+            preset(.maximum, L("Max"), selected: selected) { setAll { .fixed($0.maximum) } }
                 .disabled(control.hot)
         }
         .frame(height: 18)
@@ -137,7 +137,7 @@ struct NotchFanPanel: View {
                 Text(name).font(.system(size: 11, weight: .semibold)).lineLimit(1)
                 if case .sensor = choice {
                     Image(systemName: "waveform.path").font(.system(size: 8)).foregroundStyle(.secondary)
-                        .help(L("Theo cảm biến"))
+                        .help(L("By sensor"))
                 }
             }
             .frame(width: nameWidth, alignment: .leading)
@@ -157,7 +157,7 @@ struct NotchFanPanel: View {
                                model.dragging = !dragging.isEmpty
                            }, onAdjust: { speed in move(fan, value: speed) })
                 .disabled(control.hot || !control.enabled || !control.available)
-                .accessibilityLabel(L("Quạt {0}", name))
+                .accessibilityLabel(L("Fan {0}", name))
             Text(FanNotch.valueText(actual: model.fanUnavailable.contains(fan.index) ? nil : fan.actual,
                                     forced: choice != .automatic, parked: fan.actual == 0 && choice == .automatic))
                 .font(.system(size: 11, weight: .semibold, design: .rounded)).monospacedDigit()
@@ -167,12 +167,12 @@ struct NotchFanPanel: View {
                 .frame(width: 39, alignment: .trailing)
             if pane {
                 Button { editingMode = editingMode == fan.index ? nil : fan.index } label: {
-                    Text(choice == .automatic ? L("Tự động") : mode(choice) == "fixed" ? L("Cố định") : L("Theo cảm biến"))
+                    Text(choice == .automatic ? L("Automatic") : mode(choice) == "fixed" ? L("Fixed") : L("By sensor"))
                         .font(.caption).padding(.horizontal, 8).padding(.vertical, 3)
                         .background(Capsule().fill(.quaternary.opacity(0.6)))
                 }
                 .buttonStyle(.plain).disabled(control.hot || !control.enabled || !control.available)
-                .accessibilityLabel(L("Chế độ"))
+                .accessibilityLabel(L("Mode"))
             } else {
             Button { automatic(fan.index) } label: {
                 Text(verbatim: "A").font(.system(size: 10, weight: .semibold, design: .rounded))
@@ -181,9 +181,9 @@ struct NotchFanPanel: View {
                     .background(Circle().fill(choice == .automatic ? tint.opacity(autoHover.contains(fan.index) ? 1 : 0.85) : .clear))
                     .overlay(Circle().strokeBorder(.white.opacity(choice == .automatic ? 0 : 0.5), lineWidth: 1))
             }
-            .buttonStyle(FanPressStyle()).help(L("Tự động"))
+            .buttonStyle(FanPressStyle()).help(L("Automatic"))
             .onHover { if $0 { autoHover.insert(fan.index) } else { autoHover.remove(fan.index) } }
-            .accessibilityLabel(L("Tự động"))
+            .accessibilityLabel(L("Automatic"))
             .accessibilityValue(name)
             }
         }
@@ -194,19 +194,19 @@ struct NotchFanPanel: View {
         let choice = control.choices[fan.index] ?? .automatic
         return VStack(alignment: .leading, spacing: 4) {
             if editingMode == fan.index {
-                Picker(L("Chế độ"), selection: Binding(get: { mode(choice) }, set: { select($0, fan: fan) })) {
-                    Text(L("Tự động")).tag("automatic")
-                    Text(L("Cố định")).tag("fixed")
-                    Text(L("Theo cảm biến")).tag("sensor")
+                Picker(L("Mode"), selection: Binding(get: { mode(choice) }, set: { select($0, fan: fan) })) {
+                    Text(L("Automatic")).tag("automatic")
+                    Text(L("Fixed")).tag("fixed")
+                    Text(L("By sensor")).tag("sensor")
                 }.pickerStyle(.segmented).fixedSize().disabled(control.hot || !control.enabled || !control.available)
             }
             if case let .sensor(name, startsAt, maximumAt) = choice {
                 HStack(spacing: 8) {
-                    Picker(L("Cảm biến"), selection: Binding(get: { name }, set: { control.choices[fan.index] = .sensor(name: $0, startsAt: startsAt, maximumAt: maximumAt) })) {
+                    Picker(L("Sensors"), selection: Binding(get: { name }, set: { control.choices[fan.index] = .sensor(name: $0, startsAt: startsAt, maximumAt: maximumAt) })) {
                         ForEach(model.thermals, id: \.name) { Text($0.name).tag($0.name) }
                     }
-                    Stepper(L("Bắt đầu {0}°C", Int(startsAt)), value: Binding(get: { startsAt }, set: { control.choices[fan.index] = .sensor(name: name, startsAt: $0, maximumAt: max(maximumAt, $0 + 1)) }), in: 5...94)
-                    Stepper(L("Tối đa {0}°C", Int(maximumAt)), value: Binding(get: { maximumAt }, set: { control.choices[fan.index] = .sensor(name: name, startsAt: min(startsAt, $0 - 1), maximumAt: $0) }), in: 6...95)
+                    Stepper(L("Start {0}°C", Int(startsAt)), value: Binding(get: { startsAt }, set: { control.choices[fan.index] = .sensor(name: name, startsAt: $0, maximumAt: max(maximumAt, $0 + 1)) }), in: 5...94)
+                    Stepper(L("Maximum {0}°C", Int(maximumAt)), value: Binding(get: { maximumAt }, set: { control.choices[fan.index] = .sensor(name: name, startsAt: min(startsAt, $0 - 1), maximumAt: $0) }), in: 6...95)
                 }.font(.caption).disabled(control.hot || !control.enabled || !control.available)
             }
         }
@@ -563,7 +563,7 @@ struct EventList: View {
                 ForEach(allDay, id: \.id) { e in
                     HStack(spacing: 8) {
                         Image(systemName: "sun.max.fill").font(.system(size: 10)).foregroundStyle(e.color).frame(width: 15)
-                        Text(L("Cả ngày")).font(.system(size: 11, weight: .semibold)).foregroundStyle(.gray)
+                        Text(L("All day")).font(.system(size: 11, weight: .semibold)).foregroundStyle(.gray)
                         Button { open(e) } label: {
                             HStack(spacing: 6) {
                                 Text(e.title).font(.system(size: 12, weight: .medium)).foregroundStyle(.white).lineLimit(1)
@@ -572,7 +572,7 @@ struct EventList: View {
                             }
                             .contentShape(Rectangle())
                         }
-                        .buttonStyle(.plain).help(L("Mở trong Lịch"))
+                        .buttonStyle(.plain).help(L("Open in Calendar"))
                         Spacer(minLength: 6)
                         close(e, size: 8)
                     }
@@ -581,7 +581,7 @@ struct EventList: View {
                 if let first = timed.first { main(first, now) }
                 ForEach(timed.dropFirst().prefix(Self.rows), id: \.id) { e in row(e, now) }
                 if timed.count > Self.rows + 1 {
-                    Text(L("+{0} sự kiện nữa", timed.count - Self.rows - 1)).font(.system(size: 10)).foregroundStyle(.gray).padding(.leading, 14)
+                    Text(L("+{0} more events", timed.count - Self.rows - 1)).font(.system(size: 10)).foregroundStyle(.gray).padding(.leading, 14)
                 }
             }
         }
@@ -590,8 +590,8 @@ struct EventList: View {
     }
 
     func status(_ e: CalEvent, _ now: Date) -> (text: String, running: Bool) {
-        e.running(at: now) ? (L("Đang diễn ra · còn {0}", ago(e.end.timeIntervalSince(now))), true)
-                           : (L("Sắp tới · còn {0}", ago(e.start.timeIntervalSince(now))), false)
+        e.running(at: now) ? (L("Happening now · {0} left", ago(e.end.timeIntervalSince(now))), true)
+                           : (L("Coming up · in {0}", ago(e.start.timeIntervalSince(now))), false)
     }
 
     func span(_ e: CalEvent) -> String {
@@ -606,7 +606,7 @@ struct EventList: View {
                 Button { open(e) } label: {
                     Text(e.title).font(.system(size: 13, weight: .semibold)).foregroundStyle(.white).lineLimit(1)
                 }
-                .buttonStyle(.plain).help(e.calendar.isEmpty ? L("Mở trong Lịch") : L("{0} · mở trong Lịch", e.calendar))
+                .buttonStyle(.plain).help(e.calendar.isEmpty ? L("Open in Calendar") : L("{0} · open in Calendar", e.calendar))
                 HStack(spacing: 5) {
                     Circle().fill(st.running ? e.color : .clear).overlay(Circle().stroke(e.color, lineWidth: 1.2)).frame(width: 6, height: 6)
                     Text(span(e) + " · " + st.text).font(.system(size: 11)).foregroundStyle(st.running || e.start.timeIntervalSince(now) < 600 ? e.color : .gray)
@@ -632,9 +632,9 @@ struct EventList: View {
                 .padding(.leading, 4)
             Text(e.start.formatted(date: .omitted, time: .shortened)).font(.system(size: 11, weight: .semibold)).monospacedDigit().foregroundStyle(.gray)
             Button { open(e) } label: { Text(e.title).font(.system(size: 12)).foregroundStyle(.white.opacity(0.9)).lineLimit(1) }
-                .buttonStyle(.plain).help(e.calendar.isEmpty ? L("Mở trong Lịch") : L("{0} · mở trong Lịch", e.calendar))
+                .buttonStyle(.plain).help(e.calendar.isEmpty ? L("Open in Calendar") : L("{0} · open in Calendar", e.calendar))
             Spacer(minLength: 6)
-            Text(status(e, now).running ? L("đang diễn ra") : L("còn ") + ago(e.start.timeIntervalSince(now)))
+            Text(status(e, now).running ? L("happening now") : L("in ") + ago(e.start.timeIntervalSince(now)))
                 .font(.system(size: 10)).foregroundStyle(.gray).lineLimit(1)
             if let link = e.link {
                 Button { NSWorkspace.shared.open(link) } label: { Image(systemName: "video.fill").font(.system(size: 10)).foregroundStyle(.green) }
@@ -655,7 +655,7 @@ struct EventList: View {
             Image(systemName: "xmark").font(.system(size: size, weight: .bold)).foregroundStyle(.gray)
                 .frame(width: size + 8, height: size + 8).contentShape(Rectangle())
         }
-        .buttonStyle(.plain).help(L("Ẩn sự kiện này khỏi notch"))
+        .buttonStyle(.plain).help(L("Hide this event from the notch"))
     }
 }
 
@@ -673,33 +673,33 @@ struct ShelfCard: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 6) {
                 if picked.isEmpty {
-                    Label(L("Khay file"), systemImage: "tray.full.fill").font(.system(size: 12, weight: .semibold)).foregroundStyle(.white)
+                    Label(L("File shelf"), systemImage: "tray.full.fill").font(.system(size: 12, weight: .semibold)).foregroundStyle(.white)
                     Text("\(model.shelf.count)").font(.system(size: 11)).foregroundStyle(.gray)
                 } else {
-                    Text(L("Đã chọn {0}/{1}", picked.count, model.shelf.count)).font(.system(size: 12, weight: .semibold)).foregroundStyle(.white)
+                    Text(L("{0}/{1} selected", picked.count, model.shelf.count)).font(.system(size: 12, weight: .semibold)).foregroundStyle(.white)
                 }
                 Spacer()
                 if !model.shelf.isEmpty {
-                    pill(picked.count == model.shelf.count ? L("Bỏ chọn") : L("Chọn tất cả")) {
+                    pill(picked.count == model.shelf.count ? L("Deselect") : L("Select all")) {
                         selected = picked.count == model.shelf.count ? [] : Set(model.shelf)
                     }
                     if !picked.isEmpty {
-                        iconButton("arrow.up.forward.app", L("Mở")) { picked.forEach { NSWorkspace.shared.open($0) } }
+                        iconButton("arrow.up.forward.app", L("Open")) { picked.forEach { NSWorkspace.shared.open($0) } }
                     }
-                    iconButton("folder", L("Hiện trong Finder")) { NSWorkspace.shared.activateFileViewerSelecting(targets) }
-                    iconButton("airplayaudio", picked.isEmpty ? L("Gửi tất cả qua AirDrop") : L("Gửi qua AirDrop")) {
+                    iconButton("folder", L("Show in Finder")) { NSWorkspace.shared.activateFileViewerSelecting(targets) }
+                    iconButton("airplayaudio", picked.isEmpty ? L("AirDrop all") : L("AirDrop")) {
                         NSSharingService(named: .sendViaAirDrop)?.perform(withItems: targets)
                     }
-                    iconButton(picked.isEmpty ? "trash" : "minus.circle", picked.isEmpty ? L("Bỏ hết khỏi khay (file gốc giữ nguyên)") : L("Bỏ khỏi khay (file gốc giữ nguyên)")) {
+                    iconButton(picked.isEmpty ? "trash" : "minus.circle", picked.isEmpty ? L("Remove all from the shelf (originals stay)") : L("Remove from the shelf (original stays)")) {
                         let gone = Set(targets)
                         withAnimation(.snappy) { model.shelf.removeAll { gone.contains($0) } }
                         selected.subtract(gone)
                     }
                 }
-                iconButton("plus", L("Thêm file…")) { model.pickShelfFiles() }
+                iconButton("plus", L("Add files…")) { model.pickShelfFiles() }
             }
             if model.shelf.isEmpty {
-                Text(targeted ? L("Thả vào đây") : L("Kéo file vào notch, hoặc bấm + để chọn"))
+                Text(targeted ? L("Drop here") : L("Drag files onto the notch, or click + to choose"))
                     .font(.system(size: 11)).foregroundStyle(targeted ? .white : .gray)
                     .frame(maxWidth: .infinity).frame(height: 44)
                     .background(RoundedRectangle(cornerRadius: 10).strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [4])).foregroundStyle(.gray))
@@ -707,8 +707,8 @@ struct ShelfCard: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) { ForEach(model.shelf, id: \.self) { tile($0) } }.padding(2)
                 }
-                Text(picked.isEmpty ? L("Bấm để chọn · bấm đúp để mở · kéo ra để thả vào ứng dụng khác")
-                                    : L("Kéo một file đã chọn để mang theo cả {0} file", picked.count))
+                Text(picked.isEmpty ? L("Click to select · double-click to open · drag out to drop into another app")
+                                    : L("Drag one selected file to bring all {0} files", picked.count))
                     .font(.system(size: 9)).foregroundStyle(.gray)
             }
         }
@@ -739,11 +739,11 @@ struct ShelfCard: View {
             },
             dragBegan: { model.dragging = true },
             presenting: { model.presenting = $0 },
-            menu: [(L("Mở"), { NSWorkspace.shared.open(url) }),
-                   (L("Hiện trong Finder"), { NSWorkspace.shared.activateFileViewerSelecting([url]) }),
-                   (L("Gửi qua AirDrop"), { NSSharingService(named: .sendViaAirDrop)?.perform(withItems: [url]) }),
-                   (L("Bỏ khỏi khay"), { model.shelf.removeAll { $0 == url } })]))
-        .help(missing ? L("Không còn tìm thấy file: {0}", url.path) : url.path)
+            menu: [(L("Open"), { NSWorkspace.shared.open(url) }),
+                   (L("Show in Finder"), { NSWorkspace.shared.activateFileViewerSelecting([url]) }),
+                   (L("AirDrop"), { NSSharingService(named: .sendViaAirDrop)?.perform(withItems: [url]) }),
+                   (L("Remove from shelf"), { model.shelf.removeAll { $0 == url } })]))
+        .help(missing ? L("File not found anymore: {0}", url.path) : url.path)
     }
 
     func pill(_ text: String, _ action: @escaping () -> Void) -> some View {
@@ -918,7 +918,7 @@ struct NotchView: View {
             case .failed(let touch)?:
                 HStack(spacing: 5) {
                     Image(systemName: touch ? "touchid" : "lock.fill").font(.system(size: size * 0.75, weight: .bold))
-                    Text(touch ? L("Vân tay không khớp") : L("Sai mật khẩu")).font(.system(size: 11, weight: .bold, design: .rounded))
+                    Text(touch ? L("Fingerprint didn't match") : L("Wrong password")).font(.system(size: 11, weight: .bold, design: .rounded))
                 }
                 .foregroundStyle(.red)
                 .transition(.blurReplace)
@@ -1111,7 +1111,7 @@ struct NotchView: View {
         }
         .frame(height: 5)
         .animation(.easeOut(duration: 0.12), value: l.value)
-        let pct = Text(l.muted ? L("Tắt") : "\(Int((l.value * 100).rounded()))").font(.system(size: 11, weight: .bold, design: .rounded))
+        let pct = Text(l.muted ? L("Off") : "\(Int((l.value * 100).rounded()))").font(.system(size: 11, weight: .bold, design: .rounded))
             .monospacedDigit().foregroundStyle(.white).frame(width: 26, alignment: .trailing)
         return Group {
             if noCamera {
@@ -1214,10 +1214,10 @@ struct NotchView: View {
         HStack(spacing: 6) {
             if let a = t.ask {
                 if a.isQuestion {
-                    choiceButton(L("Trả lời"), primary: true) { openToast(t) }
+                    choiceButton(L("Reply"), primary: true) { openToast(t) }
                 } else {
-                    choiceButton(L("Từ chối"), primary: false) { model.reply(a, .deny) }
-                    choiceButton(L("Cho phép"), primary: true) { model.reply(a, .allow) }
+                    choiceButton(L("Deny"), primary: false) { model.reply(a, .deny) }
+                    choiceButton(L("Allow"), primary: true) { model.reply(a, .allow) }
                 }
             } else if let a = t.actionTitle {
                 choiceButton(a, primary: true) { openToast(t) }
@@ -1226,7 +1226,7 @@ struct NotchView: View {
                 Image(systemName: "xmark").font(.system(size: 9, weight: .bold)).foregroundStyle(.white.opacity(0.7))
                     .frame(width: 22, height: 22).background(Circle().fill(.white.opacity(0.1))).contentShape(Circle())
             }
-            .buttonStyle(.plain).help(L("Ẩn thông báo"))
+            .buttonStyle(.plain).help(L("Hide alert"))
         }
     }
 
@@ -1438,7 +1438,7 @@ struct NotchView: View {
         Group {
             switch c {
             case .alerts(let n):
-                Text(n == 1 ? L("1 lỗi") : L("{0} lỗi", n)).foregroundStyle(settings.color(for: .ci) ?? .red)
+                Text(n == 1 ? L("1 error") : L("{0} errors", n)).foregroundStyle(settings.color(for: .ci) ?? .red)
             case .media(let np):
                 Bars(color: settings.color(for: .media) ?? Icons.tint(np.item))
             case .timer(let end):
@@ -1457,11 +1457,11 @@ struct NotchView: View {
             case .sensor:
                 EmptyView()
             case .ask(let asks):
-                Text(asks.count == 1 ? L("Chờ bạn") : L("{0} chờ", asks.count)).foregroundStyle(.orange)
+                Text(asks.count == 1 ? L("Waiting for you") : L("{0} waiting", asks.count)).foregroundStyle(.orange)
             case .limit(let name, let w):
                 // out of limit: when you can go again; else the step reached
-                Text(w.used >= 100 ? L("Chờ ") + w.resetText() : "\(Int(w.used))%")
-                    .foregroundStyle(w.used >= 95 ? .red : .orange).help(L("{0} đã dùng {1}% giới hạn {2}", name, Int(w.used), w.label))
+                Text(w.used >= 100 ? L("Waiting ") + w.resetText() : "\(Int(w.used))%")
+                    .foregroundStyle(w.used >= 95 ? .red : .orange).help(L("{0} used {1}% of its {2} limit", name, Int(w.used), w.label))
             case .agent(let st):
                 HStack(spacing: 4) {
                     if st.jobs.count == 1, let p = st.jobs[0].progress { ProgressRing(value: p, tint: agentTint(st)) }
@@ -1519,10 +1519,10 @@ struct NotchView: View {
 
     var summary: String {
         var parts: [String] = []
-        if working > 0 { parts.append(L("{0} đang chạy", working)) }
-        if total > working { parts.append(L("{0} đang chờ", total - working)) }
+        if working > 0 { parts.append(L("{0} running", working)) }
+        if total > working { parts.append(L("{0} waiting", total - working)) }
         if let np = playingNow { parts.append("♪ " + np.appName) }
-        return parts.isEmpty ? L("Không có gì đang chạy") : parts.joined(separator: " · ")
+        return parts.isEmpty ? L("Nothing running") : parts.joined(separator: " · ")
     }
 
     func openActivityMonitor() {
@@ -1562,11 +1562,11 @@ struct NotchView: View {
                             Text("\(Int(t.celsius.rounded()))°").font(.system(size: 11, weight: .semibold)).monospacedDigit()
                         }
                         .foregroundStyle(t.celsius >= 85 ? .red : t.celsius >= 60 ? .orange : .green)
-                        .help(L("Nhiệt độ") + ": \(t.name) \(t.celsius.formatted(.number.precision(.fractionLength(1))))°C")
+                        .help(L("Temperature") + ": \(t.name) \(t.celsius.formatted(.number.precision(.fractionLength(1))))°C")
                         .fixedSize()
                     } else if Requirement.fan.met(on: Requirement.current) && settings.systemLoad {
                         let state = ProcessInfo.processInfo.thermalState
-                        Label(state == .critical || state == .serious ? L("Nóng") : state == .fair ? L("Ấm") : L("Mát"), systemImage: "thermometer.medium")
+                        Label(state == .critical || state == .serious ? L("Hot") : state == .fair ? L("Warm") : L("Cool"), systemImage: "thermometer.medium")
                             .font(.system(size: 11, weight: .semibold))
                             .foregroundStyle(state == .critical || state == .serious ? .red : state == .fair ? .orange : .green)
                             .fixedSize()
@@ -1594,8 +1594,8 @@ struct NotchView: View {
                             .foregroundStyle(model.fans.contains(where: \.forced) ? (settings.accentColor ?? .cyan) : .white.opacity(0.7))
                         }
                         .buttonStyle(.plain)
-                        .help(L("Quạt & nhiệt độ"))
-                        .accessibilityLabel(L("Quạt") + (model.fans.allSatisfy { $0.actual == 0 } ? "" : ", \(model.fans.map(\.actual).max() ?? 0) rpm"))
+                        .help(L("Fans & temperature"))
+                        .accessibilityLabel(L("Fans") + (model.fans.allSatisfy { $0.actual == 0 } ? "" : ", \(model.fans.map(\.actual).max() ?? 0) rpm"))
                     }
                 }
                 .frame(width: 120, alignment: .trailing)
@@ -1610,7 +1610,7 @@ struct NotchView: View {
             ForEach(settings.activeModules.filter { $0 == .calls } + settings.activeModules.filter { $0 != .calls }) { m in section(m) }
 
             if !hasCollapsed && !(settings.on(.shelf) && (!model.shelf.isEmpty || dropTargeted)) {
-                Text(L("Không có gì đang chạy")).font(.system(size: 12)).foregroundStyle(.gray)
+                Text(L("Nothing running")).font(.system(size: 12)).foregroundStyle(.gray)
                     .frame(maxWidth: .infinity).padding(.vertical, 6)
             }
             quickBar
@@ -1669,25 +1669,25 @@ struct NotchView: View {
             }
             if settings.on(.mirror) && !model.mirrorOn {
                 Button { model.openMirror() } label: {
-                    Label(L("Gương"), systemImage: "person.crop.square").font(.system(size: 11, weight: .semibold)).foregroundStyle(.white)
+                    Label(L("Mirror"), systemImage: "person.crop.square").font(.system(size: 11, weight: .semibold)).foregroundStyle(.white)
                         .padding(.horizontal, 8).frame(height: 22).background(Capsule().fill(.white.opacity(0.12)))
                 }
-                .buttonStyle(.plain).help(L("Xem nhanh camera"))
+                .buttonStyle(.plain).help(L("Quick camera check"))
             }
             Spacer()
             if settings.on(.shelf) && model.shelf.isEmpty && !dropTargeted {
                 // also a button: not every file is easy to drag up here
                 Button { model.pickShelfFiles() } label: {
-                    Label(L("Kéo thả hoặc chọn file"), systemImage: "tray.and.arrow.down").font(.system(size: 10)).foregroundStyle(.gray).lineLimit(1)
+                    Label(L("Drag and drop or choose files"), systemImage: "tray.and.arrow.down").font(.system(size: 10)).foregroundStyle(.gray).lineLimit(1)
                 }
-                .buttonStyle(.plain).help(L("Kéo file lên notch, hoặc bấm để chọn file đưa vào khay"))
+                .buttonStyle(.plain).help(L("Drag files onto the notch, or click to choose files for the shelf"))
             }
             HStack(spacing: 6) {
-                toolButton("gearshape", L("Bảng điều khiển")) { model.showSettings() }
+                toolButton("gearshape", L("Control Panel")) { model.showSettings() }
                     .overlay(alignment: .topTrailing) {
                         if model.updatePending { Circle().fill(.blue).frame(width: 5, height: 5).offset(x: 2, y: -2) }
                     }
-                toolButton("power", L("Thoát NotchTasks")) { NSApp.terminate(nil) }
+                toolButton("power", L("Quit NotchTasks")) { NSApp.terminate(nil) }
             }
         }
     }
@@ -1764,7 +1764,7 @@ struct LoadMeter: View {
             Text(label).font(.system(size: 10, weight: .semibold)).foregroundStyle(.white.opacity(0.6))
         }
         .animation(.easeOut(duration: 0.4), value: value)
-        .help((label == "CPU" ? L("CPU của cả máy: ") : L("Bộ nhớ đang dùng: ")) + L("{0}% · bấm để mở Activity Monitor", Int((value * 100).rounded())))
+        .help((label == "CPU" ? L("Whole-computer CPU: ") : L("Memory in use: ")) + L("{0}% · click to open Activity Monitor", Int((value * 100).rounded())))
     }
 }
 

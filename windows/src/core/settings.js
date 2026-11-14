@@ -17,22 +17,22 @@ const MODULE_IDS = ['agents', 'ci', 'media', 'calendar', 'timer', 'shelf', 'limi
 
 // Title (a Vietnamese key for nt.L), blurb and icon (lucide name) per module that exists on Windows.
 const MODULE_INFO = {
-  agents: { title: 'AI agent', blurb: 'Agent và app AI đang làm việc', icon: 'sparkles' },
-  ci: { title: 'Build & CI', blurb: 'Build, test, cài đặt, render, CI', icon: 'hammer' },
-  media: { title: 'Đang phát', blurb: 'Bài đang phát, có nút điều khiển', icon: 'music' },
-  timer: { title: 'Hẹn giờ', blurb: 'Hẹn giờ nhanh', icon: 'timer' },
-  shelf: { title: 'Khay file', blurb: 'Kéo file lên notch để giữ tạm', icon: 'inbox' },
-  limits: { title: 'Giới hạn AI', blurb: 'Mức dùng agent, báo khi sắp hết', icon: 'gauge' },
-  battery: { title: 'Pin', blurb: 'Cắm, rút sạc, pin yếu', icon: 'battery-medium' },
-  network: { title: 'Mạng', blurb: 'Mất mạng, có mạng lại, VPN', icon: 'wifi' },
-  downloads: { title: 'Tải xuống', blurb: 'Báo tải xong, mở nơi lưu', icon: 'download' },
-  health: { title: 'Sức khoẻ máy', blurb: 'Máy nóng, ổ đĩa sắp đầy', icon: 'thermometer' },
+  agents: { title: 'AI agent', blurb: 'Agents and AI apps at work', icon: 'sparkles' },
+  ci: { title: 'Build & CI', blurb: 'Build, test, install, render, CI', icon: 'hammer' },
+  media: { title: 'Now Playing', blurb: 'What\'s playing, with controls', icon: 'music' },
+  timer: { title: 'Timer', blurb: 'Quick timers', icon: 'timer' },
+  shelf: { title: 'Khay file', blurb: 'Drop files on the notch to keep them', icon: 'inbox' },
+  limits: { title: 'AI limits', blurb: 'Agent usage, alerts before running out', icon: 'gauge' },
+  battery: { title: 'Pin', blurb: 'Plugged in, unplugged, low battery', icon: 'battery-medium' },
+  network: { title: 'Network', blurb: 'Offline, back online, VPN', icon: 'wifi' },
+  downloads: { title: 'Downloads', blurb: 'Download finished, show in folder', icon: 'download' },
+  health: { title: 'Computer health', blurb: 'Computer hot, disk almost full', icon: 'thermometer' },
 };
 // Where it sits on the Overview page (ModuleID.groups without the Mac-only modules).
 const MODULE_GROUPS = [
-  { title: 'Công việc', ids: ['agents', 'ci', 'limits', 'timer'] },
-  { title: 'Nhạc & thiết bị', ids: ['media', 'battery'] },
-  { title: 'Hệ thống', ids: ['network', 'downloads', 'health', 'shelf'] },
+  { title: 'Work', ids: ['agents', 'ci', 'limits', 'timer'] },
+  { title: 'Music & devices', ids: ['media', 'battery'] },
+  { title: 'System', ids: ['network', 'downloads', 'health', 'shelf'] },
 ];
 
 const EXPAND_MODES = ['hover', 'click'];
@@ -47,14 +47,14 @@ const PRO_PER_SIDE = 4;
 
 // Accent palette, Apple's system colors as hex (the Mac used the system named colors).
 const ACCENTS = [
-  { name: 'auto', title: 'Theo màu app', hex: null },
-  { name: 'blue', title: 'Xanh dương', hex: '#0A84FF' },
-  { name: 'green', title: 'Xanh lá', hex: '#30D158' },
+  { name: 'auto', title: 'Match app color', hex: null },
+  { name: 'blue', title: 'Blue', hex: '#0A84FF' },
+  { name: 'green', title: 'Green', hex: '#30D158' },
   { name: 'orange', title: 'Cam', hex: '#FF9F0A' },
-  { name: 'pink', title: 'Hồng', hex: '#FF375F' },
-  { name: 'purple', title: 'Tím', hex: '#BF5AF2' },
-  { name: 'white', title: 'Trắng', hex: '#FFFFFF' },
-  { name: 'custom', title: 'Tự chọn…', hex: null },
+  { name: 'pink', title: 'Pink', hex: '#FF375F' },
+  { name: 'purple', title: 'Purple', hex: '#BF5AF2' },
+  { name: 'white', title: 'White', hex: '#FFFFFF' },
+  { name: 'custom', title: 'Custom…', hex: null },
 ];
 
 // Sound names as the Mac pack tables use them. The Windows player maps each to a bundled file.
@@ -62,28 +62,28 @@ const SOUND_NAMES = ['Basso', 'Blow', 'Bottle', 'Frog', 'Funk', 'Glass', 'Hero',
   'Submarine', 'Tink'];
 
 const SOUND_EVENTS = [
-  { id: 'taskDone', title: 'AI / tác vụ xong', icon: 'circle-check' },
-  { id: 'agentAsk', title: 'Agent hỏi, cần duyệt', icon: 'hand' },
-  { id: 'ciPassed', title: 'CI đạt', icon: 'badge-check' },
-  { id: 'ciFailed', title: 'CI lỗi', icon: 'octagon-x' },
-  { id: 'limitWarn', title: 'Sắp hết giới hạn AI', icon: 'gauge' },
-  { id: 'meeting', title: 'Sự kiện sắp tới', icon: 'calendar' },
-  { id: 'timerDone', title: 'Hết giờ hẹn', icon: 'timer' },
-  { id: 'charging', title: 'Cắm sạc', icon: 'zap' },
-  { id: 'unplugged', title: 'Rút sạc', icon: 'plug-zap' },
-  { id: 'lowBattery', title: 'Pin yếu', icon: 'battery-low' },
-  { id: 'deviceOn', title: 'Thiết bị kết nối', icon: 'headphones' },
-  { id: 'deviceOff', title: 'Thiết bị ngắt', icon: 'headphones' },
-  { id: 'callStart', title: 'Bắt đầu cuộc gọi', icon: 'phone' },
-  { id: 'callEnd', title: 'Kết thúc cuộc gọi', icon: 'phone-off' },
-  { id: 'sensorOn', title: 'Mic hoặc camera bật', icon: 'mic' },
-  { id: 'authFail', title: 'Mở khoá sai', icon: 'shield-alert' },
-  { id: 'netDown', title: 'Mất mạng', icon: 'wifi-off' },
-  { id: 'netUp', title: 'Có mạng lại, VPN', icon: 'wifi' },
-  { id: 'downloadDone', title: 'Tải xong', icon: 'download' },
-  { id: 'warning', title: 'Máy nóng, ổ đĩa đầy', icon: 'triangle-alert' },
-  { id: 'open', title: 'Mở notch', icon: 'chevron-down' },
-  { id: 'close', title: 'Thu gọn notch', icon: 'chevron-up' },
+  { id: 'taskDone', title: 'AI / task done', icon: 'circle-check' },
+  { id: 'agentAsk', title: 'Agent asks for approval', icon: 'hand' },
+  { id: 'ciPassed', title: 'CI passed', icon: 'badge-check' },
+  { id: 'ciFailed', title: 'CI failed', icon: 'octagon-x' },
+  { id: 'limitWarn', title: 'AI limit running out', icon: 'gauge' },
+  { id: 'meeting', title: 'Upcoming event', icon: 'calendar' },
+  { id: 'timerDone', title: 'Timer done', icon: 'timer' },
+  { id: 'charging', title: 'Plugged in', icon: 'zap' },
+  { id: 'unplugged', title: 'Unplugged', icon: 'plug-zap' },
+  { id: 'lowBattery', title: 'Low battery', icon: 'battery-low' },
+  { id: 'deviceOn', title: 'Device connected', icon: 'headphones' },
+  { id: 'deviceOff', title: 'Device disconnected', icon: 'headphones' },
+  { id: 'callStart', title: 'Call started', icon: 'phone' },
+  { id: 'callEnd', title: 'Call ended', icon: 'phone-off' },
+  { id: 'sensorOn', title: 'Mic or camera on', icon: 'mic' },
+  { id: 'authFail', title: 'Failed unlock', icon: 'shield-alert' },
+  { id: 'netDown', title: 'Offline', icon: 'wifi-off' },
+  { id: 'netUp', title: 'Back online, VPN', icon: 'wifi' },
+  { id: 'downloadDone', title: 'Download done', icon: 'download' },
+  { id: 'warning', title: 'Hot computer, disk full', icon: 'triangle-alert' },
+  { id: 'open', title: 'Opening the notch', icon: 'chevron-down' },
+  { id: 'close', title: 'Notch collapses', icon: 'chevron-up' },
 ];
 
 // SoundPack.all: the built-in packs. '' = silent.
@@ -106,12 +106,12 @@ const SOUND_PACKS = [
 
 // Themes (Customize.swift Theme.all): one click sets the look, never the sounds.
 const THEMES = [
-  { id: 'classic', title: 'Cổ điển', background: 'black', gradientA: '#1E1B4B', gradientB: '#000000', accent: 'auto', customAccent: '#FF9F0A', toastStyle: 'island', motion: 'bouncy' },
+  { id: 'classic', title: 'Classic', background: 'black', gradientA: '#1E1B4B', gradientB: '#000000', accent: 'auto', customAccent: '#FF9F0A', toastStyle: 'island', motion: 'bouncy' },
   { id: 'neon', title: 'Neon', background: 'glow', gradientA: '#0F172A', gradientB: '#000000', accent: 'custom', customAccent: '#00F5D4', toastStyle: 'card', motion: 'bouncy' },
-  { id: 'glass', title: 'Kính', background: 'glass', gradientA: '#334155', gradientB: '#0F172A', accent: 'white', customAccent: '#FFFFFF', toastStyle: 'banner', motion: 'smooth' },
-  { id: 'minimal', title: 'Tối giản', background: 'black', gradientA: '#111111', gradientB: '#000000', accent: 'white', customAccent: '#FFFFFF', toastStyle: 'compact', motion: 'snappy' },
-  { id: 'sunset', title: 'Hoàng hôn', background: 'gradient', gradientA: '#FF5F6D', gradientB: '#5B247A', accent: 'custom', customAccent: '#FFC371', toastStyle: 'card', motion: 'bouncy' },
-  { id: 'ocean', title: 'Đại dương', background: 'gradient', gradientA: '#0EA5E9', gradientB: '#1E1B4B', accent: 'custom', customAccent: '#7DD3FC', toastStyle: 'island', motion: 'smooth' },
+  { id: 'glass', title: 'Glass', background: 'glass', gradientA: '#334155', gradientB: '#0F172A', accent: 'white', customAccent: '#FFFFFF', toastStyle: 'banner', motion: 'smooth' },
+  { id: 'minimal', title: 'Minimal', background: 'black', gradientA: '#111111', gradientB: '#000000', accent: 'white', customAccent: '#FFFFFF', toastStyle: 'compact', motion: 'snappy' },
+  { id: 'sunset', title: 'Sunset', background: 'gradient', gradientA: '#FF5F6D', gradientB: '#5B247A', accent: 'custom', customAccent: '#FFC371', toastStyle: 'card', motion: 'bouncy' },
+  { id: 'ocean', title: 'Ocean', background: 'gradient', gradientA: '#0EA5E9', gradientB: '#1E1B4B', accent: 'custom', customAccent: '#7DD3FC', toastStyle: 'island', motion: 'smooth' },
 ];
 
 // Settings.profile: what Export/Import in Appearance carries (haptics and the lock screen are Mac-only).

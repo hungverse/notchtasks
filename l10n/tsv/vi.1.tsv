@@ -1,0 +1,338 @@
+0	{0} yêu cầu đang chờ bạn
+1	Ngôn ngữ
+2	Theo máy
+3	Chạy lệnh
+4	Sửa file
+5	Đọc file
+6	Truy cập web
+7	 đang hỏi
+8	 cần bạn duyệt
+9	Theo app
+10	Xanh dương
+11	Xanh lá
+12	Cam
+13	Hồng
+14	Tím
+15	Trắng
+16	Đen
+17	Kính mờ
+18	Viền phát sáng
+19	Đảo
+20	Gọn
+21	Thẻ nổi
+22	Dải ngang
+23	Mượt
+24	Nảy
+25	Nhanh
+26	Tối thiểu
+27	Biểu tượng khoá
+28	Icon cố định
+29	Tác vụ, nhạc, hẹn giờ
+30	Pin
+31	Đang phát
+32	Lịch
+33	Hẹn giờ
+34	Khay file
+35	Giới hạn AI
+36	Thiết bị
+37	Cuộc gọi
+38	Âm lượng & độ sáng
+39	Mạng
+40	Tải xuống
+41	Sức khoẻ máy
+42	Gương camera
+43	Cổ điển
+44	Kính
+45	Hoàng hôn
+46	Đại dương
+47	Xoá file hoặc thư mục
+48	Chạy với quyền quản trị
+49	Ghi đè lịch sử trên máy chủ git
+50	Bỏ mọi thay đổi chưa lưu
+51	Xoá file chưa theo dõi
+52	Chạy script tải từ mạng
+53	Ghi thẳng lên ổ đĩa
+54	Mở toàn quyền cho mọi file
+55	Xoá dữ liệu trong cơ sở dữ liệu
+56	Bỏ qua bước kiểm tra
+57	Nhắc nghỉ và uống nước
+58	Nhắc đứng dậy, uống nước, nghỉ mắt 6 lần trong giờ làm. Tắt được bằng công tắc.
+59	Báo cáo cuối ngày
+60	Mỗi tối 21:00: hôm nay tập trung bao lâu, mấy phiên, chuỗi ngày.
+61	Pomodoro và phiên 90 phút
+62	Tập trung theo phiên ngắn xen giờ nghỉ (mặc định 4 phiên × 25 phút, nghỉ 5 phút). Thêm phiên 90 phút.
+63	Vòng hoa và khăn quàng
+64	Thú cưng to hơn, đội vòng hoa và quàng khăn.
+65	Lên notch
+66	Đặt thú cưng lên notch máy tính. Thú cưng đổi dáng theo việc trên máy.
+67	Chế độ tập trung nghiêm
+68	Khi bắt đầu phiên, chọn chế độ nghiêm: không dừng được tới khi hết giờ.
+69	Vương miện và áo choàng
+70	Thú cưng đội vương miện, khoác áo choàng, có hào quang.
+71	Bình thường
+72	Vui
+73	Ngủ
+74	Đói
+75	Buồn
+76	Tập trung
+77	Mệt
+78	Ngủ ngon… zzz
+79	Đang ngủ… zzz
+80	Đói lả rồi, cho mình ăn với
+81	Mệt quá, cho mình ngủ chút
+82	Đang tập trung cùng bạn
+83	Lo quá, máy tính đang chờ bạn
+84	Tự hào về bạn quá!
+85	Buồn vì bạn bỏ dở
+86	Buồn vì build lỗi
+87	Chán quá, chơi với mình đi
+88	Hơi đói rồi
+89	Đang cổ vũ agent
+90	Buồn ngủ rồi
+91	Chào buổi sáng!
+92	Vui vẻ
+93	Cho ăn
+94	Chơi
+95	Ru ngủ
+96	Đánh thức
+97	Máy tính
+98	Ghép với máy tính để duyệt việc của agent AI và xem build ngay tại đây.
+99	Xem mẫu
+100	Ghép máy tính
+101	Loại
+102	Thú cưng
+103	Cửa hàng
+104	Có sẵn
+105	Chạm để chọn thú cưng
+106	, chưa mua
+107	Đã có
+108	Thú cưng bạn chọn hiện ở khắp app, widget và màn hình khoá.
+109	Đã chọn {0}
+110	Thú cưng mới sẽ hiện ở trang chủ, widget và màn chặn.
+111	Chưa mua được
+112	Không kết nối được với máy tính: {0}
+113	Máy tính này đã ghép với điện thoại khác. Cần Pro để ghép thêm.
+114	Máy tính đã huỷ ghép với điện thoại này. Quét lại mã QR để ghép.
+115	Trên máy tính: mở NotchTasks → Bảng điều khiển → Ghép nối, bấm Ghép thiết bị rồi quét mã QR.
+116	Hoặc dán mã ghép
+117	Dán mã ghép
+118	Mã ghép từ máy tính
+119	Ghép
+120	Đây không phải mã ghép của NotchTasks.
+121	Mã này chỉ dùng cho các thiết bị của bạn.
+122	Ghép với máy tính
+123	Huỷ
+124	dữ liệu mẫu
+125	Đang chờ bạn
+126	Hoạt động
+127	Đang chờ {0}…
+128	máy tính
+129	Mở NotchTasks trên máy tính để thấy agent và câu hỏi ở đây.
+130	Đang ở xa máy tính · cập nhật {0}
+131	Với Pro: xem và trả lời agent trực tiếp từ bất cứ đâu.
+132	Đang chờ bạn duyệt
+133	{0} việc chờ bạn duyệt
+134	 đang chạy
+135	Có build bị lỗi
+136	Mọi việc đã xong
+137	Máy tính đang rảnh
+138	Notch máy tính, ngay trong tay bạn
+139	Duyệt việc của agent AI và xem build ngay tại đây, cả trên màn hình khoá.
+140	Xem thử với dữ liệu mẫu
+141	Cài NotchTasks trên máy tính, mở **Bảng điều khiển → Ghép nối**, rồi quét mã QR.
+142	Trả lời
+143	Từ chối
+144	Cho phép
+145	Chọn một hoặc nhiều
+146	Gửi câu trả lời
+147	Cho phép lệnh này cần Face ID.
+148	Trả lời sau trên máy tính
+149	Chi tiết
+150	vừa xong
+151	 trước
+152	Mát
+153	Ấm
+154	Nóng
+155	Rất nóng
+156	Nhiệt độ
+157	Đặt lại sau {0}
+158	ít phút
+159	{0} ngày {1} giờ
+160	{0} ngày
+161	{0} giờ {1} phút
+162	{0} giờ
+163	{0} phút
+164	Đã cho phép
+165	Đã từ chối
+166	Để trên máy tính
+167	Đã chọn: 
+168	Đang xem
+169	Dữ liệu mẫu
+170	Chưa ghép
+171	Thoát dữ liệu mẫu
+172	Huỷ ghép
+173	Nối trực tiếp khi cùng Wi‑Fi
+174	Đang nối
+175	Trực tiếp qua Wi‑Fi
+176	Thông báo
+177	Kết nối
+178	Cùng Wi‑Fi: cập nhật ngay. Ra ngoài: tự chuyển sang Internet.
+179	Xem thử Live Activity
+180	Hiện 3 yêu cầu mẫu. Khoá máy để xem.
+181	Live Activity đang tắt: bật trong Cài đặt → NotchTasks.
+182	Face ID cho lệnh nguy hiểm
+183	Bảo mật
+184	Cần Face ID trước khi cho phép lệnh có thể xoá hoặc ghi đè dữ liệu.
+185	Thông tin
+186	Phiên bản
+187	Cài đặt
+188	Đang dùng Pro
+189	Đang dùng Pro (đã mua trên thiết bị khác)
+190	Kỳ hiện tại đến
+191	Quản lý gói đăng ký
+192	Dùng thử Pro 7 ngày miễn phí
+193	Khôi phục giao dịch
+194	Dùng ở bất cứ đâu, trả lời ngay trên thông báo, Live Activity cho agent và build, ghép nhiều thiết bị.
+195	Gói tháng và năm tự gia hạn. Huỷ trong Cài đặt → tên bạn → Đăng ký, ít nhất 24 giờ trước kỳ mới.
+196	Điều khoản
+197	Quyền riêng tư
+198	Chưa xong
+199	Pro theo năm
+200	Pro theo tháng
+201	Pro trọn đời
+202	 / năm
+203	 / tháng
+204	Của bạn
+205	Thêm widget: giữ màn hình chính → Sửa → Thêm widget → NotchTasks.
+206	Xem và đổi thú cưng
+207	Lên cấp {0}!
+208	{0} lớn thêm một chút.
+209	Mở khoá: {0}.
+210	Tuyệt
+211	Đã mở khoá hết. Tập trung xong vẫn được XP; bỏ dở thì nó buồn.
+212	1 phút tập trung = 1 XP. Cấp {0}: {1}.
+213	Đang tập trung
+214	Nghiêm
+215	Dừng
+216	Nghỉ giải lao
+217	Tiếp theo: phiên {0}/{1}
+218	Vào luôn
+219	Đếm ở đây và trên notch máy tính
+220	Hiện trên màn hình khoá, báo khi hết giờ
+221	Bắt đầu
+222	Bắt đầu chế độ nghiêm
+223	Chế độ nghiêm: không dừng được tới khi hết giờ.
+224	Bật chế độ nghiêm?
+225	Bắt đầu nghiêm
+226	Không dừng được khi đang tập trung, trong cả {0} phiên. Giờ nghỉ vẫn dừng được.
+227	Không dừng được trong {0} phút. Các app bị chặn sẽ mở lại khi hết giờ.
+228	Pomodoro: {0} phiên × {1} phút
+229	Phiên {0} phút
+230	Đứng dậy vươn vai chút nhé!
+231	Uống một ngụm nước đi nào 💧
+232	Nghỉ mắt 20 giây, nhìn ra xa nhé.
+233	Thả lỏng vai, hít thở sâu.
+234	Đi lại vài bước cho đỡ mỏi.
+235	Uống nước chưa? Mình nhắc đó 💧
+236	{0} nhắc bạn
+237	{0}: xem lại hôm nay
+238	Bạn đã tập trung bao lâu, duyệt bao nhiêu câu hỏi? Mở để xem.
+239	Hết giờ nghỉ
+240	{0} sẵn sàng vào phiên {1}/{2}, {3} phút. Chạm để bắt đầu.
+241	phút tập trung
+242	phiên
+243	câu đã duyệt
+244	ngày liên tiếp
+245	Ghép với máy tính để đưa thú cưng lên notch.
+246	Cấp {0}
+247	Chạm để đưa lên notch. Thú cưng đổi dáng theo việc trên máy tính.
+248	Thú cưng lên notch
+249	Thêm bên trái
+250	Thêm bên phải
+251	Thay icon {0} bên {1}
+252	phải
+253	trái
+254	Bỏ khỏi notch
+255	Tập trung theo từng phiên ngắn, xen giờ nghỉ. Hết giờ nghỉ, phiên sau tự bắt đầu.
+256	Tập trung: {0} phút
+257	Nghỉ: {0} phút
+258	Số phiên: {0}
+259	Mỗi lần Pomodoro
+260	Tổng {0} phút tập trung. Bắt đầu ngay sẽ xong lúc {1}.
+261	Bắt đầu ở thẻ Tập trung, Trang chủ.
+262	Giờ nghỉ có nút "Vào luôn" và "Dừng".
+263	Có thể chọn chế độ nghiêm khi bắt đầu.
+264	Số liệu mẫu, vì hôm nay chưa có phiên nào.
+265	7 ngày qua · phút tập trung
+266	Mỗi tối 21:00 có thông báo nhắc xem.
+267	Mở ở cấp 3: thẻ Hôm nay và thông báo lúc 21:00.
+268	{0} chờ bạn cả ngày. Mai mình tập trung cùng nhau nhé!
+269	{0}: hôm nay {1} phút, khởi động tốt đấy!
+270	{0}: {1} phút tập trung, {2} phiên. Giỏi lắm!
+271	{0}: {1} phút! Hôm nay bạn làm việc thật chăm, nhớ nghỉ ngơi nhé.
+272	Chúc mừng! 🎉
+273	{0} lên cấp {1} và mở khoá:
+274	Đã tự bật. Chỉnh trong trang Thú cưng.
+275	Tuyệt vời
+276	Build lỗi
+277	Không tạo được Live Activity: {0}
+278	Xong phiên {0}/{1}
+279	Hết giờ tập trung
+280	Nghỉ {0} phút, rồi vào phiên tiếp.
+281	{0} phút xong rồi. Nghỉ một chút nhé.
+282	 🎉 Mở khoá: {0}.
+283	Cho phép lệnh nguy hiểm: {0}
+284	Dùng cách nào để lưu dữ liệu?
+285	Lưu trữ
+286	SQLite (Khuyên dùng)
+287	MacBook Pro của bạn
+288	Đang sửa NotchView.swift
+289	Đang chạy test
+290	Đang build cho iPhone 17 Pro
+291	CI lỗi: deploy
+292	6 phút
+293	CI đạt: test
+294	Chưa thấy notch của máy tính
+295	Cập nhật NotchTasks trên máy tính lên bản mới, rồi mở nó để chỉnh notch từ đây.
+296	Đang gửi…
+297	Máy mẫu: thử thoải mái
+298	Đã đồng bộ với {0}
+299	Chủ đề
+300	Màn hình khoá dùng icon riêng
+301	Icon trên màn hình khoá
+302	Chọn
+303	Đổi
+304	Bỏ
+305	Icon cho công cụ build
+306	Icon hiện trên notch khi công cụ đó đang build.
+307	Giao diện
+308	Kích thước
+309	Lớn
+310	Mở notch
+311	Rê chuột
+312	Bấm
+313	Nền
+314	Màu đầu
+315	Màu cuối
+316	Chuyển động
+317	Kiểu thông báo
+318	Mô-đun
+319	{0} đang bật
+320	Âm thanh & rung
+321	Âm thanh
+322	Rung bàn di chuột
+323	Thông báo hệ thống
+324	Notch trên màn hình khoá
+325	Màn hình khoá máy tính
+326	Báo xong khi chạy hơn
+327	mọi tác vụ
+328	{0} giây
+329	Cảnh báo giới hạn AI ở
+330	Icon trên notch
+331	Chạm chỗ muốn chuyển tới. Chạm lại icon đó để huỷ.
+332	Kéo icon để đổi chỗ, chạm để dời, đổi hoặc xoá. Mỗi bên tối đa {0}{1}
+333	, Pro được 4.
+334	Dời chỗ
+335	Đổi icon
+336	bên phải
+337	bên trái

@@ -75,13 +75,13 @@ enum Devices {
                 for (name, value) in entry {
                     let info = value as? [String: Any] ?? [:]
                     let levels: [(String, String)] = [("device_batteryLevelLeft", "L"), ("device_batteryLevelRight", "R"),
-                                                      ("device_batteryLevelCase", L("Hộp")), ("device_batteryLevelMain", "")]
+                                                      ("device_batteryLevelCase", L("Case")), ("device_batteryLevelMain", "")]
                     var parts: [String] = []
                     var lowest: Int?
                     for (key, label) in levels {
                         guard let v = info[key] as? String, let n = Int(v.replacingOccurrences(of: "%", with: "")) else { continue }
                         parts.append(label.isEmpty ? "\(n)%" : "\(label) \(n)%")
-                        if label != L("Hộp") { lowest = min(lowest ?? n, n) }  // the case running low isn't urgent
+                        if label != L("Case") { lowest = min(lowest ?? n, n) }  // the case running low isn't urgent
                     }
                     func hex(_ k: String) -> Int? { (info[k] as? String).flatMap { Int($0.replacingOccurrences(of: "0x", with: ""), radix: 16) } }
                     let type = info["device_minorType"] as? String

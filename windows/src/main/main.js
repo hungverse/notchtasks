@@ -353,7 +353,7 @@ function askToast(a) {
   const name = asks.AGENTS[a.agent]?.name || a.agent;
   return toast({
     symbol: isQ ? 'questionmark.bubble.fill' : 'hand.raised.fill', tint: TINT.orange,
-    title: name + (isQ ? L(' đang hỏi') : L(' cần bạn duyệt')),
+    title: name + (isQ ? L(' is asking') : L(' needs your approval')),
     subtitle: a.session + ' · ' + (isQ ? a.summary : `${asks.actionLabel(a.tool)}: ${a.summary}`),
     event: 'agentAsk', sticky: true, ask: a,
   });
@@ -434,7 +434,7 @@ function procJob(p, o) {
   if (total > o.threshold) busyAt.set(key, o.now);
   const working = busyAt.has(key) && o.now - busyAt.get(key) < 6000;
   const pct = `${Math.round(total)}% CPU`;
-  const detail = working ? (o.busy ? `${o.busy} · ${pct}` : top ? `▶ ${top} · ${pct}` : L('Đang làm việc · {0}', pct)) : o.idle;
+  const detail = working ? (o.busy ? `${o.busy} · ${pct}` : top ? `▶ ${top} · ${pct}` : L('Working · {0}', pct)) : o.idle;
   return { id: key, title: o.title, detail, working };
 }
 
@@ -447,7 +447,7 @@ function claudeJobs(byPid, now) {
     const since = P.ago(Math.max(0, (now - (s.statusUpdatedAt ?? now)) / 1000));
     out.push({
       id: String(s.pid), title: s.name || (s.cwd ? P.lastComponent(s.cwd) : '') || 'Claude',
-      detail: busy ? L('Đang làm việc · {0}', since) : L('Đang chờ'), working: busy,
+      detail: busy ? L('Working · {0}', since) : L('Waiting'), working: busy,
     });
   }
   return out;
@@ -462,7 +462,7 @@ function modelLineOf(item) {
   const key = localKey(item);
   if (!key) return null;
   const names = localModels[key] || [];
-  return names.length ? L('Đã nạp ') + names.join(', ') : L('Chưa nạp model');
+  return names.length ? L('Loaded ') + names.join(', ') : L('No model loaded');
 }
 
 // Each enabled watch item: its running processes as rows. Build items feed the Build & CI row instead (in computeAll).
@@ -481,12 +481,12 @@ function itemStates(procs, byPid, kids, now) {
         alive = true;
         if (item.childTasks) {
           for (const c of kids.get(p.pid) || []) {
-            jobs.push(procJob(c, { title: folderFromArgv(argvOf(c)) || c.name, threshold, idle: L('Đang chờ'), kids, now }));
+            jobs.push(procJob(c, { title: folderFromArgv(argvOf(c)) || c.name, threshold, idle: L('Waiting'), kids, now }));
           }
         } else {
           jobs.push(procJob(p, {
             title: modelTitleOf(item) || folderFromArgv(argvOf(p)) || item.name, threshold, kids, now,
-            idle: modelLineOf(item) || L('Đang chờ'), busy: modelTitleOf(item) ? L('Đang chạy') : null,
+            idle: modelLineOf(item) || L('Waiting'), busy: modelTitleOf(item) ? L('Running') : null,
           }));
         }
       }
@@ -497,7 +497,7 @@ function itemStates(procs, byPid, kids, now) {
         alive = true;
         jobs.push(procJob(p, {
           title: modelTitleOf(item) || item.name, threshold, kids, now,
-          idle: modelLineOf(item) || L('Đang mở'), busy: modelTitleOf(item) ? L('Đang chạy') : null,
+          idle: modelLineOf(item) || L('Open'), busy: modelTitleOf(item) ? L('Running') : null,
         }));
       }
     } else if (item.kind === 'codex') {
@@ -531,7 +531,7 @@ function scanWorkers(procs) {
     const ok = result === 'Succeeded';
     announce(toast({
       symbol: ok ? 'checkmark.seal.fill' : 'xmark.octagon.fill', tint: ok ? TINT.green : TINT.red,
-      title: (ok ? L('CI đạt: ') : L('CI lỗi: ')) + w.job.detail, subtitle: w.job.title, event: ok ? 'ciPassed' : 'ciFailed',
+      title: (ok ? L('CI passed: ') : L('CI failed: ')) + w.job.detail, subtitle: w.job.title, event: ok ? 'ciPassed' : 'ciFailed',
     }));
   }
   return rows;
@@ -554,7 +554,7 @@ function announceFinished(states, now) {
     if (took < cfg.doneAfter) continue;
     const dev = w.item.kind === 'dev';
     announce(toast({
-      symbol: 'checkmark.circle.fill', tint: TINT.green, title: L('{0} xong', dev ? w.title : w.item.name),
+      symbol: 'checkmark.circle.fill', tint: TINT.green, title: L('{0} done', dev ? w.title : w.item.name),
       subtitle: dev ? P.ago(took) : `${w.title} · ${P.ago(took)}`, icon: dev ? undefined : (w.item.icon || undefined),
       event: 'taskDone', toPhone: true,
     }));
@@ -635,10 +635,10 @@ function pollRunners(now) {
   for (const gone of gitlabPrev) {
     if (running.some((r) => r.id === gone.id)) continue;
     if (failed.some((f) => f.id === gone.id)) {
-      announce(toast({ symbol: 'xmark.octagon.fill', tint: TINT.red, title: L('CI lỗi: {0}', gone.name), subtitle: gone.project,
-        event: 'ciFailed', url: gone.url, action: L('Xem log') }));
+      announce(toast({ symbol: 'xmark.octagon.fill', tint: TINT.red, title: L('CI failed: {0}', gone.name), subtitle: gone.project,
+        event: 'ciFailed', url: gone.url, action: L('View log') }));
     } else if (succeeded.has(gone.id)) {
-      announce(toast({ symbol: 'checkmark.seal.fill', tint: TINT.green, title: L('CI đạt: {0}', gone.name), subtitle: gone.project,
+      announce(toast({ symbol: 'checkmark.seal.fill', tint: TINT.green, title: L('CI passed: {0}', gone.name), subtitle: gone.project,
         event: 'ciPassed', url: gone.url }));
     }
   }
@@ -662,10 +662,10 @@ function githubFinished(runs) {
   const dismissed = new Set(kvGet('dismissedJobs') || []);
   for (const r of runs) {
     if (r.conclusion === 'success') {
-      announce(toast({ symbol: 'checkmark.seal.fill', tint: TINT.green, title: L('CI đạt: {0}', r.workflow), subtitle: r.repo, event: 'ciPassed', url: r.url }));
+      announce(toast({ symbol: 'checkmark.seal.fill', tint: TINT.green, title: L('CI passed: {0}', r.workflow), subtitle: r.repo, event: 'ciPassed', url: r.url }));
     } else if (['failure', 'timed_out', 'startup_failure'].includes(r.conclusion || '')) {
-      announce(toast({ symbol: 'xmark.octagon.fill', tint: TINT.red, title: L('CI lỗi: {0}', r.workflow), subtitle: r.repo,
-        event: 'ciFailed', url: r.url, action: L('Xem log') }));
+      announce(toast({ symbol: 'xmark.octagon.fill', tint: TINT.red, title: L('CI failed: {0}', r.workflow), subtitle: r.repo,
+        event: 'ciFailed', url: r.url, action: L('View log') }));
       if (!dismissed.has(`gh-${r.id}`)) M.alerts = [{ id: `gh-${r.id}`, name: r.workflow, project: r.repo, reason: r.title || 'failure', url: r.url }, ...M.alerts];
     }
   }
@@ -700,12 +700,12 @@ function warnLimits(list, now) {
       warnedLimits.add(key);
       const at = P.resetText(w, { now: new Date(now) });
       const left = Math.trunc(Math.max(0, (w.resets.getTime() - now) / 60000));
-      const wait = left >= 60 ? L('{0} giờ {1} phút', Math.trunc(left / 60), left % 60) : L('{0} phút', left);
+      const wait = left >= 60 ? L('{0}h {1}m', Math.trunc(left / 60), left % 60) : L('{0} min', left);
       announce(toast({
         symbol: step === 100 ? 'hourglass' : 'gauge.with.dots.needle.100percent', tint: step >= 95 ? TINT.red : TINT.orange,
-        title: step === 100 ? L('{0} đã hết giới hạn {1}', p.name, w.label)
-          : L('{0} đã dùng {1}% giới hạn {2}', p.name, Math.trunc(w.used), w.label),
-        subtitle: step === 100 ? L('Chờ đến {0} (còn {1})', at, wait) : L('Đặt lại lúc {0}', at),
+        title: step === 100 ? L('{0} reached its {1} limit', p.name, w.label)
+          : L('{0} used {1}% of its {2} limit', p.name, Math.trunc(w.used), w.label),
+        subtitle: step === 100 ? L('Wait until {0} ({1} left)', at, wait) : L('Resets at {0}', at),
         event: 'limitWarn', sticky: true,
       }));
     }
@@ -763,8 +763,8 @@ async function pollStats() {
     if (on('health') && hot !== null && hot >= 90 && !hotWarned) {
       hotWarned = true;
       const top = M.states.flatMap((st) => st.jobs).find((j) => j.working);
-      announce(toast({ symbol: 'thermometer.high', tint: hot >= 95 ? TINT.red : TINT.orange, title: L('Máy đang nóng'),
-        subtitle: top ? L('{0} đang chạy nặng', String(top.title).split(' · ')[0]) : L('Nên đóng bớt ứng dụng nặng'), event: 'warning' }));
+      announce(toast({ symbol: 'thermometer.high', tint: hot >= 95 ? TINT.red : TINT.orange, title: L('Computer is warm'),
+        subtitle: top ? L('{0} is working hard', String(top.title).split(' · ')[0]) : L('Consider closing heavy apps'), event: 'warning' }));
     } else if (hot !== null && hot < 80) {
       hotWarned = false;
     }
@@ -805,13 +805,13 @@ async function pollBattery(now) {
     const old = M.battery;
     if (old && old.plugged !== b.plugged) {
       announce(toast({ symbol: b.plugged ? 'bolt.fill' : 'powerplug.portrait', tint: b.plugged ? TINT.green : TINT.gray,
-        title: b.plugged ? L('Đang sạc') : L('Đã rút sạc'), subtitle: `${b.percent}%`, compact: true,
+        title: b.plugged ? L('Charging') : L('Unplugged'), subtitle: `${b.percent}%`, compact: true,
         event: b.plugged ? 'charging' : 'unplugged', art: { kind: 'charge', percent: b.percent, plugged: b.plugged } }), { notify: false });
     }
     if (b.plugged) lowBatteryWarned = false;
     if (!b.plugged && b.percent <= 20 && !lowBatteryWarned) {
       lowBatteryWarned = true;
-      announce(toast({ symbol: 'battery.25percent', tint: TINT.red, title: L('Pin yếu'), subtitle: L('Còn {0}%', b.percent), event: 'lowBattery' }));
+      announce(toast({ symbol: 'battery.25percent', tint: TINT.red, title: L('Low battery'), subtitle: L('{0}% left', b.percent), event: 'lowBattery' }));
     }
     M.battery = b;
   } finally {
@@ -831,11 +831,11 @@ function watchNetwork(now) {
       netPending = null;
       if (info.online) {
         const wifi = info.kind === 'wifi';
-        announce(toast({ symbol: wifi ? 'wifi' : 'network', tint: TINT.green, title: L('Đã có mạng lại'),
-          subtitle: wifi ? L('Wi‑Fi đã kết nối') : L('Đã kết nối'), compact: true, event: 'netUp' }));
+        announce(toast({ symbol: wifi ? 'wifi' : 'network', tint: TINT.green, title: L('Back online'),
+          subtitle: wifi ? L('Wi‑Fi connected') : L('Connected'), compact: true, event: 'netUp' }));
       } else {
-        announce(toast({ symbol: 'wifi.slash', tint: TINT.red, title: L('Mất kết nối mạng'),
-          subtitle: L('Kiểm tra Wi‑Fi hoặc dây mạng'), event: 'netDown' }));
+        announce(toast({ symbol: 'wifi.slash', tint: TINT.red, title: L('Network disconnected'),
+          subtitle: L('Check Wi‑Fi or the network cable'), event: 'netDown' }));
       }
     }
     return;
@@ -844,7 +844,7 @@ function watchNetwork(now) {
   if (info.vpn !== vpnOn) {
     vpnOn = info.vpn;
     announce(toast({ symbol: info.vpn ? 'lock.shield.fill' : 'lock.open.fill', tint: info.vpn ? TINT.blue : TINT.gray,
-      title: info.vpn ? L('VPN đã bật') : L('VPN đã tắt'), subtitle: info.vpn ? L('VPN đã bật') : L('VPN đã tắt'),
+      title: info.vpn ? L('VPN on') : L('VPN off'), subtitle: info.vpn ? L('VPN on') : L('VPN off'),
       compact: true, event: 'netUp' }), { notify: false });
   }
 }
@@ -856,8 +856,8 @@ function checkDisk() {
   const gb = free / 1e9;
   if (gb < 10 && !diskWarned) {
     diskWarned = true;
-    announce(toast({ symbol: 'internaldrive.fill', tint: TINT.orange, title: L('Ổ đĩa sắp đầy'),
-      subtitle: L('Còn {0} GB trống', gb.toFixed(1)), event: 'warning', url: 'ms-settings:storagesense', action: L('Dọn ổ đĩa') }));
+    announce(toast({ symbol: 'internaldrive.fill', tint: TINT.orange, title: L('Disk almost full'),
+      subtitle: L('{0} GB free', gb.toFixed(1)), event: 'warning', url: 'ms-settings:storagesense', action: L('Free up space') }));
   } else if (gb > 15) {
     diskWarned = false;
   }
@@ -893,7 +893,7 @@ function stopTimer() {
 
 function timerDone() {
   M.timerEnd = null;
-  announce(toast({ symbol: 'timer', tint: TINT.orange, title: L('Hết giờ'), subtitle: L('{0} phút', Math.trunc(M.timerTotal / 60)), event: 'timerDone' }));
+  announce(toast({ symbol: 'timer', tint: TINT.orange, title: L('Time\'s up'), subtitle: L('{0} min', Math.trunc(M.timerTotal / 60)), event: 'timerDone' }));
 }
 
 function addToShelf(paths) {
@@ -915,7 +915,7 @@ function removeFromShelf(paths) {
 
 async function pickShelf() {
   setExpanded(false);
-  const r = await dialog.showOpenDialog({ title: L('Thêm vào khay'), properties: ['openFile', 'openDirectory', 'multiSelections'] });
+  const r = await dialog.showOpenDialog({ title: L('Add to shelf'), properties: ['openFile', 'openDirectory', 'multiSelections'] });
   if (!r.canceled) addToShelf(r.filePaths);
 }
 
@@ -1015,7 +1015,7 @@ async function importProfile() {
   try {
     settings.importProfile(JSON.parse(fs.readFileSync(r.filePaths[0], 'utf8')));
   } catch (e) {
-    announce(toast({ symbol: 'speaker.slash.fill', tint: TINT.red, title: L('Không nhập được cấu hình'), subtitle: e.message }), { notify: false });
+    announce(toast({ symbol: 'speaker.slash.fill', tint: TINT.red, title: L('Couldn\'t import the settings'), subtitle: e.message }), { notify: false });
   }
 }
 
@@ -1042,7 +1042,7 @@ async function importSounds() {
   let pack;
   try { pack = JSON.parse(fs.readFileSync(r.filePaths[0], 'utf8')); } catch { pack = null; }
   if (!pack || pack.format !== 'notchsounds' || !pack.soundMap || typeof pack.soundMap !== 'object') {
-    announce(toast({ symbol: 'speaker.slash.fill', tint: TINT.red, title: L('Không nhập được gói âm thanh'), subtitle: '' }), { notify: false });
+    announce(toast({ symbol: 'speaker.slash.fill', tint: TINT.red, title: L('Couldn\'t import the sound pack'), subtitle: '' }), { notify: false });
     return;
   }
   const dir = path.join(userDir, 'Sounds');
@@ -1062,9 +1062,9 @@ async function importSounds() {
   }
   try {
     settings.set('soundMap', map);
-    announce(toast({ symbol: 'speaker.wave.2.fill', tint: TINT.green, title: L('Đã dùng gói âm thanh'), event: 'taskDone' }), { notify: false });
+    announce(toast({ symbol: 'speaker.wave.2.fill', tint: TINT.green, title: L('Sound pack applied'), event: 'taskDone' }), { notify: false });
   } catch (e) {
-    announce(toast({ symbol: 'speaker.slash.fill', tint: TINT.red, title: L('Không nhập được gói âm thanh'), subtitle: e.message }), { notify: false });
+    announce(toast({ symbol: 'speaker.slash.fill', tint: TINT.red, title: L('Couldn\'t import the sound pack'), subtitle: e.message }), { notify: false });
   }
 }
 
@@ -1111,7 +1111,7 @@ async function sendReport(r) {
     });
     M.report = { busy: false, code, problem: null };
   } catch {
-    M.report = { busy: false, code: null, problem: L('Không gửi được báo lỗi. Thử lại khi có mạng.') };
+    M.report = { busy: false, code: null, problem: L('Could not send the report. Try again when online.') };
   }
   schedulePush(true);
 }
@@ -1146,13 +1146,13 @@ function saveGroup(g) {
     if (!g) {
       fs.rmSync(groupFile(), { force: true });
     } else if (!safeStorage.isEncryptionAvailable()) {
-      syncNotice = L('Không lưu được mã ghép trên máy này: sẽ mất khi thoát');
+      syncNotice = L('Couldn\'t save the pairing code on this computer: it will be lost when you quit');
     } else {
       P.writeAtomic(groupFile(), safeStorage.encryptString(JSON.stringify(g)));
       syncNotice = null;
     }
   } catch (e) {
-    syncNotice = L('Không lưu được mã ghép: {0}', e.message);
+    syncNotice = L('Couldn\'t save the pairing code: {0}', e.message);
   }
 }
 
@@ -1167,8 +1167,8 @@ async function checkUpdate(manual = false) {
       const fresh = !M.update.available || M.update.version !== m.version;
       M.update = { available: true, busy: false, progress: null, error: null, version: m.version,
         notes: updater.noteFor(m, l10n.code()), manifest: m };
-      if (fresh) announce(toast({ symbol: 'arrow.down.circle.fill', tint: TINT.blue, title: L('Có bản mới {0}', m.version),
-        action: L('Bảng điều khiển'), pane: 'overview' }), { notify: false });
+      if (fresh) announce(toast({ symbol: 'arrow.down.circle.fill', tint: TINT.blue, title: L('New version {0}', m.version),
+        action: L('Control Panel'), pane: 'overview' }), { notify: false });
     } else {
       M.update = { ...M.update, available: false, busy: false, manifest: null };
       if (manual) M.update.error = null;
@@ -1222,11 +1222,11 @@ function buildTray() {
   }
   tray.setToolTip('NotchTasks');
   tray.setContextMenu(Menu.buildFromTemplate([
-    { label: L('Bảng điều khiển…'), click: () => openPrefs() },
-    { label: L('Ghép thiết bị…'), click: () => openPrefs('phone') },
-    { label: L('Kiểm tra bản cập nhật'), click: () => checkUpdate(true) },
+    { label: L('Control Panel…'), click: () => openPrefs() },
+    { label: L('Pair device…'), click: () => openPrefs('phone') },
+    { label: L('Check for updates'), click: () => checkUpdate(true) },
     { type: 'separator' },
-    { label: L('Thoát NotchTasks'), click: () => app.quit() },
+    { label: L('Quit NotchTasks'), click: () => app.quit() },
   ]));
 }
 
@@ -1270,8 +1270,8 @@ function act(name, args = []) {
       case 'importSounds': importSounds(); break;
       case 'playSound': playSound(a0, a1); break;
       case 'testToast':
-        announce(toast({ symbol: 'bell.badge.fill', tint: TINT.blue, title: L('Thử thông báo'),
-          subtitle: L('Thông báo sẽ hiện như thế này'), event: 'taskDone' }));
+        announce(toast({ symbol: 'bell.badge.fill', tint: TINT.blue, title: L('Test alert'),
+          subtitle: L('This is how the notification will look'), event: 'taskDone' }));
         break;
       case 'pickApp': pickApp(); break;
       case 'checkItem': checkItem(a0); break;
@@ -1452,8 +1452,8 @@ function boot() {
     onChange: ({ added }) => {
       for (const name of added) {
         const full = path.join(os.homedir(), 'Downloads', name);
-        announce(toast({ symbol: 'arrow.down.circle.fill', tint: TINT.blue, title: L('Đã tải xong'), subtitle: name,
-          event: 'downloadDone', url: pathToFileURL(full).href, action: L('Mở nơi lưu') }));
+        announce(toast({ symbol: 'arrow.down.circle.fill', tint: TINT.blue, title: L('Download finished'), subtitle: name,
+          event: 'downloadDone', url: pathToFileURL(full).href, action: L('Show in folder') }));
       }
     },
   });

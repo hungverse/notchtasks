@@ -95,12 +95,12 @@ struct AgentAsk: Codable, Identifiable, Equatable {
     /// What the tool does, in words a non-developer reads.
     var action: String {
         switch tool {
-        case "Bash", "run_shell_command", "run_command", "shell", "exec_command", "local_shell", "Execute", "bash": return L("Chạy lệnh")
+        case "Bash", "run_shell_command", "run_command", "shell", "exec_command", "local_shell", "Execute", "bash": return L("Run command")
         case "Edit", "Write", "MultiEdit", "NotebookEdit", "write_file", "replace", "write_to_file", "replace_file_content",
-             "multi_replace_file_content", "apply_patch", "Create", "ApplyPatch", "edit", "write": return L("Sửa file")
-        case "Read", "read_file", "view_file": return L("Đọc file")
-        case "WebFetch", "WebSearch", "web_fetch", "FetchUrl", "webfetch": return L("Truy cập web")
-        default: return tool.hasPrefix("mcp__") ? L("Dùng công cụ ") + (tool.split(separator: "_").last.map(String.init) ?? "") : tool
+             "multi_replace_file_content", "apply_patch", "Create", "ApplyPatch", "edit", "write": return L("Edit file")
+        case "Read", "read_file", "view_file": return L("Read file")
+        case "WebFetch", "WebSearch", "web_fetch", "FetchUrl", "webfetch": return L("Web access")
+        default: return tool.hasPrefix("mcp__") ? L("Use tool ") + (tool.split(separator: "_").last.map(String.init) ?? "") : tool
         }
     }
 }
@@ -191,7 +191,7 @@ enum AgentAsks {
         case .cursor:
             switch reply {
             case .allow, .answers: out = ["permission": "allow"]
-            case .deny: out = ["permission": "deny", "user_message": L("Đã từ chối trên notch"), "agent_message": denied]
+            case .deny: out = ["permission": "deny", "user_message": L("Denied on the notch"), "agent_message": denied]
             case .pass: out = ["permission": "ask"]
             }
         case .opencode:
@@ -481,9 +481,9 @@ extension AgentKind {
     var setupStep: (missing: String, button: String, command: String)? {
         switch self {
         case .codex where AgentAsks.installed(.codex) && !AgentAsks.codexTrusted:
-            return (L("Chưa Trust trong Codex"), L("Mở Codex"), "codex")
+            return (L("Not trusted in Codex yet"), L("Open Codex"), "codex")
         case .gemini where present && !AgentAsks.geminiSignedIn:
-            return (L("Chưa đăng nhập"), L("Đăng nhập"), "gemini")
+            return (L("Not signed in"), L("Sign in"), "gemini")
         default: return nil
         }
     }

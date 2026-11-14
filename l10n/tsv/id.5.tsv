@@ -1,22 +1,22 @@
-1031	Kipas
-1032	Kipas & suhu
-1033	Suhu dan kecepatan kipas dibaca dari Mac ini. Kontrol aktif hanya setelah Anda menerima peringatan.
-1034	Kontrol kipas yang salah dapat merusak perangkat keras.
-1035	Aktifkan pembantu kipas
-1036	Pembantu membatasi kecepatan pada nilai mesin dan kembali otomatis saat koneksi hilang atau Mac terlalu panas.
-1037	Sensor
-1038	Tidak dapat membaca sensor suhu.
-1039	Izinkan pembantu di Item Login pada Pengaturan Sistem.
-1040	Mac ini tidak melaporkan kipas melalui SMC; pembacaan suhu tetap berfungsi.
-1041	Kipas {0}
-1042	Dipaksa
-1043	Mode
-1044	Kecepatan tetap
-1045	Menurut sensor
-1046	Mulai {0}°C
-1047	Maksimum {0}°C
-1048	Kipas kembali otomatis karena Mac terlalu panas
-1049	Tidak dapat mendaftarkan pembantu kipas: {0}
-1050	Tidak dapat terhubung ke pembantu kipas: {0}
-1051	Setengah
-1052	Maksimum
+1015	Kipas
+1016	Kipas & suhu
+1017	Suhu dan kecepatan kipas dibaca dari Mac ini. Kontrol aktif hanya setelah Anda menerima peringatan.
+1018	Kontrol kipas yang salah dapat merusak perangkat keras.
+1019	Aktifkan pembantu kipas
+1020	Pembantu membatasi kecepatan pada nilai mesin dan kembali otomatis saat koneksi hilang atau Mac terlalu panas.
+1021	Sensor
+1022	Tidak dapat membaca sensor suhu.
+1023	Izinkan pembantu di Item Login pada Pengaturan Sistem.
+1024	Mac ini tidak melaporkan kipas melalui SMC; pembacaan suhu tetap berfungsi.
+1025	Kipas {0}
+1026	Dipaksa
+1027	Mode
+1028	Kecepatan tetap
+1029	Menurut sensor
+1030	Mulai {0}°C
+1031	Maksimum {0}°C
+1032	Kipas kembali otomatis karena Mac terlalu panas
+1033	Tidak dapat mendaftarkan pembantu kipas: {0}
+1034	Tidak dapat terhubung ke pembantu kipas: {0}
+1035	Setengah
+1036	Maksimum

@@ -276,9 +276,9 @@ final class CodexScanner {
             guard now.timeIntervalSince(m) < 20 * 60, let entry = cache[url.path], !entry.child, let s = entry.status else { continue }
             let age = now.timeIntervalSince(s.at)
             if s.working {
-                out.append(Job(id: url.lastPathComponent, title: entry.title, detail: L("Đang chạy · {0}", ago(age)), working: true))
+                out.append(Job(id: url.lastPathComponent, title: entry.title, detail: L("Running · {0}", ago(age)), working: true))
             } else if age < 10 * 60 {
-                out.append(Job(id: url.lastPathComponent, title: entry.title, detail: L("Xong · {0} trước", ago(age)), working: false))
+                out.append(Job(id: url.lastPathComponent, title: entry.title, detail: L("Done · {0} ago", ago(age)), working: false))
             }
         }
         return out

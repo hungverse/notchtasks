@@ -208,8 +208,8 @@ enum BrowserJS {
     /// Where the switch is, in the browser's own words.
     static func steps(_ b: Browser) -> String {
         b.bid == "com.apple.Safari"
-            ? L("1. Safari › Cài đặt › Nâng cao: bật \"Hiện tính năng cho nhà phát triển web\".\n2. Menu Phát triển › Cho phép JavaScript từ Apple Events.")
-            : L("Trong {0}, trên thanh menu: Xem (View) › Nhà phát triển (Developer) › Cho phép JavaScript từ Apple Events.", b.name)
+            ? L("1. Safari › Settings › Advanced: turn on \"Show features for web developers\".\n2. Develop menu › Allow JavaScript from Apple Events.")
+            : L("In {0}, in the menu bar: View › Developer › Allow JavaScript from Apple Events.", b.name)
     }
 
     /// The media tab runs a script: the switch is on for the profile that holds it (false also when no media tab is open).
@@ -252,7 +252,7 @@ enum BrowserJS {
         window?.close()
         let w = NSPanel(contentRect: NSRect(x: 0, y: 0, width: 520, height: 520), styleMask: [.titled, .closable, .fullSizeContentView],
                         backing: .buffered, defer: false)
-        w.title = L("Bật điều khiển nhạc")
+        w.title = L("Turn on music control")
         w.titlebarAppearsTransparent = true
         w.level = .floating  // stays visible over the browser while its menu is open
         w.isReleasedWhenClosed = false
@@ -273,12 +273,12 @@ struct BrowserGuideView: View {
 
     var safari: Bool { browser.bid == "com.apple.Safari" }
     var steps: [(String, String)] {
-        safari ? [(L("Mở cài đặt Safari"), L("Safari › Cài đặt… (⌘,)")),
-                  (L("Hiện tính năng nhà phát triển"), L("Tab Nâng cao: bật \"Show features for web developers\"")),
-                  (L("Bật JavaScript từ Apple Events"), "Tab Developer: tick \"Allow JavaScript from Apple Events\"")]
-               : [(L("Mở menu Xem"), L("Trên thanh menu của {0}, bấm View (Xem)", browser.name)),
-                  (L("Chọn Nhà phát triển"), L("Rê chuột vào Developer (Nhà phát triển)")),
-                  (L("Bấm Allow JavaScript from Apple Events"), L("Mục cuối cùng. Có dấu ✓ là xong"))]
+        safari ? [(L("Open Safari settings"), L("Safari › Settings… (⌘,)")),
+                  (L("Show developer features"), L("Advanced tab: turn on \"Show features for web developers\"")),
+                  (L("Allow JavaScript from Apple Events"), "Tab Developer: tick \"Allow JavaScript from Apple Events\"")]
+               : [(L("Open the View menu"), L("In {0}'s menu bar, click View", browser.name)),
+                  (L("Choose Developer"), L("Hover over Developer")),
+                  (L("Click Allow JavaScript from Apple Events"), L("The last item. A ✓ means you're done"))]
     }
 
     var body: some View {
@@ -288,8 +288,8 @@ struct BrowserGuideView: View {
                     Image(nsImage: NSWorkspace.shared.icon(forFile: url.path)).resizable().frame(width: 48, height: 48)
                 }
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(L("Cho notch điều khiển nhạc trong {0}", browser.name)).font(.title3.weight(.semibold))
-                    Text(L("Làm một lần, khoảng 10 giây. Sau đó notch dừng, phát, tua và chuyển bài ngay trong tab."))
+                    Text(L("Let the notch control music in {0}", browser.name)).font(.title3.weight(.semibold))
+                    Text(L("One time, about 10 seconds. Then the notch can pause, play, seek and skip right in the tab."))
                         .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                 }
             }
@@ -315,20 +315,20 @@ struct BrowserGuideView: View {
             HStack(spacing: 8) {
                 if enabled {
                     Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
-                    Text(L("Đã bật. Notch đã điều khiển được {0}.", browser.name)).font(.callout.weight(.medium))
+                    Text(L("Done. The notch can now control {0}.", browser.name)).font(.callout.weight(.medium))
                 } else {
                     ProgressView().controlSize(.small)
-                    Text(L("Đang chờ bạn bật… cửa sổ này tự nhận ra khi xong")).font(.callout).foregroundStyle(.secondary)
+                    Text(L("Waiting for you to turn it on… this window notices when you're done")).font(.callout).foregroundStyle(.secondary)
                 }
             }
             .padding(10).frame(maxWidth: .infinity, alignment: .leading)
             .background(RoundedRectangle(cornerRadius: 10).fill(enabled ? Color.green.opacity(0.12) : Color.secondary.opacity(0.08)))
 
             HStack {
-                Button(enabled ? "Xong" : L("Để sau"), action: close).keyboardShortcut(.cancelAction)
+                Button(enabled ? "Xong" : L("Later"), action: close).keyboardShortcut(.cancelAction)
                 Spacer()
                 if !enabled {
-                    Button { Task.detached { BrowserJS.showPlayingTab(browser) } } label: { Label(L("Mở {0}", browser.name), systemImage: "arrow.up.forward.app") }
+                    Button { Task.detached { BrowserJS.showPlayingTab(browser) } } label: { Label(L("Open {0}", browser.name), systemImage: "arrow.up.forward.app") }
                         .buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction)
                 }
             }

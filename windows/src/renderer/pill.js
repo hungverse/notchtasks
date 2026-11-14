@@ -15,16 +15,16 @@
   const PALETTE = [SYS.blue, SYS.teal, SYS.green, SYS.pink, SYS.purple, SYS.yellow, SYS.orange];
   const KIND_NAMES = { claude: 'Claude', codex: 'Codex', gemini: 'Gemini', antigravity: 'Antigravity', cursor: 'Cursor', opencode: 'OpenCode' };
   const RISK = [
-    [/\brm\s+-[a-zA-Z]*[rf]/, 'Xoá file hoặc thư mục'],
-    [/\bsudo\b/, 'Chạy với quyền quản trị'],
-    [/git\s+push\b.*(--force|-f\b)/, 'Ghi đè lịch sử trên máy chủ git'],
-    [/git\s+reset\s+--hard/, 'Bỏ mọi thay đổi chưa lưu'],
-    [/git\s+clean\s+-[a-zA-Z]*f/, 'Xoá file chưa theo dõi'],
-    [/\|\s*(sh|bash|zsh)\b/, 'Chạy script tải từ mạng'],
-    [/\b(mkfs|diskutil\s+erase|dd\s+if=)/, 'Ghi thẳng lên ổ đĩa'],
-    [/chmod\s+-R\s+777/, 'Mở toàn quyền cho mọi file'],
-    [/\bdrop\s+(table|database)\b/i, 'Xoá dữ liệu trong cơ sở dữ liệu'],
-    [/--no-verify\b/, 'Bỏ qua bước kiểm tra'],
+    [/\brm\s+-[a-zA-Z]*[rf]/, 'Deletes files or folders'],
+    [/\bsudo\b/, 'Runs as administrator'],
+    [/git\s+push\b.*(--force|-f\b)/, 'Overwrites history on the git server'],
+    [/git\s+reset\s+--hard/, 'Discards all unsaved changes'],
+    [/git\s+clean\s+-[a-zA-Z]*f/, 'Deletes untracked files'],
+    [/\|\s*(sh|bash|zsh)\b/, 'Runs a script downloaded from the web'],
+    [/\b(mkfs|diskutil\s+erase|dd\s+if=)/, 'Writes straight to a disk'],
+    [/chmod\s+-R\s+777/, 'Gives everyone full access to files'],
+    [/\bdrop\s+(table|database)\b/i, 'Deletes data in a database'],
+    [/--no-verify\b/, 'Skips safety checks'],
   ];
 
   let S = null;              // the last state from main
@@ -285,7 +285,7 @@
     switch (c.k) {
       case 'alerts': {
         const col = modColor('ci') || SYS.red;
-        return h('span', { style: base + ';color:' + col }, c.n === 1 ? L('1 lỗi') : L('{0} lỗi', c.n));
+        return h('span', { style: base + ';color:' + col }, c.n === 1 ? L('1 error') : L('{0} errors', c.n));
       }
       case 'media': {
         const col = modColor('media') || tintOf(c.np.item || { name: c.np.appName || '', kind: 'app' });
@@ -306,12 +306,12 @@
         return h('span', { style: base + ';color:' + tint }, String(jobs.length));
       }
       case 'ask':
-        return h('span', { style: base + ';color:' + SYS.orange }, c.asks.length === 1 ? L('Chờ bạn') : L('{0} chờ', c.asks.length));
+        return h('span', { style: base + ';color:' + SYS.orange }, c.asks.length === 1 ? L('Waiting for you') : L('{0} waiting', c.asks.length));
       case 'limit': {
         const w = c.w;
         const col = w.used >= 95 ? SYS.red : SYS.orange;
-        return h('span', { style: base + ';color:' + col, title: L('{0} đã dùng {1}% giới hạn {2}', c.name, Math.round(w.used), w.label) },
-          w.used >= 100 ? L('Chờ ') + resetText(w.resets) : Math.round(w.used) + '%');
+        return h('span', { style: base + ';color:' + col, title: L('{0} used {1}% of its {2} limit', c.name, Math.round(w.used), w.label) },
+          w.used >= 100 ? L('Waiting ') + resetText(w.resets) : Math.round(w.used) + '%');
       }
     }
     return null;
@@ -368,15 +368,15 @@
   function toastButtons(t) {
     const kids = [];
     if (t.ask) {
-      if (t.ask.questions && t.ask.questions.length) kids.push(choice(L('Trả lời'), true, () => openToast(t)));
+      if (t.ask.questions && t.ask.questions.length) kids.push(choice(L('Reply'), true, () => openToast(t)));
       else {
-        kids.push(choice(L('Từ chối'), false, () => nt.act('answer', t.ask.id, { kind: 'deny' })));
-        kids.push(choice(L('Cho phép'), true, () => nt.act('answer', t.ask.id, { kind: 'allow' })));
+        kids.push(choice(L('Deny'), false, () => nt.act('answer', t.ask.id, { kind: 'deny' })));
+        kids.push(choice(L('Allow'), true, () => nt.act('answer', t.ask.id, { kind: 'allow' })));
       }
     } else if (t.action || t.url || t.pane) {
-      kids.push(choice(t.action || L('Mở'), true, () => openToast(t)));
+      kids.push(choice(t.action || L('Open'), true, () => openToast(t)));
     }
-    kids.push(h('button', { class: 'xbtn', title: L('Ẩn thông báo'), onclick: (e) => { e.stopPropagation(); nt.act('dismissToast'); } }, ic('xmark', 9)));
+    kids.push(h('button', { class: 'xbtn', title: L('Hide alert'), onclick: (e) => { e.stopPropagation(); nt.act('dismissToast'); } }, ic('xmark', 9)));
     return h('div', { class: 'btns' }, kids);
   }
   function toastEl(t) {
@@ -428,14 +428,14 @@
   function askAction(tool) {
     switch (tool) {
       case 'Bash': case 'run_shell_command': case 'run_command': case 'shell': case 'exec_command': case 'local_shell': case 'Execute': case 'bash':
-        return L('Chạy lệnh');
+        return L('Run command');
       case 'Edit': case 'Write': case 'MultiEdit': case 'NotebookEdit': case 'write_file': case 'replace': case 'write_to_file': case 'replace_file_content':
       case 'multi_replace_file_content': case 'apply_patch': case 'Create': case 'ApplyPatch': case 'edit': case 'write':
-        return L('Sửa file');
-      case 'Read': case 'read_file': case 'view_file': return L('Đọc file');
-      case 'WebFetch': case 'WebSearch': case 'web_fetch': case 'FetchUrl': case 'webfetch': return L('Truy cập web');
+        return L('Edit file');
+      case 'Read': case 'read_file': case 'view_file': return L('Read file');
+      case 'WebFetch': case 'WebSearch': case 'web_fetch': case 'FetchUrl': case 'webfetch': return L('Web access');
       default:
-        if (String(tool).startsWith('mcp__')) return L('Dùng công cụ ') + (String(tool).split('_').pop() || '');
+        if (String(tool).startsWith('mcp__')) return L('Use tool ') + (String(tool).split('_').pop() || '');
         return tool;
     }
   }
@@ -447,16 +447,16 @@
     const kind = kindOf(a);
     const item = agentItem(kind);
     const isQ = !!(a.questions && a.questions.length);
-    const risky = !isQ && askAction(a.tool) === L('Chạy lệnh') ? riskReason(a.summary || '') : null;
+    const risky = !isQ && askAction(a.tool) === L('Run command') ? riskReason(a.summary || '') : null;
     const ready = isQ && a.questions.every((_, i) => pickSet(a.id, i).size > 0);
     const single = isQ && a.questions.length === 1 && !a.questions[0].multiSelect;
     const wait = h('span', { class: 'ask-wait num' });
-    tick(wait, (e) => { e.textContent = L('Chờ ') + mmss((Date.now() - toMs(a.at)) / 1000); });
-    wait.textContent = L('Chờ ') + mmss((Date.now() - toMs(a.at)) / 1000);
+    tick(wait, (e) => { e.textContent = L('Waiting ') + mmss((Date.now() - toMs(a.at)) / 1000); });
+    wait.textContent = L('Waiting ') + mmss((Date.now() - toMs(a.at)) / 1000);
     const head = h('div', { class: 'ask-head' },
       item ? itemIcon(item, 28) : h('span', { class: 'ic', style: 'width:28px;height:28px;color:#ff9f0a' }, ic('sparkles', 14, SYS.orange)),
       h('div', { style: 'min-width:0;flex:1' },
-        h('div', { class: 'ask-title txt' }, (KIND_NAMES[kind] || kind) + (isQ ? L(' đang hỏi') : L(' cần bạn duyệt'))),
+        h('div', { class: 'ask-title txt' }, (KIND_NAMES[kind] || kind) + (isQ ? L(' is asking') : L(' needs your approval'))),
         h('div', { class: 'ask-sub txt' }, a.session || '')),
       wait);
     let body;
@@ -488,17 +488,17 @@
     }
     const name = KIND_NAMES[kind] || kind;
     const foot = h('div', { class: 'ask-foot' },
-      h('button', { class: 'underline-link', title: L('Bỏ qua ở đây, {0} sẽ tự hỏi như bình thường', name), onclick: () => { PICKS.delete(a.id); nt.act('answer', a.id, { kind: 'pass' }); } },
-        L('Trả lời trong {0}', name)),
+      h('button', { class: 'underline-link', title: L('Skip here, {0} will ask as usual', name), onclick: () => { PICKS.delete(a.id); nt.act('answer', a.id, { kind: 'pass' }); } },
+        L('Answer in {0}', name)),
       h('span', { class: 'spacer' }),
       isQ
-        ? (single ? null : choice(L('Gửi'), true, () => {
+        ? (single ? null : choice(L('Send'), true, () => {
           const out = {};
           a.questions.forEach((q, qi) => { const set = pickSet(a.id, qi); out[q.question] = q.options.filter((o) => set.has(o)).join(', '); });
           PICKS.delete(a.id);
           nt.act('answer', a.id, { kind: 'answers', answers: out });
         }, true))
-        : [choice(L('Từ chối'), false, () => nt.act('answer', a.id, { kind: 'deny' }), true), choice(L('Cho phép'), true, () => nt.act('answer', a.id, { kind: 'allow' }), true)]);
+        : [choice(L('Deny'), false, () => nt.act('answer', a.id, { kind: 'deny' }), true), choice(L('Allow'), true, () => nt.act('answer', a.id, { kind: 'allow' }), true)]);
     if (isQ && !single) foot.lastChild.disabled = !ready;
     if (isQ && !single) foot.lastChild.style.opacity = ready ? '1' : '0.4';
     return h('div', { class: 'card ask' + (risky ? ' risky' : '') }, head, body, foot);
@@ -509,10 +509,10 @@
     return h('div', { class: 'card alert', onclick: () => a.url && nt.act('openURL', a.url), title: a.url || '' },
       ic('xmark.octagon.fill', 16, SYS.red),
       h('div', { style: 'flex:1;min-width:0' },
-        h('div', { style: 'font-size:12px;font-weight:600', class: 'txt' }, L('CI lỗi: {0}', a.name)),
+        h('div', { style: 'font-size:12px;font-weight:600', class: 'txt' }, L('CI failed: {0}', a.name)),
         h('div', { class: 'txt', style: 'font-size:11px;color:var(--gray)' }, `${a.project} · ${a.reason}`)),
-      a.url ? h('span', { class: 'choice', style: 'color:' + SYS.red + ';background:rgba(255,69,58,0.18)' }, L('Xem log')) : null,
-      h('button', { class: 'xbtn', title: L('Ẩn thông báo'), onclick: (e) => { e.stopPropagation(); nt.act('dismissAlert', a.id); } }, ic('xmark', 9)));
+      a.url ? h('span', { class: 'choice', style: 'color:' + SYS.red + ';background:rgba(255,69,58,0.18)' }, L('View log')) : null,
+      h('button', { class: 'xbtn', title: L('Hide alert'), onclick: (e) => { e.stopPropagation(); nt.act('dismissAlert', a.id); } }, ic('xmark', 9)));
   }
   function limitBadges(windows, now = Date.now()) {
     let pressing = null;
@@ -571,11 +571,11 @@
       h('span', { class: 'lims' },
         lim.shown.map(limitBadgeEl),
         lim.hidden.length ? h('span', { class: 'more-lim', title: lim.hidden.map((w) => `${w.label} · ${Math.round(w.used)}%`).join('\n') }, '+' + lim.hidden.length) : null),
-      h('span', { class: 'count num', style: 'background:' + tint, title: L('{0} tác vụ đang chạy', x.jobs.length) }, String(x.jobs.length)));
+      h('span', { class: 'count num', style: 'background:' + tint, title: L('{0} tasks running', x.jobs.length) }, String(x.jobs.length)));
     return h('div', { class: 'card', style: `--tint:${tint}` },
       head,
       x.jobs.slice(0, 4).map((j) => jobRow(j, tint)),
-      x.jobs.length > 4 ? h('div', { class: 'more' }, L('+{0} tác vụ khác', x.jobs.length - 4)) : null);
+      x.jobs.length > 4 ? h('div', { class: 'more' }, L('+{0} more tasks', x.jobs.length - 4)) : null);
   }
   function mediaCard(np) {
     const tint = modColor('media') || tintOf(np.item || { name: np.appName || '', kind: 'app' });
@@ -585,7 +585,7 @@
     return h('div', { class: 'card media', style: `--tint:${tint}` },
       artEl(np, 46),
       h('div', { class: 'mtext' },
-        h('div', { class: 'mtitle' }, np.title || L('Đang phát âm thanh')),
+        h('div', { class: 'mtitle' }, np.title || L('Playing audio')),
         h('div', { class: 'msub' }, h('span', { class: 'txt' }, [np.artist, np.appName].filter(Boolean).join(' · '))),
         seek),
       h('div', { class: 'mctl' },
@@ -635,10 +635,10 @@
     const extend = (sec) => () => nt.act('timer', Math.ceil(left()) + sec);
     return h('div', { class: 'card timer' },
       h('div', { style: 'position:relative;width:34px;height:34px;flex:none' }, ring, h('span', { style: 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center' }, ic('timer', 12, tint))),
-      h('div', { class: 'tt' }, big, h('div', { class: 'tlab' }, L('Hẹn giờ {0} phút', Math.round(total / 60)))),
+      h('div', { class: 'tt' }, big, h('div', { class: 'tlab' }, L('{0}-minute timer', Math.round(total / 60)))),
       h('button', { class: 'pillbtn', onclick: extend(60) }, '+1′'),
       h('button', { class: 'pillbtn', onclick: extend(300) }, '+5′'),
-      h('button', { class: 'stopbtn', title: L('Dừng hẹn giờ'), onclick: () => nt.act('timer', null) }, ic('stop.fill', 11, '#fff')));
+      h('button', { class: 'stopbtn', title: L('Stop timer'), onclick: () => nt.act('timer', null) }, ic('stop.fill', 11, '#fff')));
   }
   function shelfCard() {
     const files = S.shelf || [];
@@ -649,26 +649,26 @@
     const iconBtn = (name, title, fn) => h('button', { class: 'iconbtn', title, onclick: fn }, ic(name, 11));
     const head = h('div', { class: 'shelf-head' },
       picked.length === 0
-        ? [h('span', { class: 'sh-t' }, ic('tray.full.fill', 12, '#fff'), L('Khay file')), h('span', { class: 'sh-n num' }, String(files.length))]
-        : h('span', { class: 'sh-t' }, L('Đã chọn {0}/{1}', picked.length, files.length)),
+        ? [h('span', { class: 'sh-t' }, ic('tray.full.fill', 12, '#fff'), L('File shelf')), h('span', { class: 'sh-n num' }, String(files.length))]
+        : h('span', { class: 'sh-t' }, L('{0}/{1} selected', picked.length, files.length)),
       h('span', { class: 'spacer' }),
-      files.length ? h('button', { class: 'spill', onclick: () => { SHELF_SEL.clear(); if (!all) files.forEach((p) => SHELF_SEL.add(p)); paint(); } }, all ? L('Bỏ chọn') : L('Chọn tất cả')) : null,
-      files.length && picked.length ? iconBtn('arrow.up.forward.app', L('Mở'), () => picked.forEach((p) => nt.act('shelfOpen', p))) : null,
-      files.length ? iconBtn('folder', L('Hiện trong File Explorer'), () => nt.act('shelfReveal', targets)) : null,
-      files.length ? iconBtn(picked.length ? 'minus.circle' : 'trash', picked.length ? L('Bỏ khỏi khay (file gốc giữ nguyên)') : L('Bỏ hết khỏi khay (file gốc giữ nguyên)'), () => {
+      files.length ? h('button', { class: 'spill', onclick: () => { SHELF_SEL.clear(); if (!all) files.forEach((p) => SHELF_SEL.add(p)); paint(); } }, all ? L('Deselect') : L('Select all')) : null,
+      files.length && picked.length ? iconBtn('arrow.up.forward.app', L('Open'), () => picked.forEach((p) => nt.act('shelfOpen', p))) : null,
+      files.length ? iconBtn('folder', L('Show in File Explorer'), () => nt.act('shelfReveal', targets)) : null,
+      files.length ? iconBtn(picked.length ? 'minus.circle' : 'trash', picked.length ? L('Remove from the shelf (original stays)') : L('Remove all from the shelf (originals stay)'), () => {
         const gone = new Set(targets);
         for (const p of gone) SHELF_SEL.delete(p);
         nt.act('shelfRemove', targets);
       }) : null,
-      iconBtn('plus', L('Thêm file…'), () => nt.act('shelfPick')));
+      iconBtn('plus', L('Add files…'), () => nt.act('shelfPick')));
     let body;
     if (!files.length) {
-      body = h('div', { class: 'dropzone' + (dropOver ? ' target' : '') }, dropOver ? L('Thả vào đây') : L('Kéo file vào notch, hoặc bấm + để chọn'));
+      body = h('div', { class: 'dropzone' + (dropOver ? ' target' : '') }, dropOver ? L('Drop here') : L('Drag files onto the notch, or click + to choose'));
     } else {
       body = [
         h('div', { class: 'tiles' }, files.map((p) => tileEl(p, picked))),
-        h('div', { class: 'shelf-hint' }, picked.length ? L('Kéo một file đã chọn để mang theo cả {0} file', picked.length)
-          : L('Bấm để chọn · bấm đúp để mở · kéo ra để thả vào ứng dụng khác')),
+        h('div', { class: 'shelf-hint' }, picked.length ? L('Drag one selected file to bring all {0} files', picked.length)
+          : L('Click to select · double-click to open · drag out to drop into another app')),
       ];
     }
     return h('div', { class: 'card shelf' + (dropOver ? ' target' : '') }, head, body);
@@ -730,13 +730,13 @@
     }
     kids.push(h('span', { class: 'spacer' }));
     if (isActive('shelf') && !(S.shelf && S.shelf.length) && !dropOver) {
-      kids.push(h('button', { class: 'qhint', title: L('Kéo file lên notch, hoặc bấm để chọn file đưa vào khay'), onclick: () => nt.act('shelfPick') },
-        ic('tray.and.arrow.down', 11), L('Kéo thả hoặc chọn file')));
+      kids.push(h('button', { class: 'qhint', title: L('Drag files onto the notch, or click to choose files for the shelf'), onclick: () => nt.act('shelfPick') },
+        ic('tray.and.arrow.down', 11), L('Drag and drop or choose files')));
     }
     kids.push(h('span', { class: 'qhint', style: 'gap:6px' },
-      h('button', { class: 'qbtn', title: L('Bảng điều khiển'), onclick: () => nt.act('openPrefs') },
+      h('button', { class: 'qbtn', title: L('Control Panel'), onclick: () => nt.act('openPrefs') },
         ic('gearshape', 11), S.updatePending ? h('span', { class: 'upd' }) : null),
-      h('button', { class: 'qbtn', title: L('Thoát NotchTasks'), onclick: () => nt.act('quit') }, ic('power', 11))));
+      h('button', { class: 'qbtn', title: L('Quit NotchTasks'), onclick: () => nt.act('quit') }, ic('power', 11))));
     return h('div', { class: 'quick' }, kids);
   }
 
@@ -749,11 +749,11 @@
       total += jobs.length;
     }
     const parts = [];
-    if (working > 0) parts.push(L('{0} đang chạy', working));
-    if (total > working) parts.push(L('{0} đang chờ', total - working));
+    if (working > 0) parts.push(L('{0} running', working));
+    if (total > working) parts.push(L('{0} waiting', total - working));
     const np = playing();
     if (np) parts.push('♪ ' + (np.appName || ''));
-    return parts.length ? parts.join(' · ') : L('Không có gì đang chạy');
+    return parts.length ? parts.join(' · ') : L('Nothing running');
   }
   function hottest() {
     const list = S.thermals || [];
@@ -764,7 +764,7 @@
     const right = [];
     if (t && st().systemLoad) {
       const col = t.celsius >= 85 ? SYS.red : t.celsius >= 60 ? SYS.orange : SYS.green;
-      right.push(h('span', { class: 'temp', style: 'color:' + col, title: L('Nhiệt độ') + `: ${t.name} ${Math.round(t.celsius)}°C` },
+      right.push(h('span', { class: 'temp', style: 'color:' + col, title: L('Temperature') + `: ${t.name} ${Math.round(t.celsius)}°C` },
         ic('thermometer.medium', 14), `${Math.round(t.celsius)}°`));
     }
     const w = st().size === 'compact' ? 480 : 520;
@@ -777,7 +777,7 @@
     for (const m of activeModules()) kids.push(...sectionNodes(m));
     const hasCollapsed = !!((st().badges || []).length || chipsOf().length);
     const shelfOn = isActive('shelf') && ((S.shelf && S.shelf.length) || dropOver);
-    if (!hasCollapsed && !shelfOn) kids.push(h('div', { class: 'empty' }, L('Không có gì đang chạy')));
+    if (!hasCollapsed && !shelfOn) kids.push(h('div', { class: 'empty' }, L('Nothing running')));
     kids.push(quickBar());
     const w = st().size === 'compact' ? 480 : 520;
     return h('div', { class: 'open-body', style: `width:${w}px` }, kids);

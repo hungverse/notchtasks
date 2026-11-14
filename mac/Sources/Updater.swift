@@ -27,7 +27,7 @@ struct UpdateManifest: Codable, Equatable {
                       minOS: c.decode(String.self, forKey: .minOS), notes: c.decode([String: String].self, forKey: .notes))
     }
 
-    func note(for language: String) -> String { notes[language] ?? notes["en"] ?? L("Không có ghi chú.") }
+    func note(for language: String) -> String { notes[language] ?? notes["en"] ?? L("No notes.") }
 }
 
 struct OSVersion: Comparable, Equatable {
@@ -55,15 +55,15 @@ enum UpdateFailure: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .invalidManifest: return L("Thông tin bản cập nhật không hợp lệ.")
-        case .download: return L("Không tải được bản cập nhật.")
-        case .hash: return L("Tệp tải xuống không khớp mã kiểm tra.")
-        case .mount: return L("Không thể mở ảnh đĩa của bản cập nhật.")
-        case .image: return L("Không tìm thấy ứng dụng NotchTasks trong ảnh đĩa.")
-        case .signature: return L("Chữ ký của bản cập nhật không khớp ứng dụng này.")
-        case .oldBuild: return L("Bản cập nhật không mới hơn bản đang chạy.")
-        case .unwritable(let folder): return L("Không thể ghi vào {0}. Hãy kéo ứng dụng từ ảnh đĩa vào thư mục Ứng dụng.", folder.path)
-        case .pending: return L("Còn một bản cập nhật chưa hoàn tất. Hãy thử lại sau.")
+        case .invalidManifest: return L("The update information is invalid.")
+        case .download: return L("Couldn't download the update.")
+        case .hash: return L("The downloaded file doesn't match its checksum.")
+        case .mount: return L("Couldn't open the update disk image.")
+        case .image: return L("The disk image doesn't contain NotchTasks.app.")
+        case .signature: return L("The update signature doesn't match this app.")
+        case .oldBuild: return L("The update isn't newer than the running app.")
+        case .unwritable(let folder): return L("Can't write to {0}. Drag the app from the disk image to Applications.", folder.path)
+        case .pending: return L("Another update is unfinished. Try again later.")
         }
     }
 }

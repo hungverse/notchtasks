@@ -11,17 +11,17 @@ enum Pane: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var title: String {
         switch self {
-        case .overview: return L("Tổng quan")
-        case .modules: return L("Mô-đun")
-        case .agents: return L("Theo dõi")
-        case .phone: return L("Ghép nối")
-        case .fans: return L("Quạt & nhiệt độ")
-        case .appearance: return L("Giao diện")
-        case .badges: return L("Biểu tượng & khoá")
-        case .store: return L("Kho biểu tượng")
-        case .sounds: return L("Âm thanh")
-        case .behavior: return L("Hành vi")
-        case .permissions: return L("Quyền")
+        case .overview: return L("Overview")
+        case .modules: return L("Modules")
+        case .agents: return L("Watching")
+        case .phone: return L("Pairing")
+        case .fans: return L("Fans & temperature")
+        case .appearance: return L("Appearance")
+        case .badges: return L("Icons & lock")
+        case .store: return L("Icon Library")
+        case .sounds: return L("Sound")
+        case .behavior: return L("Behavior")
+        case .permissions: return L("Permissions")
         }
     }
     var symbol: String {
@@ -114,17 +114,17 @@ struct SettingsRoot: View {
                 NotchPreview().frame(width: 280)
                 VStack(alignment: .leading, spacing: 4) {
                     Text("NotchTasks").font(.title.bold())
-                    Text(L("Notch hiện những gì đang chạy, và im lặng khi không có gì.")).foregroundStyle(.secondary)
+                    Text(L("The notch shows what's running, and stays quiet when nothing is.")).foregroundStyle(.secondary)
                 }
             }
             HStack(spacing: 12) {
-                stat("bolt.fill", "\(model.states.reduce(0) { $0 + $1.working })", L("Đang chạy"), .blue)
-                stat("xmark.octagon.fill", "\(model.alerts.count)", L("Lỗi CI"), .red)
-                stat("lock.shield.fill", "\(permissions.grantedCount)/\(permissions.items.count)", L("Quyền"), .green)
+                stat("bolt.fill", "\(model.states.reduce(0) { $0 + $1.working })", L("Running"), .blue)
+                stat("xmark.octagon.fill", "\(model.alerts.count)", L("CI errors"), .red)
+                stat("lock.shield.fill", "\(permissions.grantedCount)/\(permissions.items.count)", L("Permissions"), .green)
             }
             if settings.onboardingDone && !nextSteps.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(L("Tiếp theo")).font(.headline)
+                    Text(L("Next steps")).font(.headline)
                     ForEach(nextSteps.indices, id: \.self) { index in
                         HStack(spacing: 10) {
                             switch nextSteps[index] {
@@ -133,26 +133,26 @@ struct SettingsRoot: View {
                                     Image(systemName: item.symbol).foregroundStyle(.secondary)
                                     Text(item.title).font(.callout)
                                     Spacer()
-                                    Button(item.state == .denied ? L("Mở Cài đặt") : item.state == .needsApp ? L("Mở ứng dụng") : L("Cho phép")) {
+                                    Button(item.state == .denied ? L("Open Settings") : item.state == .needsApp ? L("Open app") : L("Allow")) {
                                         permissions.request(item)
                                     }
                                 }
                             case .agent(let kind):
                                 Image(systemName: "sparkles").foregroundStyle(.secondary)
-                                Text(kind.name + " · " + L("Trả lời agent trên notch")).font(.callout)
+                                Text(kind.name + " · " + L("Answer agents on the notch")).font(.callout)
                                 Spacer()
-                                Button(L("Bật")) { pane = .agents }
+                                Button(L("On")) { pane = .agents }
                             case .phone:
                                 Image(systemName: "iphone").foregroundStyle(.secondary)
-                                Text(L("Ghép nối")).font(.callout)
+                                Text(L("Pairing")).font(.callout)
                                 Spacer()
-                                Button(L("Ghép nối")) { pane = .phone }
+                                Button(L("Pairing")) { pane = .phone }
                             }
                         }.controlSize(.small).settingsCard(padding: 10)
                     }
                 }
             }
-            Text(L("Mô-đun")).font(.headline)
+            Text(L("Modules")).font(.headline)
             ForEach(ModuleID.groups, id: \.title) { g in
                 VStack(alignment: .leading, spacing: 6) {
                     Text(g.title.uppercased()).font(.caption.weight(.semibold)).foregroundStyle(.secondary)
@@ -162,8 +162,8 @@ struct SettingsRoot: View {
                     }
                 }
             }
-            Button(L("Xem hướng dẫn"), action: showOnboarding)
-            Button(L("Báo lỗi")) { showReport = true }
+            Button(L("See the guide"), action: showOnboarding)
+            Button(L("Report a problem")) { showReport = true }
         }
     }
 
@@ -216,12 +216,12 @@ struct SettingsRoot: View {
     var modules: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text(L("Kéo để đổi thứ tự trên notch.")).font(.callout).foregroundStyle(.secondary)
+                Text(L("Drag to reorder on the notch.")).font(.callout).foregroundStyle(.secondary)
                 Spacer()
                 // names for the controls on every row, which are icons or bare pickers otherwise
-                Text(L("Vị trí khi thu gọn")).frame(width: 92)
-                Text(L("Màu")).frame(width: 44)
-                Text(L("Bật")).frame(width: 40)
+                Text(L("Position when collapsed")).frame(width: 92)
+                Text(L("Color")).frame(width: 44)
+                Text(L("On")).frame(width: 40)
             }
             .font(.caption).foregroundStyle(.secondary).padding(.horizontal, 16)
             List {
@@ -234,7 +234,7 @@ struct SettingsRoot: View {
                                 Text(m.title).font(.body.weight(.medium))
                                 // the permission it needs, as a small lock instead of a sentence that won't fit
                                 if let need = m.needs {
-                                    Image(systemName: "lock.fill").font(.system(size: 9)).foregroundStyle(.secondary).help(L("Cần quyền {0}", need))
+                                    Image(systemName: "lock.fill").font(.system(size: 9)).foregroundStyle(.secondary).help(L("Needs {0} permission", need))
                                 }
                             }
                             Text(m.blurb).font(.caption).foregroundStyle(.secondary).lineLimit(1)
@@ -243,9 +243,9 @@ struct SettingsRoot: View {
                         Picker("", selection: placementBinding(m)) {
                             ForEach(Placement.allCases, id: \.self) { Text($0.title).tag($0) }
                         }
-                        .labelsHidden().frame(width: 92).help(L("Vị trí khi thu gọn"))
-                        ColorPicker("", selection: colorBinding(m), supportsOpacity: false).labelsHidden().help(L("Màu"))
-                            .contextMenu { Button(L("Về màu mặc định")) { settings.moduleColors[m.rawValue] = nil } }
+                        .labelsHidden().frame(width: 92).help(L("Position when collapsed"))
+                        ColorPicker("", selection: colorBinding(m), supportsOpacity: false).labelsHidden().help(L("Color"))
+                            .contextMenu { Button(L("Back to default color")) { settings.moduleColors[m.rawValue] = nil } }
                         if let requirement = m.requirement, !requirement.met(on: Requirement.current) {
                             Text(requirement.label).font(.caption2).foregroundStyle(.secondary)
                                 .padding(4).background(Capsule().fill(.quaternary))
@@ -260,7 +260,7 @@ struct SettingsRoot: View {
             .fittedList(rows: settings.modules.count)
             HStack(spacing: 12) {
                 Image(systemName: "fan.fill").frame(width: 28)
-                Text(L("Quạt & nhiệt độ"))
+                Text(L("Fans & temperature"))
                 Spacer()
                 if !Requirement.fan.met(on: Requirement.current) {
                     Text(Requirement.fan.label).font(.caption2).foregroundStyle(.secondary)
@@ -270,7 +270,7 @@ struct SettingsRoot: View {
                                          set: { if $0 { pane = .fans } else { model.fanControl.disable() } }))
                     .labelsHidden().toggleStyle(.switch).controlSize(.small)
                     .disabled(!Requirement.fan.met(on: Requirement.current))
-                    .accessibilityLabel(L("Quạt & nhiệt độ"))
+                    .accessibilityLabel(L("Fans & temperature"))
             }.settingsCard()
         }
     }
@@ -282,7 +282,7 @@ struct SettingsRoot: View {
             HStack(spacing: 16) {
                 NotchPreview().frame(width: 300)
                 Spacer()
-                Button { testToast() } label: { Label(L("Thử thông báo"), systemImage: "bell.and.waves.left.and.right") }
+                Button { testToast() } label: { Label(L("Test alert"), systemImage: "bell.and.waves.left.and.right") }
                     .buttonStyle(.borderedProminent)
             }
             LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12), GridItem(.flexible())], spacing: 12) {
@@ -290,31 +290,31 @@ struct SettingsRoot: View {
             }
             Form {
                 Section {
-                    Picker(L("Nền"), selection: $settings.background) {
+                    Picker(L("Background"), selection: $settings.background) {
                         ForEach(NotchBackground.allCases, id: \.self) { Text($0.title).tag($0) }
                     }
                     if settings.background == .gradient {
-                        ColorPicker(L("Màu trên"), selection: hexBinding(\.gradientA), supportsOpacity: false)
-                        ColorPicker(L("Màu dưới"), selection: hexBinding(\.gradientB), supportsOpacity: false)
+                        ColorPicker(L("Top color"), selection: hexBinding(\.gradientA), supportsOpacity: false)
+                        ColorPicker(L("Bottom color"), selection: hexBinding(\.gradientB), supportsOpacity: false)
                     }
-                    Picker(L("Kích thước"), selection: $settings.size) {
-                        Text(L("Gọn")).tag(NotchSize.compact)
-                        Text(L("Lớn")).tag(NotchSize.regular)
+                    Picker(L("Size"), selection: $settings.size) {
+                        Text(L("Compact")).tag(NotchSize.compact)
+                        Text(L("Large")).tag(NotchSize.regular)
                     }
                     .pickerStyle(.segmented)
-                    Picker(L("Chuyển động"), selection: $settings.motion) {
+                    Picker(L("Motion"), selection: $settings.motion) {
                         ForEach(Motion.allCases, id: \.self) { Text($0.title).tag($0) }
                     }
                     .pickerStyle(.segmented)
                 } header: { Text("Notch") } footer: { Text(lookBlurb) }
                 Section {
-                    Picker(L("Kiểu"), selection: $settings.toastStyle) {
+                    Picker(L("Style"), selection: $settings.toastStyle) {
                         ForEach(ToastStyle.allCases, id: \.self) { Text($0.title).tag($0) }
                     }
                     .pickerStyle(.segmented)
-                } header: { Text(L("Thông báo")) } footer: { Text(settings.toastStyle.blurb) }
-                Section(L("Màu")) {
-                    Picker(L("Màu nhấn"), selection: $settings.accent) {
+                } header: { Text(L("Notifications")) } footer: { Text(settings.toastStyle.blurb) }
+                Section(L("Color")) {
+                    Picker(L("Accent color"), selection: $settings.accent) {
                         ForEach(AppSettings.accents, id: \.name) { a in
                             HStack {
                                 Circle().fill(a.name == "custom" ? (Color(hex: settings.customAccent) ?? .gray) : (a.color ?? .gray)).frame(width: 10, height: 10)
@@ -324,15 +324,15 @@ struct SettingsRoot: View {
                         }
                     }
                     if settings.accent == "custom" {
-                        ColorPicker(L("Màu tự chọn"), selection: hexBinding(\.customAccent), supportsOpacity: false)
+                        ColorPicker(L("Custom color"), selection: hexBinding(\.customAccent), supportsOpacity: false)
                     }
                 }
                 Section {
                     HStack {
-                        Button(L("Xuất…"), action: exportProfile)
-                        Button(L("Nhập…"), action: importProfile)
+                        Button(L("Export…"), action: exportProfile)
+                        Button(L("Import…"), action: importProfile)
                     }
-                } header: { Text(L("Sao lưu cấu hình")) } footer: { Text(L("Toàn bộ tuỳ chỉnh trong một file .json.")) }
+                } header: { Text(L("Back up settings")) } footer: { Text(L("All your customization in one .json file.")) }
             }
             .formStyle(.grouped)
             .padding(.horizontal, -20)
@@ -344,12 +344,12 @@ struct SettingsRoot: View {
     }
 
     var lookBlurb: String {
-        model.hasNotch ? L("Màn hình này có notch: notch ôm sát camera.") : L("Màn hình này không có notch: hiện dạng Dynamic Island nổi.")
+        model.hasNotch ? L("This screen has a notch: the notch hugs the camera.") : L("This screen has no notch: shown as a floating Dynamic Island.")
     }
 
     func testToast() {
-        model.announce(Toast(symbol: "checkmark.circle.fill", tint: settings.accentColor ?? .green, title: L("Tác vụ đã xong"),
-                             subtitle: L("Thông báo thử"), event: .taskDone), notify: false)
+        model.announce(Toast(symbol: "checkmark.circle.fill", tint: settings.accentColor ?? .green, title: L("Task finished"),
+                             subtitle: L("Test alert"), event: .taskDone), notify: false)
     }
 
     func exportProfile() {
@@ -375,22 +375,22 @@ struct SettingsRoot: View {
     var sounds: some View {
         Form {
             Section {
-                Toggle(L("Âm thanh"), isOn: $settings.sounds)
-                LabeledContent(L("Âm lượng")) { Slider(value: $settings.volume, in: 0...1) }
-                Picker(L("Gói âm thanh"), selection: Binding(get: { currentPack }, set: { if !$0.isEmpty { settings.applyPack($0) } })) {
-                    if currentPack.isEmpty { Text(L("Của bạn")).tag("") }
+                Toggle(L("Sound"), isOn: $settings.sounds)
+                LabeledContent(L("Volume")) { Slider(value: $settings.volume, in: 0...1) }
+                Picker(L("Sound pack"), selection: Binding(get: { currentPack }, set: { if !$0.isEmpty { settings.applyPack($0) } })) {
+                    if currentPack.isEmpty { Text(L("Yours")).tag("") }
                     ForEach(SoundPack.all, id: \.name) { Text($0.name).tag($0.name) }
                 }
-                LabeledContent(L("Sao lưu, chia sẻ")) {
+                LabeledContent(L("Back up, share")) {
                     HStack {
-                        Button(L("Xuất gói…"), action: exportSounds)
-                        Button(L("Nhập gói…"), action: importSounds)
+                        Button(L("Export pack…"), action: exportSounds)
+                        Button(L("Import pack…"), action: importSounds)
                     }
                 }
             } footer: {
-                Text(L("Âm thanh giữ riêng, đổi giao diện không mất. Xuất gói để mang sang máy khác."))
+                Text(L("Sounds are kept separately, changing the look won't lose them. Export a pack to take it to another computer."))
             }
-            Section(L("Sự kiện")) {
+            Section(L("Events")) {
                 ForEach(SoundEvent.allCases) { e in SoundRow(event: e) }
             }
             .disabled(!settings.sounds)
@@ -406,21 +406,21 @@ struct SettingsRoot: View {
 
     func exportSounds() {
         let panel = NSSavePanel()
-        panel.nameFieldStringValue = L("Âm thanh NotchTasks.notchsounds")
+        panel.nameFieldStringValue = L("NotchTasks Sounds.notchsounds")
         panel.allowedContentTypes = [SoundPackFile.type]
         guard panel.runModal() == .OK, let url = panel.url else { return }
         let pack = SoundPackFile(map: settings.soundMap, volume: settings.volume)
         do {
             try JSONEncoder().encode(pack).write(to: url)
-        } catch { alert(L("Không xuất được gói âm thanh"), error.localizedDescription) }
+        } catch { alert(L("Couldn't export the sound pack"), error.localizedDescription) }
     }
 
     func importSounds() {
         let panel = NSOpenPanel()
         panel.allowedContentTypes = [SoundPackFile.type, .json]
-        panel.message = L("Chọn file gói âm thanh (.notchsounds)")
+        panel.message = L("Choose a sound pack file (.notchsounds)")
         guard panel.runModal() == .OK, let url = panel.url else { return }
-        if let why = settings.importSounds(url) { alert(L("Không nhập được gói âm thanh"), why) }
+        if let why = settings.importSounds(url) { alert(L("Couldn't import the sound pack"), why) }
     }
 
     func alert(_ title: String, _ text: String) {
@@ -434,31 +434,31 @@ struct SettingsRoot: View {
 
     var behavior: some View {
         Form {
-            Section(L("Mở notch")) {
-                Picker(L("Cách mở"), selection: $settings.expandMode) {
-                    Text(L("Rê chuột")).tag(ExpandMode.hover)
-                    Text(L("Bấm")).tag(ExpandMode.click)
+            Section(L("Opening the notch")) {
+                Picker(L("How to open"), selection: $settings.expandMode) {
+                    Text(L("Hover")).tag(ExpandMode.hover)
+                    Text(L("Click")).tag(ExpandMode.click)
                 }
                 .pickerStyle(.segmented)
                 if settings.expandMode == .hover {
-                    LabeledContent(L("Độ trễ {0} ms", Int(settings.hoverDelay * 1000))) {
+                    LabeledContent(L("Delay {0} ms", Int(settings.hoverDelay * 1000))) {
                         Slider(value: $settings.hoverDelay, in: 0...1, step: 0.05)
                     }
                 }
-                Toggle(L("Rung phản hồi"), isOn: $settings.haptics)
-                Toggle(L("CPU và RAM khi mở rộng"), isOn: $settings.systemLoad)
+                Toggle(L("Haptic feedback"), isOn: $settings.haptics)
+                Toggle(L("CPU and RAM when expanded"), isOn: $settings.systemLoad)
             }
-            Section(L("Thông báo")) {
-                Toggle(L("Thông báo hệ thống"), isOn: $settings.systemNotifications)
-                Stepper(L("Báo xong khi chạy từ {0} giây", Int(settings.doneAfter)), value: $settings.doneAfter, in: 5...600, step: 5)
-                LabeledContent(L("Cảnh báo giới hạn ở {0}%", Int(settings.limitWarn))) {
+            Section(L("Notifications")) {
+                Toggle(L("System notifications"), isOn: $settings.systemNotifications)
+                Stepper(L("Say done when it ran {0} sec or more", Int(settings.doneAfter)), value: $settings.doneAfter, in: 5...600, step: 5)
+                LabeledContent(L("Warn about limits at {0}%", Int(settings.limitWarn))) {
                     Slider(value: $settings.limitWarn, in: 50...100, step: 5)
                 }
             }
-            Section(L("Khác")) {
+            Section(L("Other")) {
                 LanguagePicker()
-                Toggle(L("Biểu tượng trên thanh menu"), isOn: $settings.menuBarIcon)
-                Toggle(L("Gửi thống kê sử dụng ẩn danh"), isOn: Binding(get: { !analyticsOff }, set: { Track.enabled = $0 }))
+                Toggle(L("Menu bar icon"), isOn: $settings.menuBarIcon)
+                Toggle(L("Send anonymous usage statistics"), isOn: Binding(get: { !analyticsOff }, set: { Track.enabled = $0 }))
             }
         }
         .formStyle(.grouped)
@@ -472,22 +472,22 @@ struct UpdateFooter: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
             switch updater.footerState {
-            case .checking: Text(L("Đang kiểm tra…")).foregroundStyle(.secondary)
+            case .checking: Text(L("Checking…")).foregroundStyle(.secondary)
             case .current:
                 Button(updater.shortVersion) { updater.check(manual: true) }
                     .buttonStyle(.plain).foregroundStyle(.secondary)
-                    .help(L("Kiểm tra ngay"))
-            case .upToDate: Text(L("Đã là bản mới nhất")).foregroundStyle(.secondary)
+                    .help(L("Check now"))
+            case .upToDate: Text(L("Already up to date")).foregroundStyle(.secondary)
             case .offered, .failed:
                 if updater.installing {
                     if let progress = updater.progress {
-                        ProgressView(L("Đang tải… {0}%", Int((progress * 100).rounded())), value: progress)
-                    } else { ProgressView(L("Đang xác minh…")) }
+                        ProgressView(L("Downloading… {0}%", Int((progress * 100).rounded())), value: progress)
+                    } else { ProgressView(L("Verifying…")) }
                 } else {
                     Button {
                         updater.install()
                     } label: {
-                        Label(updater.error == nil ? L("Cập nhật {0}", updater.offered?.version ?? "") : L("Thử lại"), systemImage: "arrow.down")
+                        Label(updater.error == nil ? L("Update {0}", updater.offered?.version ?? "") : L("Try again"), systemImage: "arrow.down")
                     }.buttonStyle(.borderedProminent)
                 }
                 if let offered = updater.offered {
@@ -514,18 +514,18 @@ struct PermissionList: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             if !compact {
-                Text(L("Chỉ cấp quyền cho tính năng bạn dùng. Tắt hẳn một tính năng ở trang Mô-đun."))
+                Text(L("Only grant permissions for features you use. Turn a feature off completely on the Modules page."))
                     .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             }
             let shown = permissions.items.filter { !activeOnly || ($0.module.map(settings.on) ?? true) }
-            if shown.isEmpty { Text(L("Đang kiểm tra…")).settingsCard() }
+            if shown.isEmpty { Text(L("Checking…")).settingsCard() }
             ForEach([PermItem.Group.needed, .granted, .unused], id: \.self) { group in
                 let rows = shown.filter { $0.group(featureOn: $0.module.map(settings.on) ?? true) == group }
                 let showsFan = Requirement.fan.met(on: Requirement.current) && !activeOnly && fanControl.enabled &&
                     (group == (fanControl.available ? .granted : .needed))
                 if !rows.isEmpty || showsFan {
                     VStack(alignment: .leading, spacing: 0) {
-                        Text(group == .needed ? L("Đang cần") : group == .granted ? L("Đã cấp") : L("Chưa dùng"))
+                        Text(group == .needed ? L("Needed now") : group == .granted ? L("Granted") : L("Not in use"))
                             .font(.headline).padding(.horizontal, 6).padding(.bottom, 4)
                         ForEach(rows) { p in
                             if p.id != rows.first?.id { Divider() }
@@ -539,9 +539,9 @@ struct PermissionList: View {
                 }
             }
             HStack {
-                Button(L("Làm mới")) { permissions.refresh() }
+                Button(L("Refresh")) { permissions.refresh() }
                 if !compact {
-                    Text(L("Một số quyền chỉ kiểm tra được khi ứng dụng liên quan đang mở.")).font(.caption).foregroundStyle(.secondary)
+                    Text(L("Some permissions can only be checked while the related app is open.")).font(.caption).foregroundStyle(.secondary)
                 }
             }
         }
@@ -554,15 +554,15 @@ struct PermissionList: View {
         HStack(spacing: 12) {
             Image(systemName: "fan.fill").frame(width: 30, height: 30)
             VStack(alignment: .leading, spacing: 2) {
-                Text(L("Trợ lý quạt")).font(.body.weight(.medium))
-                Text(L("Điều khiển quạt có thể làm hỏng phần cứng nếu dùng sai.")).font(.caption).foregroundStyle(.secondary)
+                Text(L("Fan helper")).font(.body.weight(.medium))
+                Text(L("Fan control can damage hardware when used incorrectly.")).font(.caption).foregroundStyle(.secondary)
             }
             Spacer()
-            Text(control.available ? L("Đã cho phép") : control.needsApproval ? L("Chưa cấp") : L("Chưa kiểm tra"))
+            Text(control.available ? L("Allowed") : control.needsApproval ? L("Not granted") : L("Not checked"))
                 .font(.caption).foregroundStyle(.secondary)
-            if control.needsApproval { Button(L("Mở Cài đặt hệ thống")) { SMAppService.openSystemSettingsLoginItems() }.controlSize(.small) }
-            else if !control.available { Button(L("Bật trợ lý quạt")) { control.register() }.controlSize(.small) }
-            else { Button(L("Mở Cài đặt hệ thống")) { SMAppService.openSystemSettingsLoginItems() }.controlSize(.small) }
+            if control.needsApproval { Button(L("Open System Settings")) { SMAppService.openSystemSettingsLoginItems() }.controlSize(.small) }
+            else if !control.available { Button(L("Enable fan helper")) { control.register() }.controlSize(.small) }
+            else { Button(L("Open System Settings")) { SMAppService.openSystemSettingsLoginItems() }.controlSize(.small) }
         }.padding(.horizontal, 6).padding(.vertical, 8)
     }
 
@@ -578,15 +578,15 @@ struct PermissionList: View {
             Text(p.state.label).font(.caption.weight(.semibold)).foregroundStyle(p.state.color)
                 .padding(.horizontal, 8).padding(.vertical, 3).background(Capsule().fill(p.state.color.opacity(0.15)))
             if p.state == .granted {
-                Button(L("Thu hồi")) { permissions.revoke(p) }.controlSize(.small)
+                Button(L("Revoke")) { permissions.revoke(p) }.controlSize(.small)
             } else {
                 if p.id == "accessibility" {
                     // an entry left by an older build looks switched on in Settings but no longer matches this app
-                    Button(L("Đặt lại")) { permissions.resetAndAsk(p) }.controlSize(.small)
-                        .help(L("Xoá mục cũ của NotchTasks trong Cài đặt rồi xin lại"))
+                    Button(L("Reset")) { permissions.resetAndAsk(p) }.controlSize(.small)
+                        .help(L("Remove NotchTasks's old entry in Settings, then ask again"))
                 }
                 if p.state != .checking {
-                    Button(p.state == .denied ? L("Mở Cài đặt") : p.state == .needsApp ? L("Mở ứng dụng") : L("Cho phép")) { permissions.request(p) }
+                    Button(p.state == .denied ? L("Open Settings") : p.state == .needsApp ? L("Open app") : L("Allow")) { permissions.request(p) }
                         .controlSize(.small).buttonStyle(.borderedProminent)
                 }
             }
@@ -693,7 +693,7 @@ struct SoundRow: View {
             Label(event.title, systemImage: event.symbol)
             Spacer()
             Menu(Sounds.displayName(current)) {
-                Button(L("Không")) { settings.soundMap[event.rawValue] = "" }
+                Button(L("No")) { settings.soundMap[event.rawValue] = "" }
                 Divider()
                 ForEach(Sounds.system, id: \.self) { name in
                     Button(name) {
@@ -702,11 +702,11 @@ struct SoundRow: View {
                     }
                 }
                 Divider()
-                Button(L("Chọn file của bạn…"), action: pickFile)
+                Button(L("Choose your file…"), action: pickFile)
             }
             .frame(width: 170)
             Button { Sounds.play(name: current, volume: settings.volume) } label: { Image(systemName: "play.circle.fill") }
-                .buttonStyle(.borderless).disabled(current.isEmpty).help(L("Nghe thử"))
+                .buttonStyle(.borderless).disabled(current.isEmpty).help(L("Preview"))
         }
     }
 

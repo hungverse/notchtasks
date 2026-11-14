@@ -130,7 +130,7 @@ function fullNotch() {
 function fullSnapshot() {
   return {
     mac: 'Hùng’s MacBook "Pro"',
-    runs: [{ id: 'r1', agent: 'gemini', title: 'api', detail: 'Đang chạy test', since: T0, icon: { id: UUID_A, symbol: 'star.fill', sprite: 'px-gears', plain: true } }],
+    runs: [{ id: 'r1', agent: 'gemini', title: 'api', detail: 'Running tests', since: T0, icon: { id: UUID_A, symbol: 'star.fill', sprite: 'px-gears', plain: true } }],
     asks: [
       { id: 'a1', pid: 4242, session: 'NotchTasks', tool: 'Bash', summary: 'rm -rf build', questions: [], at: T0, agent: 'claude',
         icon: { id: UUID_B, symbol: 'star.fill', sprite: 'px-cat', plain: true } },
@@ -141,7 +141,7 @@ function fullSnapshot() {
     at: T0,
     builds: [{ id: 'b1', title: 'Xcode', detail: 'build', since: T0 }],
     health: { battery: 64, charging: false, thermal: 1, temp: 52, fan: 3200, cpu: 45, memory: 70 },
-    events: [{ id: 'e1', kind: 'ciFailed', title: 'CI lỗi', detail: 'deploy', at: T0 }],
+    events: [{ id: 'e1', kind: 'ciFailed', title: 'CI failed', detail: 'deploy', at: T0 }],
     job: { title: 'Xcode', detail: 'build', since: T0, state: 'running', icon: { id: UUID_C, symbol: 'star.fill', sprite: 'px-gears', plain: true } },
     notch: fullNotch(),
     crew: { count: 1, title: 'api', detail: 'x', since: T0, agent: 'gemini', members: [{ agent: 'gemini' }] },
@@ -221,7 +221,7 @@ test('the js-* fixtures the Swift check opens are written here (build/crosscheck
     at: T0, agent: 'opencode',
   };
   fs.writeFileSync(path.join(OUT, 'js-ask.box'), box.seal(wire.ask(wire.askForPush(longAsk)), KEY));
-  const event = { id: 'js-e1', kind: 'taskDone', title: 'Xong', detail: 'build', at: toSwiftDate(T0) };
+  const event = { id: 'js-e1', kind: 'taskDone', title: 'Done', detail: 'build', at: toSwiftDate(T0) };
   fs.writeFileSync(path.join(OUT, 'js-event.box'), box.seal(event, KEY));
   assert.ok(fs.existsSync(path.join(OUT, 'js-snapshot.box')));
 });

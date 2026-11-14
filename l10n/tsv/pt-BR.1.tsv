@@ -43,298 +43,296 @@
 42	Espelho da câmera
 43	Clássico
 44	Vidro
-45	Minimalista
-46	Pôr do sol
-47	Oceano
-48	Exclui arquivos ou pastas
-49	Executa como administrador
-50	Sobrescreve o histórico no servidor git
-51	Descarta todas as alterações não salvas
-52	Exclui arquivos não rastreados
-53	Executa um script baixado da web
-54	Grava diretamente em um disco
-55	Dá a todos acesso total aos arquivos
-56	Exclui dados de um banco de dados
-57	Ignora verificações de segurança
-58	Lembretes para pausar e beber água
-59	Lembra você de levantar, beber água e descansar os olhos 6 vezes durante o expediente. Desative pelo botão.
-60	Resumo do dia
-61	Todas as noites, às 21h: tempo de foco no dia, número de sessões e sequência de dias.
-62	Pomodoro e sessões de 90 minutos
-63	Alterne sessões curtas de foco e pausas (por padrão, 4 × 25 minutos com pausas de 5 minutos). Também há uma sessão de 90 minutos.
-64	Coroa de flores e cachecol
-65	Seu pet cresce um pouco e usa uma coroa de flores e um cachecol.
-66	Na notch
-67	Coloque seu pet na notch do computador. Ele muda de pose de acordo com a atividade no computador.
-68	Modo de foco rigoroso
-69	Ao iniciar uma sessão, escolha o modo rigoroso: não é possível parar até o tempo acabar.
-70	Coroa e capa
-71	Seu pet usa uma coroa e uma capa, com uma auréola.
-72	Normal
-73	Feliz
-74	Dormindo
-75	Com fome
-76	Triste
-77	Concentrado
-78	Cansado
-79	Dormindo bem… zzz
-80	Dormindo… zzz
-81	Muita fome, me dê comida
-82	Muito cansado, me deixe tirar uma soneca
-83	Me concentrando com você
-84	Preocupado, seu computador está esperando por você
-85	Tenho muito orgulho de você!
-86	Triste porque você desistiu
-87	Triste porque o build falhou
-88	Entediado, venha brincar comigo
-89	Um pouco de fome
-90	Torcendo pelo agent
-91	Ficando com sono
-92	Bom dia!
-93	Alegre
-94	Alimentar
-95	Brincar
-96	Dormir
-97	Acordar
-98	Computador
-99	Conecte ao computador para revisar o trabalho dos seus agents de IA e ver os builds aqui.
-100	Ver exemplo
-101	Conectar computador
-102	Tipo
-103	Pets
-104	Loja
-105	Disponível
-106	Toque para escolher um pet
-107	, não comprado
-108	Adquirido
-109	O pet escolhido aparece em todo o app, nos widgets e na tela bloqueada.
-110	{0} escolhido
-111	Seu novo pet aparecerá na tela inicial, nos widgets e na tela de bloqueio.
-112	Não foi possível comprar
-113	Não foi possível conectar ao computador: {0}
-114	Este computador está conectado a outro telefone. É preciso ter Pro para conectar mais de um.
-115	O computador desconectou este telefone. Escaneie o código QR novamente para conectar.
-116	No computador: abra NotchTasks → Painel de Controle → Conexão, clique em Conectar dispositivo e escaneie o código QR.
-117	Ou cole um código de conexão
-118	Cole um código de conexão
-119	Código de conexão do computador
-120	Conectar
-121	Este não é um código de conexão do NotchTasks.
-122	Este código funciona apenas nos seus dispositivos.
-123	Conectar ao computador
-124	Cancelar
-125	dados de exemplo
-126	Esperando por você
-127	Atividade
-128	Aguardando {0}…
-129	computador
-130	Abra NotchTasks no computador para ver agents e perguntas aqui.
-131	Longe do computador · atualizado {0}
-132	Com Pro: veja e responda aos agents de qualquer lugar.
-133	Aguardando sua aprovação
-134	{0} itens aguardando sua aprovação
-135	 em execução
-136	Um build falhou
-137	Tudo pronto
-138	O computador está ocioso
-139	A notch do computador na palma da sua mão
-140	Revise o trabalho dos seus agents de IA e veja builds aqui, até na tela bloqueada.
-141	Experimentar com dados de exemplo
-142	Instale NotchTasks no computador, abra **Painel de Controle → Conexão** e escaneie o código QR.
-143	Responder
-144	Negar
-145	Permitir
-146	Selecione um ou mais
-147	Enviar resposta
-148	É necessário usar Face ID para permitir este comando.
-149	Responder depois no computador
-150	Detalhes
-151	agora mesmo
-152	 atrás
-153	Frio
-154	Morno
-155	Quente
-156	Muito quente
-157	Temperatura
-158	Redefine em {0}
-159	alguns minutos
-160	{0} d {1} h
-161	{0} dias
-162	{0} h {1} min
-163	{0} horas
-164	{0} min
-165	Permitido
-166	Negado
-167	Deixar para o computador
-168	Selecionado: 
-169	Visualizando
-170	Dados de exemplo
-171	Não conectado
-172	Sair dos dados de exemplo
-173	Desconectar
-174	Conectar diretamente na mesma rede Wi‑Fi
-175	Conexão
-176	Direto por Wi‑Fi
-177	Notificações
-178	Conexão
-179	Mesma rede Wi‑Fi: atualizações imediatas. Fora dela: muda automaticamente para a Internet.
-180	Prévia da Live Activity
-181	Mostra 3 solicitações de exemplo. Bloqueie o telefone para vê-las.
-182	Live Activity desativada: ative em Ajustes → NotchTasks.
-183	Face ID para comandos arriscados
-184	Segurança
-185	Exigir Face ID antes de permitir comandos que possam excluir ou sobrescrever dados.
-186	Sobre
-187	Versão
-188	Ajustes
-189	Pro ativo
-190	Pro ativo (comprado em outro dispositivo)
-191	O período atual termina em
-192	Gerenciar assinatura
-193	Teste o Pro grátis por 7 dias
-194	Restaurar compras
-195	Use em qualquer lugar, responda direto das notificações, veja Live Activity de agents e builds e conecte vários dispositivos.
-196	Os planos mensal e anual são renovados automaticamente. Cancele em Ajustes → seu nome → Assinaturas pelo menos 24 horas antes do próximo período.
-197	Termos
-198	Privacidade
-199	Não concluído
-200	Pro anual
-201	Pro mensal
-202	Pro vitalício
-203	 / ano
-204	 / mês
-205	Seu
-206	Para adicionar um widget: mantenha pressionada a tela inicial → Editar → Adicionar Widget → NotchTasks.
-207	Ver e trocar pets
-208	Nível {0}!
-209	{0} cresceu um pouco.
-210	Desbloqueado: {0}.
-211	Ótimo
-212	Tudo desbloqueado. Sessões concluídas ainda rendem XP; desistir deixa seu pet triste.
-213	1 minuto de foco = 1 XP. Nível {0}: {1}.
-214	Em foco
-215	Rigoroso
-216	Parar
-217	Pausa
-218	Próxima: sessão {0}/{1}
-219	Começar agora
-220	Conta aqui e na notch do computador
-221	Aparece na tela bloqueada e avisa quando o tempo acaba
-222	Iniciar
-223	Iniciar modo rigoroso
-224	Modo rigoroso: não é possível parar até o tempo acabar.
-225	Ativar modo rigoroso?
-226	Iniciar rigoroso
-227	Não é possível parar durante o foco nas {0} sessões. As pausas ainda podem ser interrompidas.
-228	Não é possível parar por {0} minutos. Os apps bloqueados voltam a abrir quando o tempo acaba.
-229	Pomodoro: {0} sessões × {1} min
-230	Sessão de {0} minutos
-231	Levante-se e se alongue um pouco!
-232	Beba um pouco de água 💧
-233	Descanse os olhos por 20 segundos e olhe para longe.
-234	Relaxe os ombros e respire fundo.
-235	Dê alguns passos para se soltar.
-236	Já bebeu água? Só um lembrete 💧
-237	{0} lembra você
-238	{0}: reveja seu dia
-239	Por quanto tempo você se concentrou? Quantas perguntas revisou? Abra para ver.
-240	Fim da pausa
-241	{0} está pronto para a sessão {1}/{2}, de {3} minutos. Toque para começar.
-242	minutos de foco
-243	sessões
-244	perguntas revisadas
-245	dias seguidos
-246	Conecte ao computador para colocar seu pet na notch.
-247	Nível {0}
-248	Toque para colocá-lo na notch. Seu pet muda de pose conforme a atividade no computador.
-249	Pets na notch
-250	Adicionar à esquerda
-251	Adicionar à direita
-252	Substituir ícone {0} à {1}
-253	direita
-254	esquerda
-255	Remover da notch
-256	Concentre-se em sessões curtas com pausas. Quando a pausa termina, a próxima sessão começa automaticamente.
-257	Foco: {0} min
-258	Pausa: {0} min
-259	Sessões: {0}
-260	Cada Pomodoro
-261	{0} minutos de foco no total. Se começar agora, terminará às {1}.
-262	Comece pelo cartão Foco na tela Início.
-263	Nas pausas, há botões “Começar agora” e “Parar”.
-264	Você pode escolher o modo rigoroso ao começar.
-265	Números de exemplo, pois não houve sessões hoje.
-266	Últimos 7 dias · minutos de foco
-267	Um lembrete para conferir chega todas as noites às 21h.
-268	Desbloqueia no nível 3: cartão Hoje e notificação às 21h.
-269	{0} esperou por você o dia todo. Vamos nos concentrar juntos amanhã!
-270	{0}: {1} minutos hoje, um bom começo!
-271	{0}: {1} minutos de foco, {2} sessões. Muito bem!
-272	{0}: {1} minutos! Você trabalhou bastante hoje. Lembre-se de descansar.
-273	Parabéns! 🎉
-274	{0} chegou ao nível {1} e desbloqueou:
-275	Ativado para você. Ajuste na página Pets.
-276	Excelente
-277	Build falhou
-278	Não foi possível iniciar a Live Activity: {0}
-279	Sessão {0}/{1} concluída
-280	Tempo de foco encerrado
-281	Faça uma pausa de {0} minutos antes da próxima sessão.
-282	{0} minutos concluídos. Descanse um pouco.
-283	 🎉 Desbloqueado: {0}.
-284	Permitir comando arriscado: {0}
-285	Como os dados devem ser armazenados?
-286	Armazenamento
-287	SQLite (Recomendado)
-288	Seu MacBook Pro
-289	Editando NotchView.swift
-290	Executando testes
-291	Compilando para iPhone 17 Pro
-292	CI falhou: deploy
-293	6 min
-294	CI aprovado: teste
-295	Notch do computador não encontrada
-296	Atualize NotchTasks no computador para a versão mais recente e abra-o para personalizar a notch por aqui.
-297	Enviando…
-298	Computador de exemplo: experimente à vontade
-299	Sincronizado com {0}
-300	Tema
-301	A tela bloqueada usa ícones próprios
-302	Ícones da tela bloqueada
-303	Escolher
-304	Alterar
-305	Remover
-306	Ícones das ferramentas de build
-307	O ícone exibido na notch enquanto essa ferramenta compila.
-308	Aparência
-309	Tamanho
-310	Grande
-311	Abertura da notch
-312	Passar o cursor
-313	Clicar
-314	Plano de fundo
-315	Cor superior
-316	Cor inferior
-317	Movimento
-318	Estilo dos alertas
-319	Módulos
-320	{0} ativados
-321	Som e resposta tátil
-322	Som
-323	Resposta tátil do trackpad
-324	Notificações do sistema
-325	Notch na tela bloqueada
-326	Tela de bloqueio do computador
-327	Avisar conclusão quando demorar mais de
-328	cada tarefa
-329	{0} s
-330	Avisar sobre limites de IA em
-331	Ícones na notch
-332	Toque no lugar de destino. Toque no mesmo ícone novamente para cancelar.
-333	Arraste um ícone para trocar de posição; toque para mover, alterar ou remover. Até {0} de cada lado{1}
-334	, o Pro permite 4.
-335	Mover
-336	Alterar ícone
-337	Remover
-338	lado direito
-339	lado esquerdo
+45	Pôr do sol
+46	Oceano
+47	Exclui arquivos ou pastas
+48	Executa como administrador
+49	Sobrescreve o histórico no servidor git
+50	Descarta todas as alterações não salvas
+51	Exclui arquivos não rastreados
+52	Executa um script baixado da web
+53	Grava diretamente em um disco
+54	Dá a todos acesso total aos arquivos
+55	Exclui dados de um banco de dados
+56	Ignora verificações de segurança
+57	Lembretes para pausar e beber água
+58	Lembra você de levantar, beber água e descansar os olhos 6 vezes durante o expediente. Desative pelo botão.
+59	Resumo do dia
+60	Todas as noites, às 21h: tempo de foco no dia, número de sessões e sequência de dias.
+61	Pomodoro e sessões de 90 minutos
+62	Alterne sessões curtas de foco e pausas (por padrão, 4 × 25 minutos com pausas de 5 minutos). Também há uma sessão de 90 minutos.
+63	Coroa de flores e cachecol
+64	Seu pet cresce um pouco e usa uma coroa de flores e um cachecol.
+65	Na notch
+66	Coloque seu pet na notch do computador. Ele muda de pose de acordo com a atividade no computador.
+67	Modo de foco rigoroso
+68	Ao iniciar uma sessão, escolha o modo rigoroso: não é possível parar até o tempo acabar.
+69	Coroa e capa
+70	Seu pet usa uma coroa e uma capa, com uma auréola.
+71	Normal
+72	Feliz
+73	Dormindo
+74	Com fome
+75	Triste
+76	Concentrado
+77	Cansado
+78	Dormindo bem… zzz
+79	Dormindo… zzz
+80	Muita fome, me dê comida
+81	Muito cansado, me deixe tirar uma soneca
+82	Me concentrando com você
+83	Preocupado, seu computador está esperando por você
+84	Tenho muito orgulho de você!
+85	Triste porque você desistiu
+86	Triste porque o build falhou
+87	Entediado, venha brincar comigo
+88	Um pouco de fome
+89	Torcendo pelo agent
+90	Ficando com sono
+91	Bom dia!
+92	Alegre
+93	Alimentar
+94	Brincar
+95	Dormir
+96	Acordar
+97	Computador
+98	Conecte ao computador para revisar o trabalho dos seus agents de IA e ver os builds aqui.
+99	Ver exemplo
+100	Conectar computador
+101	Tipo
+102	Pets
+103	Loja
+104	Disponível
+105	Toque para escolher um pet
+106	, não comprado
+107	Adquirido
+108	O pet escolhido aparece em todo o app, nos widgets e na tela bloqueada.
+109	{0} escolhido
+110	Seu novo pet aparecerá na tela inicial, nos widgets e na tela de bloqueio.
+111	Não foi possível comprar
+112	Não foi possível conectar ao computador: {0}
+113	Este computador está conectado a outro telefone. É preciso ter Pro para conectar mais de um.
+114	O computador desconectou este telefone. Escaneie o código QR novamente para conectar.
+115	No computador: abra NotchTasks → Painel de Controle → Conexão, clique em Conectar dispositivo e escaneie o código QR.
+116	Ou cole um código de conexão
+117	Cole um código de conexão
+118	Código de conexão do computador
+119	Conectar
+120	Este não é um código de conexão do NotchTasks.
+121	Este código funciona apenas nos seus dispositivos.
+122	Conectar ao computador
+123	Cancelar
+124	dados de exemplo
+125	Esperando por você
+126	Atividade
+127	Aguardando {0}…
+128	computador
+129	Abra NotchTasks no computador para ver agents e perguntas aqui.
+130	Longe do computador · atualizado {0}
+131	Com Pro: veja e responda aos agents de qualquer lugar.
+132	Aguardando sua aprovação
+133	{0} itens aguardando sua aprovação
+134	 em execução
+135	Um build falhou
+136	Tudo pronto
+137	O computador está ocioso
+138	A notch do computador na palma da sua mão
+139	Revise o trabalho dos seus agents de IA e veja builds aqui, até na tela bloqueada.
+140	Experimentar com dados de exemplo
+141	Instale NotchTasks no computador, abra **Painel de Controle → Conexão** e escaneie o código QR.
+142	Responder
+143	Negar
+144	Permitir
+145	Selecione um ou mais
+146	Enviar resposta
+147	É necessário usar Face ID para permitir este comando.
+148	Responder depois no computador
+149	Detalhes
+150	agora mesmo
+151	 atrás
+152	Frio
+153	Morno
+154	Quente
+155	Muito quente
+156	Temperatura
+157	Redefine em {0}
+158	alguns minutos
+159	{0} d {1} h
+160	{0} dias
+161	{0} h {1} min
+162	{0} horas
+163	{0} min
+164	Permitido
+165	Negado
+166	Deixar para o computador
+167	Selecionado: 
+168	Visualizando
+169	Dados de exemplo
+170	Não conectado
+171	Sair dos dados de exemplo
+172	Desconectar
+173	Conectar diretamente na mesma rede Wi‑Fi
+174	Conexão
+175	Direto por Wi‑Fi
+176	Notificações
+177	Conexão
+178	Mesma rede Wi‑Fi: atualizações imediatas. Fora dela: muda automaticamente para a Internet.
+179	Prévia da Live Activity
+180	Mostra 3 solicitações de exemplo. Bloqueie o telefone para vê-las.
+181	Live Activity desativada: ative em Ajustes → NotchTasks.
+182	Face ID para comandos arriscados
+183	Segurança
+184	Exigir Face ID antes de permitir comandos que possam excluir ou sobrescrever dados.
+185	Sobre
+186	Versão
+187	Ajustes
+188	Pro ativo
+189	Pro ativo (comprado em outro dispositivo)
+190	O período atual termina em
+191	Gerenciar assinatura
+192	Teste o Pro grátis por 7 dias
+193	Restaurar compras
+194	Use em qualquer lugar, responda direto das notificações, veja Live Activity de agents e builds e conecte vários dispositivos.
+195	Os planos mensal e anual são renovados automaticamente. Cancele em Ajustes → seu nome → Assinaturas pelo menos 24 horas antes do próximo período.
+196	Termos
+197	Privacidade
+198	Não concluído
+199	Pro anual
+200	Pro mensal
+201	Pro vitalício
+202	 / ano
+203	 / mês
+204	Seu
+205	Para adicionar um widget: mantenha pressionada a tela inicial → Editar → Adicionar Widget → NotchTasks.
+206	Ver e trocar pets
+207	Nível {0}!
+208	{0} cresceu um pouco.
+209	Desbloqueado: {0}.
+210	Ótimo
+211	Tudo desbloqueado. Sessões concluídas ainda rendem XP; desistir deixa seu pet triste.
+212	1 minuto de foco = 1 XP. Nível {0}: {1}.
+213	Em foco
+214	Rigoroso
+215	Parar
+216	Pausa
+217	Próxima: sessão {0}/{1}
+218	Começar agora
+219	Conta aqui e na notch do computador
+220	Aparece na tela bloqueada e avisa quando o tempo acaba
+221	Iniciar
+222	Iniciar modo rigoroso
+223	Modo rigoroso: não é possível parar até o tempo acabar.
+224	Ativar modo rigoroso?
+225	Iniciar rigoroso
+226	Não é possível parar durante o foco nas {0} sessões. As pausas ainda podem ser interrompidas.
+227	Não é possível parar por {0} minutos. Os apps bloqueados voltam a abrir quando o tempo acaba.
+228	Pomodoro: {0} sessões × {1} min
+229	Sessão de {0} minutos
+230	Levante-se e se alongue um pouco!
+231	Beba um pouco de água 💧
+232	Descanse os olhos por 20 segundos e olhe para longe.
+233	Relaxe os ombros e respire fundo.
+234	Dê alguns passos para se soltar.
+235	Já bebeu água? Só um lembrete 💧
+236	{0} lembra você
+237	{0}: reveja seu dia
+238	Por quanto tempo você se concentrou? Quantas perguntas revisou? Abra para ver.
+239	Fim da pausa
+240	{0} está pronto para a sessão {1}/{2}, de {3} minutos. Toque para começar.
+241	minutos de foco
+242	sessões
+243	perguntas revisadas
+244	dias seguidos
+245	Conecte ao computador para colocar seu pet na notch.
+246	Nível {0}
+247	Toque para colocá-lo na notch. Seu pet muda de pose conforme a atividade no computador.
+248	Pets na notch
+249	Adicionar à esquerda
+250	Adicionar à direita
+251	Substituir ícone {0} à {1}
+252	direita
+253	esquerda
+254	Remover da notch
+255	Concentre-se em sessões curtas com pausas. Quando a pausa termina, a próxima sessão começa automaticamente.
+256	Foco: {0} min
+257	Pausa: {0} min
+258	Sessões: {0}
+259	Cada Pomodoro
+260	{0} minutos de foco no total. Se começar agora, terminará às {1}.
+261	Comece pelo cartão Foco na tela Início.
+262	Nas pausas, há botões “Começar agora” e “Parar”.
+263	Você pode escolher o modo rigoroso ao começar.
+264	Números de exemplo, pois não houve sessões hoje.
+265	Últimos 7 dias · minutos de foco
+266	Um lembrete para conferir chega todas as noites às 21h.
+267	Desbloqueia no nível 3: cartão Hoje e notificação às 21h.
+268	{0} esperou por você o dia todo. Vamos nos concentrar juntos amanhã!
+269	{0}: {1} minutos hoje, um bom começo!
+270	{0}: {1} minutos de foco, {2} sessões. Muito bem!
+271	{0}: {1} minutos! Você trabalhou bastante hoje. Lembre-se de descansar.
+272	Parabéns! 🎉
+273	{0} chegou ao nível {1} e desbloqueou:
+274	Ativado para você. Ajuste na página Pets.
+275	Excelente
+276	Build falhou
+277	Não foi possível iniciar a Live Activity: {0}
+278	Sessão {0}/{1} concluída
+279	Tempo de foco encerrado
+280	Faça uma pausa de {0} minutos antes da próxima sessão.
+281	{0} minutos concluídos. Descanse um pouco.
+282	 🎉 Desbloqueado: {0}.
+283	Permitir comando arriscado: {0}
+284	Como os dados devem ser armazenados?
+285	Armazenamento
+286	SQLite (Recomendado)
+287	Seu MacBook Pro
+288	Editando NotchView.swift
+289	Executando testes
+290	Compilando para iPhone 17 Pro
+291	CI falhou: deploy
+292	6 min
+293	CI aprovado: teste
+294	Notch do computador não encontrada
+295	Atualize NotchTasks no computador para a versão mais recente e abra-o para personalizar a notch por aqui.
+296	Enviando…
+297	Computador de exemplo: experimente à vontade
+298	Sincronizado com {0}
+299	Tema
+300	A tela bloqueada usa ícones próprios
+301	Ícones da tela bloqueada
+302	Escolher
+303	Alterar
+304	Remover
+305	Ícones das ferramentas de build
+306	O ícone exibido na notch enquanto essa ferramenta compila.
+307	Aparência
+308	Tamanho
+309	Grande
+310	Abertura da notch
+311	Passar o cursor
+312	Clicar
+313	Plano de fundo
+314	Cor superior
+315	Cor inferior
+316	Movimento
+317	Estilo dos alertas
+318	Módulos
+319	{0} ativados
+320	Som e resposta tátil
+321	Som
+322	Resposta tátil do trackpad
+323	Notificações do sistema
+324	Notch na tela bloqueada
+325	Tela de bloqueio do computador
+326	Avisar conclusão quando demorar mais de
+327	cada tarefa
+328	{0} s
+329	Avisar sobre limites de IA em
+330	Ícones na notch
+331	Toque no lugar de destino. Toque no mesmo ícone novamente para cancelar.
+332	Arraste um ícone para trocar de posição; toque para mover, alterar ou remover. Até {0} de cada lado{1}
+333	, o Pro permite 4.
+334	Mover
+335	Alterar ícone
+336	lado direito
+337	lado esquerdo

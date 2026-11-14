@@ -1,360 +1,349 @@
-340	Ajouter une icône à droite
-341	Ajouter une icône à gauche
-342	Ajouter une icône : Pro requis
-343	Votre animation
-344	Votre image
-345	Symbole
-346	Thème {0}
-347	Couleur d'accent
-348	Personnalisé
-349	Faites glisser pour réordonner.
-350	{0} icônes animées · Gratuit
-351	Touchez une icône pour la placer sur l'encoche.
-352	Choisir une icône
-353	Associez votre ordinateur pour utiliser cette icône sur l'encoche.
-354	Utiliser cette icône sur l'encoche.
-355	Impossible de joindre l'App Store. Réessayez plus tard.
-356	L'App Store n'a pas pu vérifier cet achat.
-357	Achat en attente d'approbation. Vous l'aurez dès qu'il sera approuvé.
-358	Le simulateur ne bloque pas les vraies apps.
-359	Autorisation manquante. Connectez-vous à iCloud dans Réglages.
-360	Le blocage d'apps n'est pas encore autorisé.
-361	Impossible de programmer le déblocage. Ouvrez l'app après la session pour débloquer les apps.
-362	Bloquer les autres apps pendant la concentration
-363	Modifiable après la session.
-364	Seules les apps autorisées s'ouvrent.
-365	Choisir les apps autorisées
-366	{0} éléments autorisés
-367	Accueil
-368	Désactivé
-369	Ouvrir pour examiner
-370	Enregistrement…
-371	Désactivé : activez-le dans Réglages
-372	Impossible d'activer, réessayez plus tard
-373	Activation…
-374	Erreur : FCM n'a fourni aucun jeton
-375	Activé
-376	{0} XP · encore {1} XP avant le niveau {2}
-377	Aujourd'hui
-378	Touchez pour voir l'aperçu
-379	Non acquis
-380	, aperçu
-381	Déblocages par niveau
-382	Selon le niveau le plus haut : {0}
-383	Explication : {0}
-384	Niveau {0} · débloqué
-385	Débloqué au niveau {0}
-386	Voir un bilan d'exemple
-387	Bébé
-388	Niveau 5
-389	Niveau 10
-390	Niveau {0} · {1}
-391	Non acquis · aperçu
-392	Stade
-393	Sélectionné
-394	Choisir {0}
-395	Acheter le pack Compagnons · {0}
-396	Connexion à distance
-397	Utilisable partout, sans Wi‑Fi commun
-398	Répondez depuis les notifications
-399	Autorisez ou refusez tout de suite, sans ouvrir l'app
-400	Agents et builds sur l'écran verrouillé et dans la Dynamic Island
-401	Alertes de build et de CI
-402	Sachez tout de suite quand un build se termine ou échoue
-403	Plusieurs appareils
-404	Associez plusieurs téléphones au même ordinateur
-405	Plus d'icônes sur l'encoche
-406	Jusqu'à 4 icônes par côté
-407	Votre ordinateur, partout.
-408	Essai gratuit de 7 jours
-409	puis {0}{1}
-410	Le même Wi‑Fi reste gratuit. Achetez une fois, utilisez-le sur tous vos appareils associés.
-411	Fermer
-412	7 jours gratuits
-413	Payez une fois, utilisez pour toujours
-414	Grenouille, panda, lapin et hibou
-415	Inactif
-416	En cours
-417	Vous attend
-418	Erreur
-419	Renard
-420	Rassasié
-421	Énergie
-422	{0} {1} pour cent
-423	Niveau {0}, {1} pour cent jusqu'au niveau suivant
-424	Aperçu de l'encoche
-425	{0} tâches en cours
-426	Retour à la concentration
-427	Rouvre à {0}
-428	Temps de concentration en cours
-429	{0}. Terminez la concentration et {1} gagnera plus d'XP (niveau {2} actuellement).
-430	Votre compagnon, joyeux ou triste au fil de votre journée.
-431	Lancez une concentration de 25 ou 50 minutes.
-432	Ensuite : session {0}/{1}
-433	Démarrer la session {0}/{1}
-434	Terminer
-435	STRICT
-436	Impossible d'arrêter
-437	MODE STRICT
-438	Impossible d'arrêter avant la fin
-439	Terminé !
-440	{0} min de concentration · +{1} XP
-441	Strict · impossible d'arrêter
-442	Ensuite : session {0}
-443	Aperçu de l'ordinateur
-444	Ce qui attend votre accord, les agents et les builds de votre ordinateur.
-445	Claude attend votre accord
-446	et {0} autres
-447	vous attend
-448	Ouvrez l'app pour examiner
-449	Ouvrez NotchTasks pour associer un ordinateur
-450	{0} à examiner
-451	attend votre accord
-452	Tous les agents se reposent
-453	{0} en attente
-454	Examiner
-455	Build en cours
-456	Un agent vous attend
-457	Ouvrez NotchTasks pour voir la demande.
-458	Ouvrez l'app pour choisir une réponse
-459	Examiner dans l'app
-460	{0} agents en cours
-461	Agent en cours
-462	Ce que surveille l'encoche. Seul ce qui travaille apparaît sur l'encoche.
-463	Modifier
-464	Activé
-465	 (ajouté)
-466	Apps ouvertes
-467	Choisir une autre app…
-468	Saisir un processus…
-469	Ajouter un élément à surveiller
-470	Choisissez un agent, une app ouverte, ou saisissez un nom de processus.
-471	Répondre aux agents sur l'encoche
-472	Quand un agent pose une question, l'encoche affiche des boutons de réponse.
-473	Prêt
-474	Impossible de modifier la configuration de {0} : {1}
-475	Prend effet au prochain lancement de l'agent.
-476	Examiner commandes et modifications, répondre aux questions
-477	Examiner commandes et modifications
-478	Refuse les commandes. Autorise seulement quand Cursor exécute seul des commandes
-479	Examiner commandes, modifications et accès web
-480	Élément surveillé
-481	Nom affiché
-482	Afficher dans
-483	Changer l'icône
-484	Changer…
-485	{0} est suivi par session de travail, rien d'autre à régler.
-486	Nom du processus
-487	La ligne de commande contient
-488	facultatif, ex. : gemini-cli
-489	Détection
-490	Nom du processus, comme dans Moniteur d'activité.
-491	Chaque ligne de l'encoche est
-492	Chaque exécution
-493	Chaque sous-processus (runner, worker)
-494	Au travail quand le CPU dépasse
-495	Augmentez si cela s'affiche au repos, baissez si du travail est manqué.
-496	L'app n'est pas ouverte.
-497	Introuvable. Ouvrez l'outil, puis cliquez sur Vérifier à nouveau.
-498	Correspondance : {0}
-499	Vérifier à nouveau
-500	Ajouter
-501	Enregistrer
-502	Afficher tous les outils
-503	Aucun build pour l'instant. Activez « Tout afficher » pour choisir les icônes à l'avance.
-504	Rien à ajouter : tout outil en cours apparaît. Cliquez sur un outil pour changer son icône.
-505	Modifié
-506	Modèle exécuté en local
-507	De nouveau en ligne
-508	Wi‑Fi connecté
-509	Connecté
-510	Réseau déconnecté
-511	Vérifiez le Wi‑Fi ou le câble réseau
-512	VPN activé
-513	VPN désactivé
-514	Téléchargement terminé
-515	Afficher dans le dossier
-516	Disque presque plein
-517	%.1f Go disponibles
-518	Libérer de l'espace
-519	L'ordinateur est très chaud
-520	L'ordinateur chauffe
-521	{0} tourne à plein régime
-522	Fermez les apps gourmandes
-523	Voir les apps
-524	En appel
-525	Terminé
-526	Micro activé
-527	Caméra activée
-528	Impossible de couper le micro
-529	Utilisez le bouton dans {0}
-530	Aucun modèle chargé
-531	Chargé 
-532	Ajouter à l'étagère
-533	Contrôle de {0} activé
-534	L'encoche contrôle maintenant la musique de l'onglet
-535	Échec CI : {0}
-536	Voir le journal
-537	CI réussi : {0}
-538	Au travail · {0}
-539	En attente
-540	CI réussi : 
-541	Échec CI : 
-542	Ouvrir
-543	{0} a atteint sa limite {1}
-544	{0} a utilisé {1} % de sa limite {2}
-545	Attendre jusqu'à {0} (encore {1})
-546	Réinitialisation à {0}
-547	{0} connecté
-548	{0} déconnecté
-549	Batterie de {0} faible
-550	En charge
-551	Débranché
-552	Batterie faible
-553	{0} % restants
-554	À 
-555	Temps écoulé
-556	Écran principal
-557	Icônes toujours affichées sur l'encoche repliée.
-558	Écran verrouillé
-559	Consultation seule : ne s'agrandit pas, non cliquable.
-560	Comme l'écran principal
-561	Distinctes
-562	Signaler les déverrouillages échoués
-563	L'encoche tremble en rouge en cas de mauvais mot de passe ou d'empreinte. Après le déverrouillage, elle indique le nombre d'échecs.
-564	Gauche
-565	Droite
-566	Cliquez sur + pour ajouter, cliquez pour modifier, faites glisser pour échanger. Jusqu'à {0} par côté{1}
-567	Ajouter depuis la bibliothèque d'icônes
-568	Synchroniser les animations
-569	Relance toutes les icônes animées en même temps
-570	Icône fixe
-571	À droite de l'encoche
-572	À gauche de l'encoche
-573	Plus de 8 000 symboles Apple
-574	Quelques caractères ou un emoji
-575	Personnages animés, GIF
-576	Sur l'encoche
-577	Saisissez jusqu'à 8 caractères
-578	Choix rapide
-579	Déposez une autre image ici
-580	Déposez une image ici
-581	Choisir une image…
-582	Ouvrir la bibliothèque d'icônes
-583	Votre GIF ou spritesheet…
-584	{0}/s
-585	PNG, JPG, HEIC… Les images carrées rendent le mieux.
-586	Forme
-587	Cercle
-588	Carré
-589	Bordure
-590	Couleur du texte
-591	Couleur du symbole
-592	Supprimer l'icône
-593	Utiliser l'icône par défaut
-594	Sans fond
-595	Autre couleur
-596	Suggestions
-597	Tout
-598	Communication
-599	Météo
-600	Cartes
-601	Objets
-602	Photos
-603	Jeux
-604	Transports
-605	Accessibilité
-606	Personnes
-607	Maison
-608	Sports
-609	Nature
-610	Édition
-611	Texte
-612	Médias
-613	Clavier
-614	Commerce
-615	Temps
-616	Santé
-617	Formes
-618	Flèches
-619	Chiffres et lettres
-620	Maths
-621	Recherche en anglais : star, cloud, cat, hammer…
-622	{0} · {1} symboles
-623	{0} résultats
-624	{0} icônes animées · Gratuit
-625	Rechercher
-626	Aucune icône ne correspond à « {0} ».
-627	Packs de la communauté : bientôt.
-628	Utilisée
-629	Icône fixe sur l'encoche
-630	Attribuer à une app surveillée
-631	Attribuer à un outil de build
-632	Ouvrir
-633	jusqu'à 
-634	Événements
-635	Vue d'ensemble
-636	Surveillance
-637	Association
-638	Icônes et verrouillage
-639	Bibliothèque d'icônes
-640	Comportement
-641	Autorisations
-642	L'encoche montre ce qui tourne et reste discrète quand il n'y a rien.
-643	Erreurs CI
-644	Voir le guide
-645	Faites glisser pour réordonner sur l'encoche.
-646	Position une fois repliée
-647	Couleur
-648	Autorisation {0} requise
-649	Revenir à la couleur par défaut
-650	Tester une alerte
-651	Couleur du haut
-652	Couleur du bas
-653	Style
-654	Couleur personnalisée
-655	Exporter…
-656	Importer…
-657	Sauvegarder la configuration
-658	Toute votre personnalisation dans un fichier .json.
-659	Cet écran a une encoche : l'encoche épouse la caméra.
-660	Cet écran n'a pas d'encoche : affichage en Dynamic Island flottante.
-661	Tâche terminée
-662	Alerte de test
-663	Volume
-664	Pack de sons
-665	Sauvegarder, partager
-666	Exporter le pack…
-667	Importer un pack…
-668	Les sons sont gardés à part : changer d'apparence ne les efface pas. Exportez un pack pour l'emporter sur un autre ordinateur.
-669	Sons NotchTasks.notchsounds
-670	Impossible d'exporter le pack de sons
-671	Choisissez un fichier de pack de sons (.notchsounds)
-672	Impossible d'importer le pack de sons
-673	Ouverture
-674	Délai {0} ms
-675	Retour haptique
-676	CPU et RAM une fois agrandie
-677	Signaler la fin après {0} s ou plus
-678	Alerte de limite à {0} %
-679	Autres
-680	Icône dans la barre des menus
-681	N'accordez des autorisations qu'aux fonctions que vous utilisez. Désactivez complètement une fonction dans la page Modules.
-682	Actualiser
-683	Certaines autorisations ne se vérifient que lorsque l'app concernée est ouverte.
-684	Révoquer
-685	Réinitialiser
-686	Supprimez l'ancienne entrée NotchTasks dans Réglages, puis redemandez
-687	Ouvrir Réglages
-688	Ouvrir l'app
-689	Non
-690	Choisir votre fichier…
-691	Écouter
-692	Impossible de créer un code d'association : {0}
-693	Téléphone
-694	Envoi au téléphone impossible : {0}
-695	Connexion au téléphone perdue, nouvelle tentative…
-696	Répondez aux agents et voyez ce qui tourne, directement sur votre téléphone. Les données sont chiffrées entre vos appareils.
-697	Ouvrez NotchTasks sur votre téléphone → Associer un ordinateur, puis scannez ce code.
-698	Quiconque possède ce code peut lire les questions de vos agents : ne le partagez pas.
-699	Copier le code
+338	Ajouter une icône à droite
+339	Ajouter une icône à gauche
+340	Ajouter une icône : Pro requis
+341	Votre animation
+342	Votre image
+343	Symbole
+344	Thème {0}
+345	Couleur d'accent
+346	Personnalisé
+347	Faites glisser pour réordonner.
+348	{0} icônes animées · Gratuit
+349	Touchez une icône pour la placer sur l'encoche.
+350	Choisir une icône
+351	Associez votre ordinateur pour utiliser cette icône sur l'encoche.
+352	Utiliser cette icône sur l'encoche.
+353	Impossible de joindre l'App Store. Réessayez plus tard.
+354	L'App Store n'a pas pu vérifier cet achat.
+355	Achat en attente d'approbation. Vous l'aurez dès qu'il sera approuvé.
+356	Le simulateur ne bloque pas les vraies apps.
+357	Autorisation manquante. Connectez-vous à iCloud dans Réglages.
+358	Le blocage d'apps n'est pas encore autorisé.
+359	Impossible de programmer le déblocage. Ouvrez l'app après la session pour débloquer les apps.
+360	Bloquer les autres apps pendant la concentration
+361	Modifiable après la session.
+362	Seules les apps autorisées s'ouvrent.
+363	Choisir les apps autorisées
+364	{0} éléments autorisés
+365	Accueil
+366	Désactivé
+367	Ouvrir pour examiner
+368	Enregistrement…
+369	Désactivé : activez-le dans Réglages
+370	Impossible d'activer, réessayez plus tard
+371	Activation…
+372	Erreur : FCM n'a fourni aucun jeton
+373	Activé
+374	{0} XP · encore {1} XP avant le niveau {2}
+375	Aujourd'hui
+376	Touchez pour voir l'aperçu
+377	Non acquis
+378	, aperçu
+379	Déblocages par niveau
+380	Selon le niveau le plus haut : {0}
+381	Explication : {0}
+382	Niveau {0} · débloqué
+383	Débloqué au niveau {0}
+384	Voir un bilan d'exemple
+385	Bébé
+386	Niveau 5
+387	Niveau 10
+388	Niveau {0} · {1}
+389	Non acquis · aperçu
+390	Stade
+391	Sélectionné
+392	Choisir {0}
+393	Acheter le pack Compagnons · {0}
+394	Connexion à distance
+395	Utilisable partout, sans Wi‑Fi commun
+396	Répondez depuis les notifications
+397	Autorisez ou refusez tout de suite, sans ouvrir l'app
+398	Agents et builds sur l'écran verrouillé et dans la Dynamic Island
+399	Alertes de build et de CI
+400	Sachez tout de suite quand un build se termine ou échoue
+401	Plusieurs appareils
+402	Associez plusieurs téléphones au même ordinateur
+403	Plus d'icônes sur l'encoche
+404	Jusqu'à 4 icônes par côté
+405	Votre ordinateur, partout.
+406	Essai gratuit de 7 jours
+407	puis {0}{1}
+408	Le même Wi‑Fi reste gratuit. Achetez une fois, utilisez-le sur tous vos appareils associés.
+409	Fermer
+410	7 jours gratuits
+411	Payez une fois, utilisez pour toujours
+412	Grenouille, panda, lapin et hibou
+413	Inactif
+414	En cours
+415	Erreur
+416	Renard
+417	Rassasié
+418	Énergie
+419	{0} {1} pour cent
+420	Niveau {0}, {1} pour cent jusqu'au niveau suivant
+421	Aperçu de l'encoche
+422	{0} tâches en cours
+423	Retour à la concentration
+424	Rouvre à {0}
+425	Temps de concentration en cours
+426	{0}. Terminez la concentration et {1} gagnera plus d'XP (niveau {2} actuellement).
+427	Votre compagnon, joyeux ou triste au fil de votre journée.
+428	Lancez une concentration de 25 ou 50 minutes.
+429	Démarrer la session {0}/{1}
+430	Terminer
+431	STRICT
+432	Impossible d'arrêter
+433	MODE STRICT
+434	Impossible d'arrêter avant la fin
+435	Terminé !
+436	{0} min de concentration · +{1} XP
+437	Strict · impossible d'arrêter
+438	Ensuite : session {0}
+439	Aperçu de l'ordinateur
+440	Ce qui attend votre accord, les agents et les builds de votre ordinateur.
+441	Claude attend votre accord
+442	et {0} autres
+443	vous attend
+444	Ouvrez l'app pour examiner
+445	Ouvrez NotchTasks pour associer un ordinateur
+446	{0} à examiner
+447	attend votre accord
+448	Tous les agents se reposent
+449	{0} en attente
+450	Examiner
+451	Build en cours
+452	Un agent vous attend
+453	Ouvrez NotchTasks pour voir la demande.
+454	Ouvrez l'app pour choisir une réponse
+455	Examiner dans l'app
+456	{0} agents en cours
+457	Agent en cours
+458	Ce que surveille l'encoche. Seul ce qui travaille apparaît sur l'encoche.
+459	Modifier
+460	 (ajouté)
+461	Apps ouvertes
+462	Choisir une autre app…
+463	Saisir un processus…
+464	Ajouter un élément à surveiller
+465	Choisissez un agent, une app ouverte, ou saisissez un nom de processus.
+466	Répondre aux agents sur l'encoche
+467	Quand un agent pose une question, l'encoche affiche des boutons de réponse.
+468	Prêt
+469	Impossible de modifier la configuration de {0} : {1}
+470	Prend effet au prochain lancement de l'agent.
+471	Examiner commandes et modifications, répondre aux questions
+472	Examiner commandes et modifications
+473	Refuse les commandes. Autorise seulement quand Cursor exécute seul des commandes
+474	Examiner commandes, modifications et accès web
+475	Élément surveillé
+476	Nom affiché
+477	Afficher dans
+478	Changer…
+479	{0} est suivi par session de travail, rien d'autre à régler.
+480	Nom du processus
+481	La ligne de commande contient
+482	facultatif, ex. : gemini-cli
+483	Détection
+484	Nom du processus, comme dans Moniteur d'activité.
+485	Chaque ligne de l'encoche est
+486	Chaque exécution
+487	Chaque sous-processus (runner, worker)
+488	Au travail quand le CPU dépasse
+489	Augmentez si cela s'affiche au repos, baissez si du travail est manqué.
+490	L'app n'est pas ouverte.
+491	Introuvable. Ouvrez l'outil, puis cliquez sur Vérifier à nouveau.
+492	Correspondance : {0}
+493	Vérifier à nouveau
+494	Ajouter
+495	Enregistrer
+496	Afficher tous les outils
+497	Aucun build pour l'instant. Activez « Tout afficher » pour choisir les icônes à l'avance.
+498	Rien à ajouter : tout outil en cours apparaît. Cliquez sur un outil pour changer son icône.
+499	Modifié
+500	Modèle exécuté en local
+501	De nouveau en ligne
+502	Wi‑Fi connecté
+503	Connecté
+504	Réseau déconnecté
+505	Vérifiez le Wi‑Fi ou le câble réseau
+506	VPN activé
+507	VPN désactivé
+508	Téléchargement terminé
+509	Afficher dans le dossier
+510	Disque presque plein
+511	%.1f Go disponibles
+512	Libérer de l'espace
+513	L'ordinateur est très chaud
+514	L'ordinateur chauffe
+515	{0} tourne à plein régime
+516	Fermez les apps gourmandes
+517	Voir les apps
+518	En appel
+519	Terminé
+520	Micro activé
+521	Caméra activée
+522	Impossible de couper le micro
+523	Utilisez le bouton dans {0}
+524	Aucun modèle chargé
+525	Chargé 
+526	Ajouter à l'étagère
+527	Contrôle de {0} activé
+528	L'encoche contrôle maintenant la musique de l'onglet
+529	Échec CI : {0}
+530	Voir le journal
+531	CI réussi : {0}
+532	Au travail · {0}
+533	En attente
+534	CI réussi : 
+535	Échec CI : 
+536	Ouvrir
+537	{0} a atteint sa limite {1}
+538	{0} a utilisé {1} % de sa limite {2}
+539	Attendre jusqu'à {0} (encore {1})
+540	Réinitialisation à {0}
+541	{0} connecté
+542	{0} déconnecté
+543	Batterie de {0} faible
+544	En charge
+545	Débranché
+546	Batterie faible
+547	{0} % restants
+548	À 
+549	Temps écoulé
+550	Écran principal
+551	Icônes toujours affichées sur l'encoche repliée.
+552	Écran verrouillé
+553	Consultation seule : ne s'agrandit pas, non cliquable.
+554	Comme l'écran principal
+555	Distinctes
+556	Signaler les déverrouillages échoués
+557	L'encoche tremble en rouge en cas de mauvais mot de passe ou d'empreinte. Après le déverrouillage, elle indique le nombre d'échecs.
+558	Gauche
+559	Droite
+560	Cliquez sur + pour ajouter, cliquez pour modifier, faites glisser pour échanger. Jusqu'à {0} par côté{1}
+561	Ajouter depuis la bibliothèque d'icônes
+562	Synchroniser les animations
+563	Relance toutes les icônes animées en même temps
+564	Icône fixe
+565	À droite de l'encoche
+566	À gauche de l'encoche
+567	Plus de 8 000 symboles Apple
+568	Quelques caractères ou un emoji
+569	Personnages animés, GIF
+570	Saisissez jusqu'à 8 caractères
+571	Choix rapide
+572	Déposez une autre image ici
+573	Déposez une image ici
+574	Choisir une image…
+575	Ouvrir la bibliothèque d'icônes
+576	Votre GIF ou spritesheet…
+577	{0}/s
+578	PNG, JPG, HEIC… Les images carrées rendent le mieux.
+579	Forme
+580	Cercle
+581	Carré
+582	Bordure
+583	Couleur du texte
+584	Couleur du symbole
+585	Supprimer l'icône
+586	Utiliser l'icône par défaut
+587	Sans fond
+588	Autre couleur
+589	Suggestions
+590	Tout
+591	Communication
+592	Météo
+593	Cartes
+594	Objets
+595	Photos
+596	Jeux
+597	Transports
+598	Accessibilité
+599	Personnes
+600	Sports
+601	Nature
+602	Édition
+603	Texte
+604	Médias
+605	Clavier
+606	Commerce
+607	Temps
+608	Santé
+609	Formes
+610	Flèches
+611	Chiffres et lettres
+612	Maths
+613	Recherche en anglais : star, cloud, cat, hammer…
+614	{0} · {1} symboles
+615	{0} résultats
+616	Rechercher
+617	Aucune icône ne correspond à « {0} ».
+618	Packs de la communauté : bientôt.
+619	Utilisée
+620	Icône fixe sur l'encoche
+621	Attribuer à une app surveillée
+622	Attribuer à un outil de build
+623	jusqu'à 
+624	Événements
+625	Vue d'ensemble
+626	Surveillance
+627	Association
+628	Icônes et verrouillage
+629	Bibliothèque d'icônes
+630	Comportement
+631	Autorisations
+632	L'encoche montre ce qui tourne et reste discrète quand il n'y a rien.
+633	Erreurs CI
+634	Voir le guide
+635	Faites glisser pour réordonner sur l'encoche.
+636	Position une fois repliée
+637	Couleur
+638	Autorisation {0} requise
+639	Revenir à la couleur par défaut
+640	Tester une alerte
+641	Style
+642	Couleur personnalisée
+643	Exporter…
+644	Importer…
+645	Sauvegarder la configuration
+646	Toute votre personnalisation dans un fichier .json.
+647	Cet écran a une encoche : l'encoche épouse la caméra.
+648	Cet écran n'a pas d'encoche : affichage en Dynamic Island flottante.
+649	Tâche terminée
+650	Volume
+651	Pack de sons
+652	Sauvegarder, partager
+653	Exporter le pack…
+654	Importer un pack…
+655	Les sons sont gardés à part : changer d'apparence ne les efface pas. Exportez un pack pour l'emporter sur un autre ordinateur.
+656	Sons NotchTasks.notchsounds
+657	Impossible d'exporter le pack de sons
+658	Choisissez un fichier de pack de sons (.notchsounds)
+659	Impossible d'importer le pack de sons
+660	Ouverture
+661	Délai {0} ms
+662	Retour haptique
+663	CPU et RAM une fois agrandie
+664	Signaler la fin après {0} s ou plus
+665	Alerte de limite à {0} %
+666	Autres
+667	Icône dans la barre des menus
+668	N'accordez des autorisations qu'aux fonctions que vous utilisez. Désactivez complètement une fonction dans la page Modules.
+669	Actualiser
+670	Certaines autorisations ne se vérifient que lorsque l'app concernée est ouverte.
+671	Révoquer
+672	Réinitialiser
+673	Supprimez l'ancienne entrée NotchTasks dans Réglages, puis redemandez
+674	Ouvrir Réglages
+675	Ouvrir l'app
+676	Non
+677	Choisir votre fichier…
+678	Écouter
+679	Impossible de créer un code d'association : {0}
+680	Téléphone
+681	Envoi au téléphone impossible : {0}
+682	Connexion au téléphone perdue, nouvelle tentative…
+683	Répondez aux agents et voyez ce qui tourne, directement sur votre téléphone. Les données sont chiffrées entre vos appareils.
+684	Ouvrez NotchTasks sur votre téléphone → Associer un ordinateur, puis scannez ce code.
+685	Quiconque possède ce code peut lire les questions de vos agents : ne le partagez pas.
+686	Copier le code
