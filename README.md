@@ -6,7 +6,7 @@
 
 **Your AI agents, in the notch.**
 
-[Website](https://notchtasks.web.app) · [Download for macOS](https://notchtasks.web.app/assets/NotchTasks.dmg)
+[Website](https://notchtasks.web.app) · [Download for macOS](https://notchtasks.web.app/assets/NotchTasks.dmg) · [Download for Windows](https://notchtasks.web.app/assets/NotchTasks-Setup.exe)
 
 <img src=".github/assets/notch-macos.gif" width="760" alt="NotchTasks in the MacBook notch: animated icons, a build running, Claude asking to run git push, then charging and AirPods" />
 
@@ -35,7 +35,14 @@ macOS 14 or later:
 curl -fsSL https://notchtasks.web.app/install.sh | bash
 ```
 
-Windows 10/11 is in preview: build it from source.
+Windows 10/11 (preview), in PowerShell:
+
+```powershell
+irm https://notchtasks.web.app/install.ps1 | iex
+```
+
+Or [download the installer](https://notchtasks.web.app/assets/NotchTasks-Setup.exe). It is not code-signed yet, so if
+Windows protects your PC, choose **More info → Run anyway**.
 
 ## Build
 
