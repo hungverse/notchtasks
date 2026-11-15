@@ -1,9 +1,0 @@
-2026-11-10 03:20:06Z: Starting Worker
-[2026-11-10 03:20:07Z INFO JobRunner] Job request: {"jobDisplayName": "build (windows)", "jobId": "5b1c", "steps": []}
-[2026-11-10 03:20:07Z INFO Worker] Workspace: C:\actions-runner\_work\app\app
-[2026-11-10 03:20:09Z INFO StepsRunner] Starting: Checkout
-[2026-11-10 03:20:14Z INFO StepsRunner] Finished: Checkout
-[2026-11-10 03:20:14Z INFO StepsRunner] Starting: npm ci
-[2026-11-10 03:21:02Z INFO StepsRunner] Finished: npm ci
-[2026-11-10 03:21:02Z INFO JobRunner] Job result after all job steps finish: Succeeded
-[2026-11-10 03:21:03Z INFO Worker] Worker finished

@@ -1,8 +1,0 @@
-{
-  "hook_event_name": "beforeShellExecution",
-  "conversation_id": "c0ffee42-19ab-4d7e-a3f1-5b8e2c9d7a10",
-  "generation_id": "g-0007",
-  "command": "git push origin main",
-  "cwd": "C:\\Users\\hung\\Projects\\notchtasks",
-  "workspacePaths": ["C:\\Users\\hung\\Projects\\notchtasks"]
-}

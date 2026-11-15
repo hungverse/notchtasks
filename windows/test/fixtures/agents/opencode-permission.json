@@ -1,7 +1,0 @@
-{
-  "action": "bash",
-  "resources": ["git push origin main"],
-  "metadata": { "command": "git push origin main" },
-  "sessionID": "ses_2c8f41d0",
-  "agent": "build"
-}
