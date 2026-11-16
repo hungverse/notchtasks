@@ -6,7 +6,8 @@
     <RootNamespace>NotchTasks</RootNamespace>
     <AssemblyName>NotchTasks</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+    <!-- Plain net10.0-windows: nothing in the app uses WinRT now (the accent is read from the registry). -->
+    <TargetFramework>net10.0-windows</TargetFramework>
     <ApplicationIcon>Assets\NotchTasks.ico</ApplicationIcon>
     <!-- Required by LibraryImport (Pill\Win32.cs): the generated P/Invoke code is unsafe. -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>

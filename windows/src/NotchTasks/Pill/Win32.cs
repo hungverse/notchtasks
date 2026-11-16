@@ -66,6 +66,11 @@ internal static partial class Win32
     public static partial nint RegisterPowerSettingNotification(nint recipient, ref Guid powerSetting, uint flags);
 
 
+    /// Plays a sound from memory (SND_MEMORY): the bytes must stay valid until it ends (SND_ASYNC). winmm, not the media stack.
+    [LibraryImport("winmm.dll", EntryPoint = "PlaySoundW")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool PlaySound(byte[] data, nint module, uint flags);
+
     [LibraryImport("user32.dll", EntryPoint = "SystemParametersInfoW", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static partial bool SystemParametersInfo(uint action, uint param, out NativeRect area, uint winIni);

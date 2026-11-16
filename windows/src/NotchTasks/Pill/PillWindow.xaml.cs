@@ -22,11 +22,14 @@ namespace NotchTasks.Pill;
 
 /// The floating pill at the top centre of the primary screen. It never takes focus. The window is sized once; the
 /// pill inside it animates. The window is click-through (WS_EX_TRANSPARENT|WS_EX_LAYERED) while the pointer is outside
-/// the pill, so clicks reach the windows below; a 10 Hz poll of the pointer drives that, hover-open and the close check.
+/// the pill, so clicks reach the windows below; a poll of the pointer drives that, hover-open and the close check.
+/// The poll runs at 30 Hz while the pointer is within NearMargin of the pill, so a click soon after entering reaches it.
 public partial class PillWindow : Window
 {
     private static readonly TimeSpan CloseDelay = TimeSpan.FromMilliseconds(350);
-    private static readonly TimeSpan PollInterval = TimeSpan.FromMilliseconds(100);  // 10 Hz
+    private static readonly TimeSpan FastPollInterval = TimeSpan.FromMilliseconds(33);  // 30 Hz, near the pill
+    private static readonly TimeSpan SlowPollInterval = TimeSpan.FromMilliseconds(100);  // 10 Hz, otherwise
+    private const double NearMargin = 40;  // DIP from the pill's shape
     private static readonly TimeSpan MaxFadeDuration = TimeSpan.FromMilliseconds(350);
 
     /// The corner radius of the pill; animated by the spring, bound to every shape through RadiusConverter.
@@ -35,7 +38,8 @@ public partial class PillWindow : Window
         new PropertyMetadata(PillGeometry.ClosedRadius, (d, _) => ((PillWindow)d).UpdateClip()));
 
     private readonly AppState _state;
-    private readonly DispatcherTimer _pollTimer = new() { Interval = PollInterval };
+    private readonly DispatcherTimer _pollTimer = new() { Interval = SlowPollInterval };
+    private bool _fastPoll;  // the poll interval in use: fast near the pill, slow otherwise
     private readonly DispatcherTimer _closeTimer = new() { Interval = TimeSpan.FromMilliseconds(100) };
     private readonly BlurEffect _cardBlur = new() { Radius = 6 };
     private nint _hwnd;
@@ -142,10 +146,18 @@ public partial class PillWindow : Window
                 }
                 break;
             case Win32.WM_SETTINGCHANGE:
-                // Only the work area matters here. The string form is read now, while the message's memory is valid.
-                if (wParam == Win32.SPI_SETWORKAREA || (lParam != nint.Zero && Marshal.PtrToStringUni(lParam) == "WindowMetrics"))
                 {
-                    Dispatcher.BeginInvoke(new Action(Place));
+                    // The work area moves the pill; the colour set (the Windows accent) refreshes it. The string form is read now,
+                    // while the message's memory is valid.
+                    var setting = lParam != nint.Zero ? Marshal.PtrToStringUni(lParam) : null;
+                    if (wParam == Win32.SPI_SETWORKAREA || setting == "WindowMetrics")
+                    {
+                        Dispatcher.BeginInvoke(new Action(Place));
+                    }
+                    if (setting == "ImmersiveColorSet")
+                    {
+                        Dispatcher.BeginInvoke(new Action(Refresh));
+                    }
                 }
                 break;
         }
@@ -167,14 +179,16 @@ public partial class PillWindow : Window
 
     private void OnDisplaySettingsChanged(object? sender, EventArgs e) => Dispatcher.BeginInvoke(new Action(Place));
 
-    /// 10 Hz: sets click-through from the pointer's position, and opens the pill after HoverDelay over it (hover mode).
-    /// An unmoved pointer costs nothing, unless a hover-open is still waiting for its delay.
+    /// Sets click-through from the pointer's position, and opens the pill after HoverDelay over it (hover mode).
+    /// An unmoved pointer costs nothing, unless a hover-open is still waiting for its delay. The interval changes only
+    /// when the pointer crosses the NearMargin boundary.
     private void OnPoll(object? sender, EventArgs e)
     {
         if (!Win32.GetCursorPos(out var point))
         {
             return;
         }
+        SetPollRate(IsNearShape(point));
         var moved = !_havePoint || point.X != _lastPoint.X || point.Y != _lastPoint.Y;
         var hoverWaiting = _enteredAt is not null && !_open && _state.Settings.ExpandMode == "hover";
         if (!moved && !hoverWaiting && !_animating)
@@ -199,6 +213,17 @@ public partial class PillWindow : Window
         {
             OpenPill();
         }
+    }
+
+    /// Sets the poll interval: fast while the pointer is near the pill, slow otherwise. Changes the timer only on a transition.
+    private void SetPollRate(bool near)
+    {
+        if (near == _fastPoll)
+        {
+            return;
+        }
+        _fastPoll = near;
+        _pollTimer.Interval = near ? FastPollInterval : SlowPollInterval;
     }
 
     /// Toggles WS_EX_TRANSPARENT. The window is already layered (AllowsTransparency), so the bit alone makes the
@@ -428,13 +453,40 @@ public partial class PillWindow : Window
 
     private bool IsInsideShape(NativePoint screenPoint, double width, double height, double radius)
     {
+        var x = (PillGeometry.WindowWidth - width) / 2;
+        return InRoundedRect(ToShapePoint(screenPoint), x, 0, width, height, radius);
+    }
+
+    /// True within NearMargin of the pill's current shape, or of the shape it springs to while an animation runs.
+    private bool IsNearShape(NativePoint screenPoint)
+    {
+        var p = ToShapePoint(screenPoint);
+        if (DistanceToShape(p, PillShape.Width, PillShape.Height, Radius) <= NearMargin)
+        {
+            return true;
+        }
+        return _animating && DistanceToShape(p, _targetWidth, _targetHeight, _targetRadius) <= NearMargin;
+    }
+
+    /// The screen point in the pill's DIP space (the window's client area, unscaled).
+    private Point ToShapePoint(NativePoint screenPoint)
+    {
         var client = screenPoint;
         Win32.ScreenToClient(_hwnd, ref client);
         var scale = Scale;
-        var p = new Point(client.X / scale, client.Y / scale);
+        return new Point(client.X / scale, client.Y / scale);
+    }
 
+    /// Signed distance from p to the rounded rectangle the pill's shape makes: negative or zero inside it.
+    private static double DistanceToShape(Point p, double width, double height, double radius)
+    {
         var x = (PillGeometry.WindowWidth - width) / 2;
-        return InRoundedRect(p, x, 0, width, height, radius);
+        var r = Math.Min(radius, Math.Min(width, height) / 2);
+        var cx = Math.Clamp(p.X, x + r, x + width - r);
+        var cy = Math.Clamp(p.Y, r, height - r);
+        var dx = p.X - cx;
+        var dy = p.Y - cy;
+        return Math.Sqrt(dx * dx + dy * dy) - r;
     }
 
     private static bool InRoundedRect(Point p, double x, double y, double w, double h, double radius)
