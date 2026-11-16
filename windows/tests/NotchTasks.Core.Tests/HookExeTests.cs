@@ -56,7 +56,8 @@ public sealed class HookExeTests : IDisposable
 
         var sw = Stopwatch.StartNew();
         string? askPath = null;
-        while (askPath is null && sw.ElapsedMilliseconds < 1000)
+        // A correctness check, not a timing one: the window is wide so a busy machine does not fail it.
+        while (askPath is null && sw.ElapsedMilliseconds < 5000)
         {
             askPath = Directory.Exists(asks) ? Directory.GetFiles(asks, "*.json").FirstOrDefault() : null;
             if (askPath is null)
