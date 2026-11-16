@@ -10,8 +10,14 @@ public static class PillGeometry
     public const double OpenHeight = 220;
     public const double OpenRadius = 28;
 
+    /// The open pill grows with its ask cards up to this height (the window is 420 high).
+    public const double MaxOpenHeight = 400;
+
     /// The ask toast width: max(200 + 300, 520).
     public static double AskToastWidth { get; } = Math.Max(ClosedWidth + 300, OpenWidth);
+
+    /// The corner radius of the ask toast.
+    public const double AskToastRadius = 24;
 
     /// The window: big enough for the open card and the glow, never resized.
     public const double WindowWidth = 560;
