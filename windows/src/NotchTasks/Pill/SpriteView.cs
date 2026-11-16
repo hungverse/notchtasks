@@ -170,11 +170,6 @@ public sealed class SpriteView : FrameworkElement
 
     internal double FrameSeconds => _sheet.FrameSeconds;
 
-    /// Clock ticks per frame: the shared clock runs at the fastest visible sprite's frame time.
-    internal int Stride { get; set; } = 1;
-
-    internal int TicksSinceStep { get; set; }
-
     protected override void OnRender(DrawingContext drawingContext)
     {
         drawingContext.DrawImage(_sheet.Frames[_index], new Rect(0, 0, _size, _size));
@@ -183,6 +178,10 @@ public sealed class SpriteView : FrameworkElement
     /// Moves to the frame of the current moment. Frame 0 falls on the epoch and every loop after it.
     internal void Step()
     {
+        if (!(FrameSeconds > 0))
+        {
+            return;
+        }
         var count = _sheet.Frames.Count;
         if (count <= 1)
         {

@@ -20,6 +20,7 @@ public partial class IconLibraryPane : SettingsPane
     private readonly List<LibraryTile> _tiles = new();
     private readonly List<(string Category, TextBlock Header)> _headers = new();
     private ScrollViewer? _scroller;
+    private Window? _window;
     private string _message = string.Empty;
 
     private sealed record LibraryTile(SpriteEntry Entry, Button Button, SpriteView Sprite, Ellipse InUse, TextBlock Name);
@@ -134,6 +135,7 @@ public partial class IconLibraryPane : SettingsPane
             Margin = new Thickness(0, 4, 0, 0),
             Text = entry.Name,
         };
+        name.SetResourceReference(TextBlock.ForegroundProperty, "TextFillColorSecondaryBrush");
         var button = new Button
         {
             Style = (Style)FindResource("TileButton"),
@@ -181,15 +183,24 @@ public partial class IconLibraryPane : SettingsPane
         {
             return;
         }
+        // A minimized or hidden Control Panel shows nothing, so every tile stops.
+        var shown = _window is { IsVisible: true, WindowState: not WindowState.Minimized };
         var viewport = new Rect(0, 0, _scroller.ViewportWidth, _scroller.ViewportHeight);
         foreach (var tile in _tiles)
         {
             var inView = false;
-            if (tile.Button.IsLoaded)
+            if (shown && tile.Button.IsLoaded)
             {
-                var bounds = tile.Button.TransformToAncestor(_scroller)
-                    .TransformBounds(new Rect(new Point(0, 0), tile.Button.RenderSize));
-                inView = viewport.IntersectsWith(bounds);
+                try
+                {
+                    var bounds = tile.Button.TransformToAncestor(_scroller)
+                        .TransformBounds(new Rect(new Point(0, 0), tile.Button.RenderSize));
+                    inView = viewport.IntersectsWith(bounds);
+                }
+                catch (InvalidOperationException)
+                {
+                    // The tile left the visual tree between the check and the transform: it is treated as out of view.
+                }
             }
             tile.Sprite.Visibility = inView ? Visibility.Visible : Visibility.Hidden;
         }
@@ -203,6 +214,12 @@ public partial class IconLibraryPane : SettingsPane
         {
             _scroller.ScrollChanged += OnScrolled;
         }
+        _window = Window.GetWindow(this);
+        if (_window is not null)
+        {
+            _window.StateChanged += OnWindowStateChanged;
+            _window.IsVisibleChanged += OnWindowVisibleChanged;
+        }
         // After the layout pass, so the tiles have their places.
         Dispatcher.BeginInvoke(new Action(UpdateVisibleTiles), DispatcherPriority.Loaded);
     }
@@ -215,10 +232,20 @@ public partial class IconLibraryPane : SettingsPane
             _scroller.ScrollChanged -= OnScrolled;
             _scroller = null;
         }
+        if (_window is not null)
+        {
+            _window.StateChanged -= OnWindowStateChanged;
+            _window.IsVisibleChanged -= OnWindowVisibleChanged;
+            _window = null;
+        }
         _message = string.Empty;
     }
 
     private void OnScrolled(object sender, ScrollChangedEventArgs e) => UpdateVisibleTiles();
+
+    private void OnWindowStateChanged(object? sender, EventArgs e) => UpdateVisibleTiles();
+
+    private void OnWindowVisibleChanged(object sender, DependencyPropertyChangedEventArgs e) => UpdateVisibleTiles();
 
     private static T? Ancestor<T>(DependencyObject node) where T : DependencyObject
     {

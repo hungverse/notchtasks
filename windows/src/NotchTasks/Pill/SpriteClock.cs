@@ -97,12 +97,9 @@ internal static class SpriteClock
             return;
         }
 
-        var interval = visible.Min(s => s.FrameSeconds);
-        foreach (var sprite in visible)
-        {
-            sprite.Stride = Math.Max(1, (int)Math.Round(sprite.FrameSeconds / interval));
-        }
-
+        // Ticks at half the fastest frame time, so a frame change is never late by a whole frame; each sprite redraws only
+        // when its frame index changes, so the extra ticks cost a comparison, not a redraw.
+        var interval = visible.Min(s => s.FrameSeconds) / 2;
         _timer ??= CreateTimer();
         _timer.Interval = TimeSpan.FromSeconds(interval);
         if (!_timer.IsEnabled)
@@ -122,12 +119,7 @@ internal static class SpriteClock
                 {
                     continue;
                 }
-                sprite.TicksSinceStep++;
-                if (sprite.TicksSinceStep >= sprite.Stride)
-                {
-                    sprite.TicksSinceStep = 0;
-                    sprite.Step();
-                }
+                sprite.Step();
             }
         };
         return timer;
