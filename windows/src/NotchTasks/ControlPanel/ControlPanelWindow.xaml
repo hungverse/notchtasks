@@ -6,15 +6,19 @@
         Width="900" Height="640"
         MinWidth="760" MinHeight="520"
         WindowStartupLocation="CenterScreen"
-        Background="#FF202020" Foreground="White">
+        Background="{DynamicResource ApplicationBackgroundBrush}"
+        Foreground="{DynamicResource TextFillColorPrimaryBrush}">
   <Grid>
     <Grid.ColumnDefinitions>
       <ColumnDefinition Width="200" />
       <ColumnDefinition Width="*" />
     </Grid.ColumnDefinitions>
 
-    <!-- The sidebar: one row per pane, with its icon and title. The selected row takes the accent. -->
-    <ListBox x:Name="Sidebar" Grid.Column="0" BorderThickness="0" Background="Transparent" Foreground="White"
+    <!-- The sidebar: one row per pane, with its icon and title. The selected row takes the accent. The layer and the
+         text colours are the Windows theme's own brushes, so the window follows light and dark mode. -->
+    <Border Grid.Column="0" Background="{DynamicResource LayerFillColorAltBrush}">
+    <ListBox x:Name="Sidebar" BorderThickness="0" Background="Transparent"
+             Foreground="{DynamicResource TextFillColorPrimaryBrush}"
              Padding="8,12" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
       <ListBox.ItemContainerStyle>
         <Style TargetType="ListBoxItem">
@@ -32,7 +36,7 @@
                 <ControlTemplate.Triggers>
                   <Trigger Property="IsSelected" Value="True">
                     <Setter TargetName="Body" Property="Background" Value="{x:Static SystemColors.HighlightBrush}" />
-                    <Setter Property="Foreground" Value="White" />
+                    <Setter Property="Foreground" Value="{DynamicResource TextOnAccentFillColorPrimaryBrush}" />
                   </Trigger>
                   <Trigger Property="IsMouseOver" Value="True">
                     <Setter Property="Opacity" Value="0.85" />
@@ -53,6 +57,7 @@
         </DataTemplate>
       </ListBox.ItemTemplate>
     </ListBox>
+    </Border>
 
     <!-- The detail area: the selected pane, scrolling when it is taller than the window. -->
     <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
