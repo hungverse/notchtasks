@@ -95,6 +95,7 @@ public sealed class AskPresentationTests
     {
         Assert.Equal("echo ok ↵  ↵  ↵  ↵ rm -rf ~", AskPresentation.Display("echo ok\n\n\n\nrm -rf ~"));
         Assert.Equal("a ↵ b ↵ c ↵ d", AskPresentation.Display("a\r\nb\nc\rd"));
+        Assert.Equal("a ↵ b ↵ c ↵ d", AskPresentation.Display("a" + (char)0x2028 + "b" + (char)0x2029 + "c" + (char)0x2028 + "d"));
         Assert.Equal("a ⇥ b", AskPresentation.Display("a\tb"));
         Assert.Equal("plain text, 世界 \U0001F44D", AskPresentation.Display("plain text, 世界 \U0001F44D"));
     }
@@ -107,6 +108,15 @@ public sealed class AskPresentationTests
         Assert.Equal("ab", AskPresentation.Display("a⁦⁩b"));
         Assert.Equal("ab", AskPresentation.Display("a​‏b"));
         Assert.Equal("ab", AskPresentation.Display("﻿a‬b"));
+    }
+
+    [Fact]
+    public void Display_UnknownToolActionLabelIsSanitised()
+    {
+        L10n.Init(AppContext.BaseDirectory, "en");
+
+        // An unknown tool name comes back raw from ActionLabel; the card shows it through Display.
+        Assert.Equal("Bad ↵ Toolx", AskPresentation.Display(AskParser.ActionLabel("Bad\nTool" + (char)0x202E + "x")));
     }
 
     [Fact]

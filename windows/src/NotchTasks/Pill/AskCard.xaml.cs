@@ -75,7 +75,7 @@ public partial class AskCard : UserControl
         var body = new StackPanel { Margin = new Thickness(0, 9, 0, 0) };
         body.Children.Add(new TextBlock
         {
-            Text = AskParser.ActionLabel(Ask.Tool),
+            Text = AskPresentation.Display(AskParser.ActionLabel(Ask.Tool)),
             FontSize = 10,
             FontWeight = FontWeights.Bold,
             Foreground = (Brush)FindResource("AskOrange"),

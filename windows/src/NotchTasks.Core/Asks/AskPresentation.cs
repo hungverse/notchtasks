@@ -36,6 +36,10 @@ public static class AskPresentation
         {
             switch (Rune.GetUnicodeCategory(rune))
             {
+                case UnicodeCategory.LineSeparator:
+                case UnicodeCategory.ParagraphSeparator:
+                    sb.Append(" ↵ ");
+                    break;
                 case UnicodeCategory.Format:
                     break;
                 case UnicodeCategory.Control:
