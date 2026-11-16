@@ -1,6 +1,7 @@
 <UserControl x:Class="NotchTasks.ControlPanel.ColorField"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:l="clr-namespace:NotchTasks.ControlPanel">
   <UserControl.Resources>
     <!-- A round swatch: its colour is the button's background. -->
     <Style x:Key="ColorSwatch" TargetType="Button">
@@ -30,6 +31,6 @@
     <StackPanel x:Name="Swatches" Orientation="Horizontal" VerticalAlignment="Center" />
     <TextBox x:Name="HexBox" MinWidth="104" MaxLength="7" VerticalContentAlignment="Center" Margin="0,0,6,0"
              ToolTip="#RRGGBB" KeyDown="OnHexKeyDown" LostFocus="OnHexLostFocus" />
-    <Button x:Name="PickButton" Content="…" Width="34" Height="30" ToolTip="Choose a colour" Click="OnPickClick" />
+    <Button x:Name="PickButton" Content="…" Width="34" Height="30" ToolTip="{l:L Choose a colour}" Click="OnPickClick" />
   </StackPanel>
 </UserControl>

@@ -171,4 +171,32 @@ public sealed class L10nTests
             Directory.Delete(folder, recursive: true);
         }
     }
+
+    [Fact]
+    public void WindowsOverlay_TranslatesNoneAndChooseAColour_InEveryLanguage()
+    {
+        // The Windows-only keys: the sound picker's "None" and the colour field's "Choose a colour" tooltip.
+        var folder = Path.Combine(Path.GetTempPath(), "nt-l10n-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(folder);
+        try
+        {
+            foreach (var file in Directory.GetFiles(MacSources(), "l10n-*.json"))
+            {
+                File.Copy(file, Path.Combine(folder, Path.GetFileName(file)));
+            }
+            File.Copy(Path.Combine(RepoRoot(), "electron", "l10n", "windows.json"), Path.Combine(folder, "windows.json"));
+
+            foreach (var (code, _) in L10n.Languages.Where(language => language.Code != "en"))
+            {
+                L10n.Init(folder, code);
+
+                Assert.NotEqual("None", L10n.L("None"));
+                Assert.NotEqual("Choose a colour", L10n.L("Choose a colour"));
+            }
+        }
+        finally
+        {
+            Directory.Delete(folder, recursive: true);
+        }
+    }
 }

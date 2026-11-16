@@ -105,8 +105,9 @@ public partial class SoundsPane : SettingsPane
             Content = new TextBlock { Text = "", FontFamily = new System.Windows.Media.FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets"), FontSize = 12 },
             Width = 32,
             Height = 28,
-            ToolTip = L10n.L("Play"),
         };
+        // The tooltip follows the language at once, as the other texts do (LocalizedStrings raises Item[] on each change).
+        play.SetBinding(FrameworkElement.ToolTipProperty, new Binding("[Play]") { Source = LocalizedStrings.Instance, Mode = BindingMode.OneWay });
         DockPanel.SetDock(play, Dock.Right);
         play.Click += (_, _) => Sounds.PlayName(picker.SelectedItem is Choice chosen ? chosen.Value : string.Empty);
 
