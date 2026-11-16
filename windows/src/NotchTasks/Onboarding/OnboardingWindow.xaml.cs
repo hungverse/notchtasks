@@ -71,6 +71,14 @@ public partial class OnboardingWindow : Window
             _window.WindowState = WindowState.Normal;
         }
         _window.Activate();
+        if (!_window.IsActive)
+        {
+            // Windows may refuse the foreground to a window that was not started by the user's click (the first run).
+            // A topmost flip brings it forward once; it is not left topmost.
+            _window.Topmost = true;
+            _window.Activate();
+            _window.Topmost = false;
+        }
     }
 
     private SettingsStore Settings => _state.Settings;
