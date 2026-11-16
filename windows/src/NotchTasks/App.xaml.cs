@@ -6,6 +6,7 @@ using System.Windows;
 using NotchTasks.Core;
 using NotchTasks.Core.Asks;
 using NotchTasks.Core.Settings;
+using NotchTasks.Pill;
 using NotchTasks.Services;
 
 namespace NotchTasks;
@@ -16,6 +17,7 @@ public partial class App : System.Windows.Application
     private SettingsStore? _settings;
     private AppState? _state;
     private Tray? _tray;
+    private PillWindow? _pill;
     private bool _primary;
 
     /// The running app.
@@ -75,6 +77,8 @@ public partial class App : System.Windows.Application
 
         _state = new AppState(_settings, store);
         _state.StartWatching();
+        _pill = new PillWindow(_state);
+        _pill.Show();
         _tray = new Tray(() => Shutdown());
     }
 
@@ -82,6 +86,7 @@ public partial class App : System.Windows.Application
     {
         if (_primary)
         {
+            _pill?.Close();
             _tray?.Dispose();
             _state?.Dispose();
             _settings?.Dispose();
