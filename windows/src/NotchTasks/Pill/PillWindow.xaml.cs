@@ -86,7 +86,7 @@ public partial class PillWindow : Window
             ClosePill();
             ControlPanelWindow.Show(_state);
         };
-        QuitButton.Click += (_, _) => Application.Current.Shutdown();
+        QuitButton.Click += (_, _) => App.Quit();
         L10n.Changed += OnLanguageChanged;
 
         _pollTimer.Tick += OnPoll;

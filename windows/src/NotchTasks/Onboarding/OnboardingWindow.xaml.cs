@@ -266,9 +266,9 @@ public partial class OnboardingWindow : Window
         {
             return;
         }
-        // The app is quitting with the guide open: it is not finished, so the guide opens again on the next launch, and the
-        // pill is not shown on the way out.
-        if (Dispatcher.HasShutdownStarted)
+        // The app is quitting with the guide open (App.Quit or the end of the session): it is not finished, so the guide opens
+        // again on the next launch, and the pill is not shown on the way out.
+        if (App.Quitting)
         {
             return;
         }

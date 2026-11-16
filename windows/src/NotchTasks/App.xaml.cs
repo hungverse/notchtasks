@@ -28,6 +28,24 @@ public partial class App : System.Windows.Application
     /// The app state. Available after start-up.
     public AppState State => _state ?? throw new InvalidOperationException("The app has not started.");
 
+    /// True while the app is quitting: set by Quit (the tray's and the pill's Quit) and by the end of the Windows session, before
+    /// the windows close. A window that closes with the app reads it: the first-run guide then stays unfinished, and the pill is
+    /// not shown on the way out. Dispatcher.HasShutdownStarted is not enough: it is still false while the windows close.
+    public static bool Quitting { get; set; }
+
+    /// Quits the app. Quitting goes up first, so the windows that close with the app see it.
+    public static void Quit()
+    {
+        Quitting = true;
+        Instance.Shutdown();
+    }
+
+    protected override void OnSessionEnding(SessionEndingCancelEventArgs e)
+    {
+        Quitting = true;
+        base.OnSessionEnding(e);
+    }
+
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
@@ -108,7 +126,7 @@ public partial class App : System.Windows.Application
             var pill = _pill;
             OnboardingWindow.Show(_state, () => pill.Show());
         }
-        _tray = new Tray(() => ControlPanelWindow.Show(_state), () => OnboardingWindow.Show(_state), () => Shutdown());
+        _tray = new Tray(() => ControlPanelWindow.Show(_state), () => OnboardingWindow.Show(_state), Quit);
         ApplyTrayVisibility(settings);
     }
 

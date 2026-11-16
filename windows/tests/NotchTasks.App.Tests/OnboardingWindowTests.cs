@@ -8,6 +8,51 @@ namespace NotchTasks.AppTests;
 public sealed class OnboardingWindowTests
 {
     [Fact]
+    public void GuideClosedByQuit_IsNotFinished_AndShowsNoPill()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            var closedRan = false;
+            var window = Fixture.Create<OnboardingWindow>(state, new Action(() => closedRan = true));
+            Fixture.ShowOffScreen(window);
+
+            // The quit sets App.Quitting before the windows close: the guide stays unfinished, and the pill is not shown.
+            App.Quitting = true;
+            try
+            {
+                window.Close();
+            }
+            finally
+            {
+                App.Quitting = false;
+            }
+
+            Assert.False(state.Settings.OnboardingDone);
+            Assert.False(closedRan);
+        });
+    }
+
+    [Fact]
+    public void GuideClosedNormally_IsFinished_AndShowsThePill()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            var closedRan = false;
+            var window = Fixture.Create<OnboardingWindow>(state, new Action(() => closedRan = true));
+            Fixture.ShowOffScreen(window);
+
+            window.Close();
+
+            Assert.True(state.Settings.OnboardingDone);
+            Assert.True(closedRan);
+        });
+    }
+
+    [Fact]
     public void PagesOneToFiveBuild()
     {
         Sta.Run(() =>
