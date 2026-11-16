@@ -6,7 +6,7 @@
         Width="900" Height="640"
         MinWidth="760" MinHeight="520"
         WindowStartupLocation="CenterScreen"
-        Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
+        Background="#FF202020" Foreground="White">
   <Grid>
     <Grid.ColumnDefinitions>
       <ColumnDefinition Width="200" />
@@ -14,7 +14,7 @@
     </Grid.ColumnDefinitions>
 
     <!-- The sidebar: one row per pane, with its icon and title. The selected row takes the accent. -->
-    <ListBox x:Name="Sidebar" Grid.Column="0" BorderThickness="0" Background="Transparent"
+    <ListBox x:Name="Sidebar" Grid.Column="0" BorderThickness="0" Background="Transparent" Foreground="White"
              Padding="8,12" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
       <ListBox.ItemContainerStyle>
         <Style TargetType="ListBoxItem">
@@ -32,7 +32,7 @@
                 <ControlTemplate.Triggers>
                   <Trigger Property="IsSelected" Value="True">
                     <Setter TargetName="Body" Property="Background" Value="{x:Static SystemColors.HighlightBrush}" />
-                    <Setter Property="Foreground" Value="{x:Static SystemColors.HighlightTextBrush}" />
+                    <Setter Property="Foreground" Value="White" />
                   </Trigger>
                   <Trigger Property="IsMouseOver" Value="True">
                     <Setter Property="Opacity" Value="0.85" />
