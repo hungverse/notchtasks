@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Encodings.Web;
 using System.Text.Json;
@@ -44,7 +45,7 @@ public sealed class SettingsStore : INotifyPropertyChanged, IDisposable
     private readonly string _file;
     private readonly object _gate = new();
     private JsonObject _root = new();
-    private string? _lastWritten;   // text of the last write made by this store; a watcher event that reads back the same text is ignored
+    private string? _lastSeenText;  // text last written by this store or read from the file; a watcher event that reads back the same text is ignored
     private bool _corrupt;          // the file on disk is unreadable; the next Set moves it aside
     private FileSystemWatcher? _watcher;
     private Timer? _debounce;
@@ -88,7 +89,7 @@ public sealed class SettingsStore : INotifyPropertyChanged, IDisposable
             var text = next.ToJsonString(WriteOptions);
             AtomicFile.WriteAllText(_file, text);
             _root = next;
-            _lastWritten = text;
+            _lastSeenText = text;
             _corrupt = false;
         }
         Raise(new[] { key });
@@ -237,7 +238,7 @@ public sealed class SettingsStore : INotifyPropertyChanged, IDisposable
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
-            _corrupt = true;
+            // Locked or unreadable for now: defaults in memory, and the file is not treated as corrupt.
             return;
         }
 
@@ -245,6 +246,7 @@ public sealed class SettingsStore : INotifyPropertyChanged, IDisposable
         {
             return;
         }
+        _lastSeenText = text;
         if (TryParseObject(text, out var parsed))
         {
             _root = parsed;
@@ -283,6 +285,7 @@ public sealed class SettingsStore : INotifyPropertyChanged, IDisposable
     }
 
     /// Reloads after an outside edit. A file that is missing, unreadable or corrupt keeps the values in memory.
+    /// Runs on a timer thread, so a throwing subscriber is caught here instead of ending the process.
     private void OnDebounced()
     {
         IReadOnlyList<string> changed;
@@ -306,10 +309,11 @@ public sealed class SettingsStore : INotifyPropertyChanged, IDisposable
                 return;
             }
 
-            if (text == _lastWritten)
+            if (text == _lastSeenText)
             {
                 return;
             }
+            _lastSeenText = text;
             if (!TryParseObject(text, out var parsed))
             {
                 _corrupt = true;
@@ -320,7 +324,18 @@ public sealed class SettingsStore : INotifyPropertyChanged, IDisposable
             _root = parsed;
             _corrupt = false;
         }
-        Raise(changed);
+        if (changed.Count == 0)
+        {
+            return;
+        }
+        try
+        {
+            Raise(changed);
+        }
+        catch (Exception e)
+        {
+            Debug.WriteLine($"settings: a subscriber threw: {e}");
+        }
     }
 
     /// The corrupt file is renamed to settings.json.corrupt, replacing an older one.
@@ -361,6 +376,12 @@ public sealed class SettingsStore : INotifyPropertyChanged, IDisposable
         }
         catch (JsonException)
         {
+            obj = null;
+            return false;
+        }
+        catch (ArgumentException)
+        {
+            // Duplicate keys in the object.
             obj = null;
             return false;
         }

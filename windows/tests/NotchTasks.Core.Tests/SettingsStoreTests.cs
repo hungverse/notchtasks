@@ -126,6 +126,88 @@ public sealed class SettingsStoreTests : IDisposable
         Assert.Equal("snappy", store.Motion);
     }
 
+    [Fact]
+    public async Task ExternalRevertToOwnText_Reloads()
+    {
+        using var store = SettingsStore.Load(_file);
+        store.Set("motion", JsonValue.Create("snappy"));
+        var ownText = File.ReadAllText(_file);
+
+        var edited = NextChange(store, "motion");
+        File.WriteAllText(_file, "{\"motion\":\"smooth\"}");
+        await edited.WaitAsync(TimeSpan.FromSeconds(3));
+        Assert.Equal("smooth", store.Motion);
+
+        var reverted = NextChange(store, "motion");
+        File.WriteAllText(_file, ownText);
+        await reverted.WaitAsync(TimeSpan.FromSeconds(3));
+        Assert.Equal("snappy", store.Motion);
+    }
+
+    [Fact]
+    public async Task ThrowingSubscriber_DoesNotCrashWatcher()
+    {
+        using var store = SettingsStore.Load(_file);
+        store.Changed += _ => throw new InvalidOperationException("subscriber bug");
+
+        File.WriteAllText(_file, "{\"motion\":\"snappy\"}");
+
+        await WaitUntil(() => store.Motion == "snappy", TimeSpan.FromSeconds(3));
+        Assert.Equal("snappy", store.Motion);
+    }
+
+    [Fact]
+    public void LockedFile_IsNotRenamedCorrupt()
+    {
+        File.WriteAllText(_file, "{\"accent\":\"green\"}");
+        using var locked = new FileStream(_file, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+        using var store = SettingsStore.Load(_file);
+        Assert.Equal("auto", store.Accent);
+
+        locked.Dispose();
+        store.Set("motion", JsonValue.Create("snappy"));
+
+        Assert.False(File.Exists(_file + ".corrupt"));
+        var root = JsonNode.Parse(File.ReadAllText(_file))!.AsObject();
+        Assert.Equal("snappy", root["motion"]!.GetValue<string>());
+    }
+
+    [Fact]
+    public async Task OwnWrite_IsIgnoredByWatcher()
+    {
+        using var store = SettingsStore.Load(_file);
+        int count = 0;
+        store.Changed += _ => Interlocked.Increment(ref count);
+
+        store.Set("motion", JsonValue.Create("snappy"));
+        await Task.Delay(400);
+
+        Assert.Equal(1, Volatile.Read(ref count));
+    }
+
+    /// The next Changed that names the key. The subscription stays, which is harmless in a test.
+    private static Task<IReadOnlyCollection<string>> NextChange(SettingsStore store, string key)
+    {
+        var changed = new TaskCompletionSource<IReadOnlyCollection<string>>(TaskCreationOptions.RunContinuationsAsynchronously);
+        store.Changed += keys =>
+        {
+            if (keys.Contains(key))
+            {
+                changed.TrySetResult(keys);
+            }
+        };
+        return changed.Task;
+    }
+
+    private static async Task WaitUntil(Func<bool> condition, TimeSpan timeout)
+    {
+        var deadline = DateTime.UtcNow + timeout;
+        while (!condition() && DateTime.UtcNow < deadline)
+        {
+            await Task.Delay(20);
+        }
+    }
+
     [Theory]
     [InlineData("auto", "#00F5D4", "#123456", "#123456")]
     [InlineData("auto", "#00F5D4", null, "#0A84FF")]

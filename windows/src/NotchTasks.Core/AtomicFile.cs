@@ -15,12 +15,31 @@ public static class AtomicFile
         try
         {
             File.WriteAllText(tmp, text, Utf8);
-            File.Move(tmp, full, overwrite: true);
+            MoveWithRetry(tmp, full);
         }
         catch
         {
             TryDelete(tmp);
             throw;
+        }
+    }
+
+    private const int MoveAttempts = 3;
+
+    /// Windows can refuse the rename for a moment while another process reads the target (a watcher, an antivirus scan).
+    private static void MoveWithRetry(string from, string to)
+    {
+        for (var attempt = 1; ; attempt++)
+        {
+            try
+            {
+                File.Move(from, to, overwrite: true);
+                return;
+            }
+            catch (Exception e) when ((e is IOException or UnauthorizedAccessException) && attempt < MoveAttempts)
+            {
+                Thread.Sleep(20);
+            }
         }
     }
 
