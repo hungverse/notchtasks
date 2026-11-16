@@ -21,6 +21,9 @@ public partial class OnboardingWindow : Window
 
     private static OnboardingWindow? _window;
 
+    /// True while the guide is open.
+    public static bool IsOpen => _window is not null;
+
     private readonly AppState _state;
     private readonly Action? _closed;
     private readonly Dictionary<int, UserControl> _panes = new();

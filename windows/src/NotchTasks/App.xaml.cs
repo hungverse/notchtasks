@@ -53,10 +53,12 @@ public partial class App : System.Windows.Application
         AppDomain.CurrentDomain.UnhandledException += (_, args) =>
             ErrorLog.Write(args.ExceptionObject as Exception ?? new Exception(args.ExceptionObject.ToString()));
 
-        // Before anything else: a second launch exits at once and creates nothing.
+        // Before anything else: a second launch exits at once and creates nothing. First it asks the first instance to show
+        // its window (the guide, or the Control Panel).
         _instance = new SingleInstance();
         if (!_instance.IsFirst)
         {
+            _instance.SignalFirst();
             Shutdown(0);
             return;
         }
@@ -128,6 +130,24 @@ public partial class App : System.Windows.Application
         }
         _tray = new Tray(() => ControlPanelWindow.Show(_state), () => OnboardingWindow.Show(_state), Quit);
         ApplyTrayVisibility(settings);
+        _instance?.Listen(() => Dispatcher.BeginInvoke(new Action(ShowFromSecondLaunch)));
+    }
+
+    /// A second launch shows this instance's window: the guide when it is open, else the Control Panel. Runs on the UI thread.
+    private void ShowFromSecondLaunch()
+    {
+        if (_state is null)
+        {
+            return;
+        }
+        if (OnboardingWindow.IsOpen)
+        {
+            OnboardingWindow.Show(_state);
+        }
+        else
+        {
+            ControlPanelWindow.Show(_state);
+        }
     }
 
     /// Shows or hides the tray icon as the menuBarIcon setting says. Runs on the UI thread.
