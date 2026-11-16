@@ -12,11 +12,18 @@ public static class ModuleCatalog
 
     private static readonly HashSet<string> NotOnWindows = new(StringComparer.Ordinal) { "levels", "calendar", "fans" };
 
+    /// The modules this build actually does. Phase 2 builds only the agents; the others show "Coming soon" and ask for no
+    /// permission (PermissionItems.Needed, NextSteps).
+    private static readonly HashSet<string> BuiltIds = new(StringComparer.Ordinal) { "agents" };
+
     /// Every module id, in the Mac's order.
     public static IReadOnlyList<string> All => Ids;
 
     /// Whether this PC can show the module. Unknown ids are not on Windows.
     public static bool OnWindows(string id) => Ids.Contains(id) && !NotOnWindows.Contains(id);
+
+    /// Whether this build has the module's feature. An unbuilt module keeps its settings but does nothing yet.
+    public static bool Built(string id) => BuiltIds.Contains(id);
 
     /// The English title key of a module (Settings.swift ModuleID.title).
     public static string Title(string id) => id switch

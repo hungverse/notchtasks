@@ -22,21 +22,22 @@ public sealed class PermissionItemsTests
     [Fact]
     public void Needed_FollowsModule()
     {
-        var mirror = Item("camera", "mirror");
+        // The agent hook is the one row whose module is built in Phase 2.
+        var hook = Item("hook.claude", "agents");
 
-        Assert.True(PermissionItems.Needed(mirror, new HashSet<string> { "mirror" }, notifications: false));
-        Assert.False(PermissionItems.Needed(mirror, new HashSet<string> { "calls" }, notifications: false));
-        Assert.False(PermissionItems.Needed(Item("firewall"), new HashSet<string> { "mirror" }, notifications: false));
+        Assert.True(PermissionItems.Needed(hook, new HashSet<string> { "agents" }, notifications: false));
+        Assert.False(PermissionItems.Needed(hook, new HashSet<string> { "ci" }, notifications: false));
+        Assert.False(PermissionItems.Needed(Item("firewall"), new HashSet<string> { "agents" }, notifications: false));
     }
 
     [Fact]
-    public void Needed_Mic_FollowsPrivacyOrCalls()
+    public void Needed_MicNotNeeded_WhenPrivacyNotBuilt()
     {
+        // Privacy and calls are not built in Phase 2: a mic row is not needed for them, even when they are on.
         var mic = Item("mic", "privacy", "calls");
 
-        Assert.True(PermissionItems.Needed(mic, new HashSet<string> { "privacy" }, notifications: false));
-        Assert.True(PermissionItems.Needed(mic, new HashSet<string> { "calls" }, notifications: false));
-        Assert.False(PermissionItems.Needed(mic, new HashSet<string> { "mirror" }, notifications: false));
+        Assert.False(PermissionItems.Needed(mic, new HashSet<string> { "privacy", "calls" }, notifications: false));
+        Assert.False(PermissionItems.Needed(Item("camera", "mirror"), new HashSet<string> { "mirror" }, notifications: false));
     }
 
     [Fact]
@@ -45,7 +46,7 @@ public sealed class PermissionItemsTests
         var notifications = Item("notifications");
 
         Assert.True(PermissionItems.Needed(notifications, new HashSet<string> { "agents" }, notifications: true));
-        Assert.True(PermissionItems.Needed(notifications, new HashSet<string> { "ci" }, notifications: true));
+        Assert.False(PermissionItems.Needed(notifications, new HashSet<string> { "ci" }, notifications: true));
         Assert.False(PermissionItems.Needed(notifications, new HashSet<string> { "media" }, notifications: true));
         Assert.False(PermissionItems.Needed(notifications, new HashSet<string> { "agents" }, notifications: false));
     }
@@ -102,7 +103,7 @@ public sealed class PermissionItemsTests
             hooks: new Dictionary<AgentKind, bool?> { [AgentKind.Claude] = true, [AgentKind.Codex] = false }));
 
         Assert.Equal(PermGroup.Granted, PermissionItems.GroupOf(Find(items, "login"), modules, notifications: true));
-        Assert.Equal(PermGroup.Needed, PermissionItems.GroupOf(Find(items, "camera"), modules, notifications: true));
+        Assert.Equal(PermGroup.NotInUse, PermissionItems.GroupOf(Find(items, "camera"), modules, notifications: true));  // mirror is not built
         Assert.Equal(PermGroup.Granted, PermissionItems.GroupOf(Find(items, "hook.claude"), modules, notifications: true));
         Assert.Equal(PermGroup.Needed, PermissionItems.GroupOf(Find(items, "hook.codex"), modules, notifications: true));
         Assert.Equal(PermGroup.NotInUse, PermissionItems.GroupOf(Find(items, "firewall"), modules, notifications: true));

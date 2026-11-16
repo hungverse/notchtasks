@@ -1,4 +1,5 @@
 using NotchTasks.Core.Asks;
+using NotchTasks.Core.Settings;
 using static NotchTasks.Core.L10n;
 
 namespace NotchTasks.Core.Permissions;
@@ -86,8 +87,8 @@ public static class PermissionItems
         return items;
     }
 
-    /// True when the row is needed: it applies here, and one of its modules is on. Notifications are needed only with the
-    /// agents or the build modules, and only while notifications are on (OnboardingGuide.needs). Needed says nothing about
+    /// True when the row is needed: it applies here, and one of its modules is on and built. Notifications are needed only with
+    /// the agents or the build modules, and only while notifications are on (OnboardingGuide.needs). Needed says nothing about
     /// the state: a granted row can still be needed (GroupOf sorts it).
     public static bool Needed(PermItem item, IReadOnlySet<string> modules, bool notifications)
     {
@@ -95,11 +96,12 @@ public static class PermissionItems
         {
             return false;
         }
+        bool On(string module) => modules.Contains(module) && ModuleCatalog.Built(module);
         if (item.Id == "notifications")
         {
-            return notifications && (modules.Contains("agents") || modules.Contains("ci"));
+            return notifications && (On("agents") || On("ci"));
         }
-        return item.Modules.Any(module => modules.Contains(module));
+        return item.Modules.Any(On);
     }
 
     /// Which group a row is in: Not in use when it is not needed, Granted once granted, else Needed. Start at login is always

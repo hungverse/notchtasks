@@ -12,43 +12,44 @@ public sealed class NextStepsTests
     private static PermItem Item(string id, PermState state, params string[] modules) =>
         new(id, id, "", "", modules, state);
 
-    // The Mac's calendar row maps to the Windows mic row (privacy or calls); the camera row keeps the mirror module.
-    private static PermItem Mic(PermState state = PermState.NotAsked) => Item("mic", state, "privacy", "calls");
+    // Phase 2 builds only the agents: the agent hook row is the one permission row whose module is on and built.
+    private static PermItem Hook(PermState state = PermState.NotAsked) => Item("hook.claude", state, "agents");
 
-    private static PermItem Camera(PermState state = PermState.NotAsked) => Item("camera", state, "mirror");
+    // Mic and camera rows need privacy, calls and mirror, which are not built yet: they are never a step in Phase 2.
+    private static PermItem Mic(PermState state = PermState.NotAsked) => Item("mic", state, "privacy", "calls");
 
     [Fact]
     public void NextSteps_PermissionsFollowChoices()
     {
-        var calls = new HashSet<string> { "calls" };
+        var agents = new HashSet<string> { "agents" };
 
-        Assert.True(PermissionItems.Needed(Mic(), calls, notifications: false));
-        Assert.False(PermissionItems.Needed(Camera(), calls, notifications: false));
+        Assert.True(PermissionItems.Needed(Hook(), agents, notifications: false));
+        Assert.False(PermissionItems.Needed(Mic(), agents, notifications: false));
 
-        var steps = NextSteps.Compute(new[] { Mic(), Camera() }, calls, notifications: false,
+        var steps = NextSteps.Compute(new[] { Hook(), Mic() }, agents, notifications: false,
             present: [], installed: new HashSet<AgentKind>());
-        Assert.Equal(new NextStep[] { new NextStep.Permission("mic") }, steps);
+        Assert.Equal(new NextStep[] { new NextStep.Permission("hook.claude") }, steps);
     }
 
     [Fact]
     public void NextSteps_Order()
     {
-        var steps = NextSteps.Compute(new[] { Mic(), Camera() }, new HashSet<string> { "calls" }, notifications: false,
-            present: [AgentKind.Claude], installed: new HashSet<AgentKind>());
+        var steps = NextSteps.Compute(new[] { Hook(), Mic() }, new HashSet<string> { "agents" }, notifications: false,
+            present: [AgentKind.Codex], installed: new HashSet<AgentKind>());
 
-        Assert.Equal(new NextStep[] { new NextStep.Permission("mic"), new NextStep.Agent(AgentKind.Claude) }, steps);
+        Assert.Equal(new NextStep[] { new NextStep.Permission("hook.claude"), new NextStep.Agent(AgentKind.Codex) }, steps);
     }
 
     [Fact]
     public void NextSteps_EmptyWhenDone()
     {
-        Assert.Empty(NextSteps.Compute(new[] { Mic() }, new HashSet<string>(), notifications: false,
+        Assert.Empty(NextSteps.Compute(new[] { Hook() }, new HashSet<string>(), notifications: false,
             present: [], installed: new HashSet<AgentKind>()));
-        Assert.Empty(NextSteps.Compute(new[] { Mic(PermState.Granted) }, new HashSet<string> { "calls" }, notifications: false,
+        Assert.Empty(NextSteps.Compute(new[] { Hook(PermState.Granted) }, new HashSet<string> { "agents" }, notifications: false,
             present: [], installed: new HashSet<AgentKind>()));
-        Assert.Empty(NextSteps.Compute(new[] { Mic(PermState.Checking) }, new HashSet<string> { "calls" }, notifications: false,
+        Assert.Empty(NextSteps.Compute(new[] { Hook(PermState.Checking) }, new HashSet<string> { "agents" }, notifications: false,
             present: [], installed: new HashSet<AgentKind>()));
-        Assert.Empty(NextSteps.Compute(Array.Empty<PermItem>(), new HashSet<string> { "calls" }, notifications: false,
+        Assert.Empty(NextSteps.Compute(Array.Empty<PermItem>(), new HashSet<string> { "agents" }, notifications: false,
             present: [AgentKind.Claude], installed: new HashSet<AgentKind> { AgentKind.Claude }));
     }
 
@@ -72,6 +73,16 @@ public sealed class NextStepsTests
 
         Assert.Empty(NextSteps.Compute(new[] { notifications }, new HashSet<string> { "agents" }, notifications: false,
             present: [], installed: new HashSet<AgentKind>()));
+    }
+
+    [Fact]
+    public void NextSteps_IgnoresUnbuiltModules()
+    {
+        // Only the modules that are on and built ask for permissions: privacy and ci are not built in Phase 2.
+        Assert.Empty(NextSteps.Compute(new[] { Mic() }, new HashSet<string> { "privacy" }, notifications: false,
+            present: [], installed: new HashSet<AgentKind>()));
+        Assert.Empty(NextSteps.Compute(new[] { Item("notifications", PermState.NotAsked) }, new HashSet<string> { "ci" },
+            notifications: true, present: [], installed: new HashSet<AgentKind>()));
     }
 
     [Fact]

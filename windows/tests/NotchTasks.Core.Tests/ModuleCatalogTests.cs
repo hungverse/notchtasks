@@ -28,6 +28,16 @@ public sealed class ModuleCatalogTests
     }
 
     [Fact]
+    public void Built_OnlyAgentsInPhase2()
+    {
+        Assert.True(ModuleCatalog.Built("agents"));
+        Assert.False(ModuleCatalog.Built("ci"));
+        Assert.False(ModuleCatalog.Built("privacy"));
+        Assert.False(ModuleCatalog.Built("mirror"));
+        Assert.False(ModuleCatalog.Built("bogus"));
+    }
+
+    [Fact]
     public void Order_KeepsUserOrder_AppendsNew()
     {
         // The user's order first; unknown and off-Windows ids and repeats are dropped; the rest follow in the Mac's order.

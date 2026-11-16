@@ -45,7 +45,7 @@ public partial class ModulesPane : SettingsPane
             row.Title.Text = title;
             row.Title.SetResourceReference(TextBlock.ForegroundProperty,
                 on ? "TextFillColorPrimaryBrush" : "TextFillColorSecondaryBrush");
-            row.Caption.Visibility = id == "agents" ? Visibility.Collapsed : Visibility.Visible;
+            row.Caption.Visibility = ModuleCatalog.Built(id) ? Visibility.Collapsed : Visibility.Visible;
             row.Tile.SetResourceReference(Border.BackgroundProperty,
                 on ? "AccentFillColorDefaultBrush" : "ControlStrongFillColorDefaultBrush");
             row.Up.IsEnabled = i > 0;
