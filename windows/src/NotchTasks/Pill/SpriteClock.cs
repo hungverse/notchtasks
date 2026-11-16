@@ -97,30 +97,54 @@ internal static class SpriteClock
             return;
         }
 
-        // Ticks at half the fastest frame time, so a frame change is never late by a whole frame; each sprite redraws only
-        // when its frame index changes, so the extra ticks cost a comparison, not a redraw.
-        var interval = visible.Min(s => s.FrameSeconds) / 2;
         _timer ??= CreateTimer();
-        _timer.Interval = TimeSpan.FromSeconds(interval);
-        if (!_timer.IsEnabled)
-        {
-            _timer.Start();
-        }
+        Schedule(visible);
     }
+
+    /// Sets the next tick to the nearest frame boundary of any visible sprite, so each sprite steps once per frame.
+    private static void Schedule(List<SpriteView> visible)
+    {
+        var elapsed = ElapsedMs();
+        var wait = double.MaxValue;
+        foreach (var sprite in visible)
+        {
+            var period = sprite.FrameSeconds * 1000;
+            if (!(period > 0))
+            {
+                continue;
+            }
+            var untilNext = (Math.Floor(elapsed / period) + 1) * period - elapsed;
+            wait = Math.Min(wait, untilNext);
+        }
+        if (wait == double.MaxValue)
+        {
+            _timer?.Stop();
+            return;
+        }
+
+        _timer!.Stop();
+        _timer.Interval = TimeSpan.FromMilliseconds(Math.Max(MinTickMs, wait));
+        _timer.Start();
+    }
+
+    private const double MinTickMs = 10;
 
     private static DispatcherTimer CreateTimer()
     {
         var timer = new DispatcherTimer();
         timer.Tick += (_, _) =>
         {
-            foreach (var sprite in Sprites)
+            var visible = Sprites.Where(s => s.IsVisible).ToList();
+            foreach (var sprite in visible)
             {
-                if (!sprite.IsVisible)
-                {
-                    continue;
-                }
                 sprite.Step();
             }
+            if (visible.Count == 0)
+            {
+                _timer?.Stop();
+                return;
+            }
+            Schedule(visible);
         };
         return timer;
     }
