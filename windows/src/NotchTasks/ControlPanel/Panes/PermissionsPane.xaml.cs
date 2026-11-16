@@ -1,12 +1,308 @@
+using System.IO;
+using System.Security;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Automation;
 using System.Windows.Controls;
+using System.Windows.Media;
+using NotchTasks.Core;
+using NotchTasks.Core.Asks;
+using NotchTasks.Core.Permissions;
+using NotchTasks.Core.Settings;
+using NotchTasks.Services;
 
 namespace NotchTasks.ControlPanel.Panes;
 
-/// The Permissions pane. A placeholder until its content is built.
-public partial class PermissionsPane : UserControl
+/// The Permissions pane (Preferences.swift PermissionList): the permissions the chosen modules need, the ones allowed, and the
+/// ones not used. Each row shows its state and the one button that fixes it. The states are read when the pane shows, when the
+/// Control Panel is activated (the user came back from Settings) and on Refresh; the firewall rule is read off the UI thread.
+public partial class PermissionsPane : SettingsPane
 {
-    public PermissionsPane()
+    private static readonly PermissionFacts Unknown = new(null, false, null, null, null,
+        new Dictionary<AgentKind, bool?>());
+
+    private readonly IRegistry _registry = new RegistryAccess();
+    private PermissionFacts? _facts;
+    private int _probe;
+
+    public PermissionsPane(SettingsStore store) : base(store)
     {
         InitializeComponent();
+        Loaded += (_, _) => Refresh();
+        RefreshButton.Click += (_, _) => Refresh();
     }
+
+    protected override void Apply() => Render();
+
+    protected override void OnWindowActivated()
+    {
+        Refresh();
+    }
+
+    /// Reads the states again. The firewall rule keeps its last answer until netsh gives a new one.
+    private void Refresh()
+    {
+        var probe = ++_probe;
+        var previousRule = _facts?.FirewallRule;
+        _facts = PermissionProbe.Facts(_registry, AppFiles.Home, AppFiles.HookExe, AppFiles.AppExe) with { FirewallRule = previousRule };
+        ApplyStored();
+        _ = ReadFirewallAsync(probe);
+    }
+
+    private async Task ReadFirewallAsync(int probe)
+    {
+        var rule = await Task.Run(PermissionProbe.FirewallRule);
+        if (probe != _probe || !IsLoaded || _facts is null)
+        {
+            return;
+        }
+        _facts = _facts with { FirewallRule = rule };
+        ApplyStored();
+    }
+
+    /// Builds the three groups from the last facts and the enabled modules.
+    private void Render()
+    {
+        var facts = _facts ?? Unknown;
+        var items = PermissionItems.Build(facts);
+        var modules = ModuleCatalog.All.Where(id => !Store.Disabled.Contains(id)).ToHashSet(StringComparer.Ordinal);
+        var notifications = Store.SystemNotifications;
+
+        Groups.Children.Clear();
+        foreach (var group in new[] { PermGroup.Needed, PermGroup.Allowed, PermGroup.NotUsed })
+        {
+            var rows = items.Where(item => PermissionItems.GroupOf(item, modules, notifications) == group).ToList();
+            if (rows.Count == 0)
+            {
+                continue;
+            }
+
+            Groups.Children.Add(new TextBlock
+            {
+                Style = (Style)FindResource("SectionHeader"),
+                Text = GroupTitle(group),
+            });
+            var rowsPanel = new StackPanel();
+            for (var i = 0; i < rows.Count; i++)
+            {
+                if (i > 0)
+                {
+                    rowsPanel.Children.Add(new Separator { Margin = new Thickness(16, 0, 16, 0) });
+                }
+                rowsPanel.Children.Add(BuildRow(rows[i]));
+            }
+            Groups.Children.Add(new Border { Style = (Style)FindResource("Card"), Child = rowsPanel });
+        }
+    }
+
+    /// One row: the glyph in its state's colour, the title and detail, the state, and the button or switch that acts on it.
+    private UIElement BuildRow(PermItem item)
+    {
+        var tile = new Border
+        {
+            Width = 28,
+            Height = 28,
+            CornerRadius = new CornerRadius(7),
+            Margin = new Thickness(0, 0, 12, 0),
+            VerticalAlignment = VerticalAlignment.Center,
+            Child = new TextBlock
+            {
+                Text = item.Glyph,
+                FontFamily = new FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets"),
+                FontSize = 14,
+                Foreground = Brushes.White,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+            },
+        };
+        tile.SetResourceReference(Border.BackgroundProperty, StateBrush(item.State, filled: true));
+
+        var text = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+        text.Children.Add(new TextBlock
+        {
+            Text = item.Title,
+            FontWeight = FontWeights.Medium,
+            TextWrapping = TextWrapping.Wrap,
+        });
+        text.Children.Add(new TextBlock
+        {
+            Style = (Style)FindResource("CardNote"),
+            Margin = new Thickness(0, 2, 0, 0),
+            Text = item.Detail,
+        });
+
+        var state = new TextBlock
+        {
+            Text = PermissionItems.Label(item.State),
+            FontSize = 12,
+            FontWeight = FontWeights.SemiBold,
+            Margin = new Thickness(12, 0, 12, 0),
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        state.SetResourceReference(TextBlock.ForegroundProperty, StateBrush(item.State, filled: false));
+
+        var grid = new Grid { Margin = new Thickness(16, 10, 16, 10) };
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        Place(tile, grid, 0);
+        Place(text, grid, 1);
+        Place(state, grid, 2);
+
+        var action = ActionFor(item);
+        if (action is not null)
+        {
+            Place(action, grid, 3);
+        }
+        return grid;
+    }
+
+    /// The control that acts on a row: the start-at-login switch, or the button that opens the page or asks for the grant.
+    private UIElement? ActionFor(PermItem item)
+    {
+        if (item.Id == PermissionItems.LoginId)
+        {
+            var box = new CheckBox
+            {
+                IsChecked = item.State == PermState.Granted,
+                VerticalAlignment = VerticalAlignment.Center,
+                ToolTip = item.Title,
+            };
+            AutomationProperties.SetName(box, item.Title);
+            box.Click += (_, _) => ChangeLogin(box.IsChecked == true);
+            return box;
+        }
+
+        if (item.State is PermState.Checking)
+        {
+            return null;
+        }
+
+        var settings = SettingsUri(item.Id);
+        if (settings is not null && item.State is PermState.Denied or PermState.NotAsked)
+        {
+            return ActionButton(L10n.L("Open Settings"), () => SystemActions.OpenSettings(settings));
+        }
+        if (item.Id == "firewall" && item.State == PermState.NotAsked)
+        {
+            return ActionButton(L10n.L("Allow"), button => AllowFirewall(button));
+        }
+        if (AgentKinds.Parse(item.Id.StartsWith("hook.", StringComparison.Ordinal) ? item.Id[5..] : null) is { } kind)
+        {
+            return item.State == PermState.Granted
+                ? ActionButton(L10n.L("Revoke"), () => ChangeHook(kind, on: false))
+                : ActionButton(L10n.L("Allow"), () => ChangeHook(kind, on: true));
+        }
+        return null;
+    }
+
+    /// The ms-settings page of a row, or null when the row has none.
+    private static string? SettingsUri(string id) => id switch
+    {
+        "notifications" => "ms-settings:notifications",
+        "mic" => "ms-settings:privacy-microphone",
+        "camera" => "ms-settings:privacy-webcam",
+        _ => null,
+    };
+
+    private static Button ActionButton(string text, Action<Button> click)
+    {
+        var button = new Button
+        {
+            Content = text,
+            Margin = new Thickness(12, 0, 0, 0),
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        button.Click += (_, _) => click(button);
+        return button;
+    }
+
+    private static Button ActionButton(string text, Action click) =>
+        ActionButton(text, _ => click());
+
+    /// Saves start at login, as the switch says. A failure is shown and the switch takes the real state back.
+    private void ChangeLogin(bool on)
+    {
+        try
+        {
+            StartAtLogin.Set(_registry, AppFiles.AppExe, on);
+            ShowError(null);
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException or SecurityException)
+        {
+            ShowError(L10n.L("Couldn't change {0}: {1}", L10n.L("Open at login"), e.Message));
+        }
+        Refresh();
+    }
+
+    /// Adds or removes the agent's hook. A settings file that cannot be edited is left as it is, and the error is shown.
+    private void ChangeHook(AgentKind kind, bool on)
+    {
+        var name = AgentKinds.Spec(kind).Name;
+        try
+        {
+            if (on)
+            {
+                HookInstaller.Install(kind, AppFiles.HookExe, AppFiles.Home);
+            }
+            else
+            {
+                HookInstaller.Uninstall(kind, AppFiles.Home);
+            }
+            ShowError(null);
+        }
+        catch (Exception e) when (e is InvalidDataException or IOException or UnauthorizedAccessException)
+        {
+            ShowError(L10n.L("Couldn't edit {0}'s settings: {1}", name, e.Message));
+        }
+        Refresh();
+    }
+
+    /// Adds the firewall rule through the UAC prompt. The button is off while netsh runs, so one click asks once.
+    private async void AllowFirewall(Button button)
+    {
+        button.IsEnabled = false;
+        try
+        {
+            await Task.Run(() => SystemActions.AddFirewallRule(AppFiles.AppExe));
+        }
+        catch (Exception e) when (e is System.ComponentModel.Win32Exception)  // the UAC prompt is cancelled silently
+        {
+            ErrorLog.Write(e);
+        }
+        if (IsLoaded)
+        {
+            Refresh();
+        }
+    }
+
+    private void ShowError(string? message)
+    {
+        ErrorText.Text = message ?? string.Empty;
+        ErrorText.Visibility = message is null ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    private static void Place(UIElement element, Grid grid, int column)
+    {
+        Grid.SetColumn(element, column);
+        grid.Children.Add(element);
+    }
+
+    private static string GroupTitle(PermGroup group) => group switch
+    {
+        PermGroup.Needed => L10n.L("Needed"),
+        PermGroup.Allowed => L10n.L("Allowed"),
+        _ => L10n.L("Not used"),
+    };
+
+    /// The theme brush of a state: green when allowed, red when denied, amber when not granted. While checking, the tile is
+    /// grey and the state text is secondary. Filled is the tile's background; otherwise the state text's foreground.
+    private static string StateBrush(PermState state, bool filled) => state switch
+    {
+        PermState.Granted => "SystemFillColorSuccessBrush",
+        PermState.Denied => "SystemFillColorCriticalBrush",
+        PermState.NotAsked => "SystemFillColorCautionBrush",
+        _ => filled ? "ControlStrongFillColorDefaultBrush" : "TextFillColorSecondaryBrush",
+    };
 }

@@ -1,9 +1,19 @@
-<UserControl x:Class="NotchTasks.ControlPanel.Panes.WatchingPane"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:l="clr-namespace:NotchTasks.ControlPanel">
+<local:SettingsPane x:Class="NotchTasks.ControlPanel.Panes.WatchingPane"
+                       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                       xmlns:l="clr-namespace:NotchTasks.ControlPanel"
+                       xmlns:local="clr-namespace:NotchTasks.ControlPanel">
   <StackPanel>
     <TextBlock Style="{StaticResource PaneTitle}" Text="{l:L Watching}" />
-    <TextBlock Style="{StaticResource PaneNote}" Text="{l:L Coming soon}" />
+    <TextBlock Style="{StaticResource PaneNote}" Text="{l:L Answer the permission prompts of AI agents from the notch.}" />
+
+    <TextBlock Style="{StaticResource SectionHeader}" Text="{l:L AI agent}" />
+    <Border Style="{StaticResource Card}">
+      <StackPanel x:Name="Rows" />
+    </Border>
+    <TextBlock Style="{StaticResource CardNote}" Text="{l:L Takes effect the next time the agent starts.}" />
+
+    <TextBlock x:Name="ErrorText" Style="{StaticResource CardNote}" Margin="0,12,0,0"
+               Foreground="{DynamicResource SystemFillColorCriticalBrush}" Visibility="Collapsed" />
   </StackPanel>
-</UserControl>
+</local:SettingsPane>

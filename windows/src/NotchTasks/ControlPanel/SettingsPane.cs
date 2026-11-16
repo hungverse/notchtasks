@@ -17,6 +17,7 @@ public abstract class SettingsPane : UserControl
     private readonly List<DelayedWrite> _delayed = new();
     private bool _shown;
     private bool _applying;
+    private Window? _window;
 
     protected SettingsPane(SettingsStore store)
     {
@@ -32,6 +33,11 @@ public abstract class SettingsPane : UserControl
 
     /// Gives the controls the stored values. Runs on the UI thread with writes off.
     protected abstract void Apply();
+
+    /// Runs while the pane is shown and its window is activated: the user may have come back from Settings. Default: nothing.
+    protected virtual void OnWindowActivated()
+    {
+    }
 
     /// A write that waits for a slider to settle. Pane is left: its pending writes run at once.
     protected DelayedWrite Delayed()
@@ -97,6 +103,11 @@ public abstract class SettingsPane : UserControl
         _shown = true;
         Store.Changed += OnStoreChanged;
         L10n.Changed += OnLanguageChanged;
+        _window = Window.GetWindow(this);
+        if (_window is not null)
+        {
+            _window.Activated += OnWindowActivatedEvent;
+        }
         ApplyStored();
     }
 
@@ -109,6 +120,11 @@ public abstract class SettingsPane : UserControl
         _shown = false;
         Store.Changed -= OnStoreChanged;
         L10n.Changed -= OnLanguageChanged;
+        if (_window is not null)
+        {
+            _window.Activated -= OnWindowActivatedEvent;
+            _window = null;
+        }
         foreach (var delayed in _delayed)
         {
             delayed.Flush();
@@ -119,6 +135,8 @@ public abstract class SettingsPane : UserControl
     private void OnStoreChanged(IReadOnlyCollection<string> keys) => OnUi(ApplyStored);
 
     private void OnLanguageChanged() => OnUi(ApplyStored);
+
+    private void OnWindowActivatedEvent(object? sender, EventArgs e) => OnUi(OnWindowActivated);
 
     private void OnUi(Action action)
     {

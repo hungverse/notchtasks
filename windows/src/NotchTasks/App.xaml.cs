@@ -90,6 +90,7 @@ public partial class App : System.Windows.Application
         var store = new AskStore(AppPaths.AsksDir);
         store.MarkAppRunning(Environment.ProcessId);
         MigrateHooks();
+        LoginItems.ApplyFirstRun();
 
         _state = new AppState(settings, store);
         _state.StartWatching();

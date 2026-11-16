@@ -1,9 +1,17 @@
-<UserControl x:Class="NotchTasks.ControlPanel.Panes.PermissionsPane"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:l="clr-namespace:NotchTasks.ControlPanel">
+<local:SettingsPane x:Class="NotchTasks.ControlPanel.Panes.PermissionsPane"
+                       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                       xmlns:l="clr-namespace:NotchTasks.ControlPanel"
+                       xmlns:local="clr-namespace:NotchTasks.ControlPanel">
   <StackPanel>
     <TextBlock Style="{StaticResource PaneTitle}" Text="{l:L Permissions}" />
-    <TextBlock Style="{StaticResource PaneNote}" Text="{l:L Coming soon}" />
+    <TextBlock Style="{StaticResource PaneNote}" Text="{l:L Only grant permissions for features you use. Turn a feature off completely on the Modules page.}" />
+    <Button x:Name="RefreshButton" HorizontalAlignment="Left" Margin="0,12,0,0" Content="{l:L Refresh}" />
+
+    <!-- The groups (Needed, Allowed, Not used), each a section header over its card; built by the pane. -->
+    <StackPanel x:Name="Groups" />
+
+    <TextBlock x:Name="ErrorText" Style="{StaticResource CardNote}" Margin="0,12,0,0"
+               Foreground="{DynamicResource SystemFillColorCriticalBrush}" Visibility="Collapsed" />
   </StackPanel>
-</UserControl>
+</local:SettingsPane>
