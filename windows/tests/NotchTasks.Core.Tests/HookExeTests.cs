@@ -19,7 +19,7 @@ public sealed class HookExeTests : IDisposable
             {
                 Directory.Delete(dir, recursive: true);
             }
-            catch (IOException)
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException)
             {
                 // A file still open elsewhere; the temp cleaner takes it later.
             }
@@ -85,6 +85,8 @@ public sealed class HookExeTests : IDisposable
             "{\"hookSpecificOutput\":{\"hookEventName\":\"PermissionRequest\",\"decision\":{\"behavior\":\"deny\",\"message\":\"The user denied this from the NotchTasks notch.\"}}}\n",
             stdout);
         Assert.Empty(Directory.GetFiles(asks));
+        // The fake app holds its copied exe open until it has exited: wait, or Dispose cannot delete the folder.
         app.Kill();
+        app.WaitForExit(5000);
     }
 }
