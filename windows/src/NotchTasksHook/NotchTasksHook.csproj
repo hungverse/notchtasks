@@ -4,8 +4,17 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>NotchTasksHook</RootNamespace>
     <AssemblyName>NotchTasksHook</AssemblyName>
-    <PublishAot>true</PublishAot>
     <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <!-- Native AOT is opt-in (-p:UseAot=true) because it needs the MSVC linker. -->
+  <PropertyGroup Condition="'$(UseAot)'=='true'">
+    <PublishAot>true</PublishAot>
+  </PropertyGroup>
+
+  <!-- Otherwise a Release publish is ReadyToRun (still needs a RuntimeIdentifier, e.g. -r win-x64). -->
+  <PropertyGroup Condition="'$(UseAot)'!='true' And '$(Configuration)'=='Release'">
+    <PublishReadyToRun>true</PublishReadyToRun>
   </PropertyGroup>
 
   <ItemGroup>
