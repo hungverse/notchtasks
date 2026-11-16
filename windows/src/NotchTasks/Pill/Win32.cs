@@ -11,6 +11,14 @@ internal static partial class Win32
     public const int WM_NCHITTEST = 0x0084;
     public const int WM_MOUSEACTIVATE = 0x0021;
     public const int WM_DPICHANGED = 0x02E0;
+    public const int WM_POWERBROADCAST = 0x0218;
+    public const int PBT_POWERSETTINGCHANGE = 0x8013;
+
+    /// GUID_CONSOLE_DISPLAY_STATE: the console display turns off, on, or dims (the DWORD data: 0, 1, 2).
+    public static readonly Guid GuidConsoleDisplayState = new("6FE69556-704A-47A0-8F24-C28D936FDA47");
+
+    /// Byte offset of POWERBROADCAST_SETTING.Data: after the GUID and the DataLength DWORD.
+    public const int PowerSettingDataOffset = 20;
 
     public const int HTCLIENT = 1;
     public const int HTTRANSPARENT = -1;
@@ -52,6 +60,10 @@ internal static partial class Win32
 
     [LibraryImport("user32.dll")]
     public static partial uint GetDpiForWindow(nint hwnd);
+
+    /// Asks for WM_POWERBROADCAST messages about one power setting, to the window (DEVICE_NOTIFY_WINDOW_HANDLE = 0).
+    [LibraryImport("user32.dll", SetLastError = true)]
+    public static partial nint RegisterPowerSettingNotification(nint recipient, ref Guid powerSetting, uint flags);
 
 
     [LibraryImport("user32.dll", EntryPoint = "SystemParametersInfoW", SetLastError = true)]

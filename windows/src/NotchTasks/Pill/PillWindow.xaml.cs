@@ -26,7 +26,7 @@ namespace NotchTasks.Pill;
 public partial class PillWindow : Window
 {
     private static readonly TimeSpan CloseDelay = TimeSpan.FromMilliseconds(350);
-    private static readonly TimeSpan PollInterval = TimeSpan.FromMilliseconds(100);
+    private static readonly TimeSpan PollInterval = TimeSpan.FromMilliseconds(100);  // 10 Hz
     private static readonly TimeSpan MaxFadeDuration = TimeSpan.FromMilliseconds(350);
 
     /// The corner radius of the pill; animated by the spring, bound to every shape through RadiusConverter.
@@ -90,6 +90,7 @@ public partial class PillWindow : Window
         _state.PropertyChanged += OnStateChanged;
         _state.Asks.CollectionChanged += OnAsksChanged;
         SystemEvents.DisplaySettingsChanged += OnDisplaySettingsChanged;
+        SpriteClock.WatchSystem();
 
         SyncCards();
         Refresh();
@@ -111,6 +112,8 @@ public partial class PillWindow : Window
         Win32.SetWindowLongPtr(_hwnd, Win32.GWL_EXSTYLE, style | Win32.WS_EX_NOACTIVATE | Win32.WS_EX_TOOLWINDOW);
 
         HwndSource.FromHwnd(_hwnd)?.AddHook(WndProc);
+        var displayState = Win32.GuidConsoleDisplayState;
+        Win32.RegisterPowerSettingNotification(_hwnd, ref displayState, 0);  // a failed registration only loses the display pause
         Place();
         _pollTimer.Start();
     }
@@ -129,6 +132,14 @@ public partial class PillWindow : Window
             case Win32.WM_DPICHANGED:
                 // WPF moves the window to the suggested rectangle first; then the pill is placed again at the new DPI.
                 Dispatcher.BeginInvoke(new Action(Place));
+                break;
+            case Win32.WM_POWERBROADCAST:
+                // The console display turned off, on or dimmed: the sprites stand still while it is off.
+                if (wParam == Win32.PBT_POWERSETTINGCHANGE && lParam != nint.Zero
+                    && Marshal.PtrToStructure<Guid>(lParam) == Win32.GuidConsoleDisplayState)
+                {
+                    SpriteClock.SetPause(ClockPause.DisplayOff, Marshal.ReadInt32(lParam, Win32.PowerSettingDataOffset) == 0);
+                }
                 break;
             case Win32.WM_SETTINGCHANGE:
                 // Only the work area matters here. The string form is read now, while the message's memory is valid.
@@ -484,7 +495,7 @@ public partial class PillWindow : Window
                 _waitTimer.Stop();
             }
         }
-        UpdateCountBadge();
+        UpdateAskIndicator();
         ApplyAppearance();
     }
 
@@ -526,8 +537,9 @@ public partial class PillWindow : Window
         }
     }
 
-    /// The closed pill's count of waiting asks, as an orange badge at the end of the right wing, when more than one waits.
-    private void UpdateCountBadge()
+    /// The closed pill's waiting indicator at the end of the right wing (Mac ask chip): orange "Waiting for you" when one
+    /// ask waits, an orange count badge when more do. Shown for any waiting ask, so a single ask is never invisible.
+    private void UpdateAskIndicator()
     {
         for (var i = RightWing.Children.Count - 1; i >= 0; i--)
         {
@@ -537,30 +549,42 @@ public partial class PillWindow : Window
             }
         }
         var count = _state.Asks.Count;
-        if (count <= 1)
+        if (count == 0)
         {
             return;
         }
-        RightWing.Children.Add(new Border
-        {
-            Tag = "ask-count",
-            Background = Frozen(new SolidColorBrush(Color.FromRgb(0xFF, 0x9F, 0x0A))),
-            CornerRadius = new CornerRadius(8),
-            Height = 16,
-            MinWidth = 16,
-            Padding = new Thickness(5, 0, 5, 0),
-            Margin = new Thickness(3, 0, 3, 0),
-            VerticalAlignment = VerticalAlignment.Center,
-            Child = new TextBlock
+        var orange = Frozen(new SolidColorBrush(Color.FromRgb(0xFF, 0x9F, 0x0A)));
+        RightWing.Children.Add(count == 1
+            ? new TextBlock
             {
-                Text = count.ToString(CultureInfo.InvariantCulture),
-                FontSize = 10,
+                Tag = "ask-count",
+                Text = L10n.L("Waiting for you"),
+                Foreground = orange,
+                FontSize = 11,
                 FontWeight = FontWeights.Bold,
-                Foreground = Brushes.Black,
-                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(6, 0, 6, 0),
                 VerticalAlignment = VerticalAlignment.Center,
-            },
-        });
+            }
+            : new Border
+            {
+                Tag = "ask-count",
+                Background = orange,
+                CornerRadius = new CornerRadius(8),
+                Height = 16,
+                MinWidth = 16,
+                Padding = new Thickness(5, 0, 5, 0),
+                Margin = new Thickness(3, 0, 3, 0),
+                VerticalAlignment = VerticalAlignment.Center,
+                Child = new TextBlock
+                {
+                    Text = count.ToString(CultureInfo.InvariantCulture),
+                    FontSize = 10,
+                    FontWeight = FontWeights.Bold,
+                    Foreground = Brushes.Black,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center,
+                },
+            });
     }
 
     private void OnStateChanged(object? sender, PropertyChangedEventArgs e)
@@ -594,8 +618,8 @@ public partial class PillWindow : Window
     {
         var settings = _state.Settings;
         // Idle (no badges, no ask, closed) hides the pill only once the close spring has finished; its hover area stays.
-        // Waiting asks show the pill too: a toast, or the count badge when more than one waits.
-        PillShape.Opacity = _open || _closing || _toastAsk is not null || _hasCollapsed || _state.Asks.Count > 1 ? 1 : 0;
+        // Waiting asks show the pill too: a toast, or the waiting indicator for any ask that waits.
+        PillShape.Opacity = _open || _closing || _toastAsk is not null || _hasCollapsed || _state.Asks.Count > 0 ? 1 : 0;
         // Only the open cards and the toast take the pointer; the closed pill's wings never do.
         CardLayer.IsHitTestVisible = _open;
         Toast.IsHitTestVisible = _toastAsk is not null;
@@ -656,7 +680,7 @@ public partial class PillWindow : Window
             var wing = ReadBool(badge, "right") ? RightWing : LeftWing;
             wing.Children.Add(BadgeElement(ReadString(badge, "sprite")));
         }
-        UpdateCountBadge();
+        UpdateAskIndicator();
     }
 
     /// A sprite when the badge names one that exists; otherwise the star glyph (for now).
