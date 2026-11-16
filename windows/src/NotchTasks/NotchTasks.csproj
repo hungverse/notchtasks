@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>NotchTasks</RootNamespace>
+    <AssemblyName>NotchTasks</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NotchTasks.Core\NotchTasks.Core.csproj" />
+    <ProjectReference Include="..\NotchTasksHook\NotchTasksHook.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\..\..\mac\Resources\Sprites\**" Link="Sprites\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\..\mac\Sources\l10n-*.json" Link="l10n\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!-- The hook is not referenced as an assembly; copy its executable next to NotchTasks.exe. -->
+  <Target Name="CopyHookExe" AfterTargets="Build">
+    <MSBuild Projects="..\NotchTasksHook\NotchTasksHook.csproj" Targets="GetTargetPath">
+      <Output TaskParameter="TargetOutputs" ItemName="HookTargetPath" />
+    </MSBuild>
+    <Copy SourceFiles="@(HookTargetPath)" DestinationFolder="$(OutDir)" />
+  </Target>
+
+</Project>

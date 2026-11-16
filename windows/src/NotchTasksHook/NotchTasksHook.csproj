@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>NotchTasksHook</RootNamespace>
+    <AssemblyName>NotchTasksHook</AssemblyName>
+    <PublishAot>true</PublishAot>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NotchTasks.Core\NotchTasks.Core.csproj" />
+  </ItemGroup>
+
+</Project>
