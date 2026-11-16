@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using NotchTasks.ControlPanel.Panes;
 using NotchTasks.Core;
+using NotchTasks.Pill;
 using NotchTasks.Services;
 
 namespace NotchTasks.ControlPanel;
@@ -39,6 +40,7 @@ public partial class ControlPanelWindow : Window
             SaveSize();
             SaveLastPane(_pane);
             IconSelection.Clear();
+            SpriteCache.Retain(PillSprites());
         };
         Closed += (_, _) => _window = null;
         SelectPane(pane);
@@ -66,6 +68,20 @@ public partial class ControlPanelWindow : Window
             _window.WindowState = WindowState.Normal;
         }
         _window.Activate();
+    }
+
+    /// The sprites the pill's badges name (settings "badges"): the ones that stay cached when the Control Panel closes.
+    private HashSet<string> PillSprites()
+    {
+        var ids = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var node in State.Settings.Badges)
+        {
+            if (node is JsonObject badge && badge["sprite"] is JsonValue value && value.TryGetValue(out string? id) && id is not null)
+            {
+                ids.Add(id);
+            }
+        }
+        return ids;
     }
 
     private void SelectPane(PaneId pane)

@@ -54,6 +54,16 @@ internal static class SpriteCache
         return sheet;
     }
 
+    /// Drops the cached sprites that are not in `keep`. The Control Panel's Icon Library loads sprites the pill does not show:
+    /// when the Control Panel closes, only the pill's own sprites stay cached. A sprite loads again when it is asked for.
+    public static void Retain(IReadOnlySet<string> keep)
+    {
+        foreach (var id in Cache.Keys.Where(id => !keep.Contains(id)).ToList())
+        {
+            Cache.Remove(id);
+        }
+    }
+
     private static SpriteSheet? Load(string id)
     {
         if (!Catalog().TryGetValue(id, out var entry))
