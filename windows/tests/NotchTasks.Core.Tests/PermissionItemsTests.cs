@@ -111,12 +111,27 @@ public sealed class PermissionItemsTests
 
     [Theory]
     [InlineData("Allow", "Allow", true)]
-    [InlineData("Allow", null, null)]
+    [InlineData("Allow", null, true)]
+    [InlineData("Deny", null, false)]
     [InlineData(null, null, null)]
+    [InlineData("Allow", "Ask", null)]
     [InlineData("Deny", "Allow", false)]
     [InlineData("Allow", "Deny", false)]
     public void ConsentAllowed_NeedsBothToAllow(string? value, string? nonPackaged, bool? expected)
     {
         Assert.Equal(expected, PermissionItems.ConsentAllowed(value, nonPackaged));
+    }
+
+    [Fact]
+    public void ConsentFromRegistry_NonPackagedAbsent_UsesTopLevelValue()
+    {
+        const string key = @"Software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\microphone";
+        var reg = new FakeRegistry();
+        reg.SetString(key, "Value", "Allow");
+
+        Assert.True(PermissionItems.ConsentFromRegistry(reg, key));
+
+        reg.SetString(key + PermissionItems.NonPackagedSubkey, "Value", "Deny");
+        Assert.False(PermissionItems.ConsentFromRegistry(reg, key));
     }
 }

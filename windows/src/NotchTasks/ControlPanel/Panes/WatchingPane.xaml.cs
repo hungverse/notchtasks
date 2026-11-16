@@ -15,6 +15,12 @@ namespace NotchTasks.ControlPanel.Panes;
 /// when the pane shows and when the Control Panel is activated, so a step done in the terminal shows at once.
 public partial class WatchingPane : SettingsPane
 {
+    /// The error of the last switch that could not be saved, until the next one. Shown with the configuration error.
+    private string? _actionError;
+
+    /// The error of an agent whose settings file cannot be read as settings, found when the rows are built.
+    private string? _configError;
+
     public WatchingPane(SettingsStore store) : base(store)
     {
         InitializeComponent();
@@ -24,13 +30,15 @@ public partial class WatchingPane : SettingsPane
 
     protected override void OnWindowActivated() => ApplyStored();
 
-    /// Builds one row per agent, in the AgentKind order, with a separator between rows.
+    /// Builds one row per agent, in the AgentKind order, with a separator between rows. An agent whose settings file cannot
+    /// be edited shows its error at once, not only after a switch fails.
     private void Render()
     {
         var home = AppFiles.Home;
         var geminiKeySet = Environment.GetEnvironmentVariable("GEMINI_API_KEY") is not null;
 
         Rows.Children.Clear();
+        _configError = null;
         var kinds = Enum.GetValues<AgentKind>();
         for (var i = 0; i < kinds.Length; i++)
         {
@@ -39,7 +47,12 @@ public partial class WatchingPane : SettingsPane
                 Rows.Children.Add(new Separator { Margin = new Thickness(16, 0, 16, 0) });
             }
             Rows.Children.Add(BuildRow(kinds[i], home, geminiKeySet));
+            if (!HookInstaller.CanEdit(kinds[i], home))
+            {
+                _configError ??= L10n.L("Couldn't edit {0}'s settings: the file is not valid JSON.", AgentKinds.Spec(kinds[i]).Name);
+            }
         }
+        ShowErrorLine();
     }
 
     private UIElement BuildRow(AgentKind kind, string home, bool geminiKeySet)
@@ -132,11 +145,11 @@ public partial class WatchingPane : SettingsPane
             {
                 HookInstaller.Uninstall(kind, home);
             }
-            ShowError(null);
+            _actionError = null;
         }
         catch (Exception e) when (e is InvalidDataException or IOException or UnauthorizedAccessException)
         {
-            ShowError(L10n.L("Couldn't edit {0}'s settings: {1}", name, e.Message));
+            _actionError = L10n.L("Couldn't edit {0}'s settings: {1}", name, e.Message);
         }
 
         ApplyStored();
@@ -146,8 +159,10 @@ public partial class WatchingPane : SettingsPane
         }
     }
 
-    private void ShowError(string? message)
+    /// Shows the last switch's error, else the configuration error of an agent, else nothing.
+    private void ShowErrorLine()
     {
+        var message = _actionError ?? _configError;
         ErrorText.Text = message ?? string.Empty;
         ErrorText.Visibility = message is null ? Visibility.Collapsed : Visibility.Visible;
     }

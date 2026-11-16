@@ -17,7 +17,6 @@ public static class PermissionProbe
     private const string PushKey = @"Software\Microsoft\Windows\CurrentVersion\PushNotifications";
     private const string MicKey = @"Software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\microphone";
     private const string CameraKey = @"Software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\webcam";
-    private const string NonPackaged = @"\NonPackaged";
 
     /// The facts the registry and the agents' settings give. The firewall is unknown here (null): FirewallRule fills it in.
     public static PermissionFacts Facts(IRegistry registry, string home, string hookExe, string appExe)
@@ -37,8 +36,8 @@ public static class PermissionProbe
         return new PermissionFacts(
             ToastsOn: toastsOff ? false : null,
             LoginOn: StartAtLogin.IsOn(registry, appExe),
-            MicAllowed: Consent(registry, MicKey),
-            CameraAllowed: Consent(registry, CameraKey),
+            MicAllowed: PermissionItems.ConsentFromRegistry(registry, MicKey),
+            CameraAllowed: PermissionItems.ConsentFromRegistry(registry, CameraKey),
             FirewallRule: null,
             Hooks: hooks,
             Present: present);
@@ -78,10 +77,6 @@ public static class PermissionProbe
             return null;
         }
     }
-
-    /// The mic or camera consent: the app's own value and its NonPackaged value (desktop apps keep theirs there).
-    private static bool? Consent(IRegistry registry, string key) =>
-        PermissionItems.ConsentAllowed(registry.GetString(key, "Value"), registry.GetString(key + NonPackaged, "Value"));
 
     /// True when the agent's hook is installed and runs this exe. Null when its settings cannot be read.
     private static bool? HookWorks(AgentKind kind, string home, string hookExe)

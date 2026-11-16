@@ -74,6 +74,38 @@ public static class HookInstaller
         return EventGroups(kind, root).Any(IsOurs);
     }
 
+    /// True when the agent's settings can be changed by Install or Uninstall: the file is missing or empty, or it parses as a
+    /// JSON object. OpenCode's plugin file is always ours to write. False when the file exists but cannot be read or parsed,
+    /// which is when Install and Uninstall would throw and leave it untouched.
+    public static bool CanEdit(AgentKind kind, string home)
+    {
+        if (kind == AgentKind.OpenCode)
+        {
+            return true;
+        }
+        string? raw;
+        try
+        {
+            raw = AtomicFile.ReadAllTextOrNull(SettingsFile(kind, home));
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            return false;
+        }
+        if (string.IsNullOrEmpty(raw))
+        {
+            return true;
+        }
+        try
+        {
+            return JsonNode.Parse(raw) is JsonObject;
+        }
+        catch (Exception e) when (e is JsonException or ArgumentException)
+        {
+            return false;
+        }
+    }
+
     /// True when the agent's settings run exactly `"<hookExe>" --hook <agent>` (OpenCode: its plugin spawns that exe).
     public static bool PointsAt(AgentKind kind, string hookExe, string home)
     {

@@ -13,7 +13,7 @@ public static class SystemActions
     {
         try
         {
-            Process.Start(new ProcessStartInfo(uri) { UseShellExecute = true });
+            Launch(new ProcessStartInfo(uri) { UseShellExecute = true });
         }
         catch (Win32Exception e)
         {
@@ -56,16 +56,22 @@ public static class SystemActions
             var script = AgentSetup.WriteTerminalScript(command);
             try
             {
-                Process.Start(new ProcessStartInfo("wt.exe", $"cmd /k \"{script}\"") { UseShellExecute = true });
+                Launch(new ProcessStartInfo("wt.exe", $"cmd /k \"{script}\"") { UseShellExecute = true });
             }
             catch (Win32Exception)
             {
-                Process.Start(new ProcessStartInfo("cmd.exe", $"/k \"{script}\"") { UseShellExecute = true });
+                Launch(new ProcessStartInfo("cmd.exe", $"/k \"{script}\"") { UseShellExecute = true });
             }
         }
         catch (Exception e) when (e is Win32Exception or IOException or UnauthorizedAccessException)
         {
             ErrorLog.Write(e);
         }
+    }
+
+    /// Starts a program without waiting for it, and disposes the Process handle at once.
+    private static void Launch(ProcessStartInfo start)
+    {
+        using var process = Process.Start(start);
     }
 }

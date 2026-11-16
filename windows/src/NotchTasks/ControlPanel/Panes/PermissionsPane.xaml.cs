@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.IO;
 using System.Security;
 using System.Threading.Tasks;
@@ -21,38 +22,44 @@ public partial class PermissionsPane : SettingsPane
     private static readonly PermissionFacts Unknown = new(null, false, null, null, null,
         new Dictionary<AgentKind, bool?>(), new Dictionary<AgentKind, bool>());
 
+    /// The firewall probe (netsh) runs at most this often when the pane shows; Refresh and a finished grant always run it.
+    private static readonly TimeSpan FirewallMaxAge = TimeSpan.FromSeconds(10);
+
     private readonly IRegistry _registry = new RegistryAccess();
     private PermissionFacts? _facts;
     private int _probe;
+    private DateTime _firewallProbedAt = DateTime.MinValue;
 
     public PermissionsPane(SettingsStore store) : base(store)
     {
         InitializeComponent();
-        Loaded += (_, _) => Refresh();
-        RefreshButton.Click += (_, _) => Refresh();
+        Loaded += (_, _) => Refresh(firewall: DateTime.UtcNow - _firewallProbedAt > FirewallMaxAge);
+        RefreshButton.Click += (_, _) => Refresh(firewall: true);
     }
 
     protected override void Apply() => Render();
 
-    protected override void OnWindowActivated()
-    {
-        Refresh();
-    }
+    /// The registry and file facts only: netsh is not started by a window activation.
+    protected override void OnWindowActivated() => Refresh(firewall: false);
 
-    /// Reads the states again. The firewall rule keeps its last answer until netsh gives a new one.
-    private void Refresh()
+    /// Reads the states again. The registry and the agents' files are read at once. The firewall rule (netsh) is read only
+    /// when `firewall` is true; it keeps its last answer otherwise.
+    private void Refresh(bool firewall)
     {
-        var probe = ++_probe;
         var previousRule = _facts?.FirewallRule;
         _facts = PermissionProbe.Facts(_registry, AppFiles.Home, AppFiles.HookExe, AppFiles.AppExe) with { FirewallRule = previousRule };
         ApplyStored();
-        _ = ReadFirewallAsync(probe);
+        if (firewall)
+        {
+            _firewallProbedAt = DateTime.UtcNow;
+            _ = ReadFirewallAsync(++_probe);
+        }
     }
 
     private async Task ReadFirewallAsync(int probe)
     {
         var rule = await Task.Run(PermissionProbe.FirewallRule);
-        if (probe != _probe || !IsLoaded || _facts is null)
+        if (probe != _probe || !IsLoaded || _facts is null)  // a later probe, or the pane was hidden: drop this answer
         {
             return;
         }
@@ -234,7 +241,7 @@ public partial class PermissionsPane : SettingsPane
         {
             ShowError(L10n.L("Couldn't change {0}: {1}", L10n.L("Open at login"), e.Message));
         }
-        Refresh();
+        Refresh(firewall: false);
     }
 
     /// Adds or removes the agent's hook. A settings file that cannot be edited is left as it is, and the error is shown.
@@ -257,10 +264,11 @@ public partial class PermissionsPane : SettingsPane
         {
             ShowError(L10n.L("Couldn't edit {0}'s settings: {1}", name, e.Message));
         }
-        Refresh();
+        Refresh(firewall: false);
     }
 
-    /// Adds the firewall rule through the UAC prompt. The button is off while netsh runs, so one click asks once.
+    /// Adds the firewall rule through the UAC prompt, then reads the rule again. The button is off while netsh runs, so one
+    /// click asks once. A cancelled UAC prompt is silent; any other failure is logged and shows nothing.
     private async void AllowFirewall(Button button)
     {
         button.IsEnabled = false;
@@ -268,13 +276,17 @@ public partial class PermissionsPane : SettingsPane
         {
             await Task.Run(() => SystemActions.AddFirewallRule(AppFiles.AppExe));
         }
-        catch (Exception e) when (e is System.ComponentModel.Win32Exception)  // the UAC prompt is cancelled silently
+        catch (Win32Exception e) when (e.NativeErrorCode == 1223)
+        {
+            // ERROR_CANCELLED: the user said no to the UAC prompt.
+        }
+        catch (Exception e)
         {
             ErrorLog.Write(e);
         }
         if (IsLoaded)
         {
-            Refresh();
+            Refresh(firewall: true);
         }
     }
 

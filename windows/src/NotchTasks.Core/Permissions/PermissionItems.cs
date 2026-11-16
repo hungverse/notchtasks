@@ -123,16 +123,27 @@ public static class PermissionItems
         _ => L("Not checked"),
     };
 
-    /// The consent of a desktop app for the mic or the camera: its own value and its NonPackaged value. Allowed only when both
-    /// say Allow, denied when either says Deny, and unknown otherwise.
+    /// The subkey a desktop app keeps its consent in, under the capability's own key.
+    public const string NonPackagedSubkey = @"\NonPackaged";
+
+    /// The consent of a desktop app for the mic or the camera. When the NonPackaged value is there, both values must say Allow;
+    /// when it is absent, the top-level value decides. Denied when either says Deny, and unknown otherwise.
     public static bool? ConsentAllowed(string? value, string? nonPackaged)
     {
         if (value == "Deny" || nonPackaged == "Deny")
         {
             return false;
         }
+        if (nonPackaged is null)
+        {
+            return value == "Allow" ? true : null;
+        }
         return value == "Allow" && nonPackaged == "Allow" ? true : null;
     }
+
+    /// ConsentAllowed read from the registry: the capability key's Value and its NonPackaged Value.
+    public static bool? ConsentFromRegistry(IRegistry registry, string capabilityKey) =>
+        ConsentAllowed(registry.GetString(capabilityKey, "Value"), registry.GetString(capabilityKey + NonPackagedSubkey, "Value"));
 
     private static PermState Consent(bool? allowed) => allowed switch
     {
