@@ -60,9 +60,9 @@ public static class WavVolume
             var id = Encoding.ASCII.GetString(wav, pos, 4);
             var size = BinaryPrimitives.ReadUInt32LittleEndian(wav.AsSpan(pos + 4));
             var body = pos + 8;
-            if (body + (long)size > wav.Length)
+            if (body + (long)size > wav.Length && id != "data")
             {
-                return null;  // a chunk that runs past the end: malformed
+                return null;  // a chunk other than data that runs past the end: malformed
             }
 
             if (id == "fmt ")
@@ -76,11 +76,17 @@ public static class WavVolume
             }
             else if (id == "data" && !seenData)
             {
+                // A data chunk declared longer than the file is scaled to the end of the file.
                 seenData = true;
                 start = body;
-                length = (int)size;
+                length = (int)Math.Min((long)size, wav.Length - body);
             }
-            pos = body + (int)size + (int)(size & 1);  // chunks are padded to an even length
+            var next = body + (long)size + (size & 1);  // chunks are padded to an even length
+            if (next >= wav.Length)
+            {
+                break;
+            }
+            pos = (int)next;
         }
 
         if (format != FormatPcm || !seenData || bits is not (8 or 16))

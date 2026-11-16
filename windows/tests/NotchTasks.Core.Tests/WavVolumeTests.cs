@@ -51,7 +51,7 @@ public class WavVolumeTests
     public void Scale_Malformed_Unchanged()
     {
         var wav = Wav(format: 1, bits: 16, data: Samples16(1000, -2000));
-        var truncated = wav[..(wav.Length - 4)];
+        var truncated = wav[..30];  // cut inside the fmt chunk
         var notRiff = (byte[])wav.Clone();
         notRiff[0] = (byte)'X';
 
@@ -93,8 +93,43 @@ public class WavVolumeTests
         Assert.Equal(wav.Length, result.Length);
     }
 
-    /// A RIFF/WAVE file: the optional chunks, then "fmt " and "data".
-    private static byte[] Wav(ushort format, ushort bits, byte[] data, byte[]? before = null)
+    [Fact]
+    public void Scale_TruncatedData_StillScaled()
+    {
+        var wav = Wav(format: 1, bits: 16, data: Samples16(1000, -2000, 30000, -32768));
+        var truncated = wav[..(wav.Length - 2)];  // the data chunk declares 8 bytes; 6 are left
+
+        var result = WavVolume.Scale(truncated, 0.5);
+
+        Assert.Equal(truncated.Length, result.Length);
+        Assert.Equal(Samples16(500, -1000, 15000), result[44..]);
+    }
+
+    [Fact]
+    public void Scale_DataBeforeFmt()
+    {
+        var wav = Wav(format: 1, bits: 16, data: Samples16(1000, -2000), dataFirst: true);
+
+        var result = WavVolume.Scale(wav, 0.5);
+
+        Assert.Equal(Samples16(500, -1000), DataOf(result));
+        Assert.Equal(wav.Length, result.Length);
+    }
+
+    [Fact]
+    public void Scale_OddPaddedChunk()
+    {
+        var odd = Chunk("LIST", [1, 2, 3]);  // 3 bytes, padded to 4 on disk
+        var wav = Wav(format: 1, bits: 16, data: Samples16(1000, -2000), before: odd);
+
+        var result = WavVolume.Scale(wav, 0.5);
+
+        Assert.Equal(Samples16(500, -1000), DataOf(result));
+        Assert.Equal(wav.Length, result.Length);
+    }
+
+    /// A RIFF/WAVE file: the optional chunks, then "fmt " and "data" (or "data" first when dataFirst).
+    private static byte[] Wav(ushort format, ushort bits, byte[] data, byte[]? before = null, bool dataFirst = false)
     {
         var fmt = new byte[16];
         BinaryPrimitives.WriteUInt16LittleEndian(fmt.AsSpan(0), format);
@@ -104,7 +139,10 @@ public class WavVolumeTests
         BinaryPrimitives.WriteUInt16LittleEndian(fmt.AsSpan(12), (ushort)(bits / 8));
         BinaryPrimitives.WriteUInt16LittleEndian(fmt.AsSpan(14), bits);
 
-        var body = Concat(before ?? [], Chunk("fmt ", fmt), Chunk("data", data));
+        var chunks = dataFirst
+            ? Concat(Chunk("data", data), Chunk("fmt ", fmt))
+            : Concat(Chunk("fmt ", fmt), Chunk("data", data));
+        var body = Concat(before ?? [], chunks);
         var header = new byte[12];
         Encoding.ASCII.GetBytes("RIFF", header.AsSpan(0));
         BinaryPrimitives.WriteUInt32LittleEndian(header.AsSpan(4), (uint)(4 + body.Length));
