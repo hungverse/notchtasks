@@ -50,7 +50,6 @@ public sealed class SettingsStore : INotifyPropertyChanged, IDisposable
     private FileSystemWatcher? _watcher;
     private Timer? _debounce;
     private bool _disposed;
-    private bool _unreadable;       // the last read failed on a lock or access error; Set re-reads the file before it writes
 
     private SettingsStore(string file)
     {
@@ -74,7 +73,8 @@ public sealed class SettingsStore : INotifyPropertyChanged, IDisposable
     public T? Get<T>(string key) => TryGet(key, out T? value) ? value : default;
 
     /// Saves one key at once (atomic write) and raises Changed and PropertyChanged for it.
-    /// If the file was unreadable at the last read, it is re-read first, so the keys already in it are kept.
+    /// The file is read first when it changed since this store last saw it (an outside edit still waiting for the
+    /// watcher's debounce, or a file that was locked at load), so the keys in it are kept, not overwritten.
     /// Throws IOException, and changes nothing, while the file is still locked.
     public void Set(string key, JsonNode? value)
     {
@@ -83,7 +83,7 @@ public sealed class SettingsStore : INotifyPropertyChanged, IDisposable
         lock (_gate)
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
-            reloaded = _unreadable ? Reread() : Array.Empty<string>();
+            reloaded = SyncFromDisk();
             var next = (JsonObject)_root.DeepClone();
             if (_corrupt)
             {
@@ -100,8 +100,9 @@ public sealed class SettingsStore : INotifyPropertyChanged, IDisposable
         Raise(reloaded.Append(key).Distinct(StringComparer.Ordinal).ToList());
     }
 
-    /// Re-reads a file that could not be read at the last read. Caller holds _gate. Changes nothing when the file is still locked.
-    private IReadOnlyList<string> Reread()
+    /// Adopts the file's keys when its text is not the text this store last saw. Caller holds _gate. Returns the keys that
+    /// changed; a missing file changes nothing. Throws IOException, and changes nothing, while the file is locked.
+    private IReadOnlyList<string> SyncFromDisk()
     {
         string? text;
         try
@@ -113,8 +114,7 @@ public sealed class SettingsStore : INotifyPropertyChanged, IDisposable
             throw new IOException(e.Message, e);
         }
 
-        _unreadable = false;
-        if (text is null)
+        if (text is null || text == _lastSeenText)
         {
             return Array.Empty<string>();
         }
@@ -126,6 +126,7 @@ public sealed class SettingsStore : INotifyPropertyChanged, IDisposable
         }
         var changed = DiffKeys(_root, parsed);
         _root = parsed;
+        _corrupt = false;
         return changed;
     }
 
@@ -268,12 +269,12 @@ public sealed class SettingsStore : INotifyPropertyChanged, IDisposable
         string? text;
         try
         {
-            text = AtomicFile.ReadAllTextOrNull(_file);
+            text = AtomicFile.ReadAllTextOrNullWithRetry(_file);
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
             // Locked or unreadable for now: defaults in memory, and the file is not treated as corrupt.
-            _unreadable = true;
+            // The next Set reads it again (SyncFromDisk).
             return;
         }
 
@@ -330,35 +331,14 @@ public sealed class SettingsStore : INotifyPropertyChanged, IDisposable
             {
                 return;
             }
-            string text;
             try
             {
-                if (!File.Exists(_file))
-                {
-                    return;
-                }
-                text = File.ReadAllText(_file);
-                _unreadable = false;
+                changed = SyncFromDisk();
             }
-            catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+            catch (IOException)
             {
-                return;
+                return;  // still locked: the next edit raises the event again
             }
-
-            if (text == _lastSeenText)
-            {
-                return;
-            }
-            _lastSeenText = text;
-            if (!TryParseObject(text, out var parsed))
-            {
-                _corrupt = true;
-                return;
-            }
-
-            changed = DiffKeys(_root, parsed);
-            _root = parsed;
-            _corrupt = false;
         }
         if (changed.Count == 0)
         {

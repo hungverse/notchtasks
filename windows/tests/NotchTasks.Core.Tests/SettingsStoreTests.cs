@@ -189,6 +189,38 @@ public sealed class SettingsStoreTests : IDisposable
     }
 
     [Fact]
+    public async Task Load_LockReleasedWithinTheRetry_ReadsTheFile()
+    {
+        File.WriteAllText(_file, "{\"accent\":\"green\"}");
+        var locked = new FileStream(_file, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+        var release = Task.Run(async () =>
+        {
+            await Task.Delay(5);
+            locked.Dispose();
+        });
+
+        using var store = SettingsStore.Load(_file);
+        await release;
+
+        Assert.Equal("green", store.Accent);
+    }
+
+    [Fact]
+    public void Set_ReadsAnEditMadeJustBefore_KeepsIt()
+    {
+        using var store = SettingsStore.Load(_file);
+        // An outside edit, made before the watcher's 100 ms reload runs.
+        File.WriteAllText(_file, "{\"volume\":0.5}");
+
+        store.Set("sounds", JsonValue.Create(false));
+
+        var root = JsonNode.Parse(File.ReadAllText(_file))!.AsObject();
+        Assert.Equal(0.5, root["volume"]!.GetValue<double>());
+        Assert.False(root["sounds"]!.GetValue<bool>());
+        Assert.Equal(0.5, store.Volume);
+    }
+
+    [Fact]
     public void StillLocked_SetThrows_FileUnchanged()
     {
         const string text = "{\"futureKey\":1,\"motion\":\"smooth\"}";

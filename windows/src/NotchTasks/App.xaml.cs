@@ -112,7 +112,7 @@ public partial class App : System.Windows.Application
             }
             catch (Exception e)
             {
-                Debug.WriteLine($"NotchTasks: hook migration failed for {kind.Id()}: {e}");
+                ErrorLog.Write(new InvalidOperationException($"NotchTasks: hook migration failed for {kind.Id()}", e));
             }
         }
     }

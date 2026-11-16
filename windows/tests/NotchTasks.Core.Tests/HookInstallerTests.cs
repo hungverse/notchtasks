@@ -125,6 +125,18 @@ public sealed class HookInstallerTests : IDisposable
     }
 
     [Fact]
+    public void Uninstall_MissingFile_WritesNothing()
+    {
+        var file = SettingsOf(AgentKind.Claude);
+        Assert.False(File.Exists(file));
+
+        HookInstaller.Uninstall(AgentKind.Claude, _home);
+
+        Assert.False(File.Exists(file), "no settings file is created by an uninstall");
+        Assert.False(File.Exists(file + ".notchtasks-backup"));
+    }
+
+    [Fact]
     public void Claude_SettingsPath_FollowsTheHomeGiven()
     {
         Assert.Equal(Path.Combine(_home, ".claude", "settings.json"), SettingsOf(AgentKind.Claude));

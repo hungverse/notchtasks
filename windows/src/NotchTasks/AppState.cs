@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.IO;
 using System.ComponentModel;
 using System.Windows.Threading;
 using NotchTasks.Core.Asks;
@@ -40,10 +41,19 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable
         _watcher = new AskWatcher(_store, list => _dispatcher.BeginInvoke(new Action(() => SyncAsks(list))));
     }
 
-    /// Writes the answer for an ask, then removes the ask from Asks at once.
+    /// Writes the answer for an ask, then removes the ask from Asks at once. When the reply cannot be written, the ask stays
+    /// in the list so the user can try again, and the failure is logged.
     public void Answer(string askId, AskReply reply)
     {
-        _store.Reply(askId, reply);
+        try
+        {
+            _store.Reply(askId, reply);
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            ErrorLog.Write(new IOException($"NotchTasks: could not write the reply for ask {askId}", e));
+            return;
+        }
         _tracker.MarkAnswered(askId);
         for (var i = Asks.Count - 1; i >= 0; i--)
         {

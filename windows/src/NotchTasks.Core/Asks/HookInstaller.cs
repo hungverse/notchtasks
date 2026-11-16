@@ -124,6 +124,10 @@ public static class HookInstaller
         }
 
         var root = ReadRootForWrite(file, out var existed);
+        if (!on && !existed)
+        {
+            return;  // nothing to remove, and no file is written
+        }
         if (existed)
         {
             Backup(file);
