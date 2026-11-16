@@ -28,6 +28,10 @@ public sealed class LExtension : MarkupExtension
 
     public string Key { get; }
 
-    public override object ProvideValue(IServiceProvider serviceProvider) =>
-        new Binding($"[{Key}]") { Source = LocalizedStrings.Instance, Mode = BindingMode.OneWay };
+    /// Returns the binding's BindingExpression, which is what a property setter accepts (a Binding object is not a value).
+    public override object ProvideValue(IServiceProvider serviceProvider)
+    {
+        var binding = new Binding($"[{Key}]") { Source = LocalizedStrings.Instance, Mode = BindingMode.OneWay };
+        return binding.ProvideValue(serviceProvider);
+    }
 }
