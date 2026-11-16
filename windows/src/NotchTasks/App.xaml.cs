@@ -79,6 +79,11 @@ public partial class App : System.Windows.Application
             {
                 Dispatcher.BeginInvoke(new Action(() => L10n.Init(l10nFolder, settings.Language)));
             }
+            // The tray icon follows the menuBarIcon setting at once.
+            if (keys.Contains("menuBarIcon"))
+            {
+                Dispatcher.BeginInvoke(new Action(() => ApplyTrayVisibility(settings)));
+            }
         };
         Sounds.Attach(settings);
 
@@ -91,6 +96,16 @@ public partial class App : System.Windows.Application
         _pill = new PillWindow(_state);
         _pill.Show();
         _tray = new Tray(() => ControlPanelWindow.Show(_state), () => Shutdown());
+        ApplyTrayVisibility(settings);
+    }
+
+    /// Shows or hides the tray icon as the menuBarIcon setting says. Runs on the UI thread.
+    private void ApplyTrayVisibility(SettingsStore settings)
+    {
+        if (_tray is not null)
+        {
+            _tray.Visible = settings.MenuBarIcon;
+        }
     }
 
     protected override void OnExit(ExitEventArgs e)

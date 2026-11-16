@@ -27,6 +27,7 @@ public static class Sounds
     /// Gives the sounds the settings to read. Call once at start-up, on the UI thread.
     public static void Attach(SettingsStore settings) => _settings = settings;
 
+    /// Plays the sound the event has in the settings, when sounds are on.
     public static void Play(string eventId)
     {
         var settings = _settings;
@@ -34,7 +35,19 @@ public static class Sounds
         {
             return;
         }
-        if (!settings.SoundMap.TryGetValue(eventId, out var name) || string.IsNullOrEmpty(name))
+        if (!settings.SoundMap.TryGetValue(eventId, out var name))
+        {
+            return;
+        }
+        PlayName(name);
+    }
+
+    /// Plays a sound by its name (a Mac sound name or a file path) at the settings' volume, whether or not sounds are on:
+    /// the Sound pane's preview. Silence for "" or a name with no file.
+    public static void PlayName(string name)
+    {
+        var settings = _settings;
+        if (settings is null || string.IsNullOrEmpty(name))
         {
             return;
         }

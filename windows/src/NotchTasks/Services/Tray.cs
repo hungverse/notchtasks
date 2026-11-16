@@ -1,3 +1,4 @@
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 using H.NotifyIcon;
@@ -41,6 +42,13 @@ public sealed class Tray : IDisposable
     {
         _panel.Header = L10n.L("Control Panel");
         _quit.Header = L10n.L("Quit");
+    }
+
+    /// Whether the tray icon is shown (the menuBarIcon setting). Hidden, it takes no room on the taskbar.
+    public bool Visible
+    {
+        get => _icon.Visibility == Visibility.Visible;
+        set => _icon.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
     }
 
     public void Dispose()

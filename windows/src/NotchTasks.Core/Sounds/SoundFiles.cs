@@ -21,6 +21,9 @@ public static class SoundFiles
         ["Tink"] = "chimes.wav",
     };
 
+    /// The sound names, sorted (the choices of the Sound pane, after "None").
+    public static IReadOnlyList<string> Names { get; } = Files.Keys.OrderBy(name => name, StringComparer.Ordinal).ToList();
+
     /// The file name in C:\Windows\Media for a Mac sound name, or null when the name has no Windows file.
     public static string? FileName(string? macName) =>
         macName is not null && Files.TryGetValue(macName, out var file) ? file : null;

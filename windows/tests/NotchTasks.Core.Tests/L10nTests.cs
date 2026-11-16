@@ -56,6 +56,32 @@ public sealed class L10nTests
     }
 
     [Fact]
+    public void Languages_AreTheSixteenOfTheMacInOrder()
+    {
+        Assert.Equal(16, L10n.Languages.Count);
+        Assert.Equal(("en", "English"), L10n.Languages[0]);
+        Assert.Equal(("pt-BR", "Português (Brasil)"), L10n.Languages[9]);
+        Assert.Equal(("hi", "हिन्दी"), L10n.Languages[15]);
+    }
+
+    [Fact]
+    public void DeviceLanguage_IsALanguageTheAppSpeaks()
+    {
+        Assert.Contains(L10n.DeviceLanguage, L10n.Languages.Select(l => l.Code));
+    }
+
+    [Fact]
+    public void Languages_EachIsSupported()
+    {
+        foreach (var (code, _) in L10n.Languages)
+        {
+            L10n.Init(MacSources(), code);
+
+            Assert.Equal(code, L10n.Current);
+        }
+    }
+
+    [Fact]
     public void Placeholders_AreFilledInOrder()
     {
         Assert.Equal("2 và a", L10n.Fill("{1} và {0}", "a", 2));

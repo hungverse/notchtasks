@@ -93,11 +93,11 @@ public partial class ControlPanelWindow : Window
                 PaneId.Modules => new ModulesPane(),
                 PaneId.Permissions => new PermissionsPane(),
                 PaneId.Watching => new WatchingPane(),
-                PaneId.Appearance => new AppearancePane(),
+                PaneId.Appearance => new AppearancePane(State.Settings),
                 PaneId.Badges => new BadgesPane(),
                 PaneId.Store => new StorePane(),
-                PaneId.Sounds => new SoundsPane(),
-                PaneId.Behavior => new BehaviorPane(),
+                PaneId.Sounds => new SoundsPane(State.Settings),
+                PaneId.Behavior => new BehaviorPane(State.Settings),
                 _ => throw new ArgumentOutOfRangeException(nameof(pane)),
             };
             _panes[pane] = control;

@@ -28,6 +28,15 @@ public class SoundFilesTests
     }
 
     [Fact]
+    public void Names_ListTheFourteenSortedByName()
+    {
+        Assert.Equal(14, SoundFiles.Names.Count);
+        Assert.Equal(SoundFiles.Names.OrderBy(n => n, StringComparer.Ordinal), SoundFiles.Names);
+        Assert.Equal("Basso", SoundFiles.Names[0]);
+        Assert.Equal("Tink", SoundFiles.Names[^1]);
+    }
+
+    [Fact]
     public void AllFourteenPackSoundsHaveFiles()
     {
         string[] names =

@@ -14,4 +14,50 @@
     <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
     <Setter Property="TextWrapping" Value="Wrap" />
   </Style>
+
+  <!-- The heading of a section, above its card (Windows 11 Settings). -->
+  <Style x:Key="SectionHeader" TargetType="TextBlock">
+    <Setter Property="FontSize" Value="14" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Margin" Value="0,20,0,8" />
+    <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+  </Style>
+
+  <!-- A rounded card that holds the rows of a section. -->
+  <Style x:Key="Card" TargetType="Border">
+    <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource CardStrokeColorDefaultBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="8" />
+  </Style>
+
+  <!-- One row of a card: a DockPanel whose control is docked right (Dock="Right") and whose label fills the rest. -->
+  <Style x:Key="SettingRow" TargetType="DockPanel">
+    <Setter Property="Margin" Value="16,10" />
+    <Setter Property="LastChildFill" Value="True" />
+  </Style>
+
+  <!-- The label at the left of a row. -->
+  <Style x:Key="RowLabel" TargetType="TextBlock">
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="TextWrapping" Value="Wrap" />
+    <Setter Property="Margin" Value="0,0,16,0" />
+  </Style>
+
+  <!-- A line of text under a card: what the card's setting does. -->
+  <Style x:Key="CardNote" TargetType="TextBlock">
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="Margin" Value="4,6,0,0" />
+    <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+    <Setter Property="TextWrapping" Value="Wrap" />
+  </Style>
+
+  <!-- A picker's item: a colour dot (when the item has a Swatch) and the title. -->
+  <DataTemplate x:Key="AccentChoice">
+    <StackPanel Orientation="Horizontal">
+      <Ellipse Width="12" Height="12" Margin="0,0,8,0" VerticalAlignment="Center"
+               Fill="{Binding Swatch}" Stroke="{DynamicResource ControlStrokeColorDefaultBrush}" StrokeThickness="1" />
+      <TextBlock Text="{Binding Title}" VerticalAlignment="Center" />
+    </StackPanel>
+  </DataTemplate>
 </ResourceDictionary>

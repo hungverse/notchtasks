@@ -1,9 +1,34 @@
-<UserControl x:Class="NotchTasks.ControlPanel.Panes.SoundsPane"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:l="clr-namespace:NotchTasks.ControlPanel">
+<local:SettingsPane x:Class="NotchTasks.ControlPanel.Panes.SoundsPane"
+                       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                       xmlns:l="clr-namespace:NotchTasks.ControlPanel"
+                       xmlns:local="clr-namespace:NotchTasks.ControlPanel">
   <StackPanel>
     <TextBlock Style="{StaticResource PaneTitle}" Text="{l:L Sound}" />
-    <TextBlock Style="{StaticResource PaneNote}" Text="{l:L Coming soon}" />
+
+    <Border Style="{StaticResource Card}" Margin="0,8,0,0">
+      <StackPanel>
+        <DockPanel Style="{StaticResource SettingRow}">
+          <CheckBox x:Name="SoundOn" DockPanel.Dock="Right" VerticalAlignment="Center" />
+          <TextBlock Style="{StaticResource RowLabel}" Text="{l:L Sound}" />
+        </DockPanel>
+        <DockPanel Style="{StaticResource SettingRow}">
+          <Slider x:Name="VolumeSlider" DockPanel.Dock="Right" Width="220" Minimum="0" Maximum="1"
+                  VerticalAlignment="Center" />
+          <TextBlock Style="{StaticResource RowLabel}" Text="{l:L Volume}" />
+        </DockPanel>
+        <DockPanel Style="{StaticResource SettingRow}">
+          <ComboBox x:Name="PackBox" DockPanel.Dock="Right" MinWidth="220" DisplayMemberPath="Title" />
+          <TextBlock Style="{StaticResource RowLabel}" Text="{l:L Sound pack}" />
+        </DockPanel>
+      </StackPanel>
+    </Border>
+
+    <TextBlock Style="{StaticResource SectionHeader}" Text="{l:L Events}" />
+    <!-- One row per event, built in code: the event's title, its sound's picker and a button that plays the sound. The rows
+         are off while sounds are off (Preferences.swift: .disabled(!settings.sounds)). -->
+    <Border x:Name="EventsCard" Style="{StaticResource Card}">
+      <StackPanel x:Name="EventRows" />
+    </Border>
   </StackPanel>
-</UserControl>
+</local:SettingsPane>

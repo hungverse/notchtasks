@@ -32,6 +32,18 @@ public sealed class SettingsStoreTests : IDisposable
     }
 
     [Fact]
+    public void Load_MissingFile_GivesDefaultsOfTheBehaviorKeys()
+    {
+        using var store = SettingsStore.Load(_file);
+
+        Assert.True(store.SystemLoad);
+        Assert.True(store.SystemNotifications);
+        Assert.Equal(80, store.LimitWarn);
+        Assert.True(store.MenuBarIcon);
+        Assert.False(store.AnalyticsOff);
+    }
+
+    [Fact]
     public void Load_MissingFile_GivesMacDefaults()
     {
         using var store = SettingsStore.Load(_file);

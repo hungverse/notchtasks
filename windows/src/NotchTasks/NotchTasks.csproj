@@ -9,6 +9,9 @@
     <!-- Plain net10.0-windows: nothing in the app uses WinRT now (the accent is read from the registry). -->
     <TargetFramework>net10.0-windows</TargetFramework>
     <ApplicationIcon>Assets\NotchTasks.ico</ApplicationIcon>
+    <!-- The colour dialog of the Control Panel (ColorField) is WinForms' ColorDialog. Its namespaces are not imported
+         into the app: the WPF names would clash, so the one file that needs it aliases them. -->
+    <UseWindowsForms>true</UseWindowsForms>
     <!-- Required by LibraryImport (Pill\Win32.cs): the generated P/Invoke code is unsafe. -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <!-- WPF0001: ThemeMode (App.xaml) is marked experimental in WPF. The app uses it on purpose for the Control Panel. -->
@@ -17,6 +20,11 @@
 
   <ItemGroup>
     <Resource Include="Assets\NotchTasks.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Remove="System.Drawing" />
+    <Using Remove="System.Windows.Forms" />
   </ItemGroup>
 
   <ItemGroup>

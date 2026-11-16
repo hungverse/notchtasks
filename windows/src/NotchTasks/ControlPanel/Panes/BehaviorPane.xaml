@@ -1,9 +1,61 @@
-<UserControl x:Class="NotchTasks.ControlPanel.Panes.BehaviorPane"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:l="clr-namespace:NotchTasks.ControlPanel">
+<local:SettingsPane x:Class="NotchTasks.ControlPanel.Panes.BehaviorPane"
+                       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                       xmlns:l="clr-namespace:NotchTasks.ControlPanel"
+                       xmlns:local="clr-namespace:NotchTasks.ControlPanel">
   <StackPanel>
     <TextBlock Style="{StaticResource PaneTitle}" Text="{l:L Behavior}" />
-    <TextBlock Style="{StaticResource PaneNote}" Text="{l:L Coming soon}" />
+
+    <TextBlock Style="{StaticResource SectionHeader}" Text="{l:L Opening the notch}" />
+    <Border Style="{StaticResource Card}">
+      <StackPanel>
+        <DockPanel Style="{StaticResource SettingRow}">
+          <ComboBox x:Name="ExpandBox" DockPanel.Dock="Right" MinWidth="220" DisplayMemberPath="Title" />
+          <TextBlock Style="{StaticResource RowLabel}" Text="{l:L How to open}" />
+        </DockPanel>
+        <DockPanel x:Name="DelayRow" Style="{StaticResource SettingRow}">
+          <Slider x:Name="DelaySlider" DockPanel.Dock="Right" Width="220" Minimum="0" Maximum="1"
+                  TickFrequency="0.05" IsSnapToTickEnabled="True" VerticalAlignment="Center" />
+          <TextBlock x:Name="DelayLabel" Style="{StaticResource RowLabel}" />
+        </DockPanel>
+        <DockPanel Style="{StaticResource SettingRow}">
+          <CheckBox x:Name="SystemLoadBox" DockPanel.Dock="Right" VerticalAlignment="Center" />
+          <TextBlock Style="{StaticResource RowLabel}" Text="{l:L CPU and RAM when expanded}" />
+        </DockPanel>
+      </StackPanel>
+    </Border>
+
+    <TextBlock Style="{StaticResource SectionHeader}" Text="{l:L Notifications}" />
+    <Border Style="{StaticResource Card}">
+      <StackPanel>
+        <DockPanel Style="{StaticResource SettingRow}">
+          <CheckBox x:Name="NotificationsBox" DockPanel.Dock="Right" VerticalAlignment="Center" />
+          <TextBlock Style="{StaticResource RowLabel}" Text="{l:L System notifications}" />
+        </DockPanel>
+        <DockPanel Style="{StaticResource SettingRow}">
+          <Slider x:Name="LimitSlider" DockPanel.Dock="Right" Width="220" Minimum="50" Maximum="100"
+                  TickFrequency="5" IsSnapToTickEnabled="True" VerticalAlignment="Center" />
+          <TextBlock x:Name="LimitLabel" Style="{StaticResource RowLabel}" />
+        </DockPanel>
+      </StackPanel>
+    </Border>
+
+    <TextBlock Style="{StaticResource SectionHeader}" Text="{l:L Other}" />
+    <Border Style="{StaticResource Card}">
+      <StackPanel>
+        <DockPanel Style="{StaticResource SettingRow}">
+          <ComboBox x:Name="LanguageBox" DockPanel.Dock="Right" MinWidth="220" DisplayMemberPath="Title" />
+          <TextBlock Style="{StaticResource RowLabel}" Text="{l:L Language}" />
+        </DockPanel>
+        <DockPanel Style="{StaticResource SettingRow}">
+          <CheckBox x:Name="MenuBarBox" DockPanel.Dock="Right" VerticalAlignment="Center" />
+          <TextBlock Style="{StaticResource RowLabel}" Text="{l:L Menu bar icon}" />
+        </DockPanel>
+        <DockPanel Style="{StaticResource SettingRow}">
+          <CheckBox x:Name="AnalyticsBox" DockPanel.Dock="Right" VerticalAlignment="Center" />
+          <TextBlock Style="{StaticResource RowLabel}" Text="{l:L Send anonymous usage statistics}" />
+        </DockPanel>
+      </StackPanel>
+    </Border>
   </StackPanel>
-</UserControl>
+</local:SettingsPane>

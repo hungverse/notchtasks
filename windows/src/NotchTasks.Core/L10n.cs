@@ -9,10 +9,15 @@ namespace NotchTasks.Core;
 /// and windows.json (PC-only overlay: { "<code>": { key: text } }), which fills keys the Mac table lacks.
 public static class L10n
 {
-    private static readonly string[] Supported =
+    /// The app's languages as the Mac lists them (L10n.swift), each shown in its own words: the code and the name.
+    public static IReadOnlyList<(string Code, string Name)> Languages { get; } =
     [
-        "en", "vi", "zh-Hans", "zh-Hant", "ja", "ko", "es", "fr", "de", "pt-BR", "it", "ru", "id", "th", "tr", "hi",
+        ("en", "English"), ("vi", "Tiếng Việt"), ("zh-Hans", "简体中文"), ("zh-Hant", "繁體中文"), ("ja", "日本語"),
+        ("ko", "한국어"), ("es", "Español"), ("fr", "Français"), ("de", "Deutsch"), ("pt-BR", "Português (Brasil)"),
+        ("it", "Italiano"), ("ru", "Русский"), ("id", "Bahasa Indonesia"), ("th", "ไทย"), ("tr", "Türkçe"), ("hi", "हिन्दी"),
     ];
+
+    private static readonly string[] Supported = Languages.Select(l => l.Code).ToArray();
 
     private static readonly object Lock = new();
     private static string _folder = string.Empty;
@@ -48,6 +53,9 @@ public static class L10n
         }
         Changed?.Invoke();
     }
+
+    /// The language of this PC: what "Device" follows, a language the app speaks.
+    public static string DeviceLanguage => Match([CultureInfo.CurrentUICulture.Name]);
 
     /// The first of the preferred languages that the app speaks; English when none.
     public static string Match(IEnumerable<string> preferred)

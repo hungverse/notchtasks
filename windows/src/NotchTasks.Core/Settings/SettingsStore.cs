@@ -162,6 +162,21 @@ public sealed class SettingsStore : INotifyPropertyChanged, IDisposable
 
     public IReadOnlyList<string> Disabled => StringList("disabled", DefaultDisabled);
 
+    /// CPU and RAM on the open notch (Mac systemLoad).
+    public bool SystemLoad => Flag("systemLoad", true);
+
+    /// System notifications for the alerts (Mac systemNotifications).
+    public bool SystemNotifications => Flag("systemNotifications", true);
+
+    /// The percentage of an AI limit that triggers a warning, 50 to 100 (Mac limitWarn).
+    public double LimitWarn => Ranged("limitWarn", 80, 50, 100);
+
+    /// The tray icon is shown (Mac menuBarIcon).
+    public bool MenuBarIcon => Flag("menuBarIcon", true);
+
+    /// The analytics opt-out, stored as the Mac and Electron store it ("analytics.off"): analytics are on unless this is true.
+    public bool AnalyticsOff => Flag("analytics.off", false);
+
     /// Event id to sound name (or file path); "" is silent. Events missing from the file keep the Default pack's sound.
     public IReadOnlyDictionary<string, string> SoundMap
     {
