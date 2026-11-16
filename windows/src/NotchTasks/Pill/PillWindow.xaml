@@ -18,6 +18,18 @@
     <pill:RadiusConverter x:Key="RadiusConverter" />
   </Window.Resources>
   <Grid Background="Transparent">
+    <!-- The shadow and the glow sit behind the pill as siblings, so a sprite frame never redraws their effects. -->
+    <Border x:Name="ShadowShape"
+            Width="{Binding Width, ElementName=PillShape}" Height="{Binding Height, ElementName=PillShape}"
+            HorizontalAlignment="Center" VerticalAlignment="Top"
+            Background="Black" Opacity="0" IsHitTestVisible="False"
+            CornerRadius="{Binding Radius, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource RadiusConverter}}">
+    </Border>
+    <Border x:Name="GlowBacking" Visibility="Collapsed" BorderThickness="1.2" IsHitTestVisible="False"
+            Width="{Binding Width, ElementName=PillShape}" Height="{Binding Height, ElementName=PillShape}"
+            HorizontalAlignment="Center" VerticalAlignment="Top"
+            CornerRadius="{Binding Radius, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource RadiusConverter}}">
+    </Border>
     <!-- The pill: its Width, Height and CornerRadius animate. Its rectangle is the hover area, even when it is invisible. -->
     <Border x:Name="PillShape"
             Width="200" Height="32"

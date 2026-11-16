@@ -20,11 +20,11 @@ namespace NotchTasks.Pill;
 
 /// The floating pill at the top centre of the primary screen. It never takes focus. The window is sized once; the
 /// pill inside it animates. The window is click-through (WS_EX_TRANSPARENT|WS_EX_LAYERED) while the pointer is outside
-/// the pill, so clicks reach the windows below; a 15 Hz poll of the pointer drives that, hover-open and the close check.
+/// the pill, so clicks reach the windows below; a 10 Hz poll of the pointer drives that, hover-open and the close check.
 public partial class PillWindow : Window
 {
     private static readonly TimeSpan CloseDelay = TimeSpan.FromMilliseconds(350);
-    private static readonly TimeSpan PollInterval = TimeSpan.FromMilliseconds(1000.0 / 15);
+    private static readonly TimeSpan PollInterval = TimeSpan.FromMilliseconds(100);
     private static readonly TimeSpan MaxFadeDuration = TimeSpan.FromMilliseconds(350);
 
     /// The corner radius of the pill; animated by the spring, bound to every shape through RadiusConverter.
@@ -42,6 +42,8 @@ public partial class PillWindow : Window
     private bool _clickThrough;
     private long? _outsideSince;
     private long? _enteredAt;
+    private NativePoint _lastPoint;
+    private bool _havePoint;
     private string _badgesJson = string.Empty;
     private bool _hasCollapsed;
     private Color _accent = Color.FromRgb(0x32, 0xD2, 0xFF);
@@ -129,13 +131,23 @@ public partial class PillWindow : Window
 
     private void OnDisplaySettingsChanged(object? sender, EventArgs e) => Dispatcher.BeginInvoke(new Action(Place));
 
-    /// 15 Hz: sets click-through from the pointer's position, and opens the pill after HoverDelay over it (hover mode).
+    /// 10 Hz: sets click-through from the pointer's position, and opens the pill after HoverDelay over it (hover mode).
+    /// An unmoved pointer costs nothing, unless a hover-open is still waiting for its delay.
     private void OnPoll(object? sender, EventArgs e)
     {
         if (!Win32.GetCursorPos(out var point))
         {
             return;
         }
+        var moved = !_havePoint || point.X != _lastPoint.X || point.Y != _lastPoint.Y;
+        var hoverWaiting = _enteredAt is not null && !_open && _state.Settings.ExpandMode == "hover";
+        if (!moved && !hoverWaiting)
+        {
+            return;
+        }
+        _lastPoint = point;
+        _havePoint = true;
+
         var inside = IsInsidePill(point);
         SetClickThrough(!inside);
         if (!inside)
@@ -363,14 +375,19 @@ public partial class PillWindow : Window
             _ => 0,
         };
 
-        PillShape.Effect = _open
+        // The shadow and glow effects live on the backing borders behind the pill; setting them here is per state change only.
+        ShadowShape.Opacity = PillShape.Opacity;
+        ShadowShape.Effect = _open
             ? Shadow(opacity: 0.45, blur: 14, depth: 6)
             : Shadow(opacity: 0.3, blur: 6, depth: 2);
 
         var glow = settings.Background == "glow" && (_open || _hasCollapsed);
+        var accentBrush = Frozen(new SolidColorBrush(_accent) { Opacity = 0.9 });
+        GlowBacking.Visibility = glow ? Visibility.Visible : Visibility.Collapsed;
+        GlowBacking.BorderBrush = accentBrush;
+        GlowBacking.Effect = new DropShadowEffect { Color = _accent, BlurRadius = 6, ShadowDepth = 0, Opacity = 1 };
         GlowRing.Visibility = glow ? Visibility.Visible : Visibility.Collapsed;
-        GlowRing.BorderBrush = Frozen(new SolidColorBrush(_accent) { Opacity = 0.9 });
-        GlowRing.Effect = new DropShadowEffect { Color = _accent, BlurRadius = 6, ShadowDepth = 0, Opacity = 1 };
+        GlowRing.BorderBrush = accentBrush;
     }
 
     private static DropShadowEffect Shadow(double opacity, double blur, double depth) =>
