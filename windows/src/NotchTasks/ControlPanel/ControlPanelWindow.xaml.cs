@@ -18,20 +18,27 @@ public partial class ControlPanelWindow : Window
     private static ControlPanelWindow? _window;
 
     private readonly Dictionary<PaneId, UserControl> _panes = new();
+    private PaneId _pane;
 
     private ControlPanelWindow(AppState state, PaneId pane)
     {
         State = state;
         InitializeComponent();
 
-        if (ReadSize() is { } size)
-        {
-            Width = size.Width;
-            Height = size.Height;
-        }
+        // The saved size (or the default), never larger than the work area: the window is then fully on screen, and
+        // CenterScreen places it inside the work area.
+        var (width, height) = ReadSize() ?? (Width, Height);
+        var area = SystemParameters.WorkArea;
+        Width = Math.Min(width, area.Width);
+        Height = Math.Min(height, area.Height);
+
         Sidebar.ItemsSource = PaneItem.All;
         Sidebar.SelectionChanged += OnSelectionChanged;
-        Closing += (_, _) => SaveSize();
+        Closing += (_, _) =>
+        {
+            SaveSize();
+            SaveLastPane(_pane);
+        };
         Closed += (_, _) => _window = null;
         SelectPane(pane);
     }
@@ -72,8 +79,8 @@ public partial class ControlPanelWindow : Window
         {
             return;
         }
+        _pane = item.Pane;
         PaneHost.Content = PaneFor(item.Pane);
-        SaveLastPane(item.Pane);
     }
 
     private UserControl PaneFor(PaneId pane)
@@ -105,12 +112,13 @@ public partial class ControlPanelWindow : Window
             var name = StateJson.Get(AppPaths.StateFile, PaneKey)?.GetValue<string>();
             return Enum.TryParse<PaneId>(name, ignoreCase: true, out var pane) ? pane : PaneId.Overview;
         }
-        catch (Exception e) when (e is IOException or UnauthorizedAccessException or InvalidOperationException)
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException or InvalidOperationException or FormatException)
         {
             return PaneId.Overview;
         }
     }
 
+    /// Written when the window closes, not on each selection.
     private static void SaveLastPane(PaneId pane)
     {
         try
@@ -140,7 +148,7 @@ public partial class ControlPanelWindow : Window
             }
             return (Math.Max(width, MinWidth), Math.Max(height, MinHeight));
         }
-        catch (Exception e) when (e is InvalidOperationException or FormatException)
+        catch (Exception e) when (e is InvalidOperationException or FormatException or IOException or UnauthorizedAccessException)
         {
             return null;
         }

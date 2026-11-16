@@ -9,6 +9,7 @@
         AllowsTransparency="True"
         Background="Transparent"
         Topmost="True"
+        ThemeMode="None"
         ShowInTaskbar="False"
         ShowActivated="False"
         ResizeMode="NoResize"
@@ -17,6 +18,51 @@
         Foreground="White">
   <Window.Resources>
     <pill:RadiusConverter x:Key="RadiusConverter" />
+    <!-- The pill keeps its own look: ThemeMode None above stops the Windows theme from restyling it, so its scrollbars and
+         tooltips are styled here, in the Mac's dark pill colours, for both light and dark Windows. -->
+    <Style TargetType="ScrollBar">
+      <Setter Property="Width" Value="8" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="ScrollBar">
+            <Track x:Name="PART_Track" IsDirectionReversed="True" Orientation="{TemplateBinding Orientation}"
+                   Minimum="{TemplateBinding Minimum}" Maximum="{TemplateBinding Maximum}"
+                   Value="{TemplateBinding Value}" ViewportSize="{TemplateBinding ViewportSize}">
+              <Track.Thumb>
+                <Thumb>
+                  <Thumb.Template>
+                    <ControlTemplate TargetType="Thumb">
+                      <Border Width="6" HorizontalAlignment="Center" CornerRadius="3" Background="#66FFFFFF" />
+                    </ControlTemplate>
+                  </Thumb.Template>
+                </Thumb>
+              </Track.Thumb>
+            </Track>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+    <Style TargetType="ToolTip">
+      <Setter Property="OverridesDefaultStyle" Value="True" />
+      <Setter Property="Foreground" Value="White" />
+      <Setter Property="Background" Value="#FF1C1C1E" />
+      <Setter Property="BorderBrush" Value="#33FFFFFF" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="Padding" Value="8,4" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="HasDropShadow" Value="True" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="ToolTip">
+            <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+              <ContentPresenter TextElement.Foreground="{TemplateBinding Foreground}" />
+            </Border>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
     <!-- A round 26 px button on the open pill. Its template is explicit, so the Windows theme does not restyle it. -->
     <Style x:Key="FooterButton" TargetType="Button">
       <Setter Property="Width" Value="26" />

@@ -9,14 +9,16 @@ public static class StateJson
 {
     private static readonly JsonSerializerOptions WriteOptions = new() { WriteIndented = true };
 
-    /// The value of a key, or null when the file or the key is missing. A corrupt file reads as empty.
+    /// The value of a key, or null when the file or the key is missing. A corrupt file reads as empty. The read is retried
+    /// when another process holds the file for a moment; it throws IOException when every attempt fails.
     public static JsonNode? Get(string file, string key)
     {
-        var root = Parse(AtomicFile.ReadAllTextOrNull(file), out _);
+        var root = Parse(AtomicFile.ReadAllTextOrNullWithRetry(file), out _);
         return root[key]?.DeepClone();
     }
 
     /// Sets one key and writes the file atomically. Throws IOException when the file cannot be read or written.
+    /// Call from the UI thread only: writes are not locked, so two concurrent Set calls would lose one key.
     public static void Set(string file, string key, JsonNode? value)
     {
         var root = Parse(AtomicFile.ReadAllTextOrNullWithRetry(file), out var corrupt);

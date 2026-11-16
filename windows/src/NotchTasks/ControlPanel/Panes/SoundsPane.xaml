@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:l="clr-namespace:NotchTasks.ControlPanel">
   <StackPanel>
-    <TextBlock Style="{StaticResource PaneTitle}" Text="{l:L Sounds}" />
+    <TextBlock Style="{StaticResource PaneTitle}" Text="{l:L Sound}" />
     <TextBlock Style="{StaticResource PaneNote}" Text="{l:L Coming soon}" />
   </StackPanel>
 </UserControl>
