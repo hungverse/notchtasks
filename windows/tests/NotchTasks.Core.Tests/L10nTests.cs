@@ -5,6 +5,7 @@ using Xunit;
 namespace NotchTasks.Core.Tests;
 
 // All tests share L10n's static state (Init), so they live in one class and run one at a time.
+[Collection("L10n")]
 public sealed class L10nTests
 {
     private static string MacSources()
