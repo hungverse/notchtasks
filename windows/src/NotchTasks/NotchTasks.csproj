@@ -7,7 +7,12 @@
     <AssemblyName>NotchTasks</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+    <ApplicationIcon>Assets\NotchTasks.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\NotchTasks.ico" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\NotchTasks.Core\NotchTasks.Core.csproj" />
@@ -18,6 +23,10 @@
     <Content Include="..\..\..\mac\Resources\Sprites\**" Link="Sprites\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\..\..\mac\Sources\l10n-*.json" Link="l10n\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\..\..\electron\l10n\windows.json" Link="l10n\windows.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="H.NotifyIcon.Wpf" Version="2.4.1" />
   </ItemGroup>
 
   <!-- The hook is not referenced as an assembly; copy its files next to NotchTasks.exe explicitly. -->
