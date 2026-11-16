@@ -21,6 +21,9 @@ internal static partial class Win32
     public const int WS_EX_NOACTIVATE = 0x08000000;
 
     public const uint SPI_GETWORKAREA = 0x0030;
+    public const int SPI_SETWORKAREA = 0x002F;
+
+    public const int WS_EX_TRANSPARENT = 0x00000020;
 
     public const uint SWP_NOSIZE = 0x0001;
     public const uint SWP_NOMOVE = 0x0002;
@@ -49,6 +52,7 @@ internal static partial class Win32
 
     [LibraryImport("user32.dll")]
     public static partial uint GetDpiForWindow(nint hwnd);
+
 
     [LibraryImport("user32.dll", EntryPoint = "SystemParametersInfoW", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]

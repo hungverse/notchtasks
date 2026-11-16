@@ -24,7 +24,7 @@
             HorizontalAlignment="Center" VerticalAlignment="Top"
             Background="Black"
             CornerRadius="{Binding Radius, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource RadiusConverter}}">
-      <Grid>
+      <Grid x:Name="PillContent">
         <Border x:Name="Tint" Opacity="0" IsHitTestVisible="False" Background="Black"
                 CornerRadius="{Binding Radius, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource RadiusConverter}}" />
         <Grid>

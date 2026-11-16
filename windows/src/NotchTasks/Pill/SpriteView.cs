@@ -1,6 +1,7 @@
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -124,19 +125,19 @@ internal static class SpriteCache
         o[key] is JsonValue v && v.TryGetValue(out bool b) && b;
 }
 
-/// One sprite on the pill. It steps through its frames when SpriteClock ticks, and only while it is visible.
-public sealed class SpriteView : Image
+/// One sprite on the pill, 18 DIP square. It steps through its frames when SpriteClock ticks, and only while it is visible.
+/// A step redraws the frame with InvalidateVisual, so no layout pass runs: the size never changes.
+public sealed class SpriteView : FrameworkElement
 {
+    private const double Size = 18;
     private readonly SpriteSheet _sheet;
     private int _index;
 
     internal SpriteView(SpriteSheet sheet)
     {
         _sheet = sheet;
-        Width = 18;
-        Height = 18;
-        Stretch = Stretch.Uniform;
-        Source = sheet.Frames[0];
+        Width = Size;
+        Height = Size;
         if (sheet.Pixel)
         {
             RenderOptions.SetBitmapScalingMode(this, BitmapScalingMode.NearestNeighbor);
@@ -153,6 +154,11 @@ public sealed class SpriteView : Image
 
     internal int TicksSinceStep { get; set; }
 
+    protected override void OnRender(DrawingContext drawingContext)
+    {
+        drawingContext.DrawImage(_sheet.Frames[_index], new Rect(0, 0, Size, Size));
+    }
+
     internal void Step()
     {
         if (_sheet.Frames.Count <= 1)
@@ -160,6 +166,6 @@ public sealed class SpriteView : Image
             return;
         }
         _index = (_index + 1) % _sheet.Frames.Count;
-        Source = _sheet.Frames[_index];
+        InvalidateVisual();
     }
 }

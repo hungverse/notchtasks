@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
+using System.Runtime.InteropServices;
 using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Controls;
@@ -18,22 +19,29 @@ using NotchTasks.Core.Settings;
 namespace NotchTasks.Pill;
 
 /// The floating pill at the top centre of the primary screen. It never takes focus. The window is sized once; the
-/// pill inside it animates. Outside the pill's rounded rectangle the window is transparent to the mouse (WM_NCHITTEST).
+/// pill inside it animates. The window is click-through (WS_EX_TRANSPARENT|WS_EX_LAYERED) while the pointer is outside
+/// the pill, so clicks reach the windows below; a 15 Hz poll of the pointer drives that, hover-open and the close check.
 public partial class PillWindow : Window
 {
     private static readonly TimeSpan CloseDelay = TimeSpan.FromMilliseconds(350);
+    private static readonly TimeSpan PollInterval = TimeSpan.FromMilliseconds(1000.0 / 15);
+    private static readonly TimeSpan MaxFadeDuration = TimeSpan.FromMilliseconds(350);
 
     /// The corner radius of the pill; animated by the spring, bound to every shape through RadiusConverter.
     public static readonly DependencyProperty RadiusProperty = DependencyProperty.Register(
-        nameof(Radius), typeof(double), typeof(PillWindow), new PropertyMetadata(PillGeometry.ClosedRadius));
+        nameof(Radius), typeof(double), typeof(PillWindow),
+        new PropertyMetadata(PillGeometry.ClosedRadius, (d, _) => ((PillWindow)d).UpdateClip()));
 
     private readonly AppState _state;
-    private readonly DispatcherTimer _hoverTimer = new();
+    private readonly DispatcherTimer _pollTimer = new() { Interval = PollInterval };
     private readonly DispatcherTimer _closeTimer = new() { Interval = TimeSpan.FromMilliseconds(100) };
     private readonly BlurEffect _cardBlur = new() { Radius = 6 };
     private nint _hwnd;
     private bool _open;
+    private bool _closing;
+    private bool _clickThrough;
     private long? _outsideSince;
+    private long? _enteredAt;
     private string _badgesJson = string.Empty;
     private bool _hasCollapsed;
     private Color _accent = Color.FromRgb(0x32, 0xD2, 0xFF);
@@ -47,11 +55,10 @@ public partial class PillWindow : Window
         CardText.Text = L10n.L("No running tasks");
         CardLayer.Effect = _cardBlur;
 
-        _hoverTimer.Tick += OnHoverTick;
+        _pollTimer.Tick += OnPoll;
         _closeTimer.Tick += OnCloseTick;
-        PillShape.MouseEnter += OnPillEnter;
-        PillShape.MouseLeave += (_, _) => _hoverTimer.Stop();
         PillShape.MouseLeftButtonUp += OnPillClick;
+        PillShape.SizeChanged += (_, _) => UpdateClip();
 
         SourceInitialized += OnSourceInitialized;
         Closed += OnClosed;
@@ -75,8 +82,10 @@ public partial class PillWindow : Window
         _hwnd = new WindowInteropHelper(this).Handle;
         var style = Win32.GetWindowLongPtr(_hwnd, Win32.GWL_EXSTYLE);
         Win32.SetWindowLongPtr(_hwnd, Win32.GWL_EXSTYLE, style | Win32.WS_EX_NOACTIVATE | Win32.WS_EX_TOOLWINDOW);
+
         HwndSource.FromHwnd(_hwnd)?.AddHook(WndProc);
         Place();
+        _pollTimer.Start();
     }
 
     private nint WndProc(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled)
@@ -84,6 +93,7 @@ public partial class PillWindow : Window
         switch (msg)
         {
             case Win32.WM_NCHITTEST:
+                // Backup for the poll: the pointer outside the pill is HTTRANSPARENT.
                 handled = true;
                 return IsOverPointer(lParam) ? Win32.HTCLIENT : Win32.HTTRANSPARENT;
             case Win32.WM_MOUSEACTIVATE:
@@ -94,7 +104,11 @@ public partial class PillWindow : Window
                 Dispatcher.BeginInvoke(new Action(Place));
                 break;
             case Win32.WM_SETTINGCHANGE:
-                Place();
+                // Only the work area matters here. The string form is read now, while the message's memory is valid.
+                if (wParam == Win32.SPI_SETWORKAREA || (lParam != nint.Zero && Marshal.PtrToStringUni(lParam) == "WindowMetrics"))
+                {
+                    Dispatcher.BeginInvoke(new Action(Place));
+                }
                 break;
         }
         return nint.Zero;
@@ -113,29 +127,48 @@ public partial class PillWindow : Window
         Win32.SetWindowPos(_hwnd, Win32.HwndTopmost, x, y, w, h, Win32.SWP_NOACTIVATE);
     }
 
-    private void OnDisplaySettingsChanged(object? sender, EventArgs e) => Place();
+    private void OnDisplaySettingsChanged(object? sender, EventArgs e) => Dispatcher.BeginInvoke(new Action(Place));
 
-    private void OnPillEnter(object? sender, System.Windows.Input.MouseEventArgs e)
+    /// 15 Hz: sets click-through from the pointer's position, and opens the pill after HoverDelay over it (hover mode).
+    private void OnPoll(object? sender, EventArgs e)
     {
-        if (!_open && _state.Settings.ExpandMode == "hover")
+        if (!Win32.GetCursorPos(out var point))
         {
-            _hoverTimer.Interval = TimeSpan.FromSeconds(_state.Settings.HoverDelay);
-            _hoverTimer.Start();
+            return;
         }
-    }
+        var inside = IsInsidePill(point);
+        SetClickThrough(!inside);
+        if (!inside)
+        {
+            _enteredAt = null;
+            return;
+        }
 
-    private void OnPillClick(object? sender, System.Windows.Input.MouseButtonEventArgs e)
-    {
-        if (!_open && _state.Settings.ExpandMode == "click")
+        _enteredAt ??= Stopwatch.GetTimestamp();
+        if (!_open && _state.Settings.ExpandMode == "hover"
+            && Stopwatch.GetElapsedTime(_enteredAt.Value) >= TimeSpan.FromSeconds(_state.Settings.HoverDelay))
         {
             OpenPill();
         }
     }
 
-    private void OnHoverTick(object? sender, EventArgs e)
+    /// Toggles WS_EX_TRANSPARENT. The window is already layered (AllowsTransparency), so the bit alone makes the
+    /// pointer pass through. Changes the style only on a transition.
+    private void SetClickThrough(bool on)
     {
-        _hoverTimer.Stop();
-        if (!_open && IsCursorOverPill())
+        if (on == _clickThrough || _hwnd == nint.Zero)
+        {
+            return;
+        }
+        _clickThrough = on;
+        var style = Win32.GetWindowLongPtr(_hwnd, Win32.GWL_EXSTYLE);
+        style = on ? style | Win32.WS_EX_TRANSPARENT : style & ~(nint)Win32.WS_EX_TRANSPARENT;
+        Win32.SetWindowLongPtr(_hwnd, Win32.GWL_EXSTYLE, style);
+    }
+
+    private void OnPillClick(object? sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (!_open && _state.Settings.ExpandMode == "click")
         {
             OpenPill();
         }
@@ -149,7 +182,7 @@ public partial class PillWindow : Window
             _closeTimer.Stop();
             return;
         }
-        if (IsCursorOverPill())
+        if (Win32.GetCursorPos(out var point) && IsInsidePill(point))
         {
             _outsideSince = null;
             return;
@@ -168,6 +201,7 @@ public partial class PillWindow : Window
             return;
         }
         _open = true;
+        _closing = false;  // a reopen cancels a pending hide of the closed pill
         _outsideSince = null;
         // Topmost is asserted again on every open; the window itself never activates.
         Win32.SetWindowPos(_hwnd, Win32.HwndTopmost, 0, 0, 0, 0, Win32.SWP_NOMOVE | Win32.SWP_NOSIZE | Win32.SWP_NOACTIVATE);
@@ -183,43 +217,61 @@ public partial class PillWindow : Window
             return;
         }
         _open = false;
+        _closing = true;  // the pill stays visible until the close spring has finished
         _outsideSince = null;
         _closeTimer.Stop();
         ApplyAppearance();
-        Animate(PillGeometry.ClosedWidth, PillGeometry.ClosedHeight, PillGeometry.ClosedRadius, opening: false);
+        var widthAnimation = Animate(PillGeometry.ClosedWidth, PillGeometry.ClosedHeight, PillGeometry.ClosedRadius, opening: false);
+        widthAnimation.Completed += (_, _) =>
+        {
+            if (!_open)
+            {
+                _closing = false;
+                ApplyAppearance();
+            }
+        };
     }
 
-    /// The Mac's spring for the shape; the card fades and un-blurs over the same time (opacity only when reduced).
-    private void Animate(double width, double height, double radius, bool opening)
+    /// The Mac's spring for the shape. The card fades and un-blurs over min(Settle, 0.35 s), with opacity only when reduced.
+    /// Returns the width animation (the one that finishes last on the way down).
+    private DoubleAnimation Animate(double width, double height, double radius, bool opening)
     {
         var settings = _state.Settings;
         var animationsOn = SystemParameters.ClientAreaAnimation;
         var reduced = !animationsOn || settings.Motion == "reduced";
         var curve = SpringCurve.For(settings.Motion, opening, animationsOn);
 
-        Spring(PillShape, FrameworkElement.WidthProperty, width, curve);
+        var widthAnimation = Spring(PillShape, FrameworkElement.WidthProperty, width, curve);
         Spring(PillShape, FrameworkElement.HeightProperty, height, curve);
         Spring(this, RadiusProperty, radius, curve);
 
-        // Opacity and blur are eased with the spring's duration but no overshoot, so they never leave their range.
-        var fade = new SpringCurve(curve.Settle, 1) { EaseInOut = true };
-        var duration = new Duration(TimeSpan.FromSeconds(curve.Settle));
+        var fadeSeconds = Math.Min(curve.Settle, MaxFadeDuration.TotalSeconds);
+        var fade = new SpringCurve(fadeSeconds, 1) { EaseInOut = true };
+        var duration = new Duration(TimeSpan.FromSeconds(fadeSeconds));
         CardLayer.BeginAnimation(OpacityProperty, new DoubleAnimation(opening ? 1 : 0, duration) { EasingFunction = new SpringEase(fade) });
         var blur = opening || reduced ? 0 : 6;
         _cardBlur.BeginAnimation(BlurEffect.RadiusProperty, new DoubleAnimation(blur, duration) { EasingFunction = new SpringEase(fade) });
+        return widthAnimation;
     }
 
-    private static void Spring(IAnimatable target, DependencyProperty property, double to, SpringCurve curve)
+    private static DoubleAnimation Spring(IAnimatable target, DependencyProperty property, double to, SpringCurve curve)
     {
         var animation = new DoubleAnimation(to, new Duration(TimeSpan.FromSeconds(curve.Settle)))
         {
             EasingFunction = new SpringEase(curve),
         };
         target.BeginAnimation(property, animation);
+        return animation;
     }
 
-    /// True when the pointer is over the pill's current animated rounded rectangle.
-    private bool IsCursorOverPill() => Win32.GetCursorPos(out var point) && IsInsidePill(point);
+    /// Clips the card and the pill's layers to the animated rounded rectangle, so nothing shows past the shape mid-bounce.
+    private void UpdateClip()
+    {
+        var w = PillShape.Width;
+        var h = PillShape.Height;
+        var r = Math.Min(Radius, Math.Min(w, h) / 2);
+        PillContent.Clip = new RectangleGeometry(new Rect(0, 0, w, h), r, r);
+    }
 
     private bool IsOverPointer(nint lParam)
     {
@@ -285,12 +337,12 @@ public partial class PillWindow : Window
         ApplyAppearance();
     }
 
-    /// The surface, shadow, glow and visibility for the current state (open, closed, idle).
+    /// The surface, shadow, glow and visibility for the current state (open, closing, closed, idle).
     private void ApplyAppearance()
     {
         var settings = _state.Settings;
-        var idle = !_open && !_hasCollapsed;
-        PillShape.Opacity = idle ? 0 : 1;
+        // Idle (no badges, closed) hides the pill only once the close spring has finished; its hover area stays.
+        PillShape.Opacity = _open || _closing || _hasCollapsed ? 1 : 0;
 
         // The background setting shows only while open; closed, the pill is black (Mac: opened ? background : .black).
         var background = _open ? settings.Background : "black";
@@ -375,7 +427,7 @@ public partial class PillWindow : Window
 
     private void OnClosed(object? sender, EventArgs e)
     {
-        _hoverTimer.Stop();
+        _pollTimer.Stop();
         _closeTimer.Stop();
         SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
         _state.PropertyChanged -= OnStateChanged;
