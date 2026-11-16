@@ -7,7 +7,8 @@ namespace NotchTasks.Core.Asks;
 /// Port of the parsing half of electron/src/core/asks.js: what an agent's hook payload asks, and what the tool does.
 public static class AskParser
 {
-    private const int SummaryElements = 600;
+    /// The summary keeps this many text elements; a longer one is cut here (the card shows "(cut)" for it).
+    public const int SummaryLimit = 600;
 
     private static readonly string[] RunTools =
         ["Bash", "run_shell_command", "run_command", "shell", "exec_command", "local_shell", "Execute", "bash"];
@@ -62,7 +63,7 @@ public static class AskParser
 
         var summary = questions.Count > 0 ? questions[0].Question : field ?? compact;
         return new AgentAsk(
-            id, pid, session, tool, Head(summary, SummaryElements), questions, now, kind.Id());
+            id, pid, session, tool, Head(summary, SummaryLimit), questions, now, kind.Id());
     }
 
     private static string FallbackTool(JsonObject input, AgentKind kind) => kind switch

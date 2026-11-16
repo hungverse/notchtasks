@@ -33,9 +33,9 @@ public partial class AskCard : UserControl
         Ask = ask;
         Glyph.Text = GlyphFor(ask);
         TitleText.Text = AskPresentation.Title(ask);
-        SessionText.Text = ask.Session;
+        SessionText.Text = AskPresentation.Display(ask.Session);
 
-        var agent = AskPresentation.AgentName(ask);
+        var agent = AskPresentation.Display(AskPresentation.AgentName(ask));
         LinkText.Text = L10n.L("Answer in {0}", agent);
         LinkButton.ToolTip = L10n.L("Skip here, {0} will ask as usual", agent);
         LinkButton.Click += (_, _) => Replied?.Invoke(new AskReply(ReplyKinds.Pass, null));
@@ -81,23 +81,43 @@ public partial class AskCard : UserControl
             Foreground = (Brush)FindResource("AskOrange"),
             TextTrimming = TextTrimming.CharacterEllipsis,
         });
-        // Five lines of the summary at most; the rest is clipped, as the Mac's lineLimit(5) does.
+        // The whole command, shown through Display (line breaks visible). Five lines are in view at once; the rest scrolls.
+        // A summary the parser cut at its limit ends with "… (cut)".
+        const double lineHeight = 16;
+        var content = new StackPanel();
+        content.Children.Add(new ScrollViewer
+        {
+            MaxHeight = 5 * lineHeight,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+            Content = new TextBlock
+            {
+                Text = AskPresentation.Display(Ask.Summary),
+                FontFamily = new FontFamily("Cascadia Mono, Consolas"),
+                FontSize = 11,
+                LineHeight = lineHeight,
+                LineStackingStrategy = LineStackingStrategy.BlockLineHeight,
+                TextWrapping = TextWrapping.Wrap,
+                Foreground = Muted,
+            },
+        });
+        if (AskPresentation.SummaryWasCut(Ask))
+        {
+            content.Children.Add(new TextBlock
+            {
+                Text = "… " + L10n.L("(cut)"),
+                FontSize = 11,
+                Foreground = Dim,
+                Margin = new Thickness(0, 4, 0, 0),
+            });
+        }
         var box = new Border
         {
             Margin = new Thickness(0, 4, 0, 0),
             Padding = new Thickness(8),
             CornerRadius = new CornerRadius(8),
             Background = SummaryBox,
-            MaxHeight = 100,
-            ClipToBounds = true,
-            Child = new TextBlock
-            {
-                Text = Ask.Summary,
-                FontFamily = new FontFamily("Cascadia Mono, Consolas"),
-                FontSize = 11,
-                TextWrapping = TextWrapping.Wrap,
-                Foreground = Muted,
-            },
+            Child = content,
         };
         body.Children.Add(box);
         BodyPanel.Children.Add(body);
@@ -116,7 +136,7 @@ public partial class AskCard : UserControl
             var block = new StackPanel { Margin = new Thickness(0, i == 0 ? 0 : 9, 0, 0) };
             block.Children.Add(new TextBlock
             {
-                Text = question.Question,
+                Text = AskPresentation.Display(question.Question),
                 FontSize = 12,
                 FontWeight = FontWeights.Medium,
                 TextWrapping = TextWrapping.Wrap,
@@ -183,7 +203,8 @@ public partial class AskCard : UserControl
             Grid.SetColumn(box, 0);
             row.Children.Add(box);
         }
-        var text = new TextBlock { Text = label, TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center };
+        // The option shows its Display text; the picked label (the raw one) is what the reply sends back.
+        var text = new TextBlock { Text = AskPresentation.Display(label), TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center };
         Grid.SetColumn(text, 1);
         row.Children.Add(text);
         button.Content = row;

@@ -89,4 +89,30 @@ public sealed class AskPresentationTests
         Assert.False(AskPresentation.Ready(questions, [Picks(), Picks("c")]));
         Assert.True(AskPresentation.Ready(questions, [Picks("a"), Picks("c", "d")]));
     }
+
+    [Fact]
+    public void Display_NewlinesVisible()
+    {
+        Assert.Equal("echo ok ↵  ↵  ↵  ↵ rm -rf ~", AskPresentation.Display("echo ok\n\n\n\nrm -rf ~"));
+        Assert.Equal("a ↵ b ↵ c ↵ d", AskPresentation.Display("a\r\nb\nc\rd"));
+        Assert.Equal("a ⇥ b", AskPresentation.Display("a\tb"));
+        Assert.Equal("plain text, 世界 \U0001F44D", AskPresentation.Display("plain text, 世界 \U0001F44D"));
+    }
+
+    [Fact]
+    public void Display_StripsBidi()
+    {
+        // RLO, LRI, PDI, ZWSP, RLM and BOM: format characters that reorder or hide text.
+        Assert.Equal("xy", AskPresentation.Display("x‮y"));
+        Assert.Equal("ab", AskPresentation.Display("a⁦⁩b"));
+        Assert.Equal("ab", AskPresentation.Display("a​‏b"));
+        Assert.Equal("ab", AskPresentation.Display("﻿a‬b"));
+    }
+
+    [Fact]
+    public void Display_ControlChars()
+    {
+        Assert.Equal("a�b", AskPresentation.Display("a\u0007b"));
+        Assert.Equal("��", AskPresentation.Display("\u0001\u0085"));
+    }
 }

@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Text;
 using NotchTasks.Core;
 
 namespace NotchTasks.Core.Asks;
@@ -12,11 +14,40 @@ public static class AskPresentation
 
     /// "Claude needs your approval", or "Claude is asking" for questions.
     public static string Title(AgentAsk ask) =>
-        AgentName(ask) + (ask.IsQuestion ? L10n.L(" is asking") : L10n.L(" needs your approval"));
+        Display(AgentName(ask) + (ask.IsQuestion ? L10n.L(" is asking") : L10n.L(" needs your approval")));
 
-    /// "work · Run command: echo hi" for an approval; "work · <the question>" for questions.
+    /// "work · Run command: echo hi" for an approval; "work · <the question>" for questions. One line, through Display.
     public static string Subtitle(AgentAsk ask) =>
-        ask.Session + " · " + (ask.IsQuestion ? ask.Summary : AskParser.ActionLabel(ask.Tool) + ": " + ask.Summary);
+        Display(ask.Session + " · " + (ask.IsQuestion ? ask.Summary : AskParser.ActionLabel(ask.Tool) + ": " + ask.Summary));
+
+    /// Text as the user reads it, so the prompt cannot hide what it runs. Line breaks and tabs become visible marks
+    /// (a prompt-injected "echo ok" followed by blank lines and "rm -rf ~" stays on one line, with the rest in view);
+    /// other control characters become U+FFFD; format characters (bidi overrides and isolates, zero-width marks, BOM)
+    /// are removed. Use it for every text from an ask that the UI shows. Replies keep the agent's own labels.
+    public static string Display(string text)
+    {
+        var visible = text
+            .Replace("\r\n", " ↵ ", StringComparison.Ordinal)
+            .Replace("\n", " ↵ ", StringComparison.Ordinal)
+            .Replace("\r", " ↵ ", StringComparison.Ordinal)
+            .Replace("\t", " ⇥ ", StringComparison.Ordinal);
+        var sb = new StringBuilder(visible.Length);
+        foreach (var rune in visible.EnumerateRunes())
+        {
+            switch (Rune.GetUnicodeCategory(rune))
+            {
+                case UnicodeCategory.Format:
+                    break;
+                case UnicodeCategory.Control:
+                    sb.Append('�');
+                    break;
+                default:
+                    sb.Append(rune.ToString());
+                    break;
+            }
+        }
+        return sb.ToString();
+    }
 
     /// "Waiting 1:05": the time since the ask came in.
     public static string Waiting(TimeSpan elapsed) => L10n.L("Waiting ") + Mmss(elapsed);
@@ -29,6 +60,9 @@ public static class AskPresentation
             ? $"{total / 3600}:{total / 60 % 60:00}:{total % 60:00}"
             : $"{total / 60}:{total % 60:00}";
     }
+
+    /// True when AskParser cut the summary at its limit. A summary of exactly that length reads as cut too.
+    public static bool SummaryWasCut(AgentAsk ask) => new StringInfo(ask.Summary).LengthInTextElements >= AskParser.SummaryLimit;
 
     /// One question with one single choice is answered by the tap itself.
     public static bool TapSends(IReadOnlyList<AskQuestion> questions) =>
