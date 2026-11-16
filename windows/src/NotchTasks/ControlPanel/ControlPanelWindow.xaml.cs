@@ -90,7 +90,7 @@ public partial class ControlPanelWindow : Window
         {
             control = pane switch
             {
-                PaneId.Overview => new OverviewPane(),
+                PaneId.Overview => new OverviewPane(State.Settings, State),
                 PaneId.Modules => new ModulesPane(State.Settings),
                 PaneId.Permissions => new PermissionsPane(State.Settings),
                 PaneId.Watching => new WatchingPane(State.Settings),

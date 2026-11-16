@@ -7,6 +7,7 @@ using NotchTasks.ControlPanel;
 using NotchTasks.Core;
 using NotchTasks.Core.Asks;
 using NotchTasks.Core.Settings;
+using NotchTasks.Onboarding;
 using NotchTasks.Pill;
 using NotchTasks.Services;
 
@@ -97,8 +98,17 @@ public partial class App : System.Windows.Application
         // The Sync motion moment, so the animated icons are in step from the first frame.
         SpriteClock.SetEpoch(AnimationEpoch.Read(AppPaths.StateFile));
         _pill = new PillWindow(_state);
-        _pill.Show();
-        _tray = new Tray(() => ControlPanelWindow.Show(_state), () => Shutdown());
+        if (settings.OnboardingDone)
+        {
+            _pill.Show();
+        }
+        else
+        {
+            // The first run: the guide opens and the pill stays hidden until the guide closes.
+            var pill = _pill;
+            OnboardingWindow.Show(_state, () => pill.Show());
+        }
+        _tray = new Tray(() => ControlPanelWindow.Show(_state), () => OnboardingWindow.Show(_state), () => Shutdown());
         ApplyTrayVisibility(settings);
     }
 

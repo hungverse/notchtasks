@@ -206,7 +206,7 @@ public partial class PermissionsPane : SettingsPane
     }
 
     /// The ms-settings page of a row, or null when the row has none.
-    private static string? SettingsUri(string id) => id switch
+    internal static string? SettingsUri(string id) => id switch
     {
         "notifications" => "ms-settings:notifications",
         "mic" => "ms-settings:privacy-microphone",
