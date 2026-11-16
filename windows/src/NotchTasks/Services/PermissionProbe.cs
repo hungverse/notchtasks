@@ -27,9 +27,11 @@ public static class PermissionProbe
         var toastsOff = registry.GetString(PushKey, "ToastEnabled") == "0";
 
         var hooks = new Dictionary<AgentKind, bool?>();
+        var present = new Dictionary<AgentKind, bool>();
         foreach (var kind in Enum.GetValues<AgentKind>())
         {
             hooks[kind] = HookWorks(kind, home, hookExe);
+            present[kind] = AgentSetup.Present(kind, home);
         }
 
         return new PermissionFacts(
@@ -38,7 +40,8 @@ public static class PermissionProbe
             MicAllowed: Consent(registry, MicKey),
             CameraAllowed: Consent(registry, CameraKey),
             FirewallRule: null,
-            Hooks: hooks);
+            Hooks: hooks,
+            Present: present);
     }
 
     /// True when the app's firewall rule exists (netsh exit code 0). Null when netsh does not answer within 3 s or cannot run.

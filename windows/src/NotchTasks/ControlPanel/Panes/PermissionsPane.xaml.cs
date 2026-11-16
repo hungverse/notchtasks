@@ -19,7 +19,7 @@ namespace NotchTasks.ControlPanel.Panes;
 public partial class PermissionsPane : SettingsPane
 {
     private static readonly PermissionFacts Unknown = new(null, false, null, null, null,
-        new Dictionary<AgentKind, bool?>());
+        new Dictionary<AgentKind, bool?>(), new Dictionary<AgentKind, bool>());
 
     private readonly IRegistry _registry = new RegistryAccess();
     private PermissionFacts? _facts;
@@ -64,12 +64,13 @@ public partial class PermissionsPane : SettingsPane
     private void Render()
     {
         var facts = _facts ?? Unknown;
-        var items = PermissionItems.Build(facts);
+        // Agents that are not installed here are hidden, as the Mac's permission list has no rows for them.
+        var items = PermissionItems.Build(facts).Where(item => item.Applies).ToList();
         var modules = ModuleCatalog.All.Where(id => !Store.Disabled.Contains(id)).ToHashSet(StringComparer.Ordinal);
         var notifications = Store.SystemNotifications;
 
         Groups.Children.Clear();
-        foreach (var group in new[] { PermGroup.Needed, PermGroup.Allowed, PermGroup.NotUsed })
+        foreach (var group in new[] { PermGroup.Needed, PermGroup.Granted, PermGroup.NotInUse })
         {
             var rows = items.Where(item => PermissionItems.GroupOf(item, modules, notifications) == group).ToList();
             if (rows.Count == 0)
@@ -289,11 +290,12 @@ public partial class PermissionsPane : SettingsPane
         grid.Children.Add(element);
     }
 
+    /// The group headers, spelled as the Mac shows them (Preferences.swift PermissionList).
     private static string GroupTitle(PermGroup group) => group switch
     {
-        PermGroup.Needed => L10n.L("Needed"),
-        PermGroup.Allowed => L10n.L("Allowed"),
-        _ => L10n.L("Not used"),
+        PermGroup.Needed => L10n.L("Needed now"),
+        PermGroup.Granted => L10n.L("Granted"),
+        _ => L10n.L("Not in use"),
     };
 
     /// The theme brush of a state: green when allowed, red when denied, amber when not granted. While checking, the tile is
