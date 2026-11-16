@@ -173,6 +173,38 @@ public sealed class SettingsStoreTests : IDisposable
     }
 
     [Fact]
+    public void LockedAtLoad_SetKeepsExistingKeys()
+    {
+        File.WriteAllText(_file, "{\"futureKey\":1,\"motion\":\"smooth\"}");
+        using var locked = new FileStream(_file, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+        using var store = SettingsStore.Load(_file);
+        locked.Dispose();
+
+        store.Set("accent", JsonValue.Create("blue"));
+
+        var root = JsonNode.Parse(File.ReadAllText(_file))!.AsObject();
+        Assert.Equal(1, root["futureKey"]!.GetValue<int>());
+        Assert.Equal("smooth", root["motion"]!.GetValue<string>());
+        Assert.Equal("blue", root["accent"]!.GetValue<string>());
+    }
+
+    [Fact]
+    public void StillLocked_SetThrows_FileUnchanged()
+    {
+        const string text = "{\"futureKey\":1,\"motion\":\"smooth\"}";
+        File.WriteAllText(_file, text);
+        using var locked = new FileStream(_file, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+        using var store = SettingsStore.Load(_file);
+
+        Assert.ThrowsAny<IOException>(() => store.Set("accent", JsonValue.Create("blue")));
+        Assert.Equal("auto", store.Accent);
+
+        locked.Position = 0;
+        using var reader = new StreamReader(locked);
+        Assert.Equal(text, reader.ReadToEnd());
+    }
+
+    [Fact]
     public async Task OwnWrite_IsIgnoredByWatcher()
     {
         using var store = SettingsStore.Load(_file);

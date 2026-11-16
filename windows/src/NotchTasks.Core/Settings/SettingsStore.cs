@@ -50,6 +50,7 @@ public sealed class SettingsStore : INotifyPropertyChanged, IDisposable
     private FileSystemWatcher? _watcher;
     private Timer? _debounce;
     private bool _disposed;
+    private bool _unreadable;       // the last read failed on a lock or access error; Set re-reads the file before it writes
 
     private SettingsStore(string file)
     {
@@ -73,12 +74,16 @@ public sealed class SettingsStore : INotifyPropertyChanged, IDisposable
     public T? Get<T>(string key) => TryGet(key, out T? value) ? value : default;
 
     /// Saves one key at once (atomic write) and raises Changed and PropertyChanged for it.
+    /// If the file was unreadable at the last read, it is re-read first, so the keys already in it are kept.
+    /// Throws IOException, and changes nothing, while the file is still locked.
     public void Set(string key, JsonNode? value)
     {
         ArgumentException.ThrowIfNullOrEmpty(key);
+        IReadOnlyList<string> reloaded;
         lock (_gate)
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
+            reloaded = _unreadable ? Reread() : Array.Empty<string>();
             var next = (JsonObject)_root.DeepClone();
             if (_corrupt)
             {
@@ -92,7 +97,36 @@ public sealed class SettingsStore : INotifyPropertyChanged, IDisposable
             _lastSeenText = text;
             _corrupt = false;
         }
-        Raise(new[] { key });
+        Raise(reloaded.Append(key).Distinct(StringComparer.Ordinal).ToList());
+    }
+
+    /// Re-reads a file that could not be read at the last read. Caller holds _gate. Changes nothing when the file is still locked.
+    private IReadOnlyList<string> Reread()
+    {
+        string? text;
+        try
+        {
+            text = AtomicFile.ReadAllTextOrNullWithRetry(_file);
+        }
+        catch (UnauthorizedAccessException e)
+        {
+            throw new IOException(e.Message, e);
+        }
+
+        _unreadable = false;
+        if (text is null)
+        {
+            return Array.Empty<string>();
+        }
+        _lastSeenText = text;
+        if (!TryParseObject(text, out var parsed))
+        {
+            _corrupt = true;
+            return Array.Empty<string>();
+        }
+        var changed = DiffKeys(_root, parsed);
+        _root = parsed;
+        return changed;
     }
 
     public string ExpandMode => Choice("expandMode", "hover", ExpandModes);
@@ -239,6 +273,7 @@ public sealed class SettingsStore : INotifyPropertyChanged, IDisposable
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
             // Locked or unreadable for now: defaults in memory, and the file is not treated as corrupt.
+            _unreadable = true;
             return;
         }
 
@@ -303,6 +338,7 @@ public sealed class SettingsStore : INotifyPropertyChanged, IDisposable
                     return;
                 }
                 text = File.ReadAllText(_file);
+                _unreadable = false;
             }
             catch (Exception e) when (e is IOException or UnauthorizedAccessException)
             {
