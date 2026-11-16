@@ -1,0 +1,9 @@
+<UserControl x:Class="NotchTasks.ControlPanel.Panes.SoundsPane"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:l="clr-namespace:NotchTasks.ControlPanel">
+  <StackPanel>
+    <TextBlock Style="{StaticResource PaneTitle}" Text="{l:L Sounds}" />
+    <TextBlock Style="{StaticResource PaneNote}" Text="{l:L Coming soon}" />
+  </StackPanel>
+</UserControl>

@@ -3,6 +3,7 @@ using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
+using NotchTasks.ControlPanel;
 using NotchTasks.Core;
 using NotchTasks.Core.Asks;
 using NotchTasks.Core.Settings;
@@ -67,19 +68,29 @@ public partial class App : System.Windows.Application
             args.SetObserved();
         };
 
-        _settings = SettingsStore.Load(AppPaths.SettingsFile);
-        L10n.Init(Path.Combine(AppContext.BaseDirectory, "l10n"), _settings.Language);
-        Sounds.Attach(_settings);
+        var settings = SettingsStore.Load(AppPaths.SettingsFile);
+        _settings = settings;
+        var l10nFolder = Path.Combine(AppContext.BaseDirectory, "l10n");
+        L10n.Init(l10nFolder, settings.Language);
+        // A language change applies at once: the texts re-read on the UI thread (the Changed event may come from any thread).
+        settings.Changed += keys =>
+        {
+            if (keys.Contains("language"))
+            {
+                Dispatcher.BeginInvoke(new Action(() => L10n.Init(l10nFolder, settings.Language)));
+            }
+        };
+        Sounds.Attach(settings);
 
         var store = new AskStore(AppPaths.AsksDir);
         store.MarkAppRunning(Environment.ProcessId);
         MigrateHooks();
 
-        _state = new AppState(_settings, store);
+        _state = new AppState(settings, store);
         _state.StartWatching();
         _pill = new PillWindow(_state);
         _pill.Show();
-        _tray = new Tray(() => Shutdown());
+        _tray = new Tray(() => ControlPanelWindow.Show(_state), () => Shutdown());
     }
 
     protected override void OnExit(ExitEventArgs e)

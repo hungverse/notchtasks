@@ -5,18 +5,24 @@ using NotchTasks.Core;
 
 namespace NotchTasks.Services;
 
-/// The tray icon and its menu. For now the menu has Quit only.
+/// The tray icon and its menu: Control Panel, a separator, Quit. A left double-click opens the Control Panel.
 public sealed class Tray : IDisposable
 {
     private readonly TaskbarIcon _icon;
+    private readonly MenuItem _panel;
+    private readonly MenuItem _quit;
 
-    public Tray(Action onQuit)
+    public Tray(Action openControlPanel, Action onQuit)
     {
-        var quit = new MenuItem { Header = L10n.L("Quit") };
-        quit.Click += (_, _) => onQuit();
+        _panel = new MenuItem();
+        _panel.Click += (_, _) => openControlPanel();
+        _quit = new MenuItem();
+        _quit.Click += (_, _) => onQuit();
 
         var menu = new ContextMenu();
-        menu.Items.Add(quit);
+        menu.Items.Add(_panel);
+        menu.Items.Add(new Separator());
+        menu.Items.Add(_quit);
 
         _icon = new TaskbarIcon
         {
@@ -24,8 +30,22 @@ public sealed class Tray : IDisposable
             IconSource = new BitmapImage(new Uri("pack://application:,,,/Assets/NotchTasks.ico", UriKind.Absolute)),
             ContextMenu = menu,
         };
+        _icon.TrayMouseDoubleClick += (_, _) => openControlPanel();
         _icon.ForceCreate();
+
+        L10n.Changed += ApplyTexts;
+        ApplyTexts();
     }
 
-    public void Dispose() => _icon.Dispose();
+    private void ApplyTexts()
+    {
+        _panel.Header = L10n.L("Control Panel");
+        _quit.Header = L10n.L("Quit");
+    }
+
+    public void Dispose()
+    {
+        L10n.Changed -= ApplyTexts;
+        _icon.Dispose();
+    }
 }

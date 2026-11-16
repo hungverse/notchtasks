@@ -105,6 +105,24 @@ public sealed class L10nTests
     }
 
     [Fact]
+    public void Changed_FiresOnInit()
+    {
+        var fired = 0;
+        Action handler = () => fired++;
+        L10n.Changed += handler;
+        try
+        {
+            L10n.Init(MacSources(), "ja");
+        }
+        finally
+        {
+            L10n.Changed -= handler;
+        }
+
+        Assert.Equal(1, fired);
+    }
+
+    [Fact]
     public void WindowsOverlay_FillsKeyMissingFromMacTable()
     {
         // "Nothing here yet." is in electron/l10n/windows.json (vi) but not in mac/Sources/l10n-vi.json.

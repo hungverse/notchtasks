@@ -13,6 +13,7 @@ using System.Windows.Media.Animation;
 using System.Windows.Media.Effects;
 using System.Windows.Threading;
 using Microsoft.Win32;
+using NotchTasks.ControlPanel;
 using NotchTasks.Core;
 using NotchTasks.Core.Asks;
 using NotchTasks.Core.Motion;
@@ -79,6 +80,14 @@ public partial class PillWindow : Window
 
         CardText.Text = L10n.L("No running tasks");
         CardLayer.Effect = _cardBlur;
+        // The gear opens the Control Panel and closes the pill; the power button quits (as the tray's Quit does).
+        ControlPanelButton.Click += (_, _) =>
+        {
+            ClosePill();
+            ControlPanelWindow.Show(_state);
+        };
+        QuitButton.Click += (_, _) => Application.Current.Shutdown();
+        L10n.Changed += OnLanguageChanged;
 
         _pollTimer.Tick += OnPoll;
         _closeTimer.Tick += OnCloseTick;
@@ -771,6 +780,15 @@ public partial class PillWindow : Window
         SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
         _state.PropertyChanged -= OnStateChanged;
         _state.Asks.CollectionChanged -= OnAsksChanged;
+        L10n.Changed -= OnLanguageChanged;
+    }
+
+    /// Re-reads the pill's own texts after a language change. The ask cards and the toast keep the text they were made
+    /// with until they are made again: rebuilding a card would lose what was picked in it.
+    private void OnLanguageChanged()
+    {
+        CardText.Text = L10n.L("No running tasks");
+        UpdateAskIndicator();
     }
 }
 

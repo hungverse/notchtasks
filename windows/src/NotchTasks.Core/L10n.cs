@@ -27,6 +27,9 @@ public static class L10n
         get { lock (Lock) return _current; }
     }
 
+    /// Raised after each Init, on the thread that called it. The UI re-reads its texts when it fires.
+    public static event Action? Changed;
+
     /// Reads the tables from `folder`, and uses `language`; "" follows the UI culture of this user.
     public static void Init(string folder, string language)
     {
@@ -43,6 +46,7 @@ public static class L10n
             _overlay = null;
             Tables.Clear();
         }
+        Changed?.Invoke();
     }
 
     /// The first of the preferred languages that the app speaks; English when none.

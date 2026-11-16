@@ -11,6 +11,8 @@
     <ApplicationIcon>Assets\NotchTasks.ico</ApplicationIcon>
     <!-- Required by LibraryImport (Pill\Win32.cs): the generated P/Invoke code is unsafe. -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- WPF0001: ThemeMode (App.xaml) is marked experimental in WPF. The app uses it on purpose for the Control Panel. -->
+    <NoWarn>$(NoWarn);WPF0001</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
