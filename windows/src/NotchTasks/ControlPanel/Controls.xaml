@@ -60,4 +60,26 @@
       <TextBlock Text="{Binding Title}" VerticalAlignment="Center" />
     </StackPanel>
   </DataTemplate>
+
+  <!-- A clickable tile with no button chrome: its content is the tile, and it dims a little under the mouse. -->
+  <Style x:Key="TileButton" TargetType="Button">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Button">
+          <ContentPresenter x:Name="Presenter" Content="{TemplateBinding Content}" />
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Presenter" Property="Opacity" Value="0.8" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
 </ResourceDictionary>

@@ -94,6 +94,8 @@ public partial class App : System.Windows.Application
 
         _state = new AppState(settings, store);
         _state.StartWatching();
+        // The Sync motion moment, so the animated icons are in step from the first frame.
+        SpriteClock.SetEpoch(AnimationEpoch.Read(AppPaths.StateFile));
         _pill = new PillWindow(_state);
         _pill.Show();
         _tray = new Tray(() => ControlPanelWindow.Show(_state), () => Shutdown());

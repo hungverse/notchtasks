@@ -51,7 +51,7 @@ public partial class PillWindow : Window
     private long? _enteredAt;
     private NativePoint _lastPoint;
     private bool _havePoint;
-    private string _badgesJson = string.Empty;
+    private string _badgesKey = string.Empty;
     private bool _hasCollapsed;
     private Color _accent = Color.FromRgb(0x32, 0xD2, 0xFF);
 
@@ -661,16 +661,16 @@ public partial class PillWindow : Window
     {
         var settings = _state.Settings;
         var badges = settings.Badges;
-        var json = badges.ToJsonString();
-        if (json != _badgesJson)
+        var hex = Appearance.ResolveAccent(settings.Accent, settings.CustomAccent, SystemAccent.Hex()) ?? "#32D2FF";
+        _accent = (Color)ColorConverter.ConvertFromString(hex)!;
+        // The badges take the accent when they have no colour of their own, so a new accent rebuilds them too.
+        var key = hex + "|" + badges.ToJsonString();
+        if (key != _badgesKey)
         {
-            _badgesJson = json;
+            _badgesKey = key;
             _hasCollapsed = badges.Count > 0;
             RebuildBadges(badges);
         }
-
-        var hex = Appearance.ResolveAccent(settings.Accent, settings.CustomAccent, SystemAccent.Hex()) ?? "#32D2FF";
-        _accent = (Color)ColorConverter.ConvertFromString(hex)!;
         ApplyAppearance();
     }
 
@@ -739,35 +739,13 @@ public partial class PillWindow : Window
                 continue;
             }
             var wing = ReadBool(badge, "right") ? RightWing : LeftWing;
-            wing.Children.Add(BadgeElement(ReadString(badge, "sprite")));
+            var glyph = BadgeGlyph.Create(badge, 18, _accent);
+            glyph.Margin = new Thickness(3, 0, 3, 0);
+            glyph.VerticalAlignment = VerticalAlignment.Center;
+            wing.Children.Add(glyph);
         }
         UpdateAskIndicator();
     }
-
-    /// A sprite when the badge names one that exists; otherwise the star glyph (for now).
-    private static UIElement BadgeElement(string? spriteId)
-    {
-        var sheet = spriteId is null ? null : SpriteCache.Get(spriteId);
-        if (sheet is not null)
-        {
-            return new SpriteView(sheet) { Margin = new Thickness(3, 0, 3, 0), VerticalAlignment = VerticalAlignment.Center };
-        }
-        return new TextBlock
-        {
-            Text = "",
-            FontFamily = new FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets"),
-            FontSize = 14,
-            Foreground = Brushes.White,
-            Width = 18,
-            Height = 18,
-            Margin = new Thickness(3, 0, 3, 0),
-            TextAlignment = TextAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center,
-        };
-    }
-
-    private static string? ReadString(JsonObject o, string key) =>
-        o[key] is JsonValue v && v.TryGetValue(out string? s) ? s : null;
 
     private static bool ReadBool(JsonObject o, string key) =>
         o[key] is JsonValue v && v.TryGetValue(out bool b) && b;

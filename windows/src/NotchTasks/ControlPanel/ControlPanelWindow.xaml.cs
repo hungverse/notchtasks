@@ -38,6 +38,7 @@ public partial class ControlPanelWindow : Window
         {
             SaveSize();
             SaveLastPane(_pane);
+            IconSelection.Clear();
         };
         Closed += (_, _) => _window = null;
         SelectPane(pane);
@@ -94,8 +95,8 @@ public partial class ControlPanelWindow : Window
                 PaneId.Permissions => new PermissionsPane(State.Settings),
                 PaneId.Watching => new WatchingPane(State.Settings),
                 PaneId.Appearance => new AppearancePane(State.Settings),
-                PaneId.Badges => new BadgesPane(),
-                PaneId.Store => new StorePane(),
+                PaneId.Badges => new BadgesPane(State.Settings, State),
+                PaneId.Store => new IconLibraryPane(State.Settings),
                 PaneId.Sounds => new SoundsPane(State.Settings),
                 PaneId.Behavior => new BehaviorPane(State.Settings),
                 _ => throw new ArgumentOutOfRangeException(nameof(pane)),

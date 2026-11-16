@@ -21,6 +21,24 @@ internal static class SpriteClock
     private static DispatcherTimer? _timer;
     private static ClockPause _pauses;
     private static bool _watching;
+    private static long _epochMs;
+
+    /// The moment (Unix ms) that frame 0 of every sprite falls on: state.json animationEpoch, set by Sync motion.
+    public static long EpochMs => _epochMs;
+
+    /// Sets the moment the sprites are in step with (read at start, and written by Sync motion). Every sprite moves to its
+    /// frame for the new moment at once.
+    public static void SetEpoch(long epochMs)
+    {
+        _epochMs = epochMs;
+        foreach (var sprite in Sprites)
+        {
+            sprite.Step();
+        }
+    }
+
+    /// Milliseconds since the epoch (negative before it).
+    internal static double ElapsedMs() => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - _epochMs;
 
     /// Pauses the sprites for a reason (the session locked, the machine asleep, the display off), or resumes them.
     public static void SetPause(ClockPause reason, bool on)

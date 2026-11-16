@@ -1,0 +1,25 @@
+<local:SettingsPane x:Class="NotchTasks.ControlPanel.Panes.IconLibraryPane"
+                       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                       xmlns:l="clr-namespace:NotchTasks.ControlPanel"
+                       xmlns:local="clr-namespace:NotchTasks.ControlPanel">
+  <StackPanel>
+    <TextBlock Style="{StaticResource PaneTitle}" Text="{l:L Icon Library}" />
+    <TextBlock x:Name="CountNote" Style="{StaticResource PaneNote}" />
+
+    <!-- What the next click does, and the two actions: stop choosing for the selected icon, and restart every animation. -->
+    <Border Style="{StaticResource Card}" Margin="0,16,0,0" Padding="16,12">
+      <DockPanel>
+        <Button x:Name="SyncButton" DockPanel.Dock="Right" Margin="12,0,0,0"
+                Content="{l:L Sync motion}" ToolTip="{l:L Restart every animated icon at once}" />
+        <Button x:Name="ClearButton" DockPanel.Dock="Right" Margin="12,0,0,0" Visibility="Collapsed"
+                Content="{l:L Stop choosing}" />
+        <TextBlock x:Name="StatusText" VerticalAlignment="Center" TextWrapping="Wrap" />
+      </DockPanel>
+    </Border>
+
+    <!-- The animated icons by category, in the Mac's order. Each one animates only while it is on screen. -->
+    <StackPanel x:Name="Groups" Margin="0,4,0,0" />
+    <TextBlock Style="{StaticResource CardNote}" Margin="0,12,0,0" Text="{l:L Community packs: coming soon.}" />
+  </StackPanel>
+</local:SettingsPane>
