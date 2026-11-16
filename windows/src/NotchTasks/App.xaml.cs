@@ -28,6 +28,9 @@ public partial class App : System.Windows.Application
     {
         base.OnStartup(e);
 
+        AppDomain.CurrentDomain.UnhandledException += (_, args) =>
+            ErrorLog.Write(args.ExceptionObject as Exception ?? new Exception(args.ExceptionObject.ToString()));
+
         // Before anything else: a second launch exits at once and creates nothing.
         _instance = new SingleInstance();
         if (!_instance.IsFirst)
@@ -37,6 +40,20 @@ public partial class App : System.Windows.Application
         }
         _primary = true;
 
+        try
+        {
+            Start();
+        }
+        catch (Exception ex)
+        {
+            // A failed start must not leave an invisible app holding the mutex: log it and exit with code 1.
+            ErrorLog.Write(ex);
+            Shutdown(1);
+        }
+    }
+
+    private void Start()
+    {
         DispatcherUnhandledException += (_, args) =>
         {
             ErrorLog.Write(args.Exception);

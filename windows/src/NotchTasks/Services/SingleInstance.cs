@@ -9,7 +9,8 @@ public sealed class SingleInstance : IDisposable
 
     public SingleInstance()
     {
-        var sid = WindowsIdentity.GetCurrent().User?.Value ?? Environment.UserName;
+        using var identity = WindowsIdentity.GetCurrent();
+        var sid = identity.User?.Value ?? Environment.UserName;
         _mutex = new Mutex(initiallyOwned: true, name: $@"Local\NotchTasks-{sid}", createdNew: out bool createdNew);
         IsFirst = createdNew;
     }

@@ -13,6 +13,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable
 {
     private readonly Dispatcher _dispatcher;
     private readonly AskStore _store;
+    private readonly AskTracker _tracker = new();
     private AskWatcher? _watcher;
     private bool _disposed;
 
@@ -43,6 +44,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable
     public void Answer(string askId, AskReply reply)
     {
         _store.Reply(askId, reply);
+        _tracker.MarkAnswered(askId);
         for (var i = Asks.Count - 1; i >= 0; i--)
         {
             if (Asks[i].Id == askId)
@@ -60,7 +62,8 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable
         {
             return;
         }
-        var wanted = new HashSet<string>(list.Select(a => a.Id), StringComparer.Ordinal);
+        var visible = _tracker.Filter(list);
+        var wanted = new HashSet<string>(visible.Select(a => a.Id), StringComparer.Ordinal);
         for (var i = Asks.Count - 1; i >= 0; i--)
         {
             if (!wanted.Contains(Asks[i].Id))
@@ -69,13 +72,13 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable
             }
         }
         // After the removals Asks is a subsequence of the list, so each new ask goes in at its own index.
-        for (var i = 0; i < list.Count; i++)
+        for (var i = 0; i < visible.Count; i++)
         {
-            if (i < Asks.Count && Asks[i].Id == list[i].Id)
+            if (i < Asks.Count && Asks[i].Id == visible[i].Id)
             {
                 continue;
             }
-            Asks.Insert(Math.Min(i, Asks.Count), list[i]);
+            Asks.Insert(Math.Min(i, Asks.Count), visible[i]);
             Sounds.Play("agentAsk");
         }
     }
