@@ -22,6 +22,7 @@ public static class Sounds
     private static readonly Dictionary<string, byte[]> FileBytes = new(StringComparer.OrdinalIgnoreCase);
     private static readonly Dictionary<(string File, int Step), byte[]> Scaled = [];
     private static byte[]? _playing;
+    private static readonly HashSet<string> _unreadable = new(StringComparer.OrdinalIgnoreCase);
     private static SettingsStore? _settings;
 
     /// Gives the sounds the settings to read. Call once at start-up, on the UI thread.
@@ -60,6 +61,10 @@ public static class Sounds
         // PlaySound with SND_ASYNC keeps reading the buffer after the call, so every buffer is a pinned array: the GC cannot move it.
         var step = (int)Math.Round(Math.Clamp(settings.Volume, 0, 1) / VolumeStep);
         var bytes = FileBytesOf(file);
+        if (bytes is null)
+        {
+            return;
+        }
         var data = step == FullVolumeStep ? bytes : ScaledBytesOf(file, step, bytes);
 
         _playing = data;
@@ -67,11 +72,23 @@ public static class Sounds
     }
 
     /// The file's bytes in a pinned array, read once per file.
-    private static byte[] FileBytesOf(string file)
+    private static byte[]? FileBytesOf(string file)
     {
         if (!FileBytes.TryGetValue(file, out var bytes))
         {
-            bytes = Pinned(File.ReadAllBytes(file));
+            try
+            {
+                bytes = Pinned(File.ReadAllBytes(file));
+            }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+            {
+                // No sound for a file that cannot be read (in use, no access). Logged once per file, not on every play.
+                if (_unreadable.Add(file))
+                {
+                    ErrorLog.Write(new IOException($"NotchTasks: could not read the sound {file}", e));
+                }
+                return null;
+            }
             FileBytes[file] = bytes;
         }
         return bytes;
