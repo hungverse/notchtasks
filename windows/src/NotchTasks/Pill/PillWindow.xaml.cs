@@ -242,8 +242,14 @@ public partial class PillWindow : Window
         _outsideSince = null;
         // Topmost is asserted again on every open; the window itself never activates.
         Win32.SetWindowPos(_hwnd, Win32.HwndTopmost, 0, 0, 0, 0, Win32.SWP_NOMOVE | Win32.SWP_NOSIZE | Win32.SWP_NOACTIVATE);
-        // Opening the pill takes over the toast; its ask stays in the card list.
+        // Opening the pill takes over the toast; its ask stays in the card list. Asks waiting now are marked as toasted,
+        // so no old toast shows after the pill closes.
         _toastAsk = null;
+        _toastQueue.Clear();
+        foreach (var ask in _state.Asks)
+        {
+            _queued.Add(ask.Id);
+        }
         Animate(Mode.Open);
         ApplyAppearance();
         _closeTimer.Start();
@@ -442,10 +448,11 @@ public partial class PillWindow : Window
         var asks = _state.Asks;
         var waiting = new HashSet<string>(asks.Select(a => a.Id), StringComparer.Ordinal);
         // Each new ask queues its toast once; a queued toast for an ask that has left is dropped (Mac dropAskToasts).
+        // An ask that arrives while the pill is open is marked as toasted without a queue entry: the card shows it.
         _queued.RemoveWhere(id => !waiting.Contains(id));
         foreach (var ask in asks)
         {
-            if (_queued.Add(ask.Id))
+            if (_queued.Add(ask.Id) && !_open)
             {
                 _toastQueue.Add(ask);
             }
