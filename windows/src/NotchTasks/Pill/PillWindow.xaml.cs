@@ -61,7 +61,11 @@ public partial class PillWindow : Window
     private readonly DispatcherTimer _waitTimer = new() { Interval = TimeSpan.FromSeconds(1) };
     private readonly Dictionary<string, AskCard> _cards = new(StringComparer.Ordinal);
     private AgentAsk? _toastAsk;  // the ask the toast shows; null when no toast is up
+    private readonly List<AgentAsk> _toastQueue = [];  // asks waiting for their toast, oldest first (Mac toastQueue)
+    private readonly HashSet<string> _queued = new(StringComparer.Ordinal);  // ids that have had their toast queued
     private int _animation;  // counts the animations; only the last one's completion clears _closing
+    private bool _animating;  // a shape animation runs: the poll evaluates click-through on every tick
+    private double _targetWidth, _targetHeight, _targetRadius;  // the shape the running animation springs to
 
     /// Creates the pill for the app state. Call Show next (the window is placed when its handle exists).
     public PillWindow(AppState state)
@@ -79,7 +83,7 @@ public partial class PillWindow : Window
         PillShape.SizeChanged += (_, _) => UpdateClip();
         Toast.Answered += (ask, reply) => _state.Answer(ask.Id, reply);
         Toast.Opened += OpenPill;
-        Toast.Hidden += HideToast;
+        Toast.Hidden += ShowNextToast;
 
         SourceInitialized += OnSourceInitialized;
         Closed += OnClosed;
@@ -162,14 +166,14 @@ public partial class PillWindow : Window
         }
         var moved = !_havePoint || point.X != _lastPoint.X || point.Y != _lastPoint.Y;
         var hoverWaiting = _enteredAt is not null && !_open && _state.Settings.ExpandMode == "hover";
-        if (!moved && !hoverWaiting)
+        if (!moved && !hoverWaiting && !_animating)
         {
             return;
         }
         _lastPoint = point;
         _havePoint = true;
 
-        var inside = IsInsidePill(point);
+        var inside = IsOverShape(point);
         SetClickThrough(!inside);
         if (!inside)
         {
@@ -216,7 +220,7 @@ public partial class PillWindow : Window
             _closeTimer.Stop();
             return;
         }
-        if (Win32.GetCursorPos(out var point) && IsInsidePill(point))
+        if (Win32.GetCursorPos(out var point) && IsOverShape(point))
         {
             _outsideSince = null;
             return;
@@ -264,28 +268,26 @@ public partial class PillWindow : Window
         ApplyAppearance();
     }
 
-    /// Shows the toast for an ask: the closed pill springs into the toast shape. The window never takes focus.
-    private void ShowToast(AgentAsk ask)
+    /// Shows the next queued ask's toast (the pill springs into the toast shape), or takes the toast away when none waits:
+    /// the pill springs back to the closed shape, or stays open. Called when the shown ask leaves, and by its ×
+    /// (Mac dropAskToasts / dismissToast). The window never takes focus.
+    private void ShowNextToast()
     {
-        if (_open)
-        {
-            return;
-        }
-        _toastAsk = ask;
-        Toast.Show(ask);
-        Animate(Mode.Toast);
-        ApplyAppearance();
-    }
-
-    /// Takes the toast away: the pill springs back to the closed shape, or stays open if the pill is open.
-    private void HideToast()
-    {
-        if (_toastAsk is null)
-        {
-            return;
-        }
         _toastAsk = null;
-        Animate(_open ? Mode.Open : Mode.Closed);
+        AgentAsk? next = null;
+        if (!_open && _toastQueue.Count > 0)
+        {
+            next = _toastQueue[0];
+            _toastQueue.RemoveAt(0);
+        }
+        if (next is not null)
+        {
+            _toastAsk = next;
+            Toast.Show(next);
+            // Topmost is asserted again when a toast shows, as OpenPill does; the window itself never activates.
+            Win32.SetWindowPos(_hwnd, Win32.HwndTopmost, 0, 0, 0, 0, Win32.SWP_NOMOVE | Win32.SWP_NOSIZE | Win32.SWP_NOACTIVATE);
+        }
+        Animate(next is not null ? Mode.Toast : _open ? Mode.Open : Mode.Closed);
         ApplyAppearance();
     }
 
@@ -302,6 +304,8 @@ public partial class PillWindow : Window
 
         var token = ++_animation;
         _closing = mode == Mode.Closed;
+        _animating = true;
+        (_targetWidth, _targetHeight, _targetRadius) = (width, height, radius);
         var widthAnimation = Spring(PillShape, FrameworkElement.WidthProperty, width, curve);
         Spring(PillShape, FrameworkElement.HeightProperty, height, curve);
         Spring(this, RadiusProperty, radius, curve);
@@ -320,10 +324,24 @@ public partial class PillWindow : Window
             if (token == _animation)
             {
                 _closing = false;
+                _animating = false;
                 ApplyAppearance();
+                ReevaluateClickThrough();
             }
         };
+        // The pointer may already be over the target shape: the window must take its clicks from this frame on.
+        ReevaluateClickThrough();
         return widthAnimation;
+    }
+
+    /// Sets click-through from the pointer now, against the shape the pill is springing to as well as the one it is.
+    /// The poll alone waits for the pointer to move, so a toast under a still pointer would pass its first click through.
+    private void ReevaluateClickThrough()
+    {
+        if (Win32.GetCursorPos(out var point))
+        {
+            SetClickThrough(!IsOverShape(point));
+        }
     }
 
     /// The width, height and radius a mode springs to. The open height follows the cards; the toast follows its text.
@@ -381,21 +399,25 @@ public partial class PillWindow : Window
             X = (short)(lParam.ToInt64() & 0xFFFF),
             Y = (short)((lParam.ToInt64() >> 16) & 0xFFFF),
         };
-        return IsInsidePill(point);
+        return IsOverShape(point);
     }
 
+    /// The pill's current shape, or, while a shape animation runs, the shape it springs to as well.
+    private bool IsOverShape(NativePoint screenPoint) =>
+        IsInsidePill(screenPoint) || (_animating && IsInsideShape(screenPoint, _targetWidth, _targetHeight, _targetRadius));
+
     /// Hit test in the animated geometry: the pill is centred at the top of the window, with the current size and radius.
-    private bool IsInsidePill(NativePoint screenPoint)
+    private bool IsInsidePill(NativePoint screenPoint) => IsInsideShape(screenPoint, PillShape.Width, PillShape.Height, Radius);
+
+    private bool IsInsideShape(NativePoint screenPoint, double width, double height, double radius)
     {
         var client = screenPoint;
         Win32.ScreenToClient(_hwnd, ref client);
         var scale = Scale;
         var p = new Point(client.X / scale, client.Y / scale);
 
-        var width = PillShape.Width;
-        var height = PillShape.Height;
         var x = (PillGeometry.WindowWidth - width) / 2;
-        return InRoundedRect(p, x, 0, width, height, Radius);
+        return InRoundedRect(p, x, 0, width, height, radius);
     }
 
     private static bool InRoundedRect(Point p, double x, double y, double w, double h, double radius)
@@ -418,20 +440,25 @@ public partial class PillWindow : Window
     {
         SyncCards();
         var asks = _state.Asks;
-        if (_toastAsk is { } shown)
+        var waiting = new HashSet<string>(asks.Select(a => a.Id), StringComparer.Ordinal);
+        // Each new ask queues its toast once; a queued toast for an ask that has left is dropped (Mac dropAskToasts).
+        _queued.RemoveWhere(id => !waiting.Contains(id));
+        foreach (var ask in asks)
         {
-            if (!asks.Any(a => a.Id == shown.Id))
+            if (_queued.Add(ask.Id))
             {
-                HideToast();
-            }
-            else if (asks[^1].Id != shown.Id)
-            {
-                ShowToast(asks[^1]);
+                _toastQueue.Add(ask);
             }
         }
-        else if (!_open && e.Action == NotifyCollectionChangedAction.Add && asks.Count > 0)
+        _toastQueue.RemoveAll(a => !waiting.Contains(a.Id));
+
+        // The shown toast's ask leaving shows the next queued toast, or none (Mac showNextToast).
+        if (_toastAsk is null || !waiting.Contains(_toastAsk.Id))
         {
-            ShowToast(asks[^1]);
+            if (_toastAsk is not null || (!_open && _toastQueue.Count > 0))
+            {
+                ShowNextToast();
+            }
         }
 
         if (_open)
