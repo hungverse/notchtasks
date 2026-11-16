@@ -64,4 +64,27 @@ public sealed class ModuleCatalogTests
             Assert.False(string.IsNullOrEmpty(ModuleCatalog.Glyph(id)), id);
         }
     }
+
+    [Fact]
+    public void Reorder_KeepsHiddenIdsInPlace()
+    {
+        // calendar, levels and bogus are hidden or unknown: they keep their positions; agents and timer swap.
+        var stored = new[] { "calendar", "timer", "levels", "agents", "bogus" };
+
+        var result = ModuleCatalog.Reorder(stored, "agents", -1);
+
+        Assert.Equal(
+            new[] { "calendar", "agents", "levels", "timer", "bogus", "ci", "media", "shelf", "limits", "battery", "devices", "calls", "privacy", "network", "downloads", "health", "mirror" },
+            result);
+    }
+
+    [Fact]
+    public void Reorder_AtEdge_NoChange()
+    {
+        var stored = new[] { "timer", "agents", "calendar" };
+
+        // The first visible module cannot move up; the last visible one (mirror, not stored) cannot move down.
+        Assert.Equal(stored, ModuleCatalog.Reorder(stored, "timer", -1));
+        Assert.Equal(stored, ModuleCatalog.Reorder(stored, "mirror", 1));
+    }
 }

@@ -28,7 +28,7 @@
   <!-- The swatches, the hex text and the colour dialog's button, at the right of a row. -->
   <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
     <StackPanel x:Name="Swatches" Orientation="Horizontal" VerticalAlignment="Center" />
-    <TextBox x:Name="HexBox" Width="88" MaxLength="7" VerticalContentAlignment="Center" Margin="0,0,6,0"
+    <TextBox x:Name="HexBox" MinWidth="104" MaxLength="7" VerticalContentAlignment="Center" Margin="0,0,6,0"
              ToolTip="#RRGGBB" KeyDown="OnHexKeyDown" LostFocus="OnHexLostFocus" />
     <Button x:Name="PickButton" Content="…" Width="34" Height="30" ToolTip="Choose a colour" Click="OnPickClick" />
   </StackPanel>

@@ -84,6 +84,40 @@ public static class ModuleCatalog
         _ => "\uE712",          // more
     };
 
+    /// The stored list with `id` swapped with the previous (delta -1) or next (delta 1) visible Windows module. Only the
+    /// visible modules move among themselves: every other stored id (hidden on Windows, unknown) keeps its position. A
+    /// move past either end, or of an id that is not visible, returns the stored list unchanged.
+    public static IReadOnlyList<string> Reorder(IReadOnlyList<string> stored, string id, int delta)
+    {
+        var visible = Order(stored).ToList();
+        var index = visible.IndexOf(id);
+        var target = index + delta;
+        if (index < 0 || target < 0 || target >= visible.Count)
+        {
+            return stored.ToList();
+        }
+        (visible[index], visible[target]) = (visible[target], visible[index]);
+
+        // Walk the stored list: a visible module's slot takes the next visible module of the new order; hidden ids stay.
+        var result = new List<string>(stored.Count + visible.Count);
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        var next = 0;
+        foreach (var item in stored)
+        {
+            if (!OnWindows(item))
+            {
+                result.Add(item);
+            }
+            else if (seen.Add(item))
+            {
+                result.Add(visible[next++]);
+            }
+        }
+        // Visible modules not in the stored list follow, in the new order.
+        result.AddRange(visible.Skip(next));
+        return result;
+    }
+
     /// The modules to show, in the order the user keeps: the ids of `modules` that are on Windows and not repeated, then
     /// the Windows modules not in it, in the Mac's order.
     public static IReadOnlyList<string> Order(IReadOnlyList<string> modules)

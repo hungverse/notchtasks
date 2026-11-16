@@ -194,14 +194,12 @@ public partial class ModulesPane : SettingsPane
     /// Swaps the module with its neighbour and saves the whole order once. The moved row keeps the keyboard focus.
     private void Move(string id, int delta)
     {
-        var order = ModuleCatalog.Order(Store.Modules).ToList();
-        var index = order.IndexOf(id);
-        var target = index + delta;
-        if (index < 0 || target < 0 || target >= order.Count)
+        // Hidden and unknown ids stay where they are in the stored list (ModuleCatalog.Reorder).
+        var order = ModuleCatalog.Reorder(Store.Modules, id, delta);
+        if (order.SequenceEqual(Store.Modules))
         {
             return;
         }
-        (order[index], order[target]) = (order[target], order[index]);
         Write("modules", ToArray(order));
 
         var row = _rows[id];
