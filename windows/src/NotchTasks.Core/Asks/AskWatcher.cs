@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 namespace NotchTasks.Core.Asks;
 
 /// Watches the Asks folder and reports the pending list when it changes (asks.js watchAsks).
@@ -84,7 +86,19 @@ public sealed class AskWatcher : IDisposable
                 }
                 _last = key;
             }
-            _onChange(list);
+            try
+            {
+                _onChange(list);
+            }
+            catch (Exception e)
+            {
+                // An exception here would end the process (timer and watcher threads); the next scan reports the list again.
+                Debug.WriteLine("NotchTasks: ask watcher callback failed: " + e);
+                lock (_gate)
+                {
+                    _last = null;
+                }
+            }
         }
     }
 

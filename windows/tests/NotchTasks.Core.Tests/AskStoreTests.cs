@@ -193,6 +193,23 @@ public sealed class AskStoreTests : IDisposable
     }
 
     [Fact]
+    public async Task ThrowingOnChange_IsRetried()
+    {
+        var store = new AskStore(Path.Combine(Temp(), "Asks"));
+        var calls = 0;
+        using var watcher = new AskWatcher(store, _ =>
+        {
+            if (Interlocked.Increment(ref calls) == 1)
+            {
+                throw new InvalidOperationException("the first report fails");
+            }
+        }, intervalMs: 50);
+
+        // The first report threw, so the next scan reports the same (empty) list again, and nothing crashed.
+        Assert.True(await WaitFor(() => Volatile.Read(ref calls) >= 2, 5000));
+    }
+
+    [Fact]
     public async Task AskWatcher_CallsBackOnlyWhenTheListChanges()
     {
         var store = new AskStore(Path.Combine(Temp(), "Asks"));

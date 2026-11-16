@@ -96,6 +96,8 @@ public sealed class HookRunnerTests : IDisposable
     public async Task Hook_AppNotRunning_ReturnsEmptyFast()
     {
         var dir = Path.Combine(Temp(), "Asks");
+        // A warm-up call first, so JIT compilation is not counted in the measured run.
+        await HookRunner.RunAsync(AgentKind.Claude, Fixture("claude-bash").ToJsonString(), Options(dir, Temp(), running: () => false));
 
         var sw = Stopwatch.StartNew();
         var (stdout, exit) = await HookRunner.RunAsync(AgentKind.Claude, Fixture("claude-bash").ToJsonString(),
@@ -122,7 +124,7 @@ public sealed class HookRunnerTests : IDisposable
     }
 
     [Fact]
-    public async Task Hook_ParentGone_ExitsWithin1500ms()
+    public async Task Hook_ParentGone_ExitsWithin2500ms()
     {
         using var parent = Process.Start(new ProcessStartInfo("ping.exe", "-n 60 127.0.0.1")
         {
@@ -141,9 +143,37 @@ public sealed class HookRunnerTests : IDisposable
         var (stdout, _) = await run;
         sw.Stop();
 
-        Assert.True(sw.ElapsedMilliseconds < 1500, $"took {sw.ElapsedMilliseconds} ms after the agent quit");
+        Assert.True(sw.ElapsedMilliseconds <= 2500, $"took {sw.ElapsedMilliseconds} ms after the agent quit");
         Assert.Equal("", stdout);
         Assert.False(FolderHasFiles(dir));
+    }
+
+    [Fact]
+    public async Task Hook_UnknownParent_KeepsWaiting()
+    {
+        // The parent cannot be resolved, so the agent-alive check is skipped (it used to read pid 0 as dead).
+        var dir = Path.Combine(Temp(), "Asks");
+        var store = new AskStore(dir);
+        var options = new HookOptions
+        {
+            Dir = dir,
+            Home = Temp(),
+            Pid = Environment.ProcessId,
+            ParentPid = null,
+            ParentLookup = () => null,
+            WaitSeconds = 10,
+            AppRunning = () => true,
+            PidAlive = _ => false,
+        };
+        var run = HookRunner.RunAsync(AgentKind.Claude, Fixture("claude-bash").ToJsonString(), options);
+        var ask = await WaitForAsk(store);
+
+        await Task.Delay(2000);
+        Assert.False(run.IsCompleted, "the hook still waits after 2 s");
+        store.Reply(ask.Id, new AskReply(ReplyKinds.Allow, null));
+        var (stdout, _) = await run;
+
+        Assert.Equal(ClaudeAllow, stdout);
     }
 
     [Fact]

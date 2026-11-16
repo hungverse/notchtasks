@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
+    <!-- No Windows SDK version: keeps the projection (Microsoft.Windows.SDK.NET, WinRT.Runtime) out of the hook. -->
+    <TargetFramework>net10.0-windows</TargetFramework>
     <RootNamespace>NotchTasksHook</RootNamespace>
     <AssemblyName>NotchTasksHook</AssemblyName>
     <InvariantGlobalization>true</InvariantGlobalization>

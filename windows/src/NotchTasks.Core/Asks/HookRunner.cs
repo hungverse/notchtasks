@@ -15,8 +15,11 @@ public sealed class HookOptions
     /// The hook's own pid (the ask's pid: the ask is pending while this process waits).
     public int Pid { get; init; } = Environment.ProcessId;
 
-    /// The agent that started the hook. Null = the parent of this process.
+    /// The agent that started the hook. Null = ParentLookup decides; when that is unknown too, the agent-alive check is skipped.
     public int? ParentPid { get; init; }
+
+    /// Finds the parent pid when ParentPid is null. Null = ProcessChecks.CurrentParentId.
+    public Func<int?>? ParentLookup { get; init; }
 
     /// The clock.
     public Func<DateTimeOffset> Now { get; init; } = () => DateTimeOffset.UtcNow;
@@ -45,7 +48,8 @@ public static class HookRunner
         var store = new AskStore(opts.Dir);
         var alive = opts.PidAlive ?? ProcessChecks.IsAlive;
         var running = opts.AppRunning ?? (() => store.AppRunning(opts.Pid));
-        var agent = opts.ParentPid ?? ProcessChecks.CurrentParentId() ?? 0;
+        // An unknown parent (null) means no agent-alive check: the hook keeps waiting for the reply or the timeout.
+        var agent = opts.ParentPid ?? (opts.ParentLookup ?? ProcessChecks.CurrentParentId)();
         var now = opts.Now;
         var wait = TimeSpan.FromSeconds(opts.WaitSeconds);
 
@@ -115,7 +119,7 @@ public static class HookRunner
                 }
                 if (checks % 5 == 0)
                 {
-                    if (!alive(agent))
+                    if (agent is { } agentPid && !alive(agentPid))
                     {
                         break; // the agent is gone (quit, or the ask was cancelled with it)
                     }
