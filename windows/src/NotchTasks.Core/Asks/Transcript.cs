@@ -26,7 +26,7 @@ public static class Transcript
                     return mode;
                 }
                 var transcript = AsksJson.Str(input["transcript_path"]);
-                return transcript is null ? null : AsksJson.Str(CodexTurn(transcript)?["approvals_reviewer"]);
+                return string.IsNullOrWhiteSpace(transcript) ? null : AsksJson.Str(CodexTurn(transcript)?["approvals_reviewer"]);
             }
             case AgentKind.Antigravity:
             {
@@ -68,7 +68,7 @@ public static class Transcript
                         lines.Add(json);
                     }
                 }
-                catch (JsonException)
+                catch (Exception ex) when (ex is JsonException or ArgumentException)
                 {
                     // the partial first line of the window
                 }
@@ -149,7 +149,7 @@ public static class Transcript
         {
             text = File.ReadAllText(transcript);
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
         {
             return null;
         }
@@ -167,7 +167,7 @@ public static class Transcript
         {
             return (JsonNode.Parse(text[start..end]) as JsonObject)?["payload"] as JsonObject;
         }
-        catch (JsonException)
+        catch (Exception ex) when (ex is JsonException or ArgumentException)
         {
             return null;
         }

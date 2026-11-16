@@ -34,7 +34,7 @@ public static class AsksJson
         {
             return JsonNode.Parse(File.ReadAllText(file));
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or ArgumentException)
         {
             return null;
         }

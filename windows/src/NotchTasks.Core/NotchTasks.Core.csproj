@@ -3,6 +3,7 @@
   <PropertyGroup>
     <RootNamespace>NotchTasks.Core</RootNamespace>
     <IsAotCompatible>true</IsAotCompatible>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
 </Project>
