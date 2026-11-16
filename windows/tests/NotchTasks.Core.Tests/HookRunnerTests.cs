@@ -19,6 +19,9 @@ public sealed class HookRunnerTests : IDisposable
 
     private static readonly Dictionary<string, string> Answers = new() { ["Proceed?"] = "Yes" };
 
+    /// The test run stands in for the hook process that wrote the ask (the pending check needs a NotchTasks program).
+    private static readonly Func<int, string[], bool> OwnProcess = (pid, _) => pid == Environment.ProcessId;
+
     private readonly List<string> _dirs = new();
 
     public void Dispose()
@@ -75,7 +78,7 @@ public sealed class HookRunnerTests : IDisposable
         AgentKind kind, JsonObject payload, AskReply? answer, int waitSeconds = 10, int replyDelayMs = 0)
     {
         var dir = Path.Combine(Temp(), "Asks");
-        var store = new AskStore(dir);
+        var store = new AskStore(dir, OwnProcess);
         var run = HookRunner.RunAsync(kind, payload.ToJsonString(), Options(dir, Temp(), waitSeconds));
         var ask = await WaitForAsk(store);
         if (answer is not null)
@@ -132,7 +135,7 @@ public sealed class HookRunnerTests : IDisposable
             CreateNoWindow = true,
         })!;
         var dir = Path.Combine(Temp(), "Asks");
-        var store = new AskStore(dir);
+        var store = new AskStore(dir, OwnProcess);
         var run = HookRunner.RunAsync(AgentKind.Claude, Fixture("claude-bash").ToJsonString(),
             Options(dir, Temp(), waitSeconds: 60, parent: parent.Id));
         await WaitForAsk(store);
@@ -153,7 +156,7 @@ public sealed class HookRunnerTests : IDisposable
     {
         // The parent cannot be resolved, so the agent-alive check is skipped (it used to read pid 0 as dead).
         var dir = Path.Combine(Temp(), "Asks");
-        var store = new AskStore(dir);
+        var store = new AskStore(dir, OwnProcess);
         var options = new HookOptions
         {
             Dir = dir,
@@ -314,7 +317,7 @@ public sealed class HookRunnerTests : IDisposable
 
         var question = Fixture("antigravity-run");
         ((JsonObject)question["toolCall"]!)["name"] = "ask_question";
-        var store = new AskStore(dir);
+        var store = new AskStore(dir, OwnProcess);
         var run = HookRunner.RunAsync(AgentKind.Antigravity, question.ToJsonString(), Options(dir, home, waitSeconds: 1));
         Assert.Equal("ask_question", (await WaitForAsk(store)).Tool);
         var (asked, _) = await run;

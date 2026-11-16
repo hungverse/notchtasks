@@ -13,9 +13,22 @@ public sealed class AskStore
 
     private static readonly string[] Kinds = [ReplyKinds.Allow, ReplyKinds.Deny, ReplyKinds.Pass, ReplyKinds.Answers];
 
-    public AskStore(string dir)
+    /// The program that runs the app, and the programs that can own an ask: the hook, and the old Electron hook (which ran as the app).
+    private static readonly string[] AppPrograms = ["NotchTasks.exe"];
+    private static readonly string[] AskPrograms = ["NotchTasksHook.exe", "NotchTasks.exe"];
+
+    // Caps on what the app reads from an ask file (the hook writes more only when an agent sends more).
+    private const int MaxQuestions = 10;
+    private const int MaxOptions = 20;
+    private const int MaxText = 2000;
+
+    private readonly Func<int, string[], bool> _runsAs;
+
+    /// runsAs(pid, fileNames) says whether the process is alive and runs one of the file names. Null = ProcessChecks.RunsAs.
+    public AskStore(string dir, Func<int, string[], bool>? runsAs = null)
     {
         Dir = Path.TrimEndingDirectorySeparator(Path.GetFullPath(dir));
+        _runsAs = runsAs ?? ProcessChecks.RunsAs;
     }
 
     /// The Asks folder.
@@ -48,7 +61,7 @@ public sealed class AskStore
         {
             return false;
         }
-        return pid > 0 && pid != selfPid && ProcessChecks.IsAlive(pid);
+        return pid > 0 && pid != selfPid && _runsAs(pid, AppPrograms);
     }
 
     /// Writes an ask file with the shape the Electron build and the Mac read.
@@ -137,26 +150,37 @@ public sealed class AskStore
     }
 
     /// Asks still waiting, oldest first (asks.js pending). Asks of hooks that died, and asks older than the wait,
-    /// are cleared; answered asks stay until the hook picks the reply up.
+    /// are cleared; answered asks stay until the hook picks the reply up. Reply and temp files older than the wait
+    /// (left by a crash between the write and the rename) are swept too.
     public IReadOnlyList<AgentAsk> Pending(DateTimeOffset now, int waitSeconds = DefaultWaitSeconds)
     {
         string[] files;
         try
         {
-            files = Directory.GetFiles(Dir, "*.json");
+            files = Directory.GetFiles(Dir);
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
             return [];
         }
+        var wait = TimeSpan.FromSeconds(waitSeconds);
         var asks = new List<AgentAsk>();
         foreach (var file in files)
         {
+            var name = Path.GetFileName(file);
+            if (!name.EndsWith(".json", StringComparison.Ordinal))
+            {
+                if (name.EndsWith(".reply", StringComparison.Ordinal) || name.Contains(".tmp-", StringComparison.Ordinal))
+                {
+                    SweepIfOlder(file, now, wait);
+                }
+                continue;
+            }
             if (AsksJson.ReadJsonOrNull(file) is not JsonObject j || ParseAsk(j) is not { } ask)
             {
                 continue;
             }
-            if (!ProcessChecks.IsAlive(ask.Pid) || now - ask.At > TimeSpan.FromSeconds(waitSeconds))
+            if (!_runsAs(ask.Pid, AskPrograms) || now - ask.At > wait)
             {
                 Remove(ask.Id);
                 continue;
@@ -170,7 +194,24 @@ public sealed class AskStore
         return asks.OrderBy(a => a.At).ToList();
     }
 
-    /// An ask file as an AgentAsk, or null when the required fields are missing or wrong.
+    /// Deletes a reply or temp file that was last written more than the wait ago.
+    private static void SweepIfOlder(string file, DateTimeOffset now, TimeSpan wait)
+    {
+        try
+        {
+            if (now - new DateTimeOffset(File.GetLastWriteTimeUtc(file)) > wait)
+            {
+                File.Delete(file);
+            }
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            // Locked for a moment, or already gone: the next scan tries again.
+        }
+    }
+
+    /// An ask file as an AgentAsk, or null when the required fields are missing or wrong. Text is capped at MaxText
+    /// characters and the lists at MaxQuestions and MaxOptions; the rest is dropped.
     private static AgentAsk? ParseAsk(JsonObject j)
     {
         var id = AsksJson.Str(j["id"]);
@@ -187,16 +228,16 @@ public sealed class AskStore
         var questions = new List<AskQuestion>();
         if (j["questions"] is JsonArray list)
         {
-            foreach (var q in list.OfType<JsonObject>())
+            foreach (var q in list.OfType<JsonObject>().Take(MaxQuestions))
             {
                 var options = new List<string>();
                 if (q["options"] is JsonArray optionNodes)
                 {
-                    options.AddRange(optionNodes.Select(AsksJson.Str).OfType<string>());
+                    options.AddRange(optionNodes.Select(AsksJson.Str).OfType<string>().Take(MaxOptions).Select(Cap));
                 }
                 questions.Add(new AskQuestion(
-                    AsksJson.Str(q["question"]) ?? string.Empty,
-                    AsksJson.Str(q["header"]),
+                    Cap(AsksJson.Str(q["question"]) ?? string.Empty),
+                    AsksJson.Str(q["header"]) is { } header ? Cap(header) : null,
                     options,
                     AsksJson.Bool(q["multiSelect"]) ?? false));
             }
@@ -204,12 +245,27 @@ public sealed class AskStore
         return new AgentAsk(
             id,
             pid,
-            AsksJson.Str(j["session"]) ?? string.Empty,
-            AsksJson.Str(j["tool"]) ?? string.Empty,
-            AsksJson.Str(j["summary"]) ?? string.Empty,
+            Cap(AsksJson.Str(j["session"]) ?? string.Empty),
+            Cap(AsksJson.Str(j["tool"]) ?? string.Empty),
+            Cap(AsksJson.Str(j["summary"]) ?? string.Empty),
             questions,
             at,
-            AsksJson.Str(j["agent"]) ?? string.Empty);
+            Cap(AsksJson.Str(j["agent"]) ?? string.Empty));
+    }
+
+    /// The text cut to MaxText characters, not splitting a surrogate pair.
+    private static string Cap(string text)
+    {
+        if (text.Length <= MaxText)
+        {
+            return text;
+        }
+        var length = MaxText;
+        if (char.IsHighSurrogate(text[length - 1]))
+        {
+            length--;
+        }
+        return text[..length];
     }
 
     private static void TryDelete(string file)

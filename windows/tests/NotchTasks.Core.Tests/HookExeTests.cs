@@ -34,7 +34,15 @@ public sealed class HookExeTests : IDisposable
         _dirs.Add(appData);
         var root = Path.Combine(appData, "NotchTasks");
         Directory.CreateDirectory(root);
-        File.WriteAllText(Path.Combine(root, "app.pid"), Environment.ProcessId.ToString());
+        // The app counts as running only as NotchTasks.exe: a copy of ping.exe under that name stands in for it.
+        var fakeApp = Path.Combine(appData, "NotchTasks.exe");
+        File.Copy(Path.Combine(Environment.SystemDirectory, "ping.exe"), fakeApp);
+        using var app = Process.Start(new ProcessStartInfo(fakeApp, "-n 60 127.0.0.1")
+        {
+            UseShellExecute = false,
+            CreateNoWindow = true,
+        })!;
+        File.WriteAllText(Path.Combine(root, "app.pid"), app.Id.ToString());
         var asks = Path.Combine(root, "Asks");
         var payload = File.ReadAllText(Path.Combine(AsksFixtures.RepoRoot(), "electron", "test", "fixtures", "agents", "claude-bash.json"));
 
@@ -77,5 +85,6 @@ public sealed class HookExeTests : IDisposable
             "{\"hookSpecificOutput\":{\"hookEventName\":\"PermissionRequest\",\"decision\":{\"behavior\":\"deny\",\"message\":\"The user denied this from the NotchTasks notch.\"}}}\n",
             stdout);
         Assert.Empty(Directory.GetFiles(asks));
+        app.Kill();
     }
 }

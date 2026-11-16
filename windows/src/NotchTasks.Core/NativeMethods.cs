@@ -16,6 +16,11 @@ internal static partial class NativeMethods
     [return: MarshalAs(UnmanagedType.Bool)]
     public static partial bool CloseHandle(nint handle);
 
+    /// The full path of the program as UTF-16 in name; size is the buffer length in characters in, the characters written out (no NUL).
+    [LibraryImport("kernel32.dll", EntryPoint = "QueryFullProcessImageNameW", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool QueryFullProcessImageNameW(nint process, uint flags, byte[] name, ref uint size);
+
     [LibraryImport("ntdll.dll")]
     public static partial int NtQueryInformationProcess(nint process, int informationClass, ref ProcessBasicInformation information, int length, out int returnLength);
 }
