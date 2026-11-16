@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using NotchTasks.Core.Asks;
+using NotchTasks.Core.Permissions;
 
 namespace NotchTasks.Services;
 
@@ -25,7 +26,7 @@ public static class SystemActions
     /// A UAC prompt the user cancels is not an error. Call off the UI thread: it waits for netsh.
     public static bool AddFirewallRule(string appExe)
     {
-        var args = $"advfirewall firewall add rule name=\"{PermissionProbe.FirewallRuleName}\" dir=in action=allow program=\"{appExe}\" enable=yes";
+        var args = FirewallRules.AddArguments(PermissionProbe.FirewallRuleName, appExe);
         try
         {
             using var process = Process.Start(new ProcessStartInfo("netsh.exe", args)

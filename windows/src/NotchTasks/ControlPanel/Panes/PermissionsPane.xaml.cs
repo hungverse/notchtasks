@@ -49,7 +49,7 @@ public partial class PermissionsPane : SettingsPane
         var previousRule = _facts?.FirewallRule;
         _facts = PermissionProbe.Facts(_registry, AppFiles.Home, AppFiles.HookExe, AppFiles.AppExe) with { FirewallRule = previousRule };
         ApplyStored();
-        if (firewall)
+        if (firewall && PermissionItems.FirewallRowShown)
         {
             _firewallProbedAt = DateTime.UtcNow;
             _ = ReadFirewallAsync(++_probe);
@@ -58,7 +58,8 @@ public partial class PermissionsPane : SettingsPane
 
     private async Task ReadFirewallAsync(int probe)
     {
-        var rule = await Task.Run(PermissionProbe.FirewallRule);
+        var appExe = AppFiles.AppExe;
+        var rule = await Task.Run(() => PermissionProbe.FirewallRule(appExe));
         if (probe != _probe || !IsLoaded || _facts is null)  // a later probe, or the pane was hidden: drop this answer
         {
             return;

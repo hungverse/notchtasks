@@ -52,8 +52,12 @@ public static class PermissionItems
     private static readonly IReadOnlyList<string> CameraModules = ["mirror"];
     private static readonly IReadOnlyList<string> AgentModules = ["agents"];
 
-    /// The rows in the Mac's order: notifications, start at login, microphone, camera, firewall, then one per agent hook.
-    /// An agent that is not installed here gets a row with Applies false.
+    /// Whether the firewall row is shown. The rule lets the phone reach the notch, so the row comes with pairing (Phase 4).
+    /// Until then the row is not built and the rule is not probed; the code for it stays in place.
+    public static readonly bool FirewallRowShown = false;
+
+    /// The rows in the Mac's order: notifications, start at login, microphone, camera, firewall (when shown), then one per agent
+    /// hook. An agent that is not installed here gets a row with Applies false.
     public static IReadOnlyList<PermItem> Build(PermissionFacts facts)
     {
         var items = new List<PermItem>
@@ -66,9 +70,12 @@ public static class PermissionItems
                 Consent(facts.MicAllowed)),
             new("camera", L("Camera mirror"), L("Check the camera before joining a meeting"), "", CameraModules,
                 Consent(facts.CameraAllowed)),
-            new("firewall", L("Firewall rule"), L("Lets your phone reach the notch on this network."), "", NoModules,
-                facts.FirewallRule switch { true => PermState.Granted, false => PermState.NotAsked, null => PermState.Checking }),
         };
+        if (FirewallRowShown)
+        {
+            items.Add(new PermItem("firewall", L("Firewall rule"), L("Lets your phone reach the notch on this network."), "", NoModules,
+                facts.FirewallRule switch { true => PermState.Granted, false => PermState.NotAsked, null => PermState.Checking }));
+        }
 
         foreach (var kind in Enum.GetValues<AgentKind>())
         {

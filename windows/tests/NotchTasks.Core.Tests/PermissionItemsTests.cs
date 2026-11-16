@@ -20,6 +20,14 @@ public sealed class PermissionItemsTests
     private static PermItem Find(IReadOnlyList<PermItem> items, string id) => items.Single(i => i.Id == id);
 
     [Fact]
+    public void Build_NoFirewallRow_UntilPairing()
+    {
+        // The rule comes with pairing (Phase 4): until then the row is not built.
+        Assert.False(PermissionItems.FirewallRowShown);
+        Assert.DoesNotContain(PermissionItems.Build(Facts(firewall: true)), item => item.Id == "firewall");
+    }
+
+    [Fact]
     public void Needed_FollowsModule()
     {
         // The agent hook is the one row whose module is built in Phase 2.
@@ -87,11 +95,9 @@ public sealed class PermissionItemsTests
         Assert.Equal(PermState.Granted, Find(items, "login").State);
         Assert.Equal(PermState.Denied, Find(items, "mic").State);
         Assert.Equal(PermState.Checking, Find(items, "camera").State);
-        Assert.Equal(PermState.NotAsked, Find(items, "firewall").State);
         Assert.Equal(PermState.Granted, Find(items, "hook.claude").State);
         Assert.Equal(PermState.NotAsked, Find(items, "hook.codex").State);
         Assert.Equal(PermState.Checking, Find(items, "hook.gemini").State);
-        Assert.Empty(Find(items, "firewall").Modules);
     }
 
     [Fact]
@@ -106,7 +112,6 @@ public sealed class PermissionItemsTests
         Assert.Equal(PermGroup.NotInUse, PermissionItems.GroupOf(Find(items, "camera"), modules, notifications: true));  // mirror is not built
         Assert.Equal(PermGroup.Granted, PermissionItems.GroupOf(Find(items, "hook.claude"), modules, notifications: true));
         Assert.Equal(PermGroup.Needed, PermissionItems.GroupOf(Find(items, "hook.codex"), modules, notifications: true));
-        Assert.Equal(PermGroup.NotInUse, PermissionItems.GroupOf(Find(items, "firewall"), modules, notifications: true));
         Assert.Equal(PermGroup.NotInUse, PermissionItems.GroupOf(Find(items, "hook.codex"), new HashSet<string> { "mirror" }, notifications: true));
     }
 

@@ -43,14 +43,14 @@ public static class PermissionProbe
             Present: present);
     }
 
-    /// True when the app's firewall rule exists (netsh exit code 0). Null when netsh does not answer within 3 s or cannot run.
-    /// Call off the UI thread.
-    public static bool? FirewallRule()
+    /// True when the app's firewall rule exists and names this app's exe (FirewallRules.Shows): a rule with the same name for
+    /// another program does not count. Null when netsh does not answer within 3 s or cannot run. Call off the UI thread.
+    public static bool? FirewallRule(string appExe)
     {
         try
         {
             using var process = Process.Start(new ProcessStartInfo(
-                "netsh.exe", $"advfirewall firewall show rule name=\"{FirewallRuleName}\"")
+                "netsh.exe", FirewallRules.ShowArguments(FirewallRuleName))
             {
                 UseShellExecute = false,
                 CreateNoWindow = true,
@@ -70,7 +70,7 @@ public static class PermissionProbe
             }
             process.WaitForExit();
             Task.WaitAll(output, errors);
-            return process.ExitCode == 0;
+            return FirewallRules.Shows(process.ExitCode, output.Result, appExe);
         }
         catch (Exception e) when (e is Win32Exception or InvalidOperationException)
         {
