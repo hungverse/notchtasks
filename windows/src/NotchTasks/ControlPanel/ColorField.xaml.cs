@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
 using NotchTasks.Core.Settings;
 using NotchTasks.Pill;
 using WinForms = System.Windows.Forms;
@@ -81,7 +82,7 @@ public partial class ColorField : UserControl
         using var dialog = new WinForms.ColorDialog { FullOpen = true, AnyColor = true };
         var current = HexColor.ToColor(Hex);
         dialog.Color = System.Drawing.Color.FromArgb(current.R, current.G, current.B);
-        if (dialog.ShowDialog() != WinForms.DialogResult.OK)
+        if (dialog.ShowDialog(Owner()) != WinForms.DialogResult.OK)
         {
             return;
         }
@@ -102,6 +103,13 @@ public partial class ColorField : UserControl
         }
     }
 
+    /// The window this field is in, as the colour dialog's owner, so the dialog opens in front of the Control Panel.
+    private WinForms.IWin32Window Owner()
+    {
+        var window = Window.GetWindow(this);
+        return new HwndOwner(window is null ? IntPtr.Zero : new WindowInteropHelper(window).Handle);
+    }
+
     private void Pick(string hex)
     {
         HexBox.Text = hex;
@@ -111,5 +119,11 @@ public partial class ColorField : UserControl
         }
         Hex = hex;
         ValueChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// A window handle as the owner of a WinForms dialog.
+    private sealed class HwndOwner(IntPtr handle) : WinForms.IWin32Window
+    {
+        public IntPtr Handle { get; } = handle;
     }
 }

@@ -200,6 +200,34 @@ public sealed class SettingsStore : INotifyPropertyChanged, IDisposable
         }
     }
 
+    /// Module id to where it sits when the notch is collapsed: "left" or "right" (Mac placements). Missing means auto.
+    public IReadOnlyDictionary<string, string> Placements =>
+        ModuleDictionary("placements", value => value is "left" or "right" or "auto");
+
+    /// Module id to its colour, "#RRGGBB" (Mac moduleColors). A module without one keeps the default colour.
+    public IReadOnlyDictionary<string, string> ModuleColors => ModuleDictionary("moduleColors", IsHex);
+
+    /// The string values of a dictionary keyed by module id, keeping the entries whose value passes `valid`.
+    private IReadOnlyDictionary<string, string> ModuleDictionary(string key, Func<string, bool> valid)
+    {
+        var map = new Dictionary<string, string>(StringComparer.Ordinal);
+        lock (_gate)
+        {
+            if (_root[key] is JsonObject saved)
+            {
+                foreach (var (id, node) in saved)
+                {
+                    if (ModuleCatalog.All.Contains(id) && node is JsonValue v && v.TryGetValue(out string? text)
+                        && text is not null && valid(text))
+                    {
+                        map[id] = text;
+                    }
+                }
+            }
+        }
+        return map;
+    }
+
     /// A copy of the "badges" array (empty when absent).
     public JsonArray Badges
     {

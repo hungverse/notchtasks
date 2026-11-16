@@ -72,6 +72,14 @@ public static class ChoiceItems
 
     public static IReadOnlyList<Choice> ExpandModes { get; } = FromOptions(Choices.ExpandModes);
 
+    /// Where a module sits when the notch is collapsed (Customize.swift Placement).
+    public static IReadOnlyList<Choice> Placements { get; } =
+    [
+        Choice.Key("auto", "Automatic"),
+        Choice.Key("left", "Left side"),
+        Choice.Key("right", "Right side"),
+    ];
+
     /// The accents, each with a dot in its colour: the system accent for "auto", the palette colour otherwise, none for "custom".
     public static IReadOnlyList<Choice> Accents { get; } = Choices.Accents
         .Select(o => Choice.Key(o.Value, o.TitleKey, swatch: AccentSwatch(o.Value)))
