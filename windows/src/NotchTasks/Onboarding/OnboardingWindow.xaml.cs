@@ -128,7 +128,8 @@ public partial class OnboardingWindow : Window
             Margin = new Thickness(0, 0, 0, 24),
             Text = L10n.L("The pill shows what's running, and stays quiet when nothing is."),
         });
-        panel.Children.Add(Card(L10n.L("Look at the top edge of the screen: that is your pill."), centered: true));        return panel;
+        panel.Children.Add(Card(L10n.L("Look at the top edge of the screen: that is your pill."), centered: true));
+        return panel;
     }
 
     /// The last page: the three things to remember about the pill.
@@ -262,6 +263,12 @@ public partial class OnboardingWindow : Window
         L10n.Changed -= OnLanguageChanged;
         _window = null;
         if (_finished)
+        {
+            return;
+        }
+        // The app is quitting with the guide open: it is not finished, so the guide opens again on the next launch, and the
+        // pill is not shown on the way out.
+        if (Dispatcher.HasShutdownStarted)
         {
             return;
         }

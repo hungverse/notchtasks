@@ -19,6 +19,9 @@
       </Border>
     </StackPanel>
 
+    <TextBlock x:Name="ErrorText" Style="{StaticResource CardNote}" Margin="0,8,0,0" Visibility="Collapsed"
+               Foreground="{DynamicResource SystemFillColorCriticalBrush}" />
+
     <TextBlock Style="{StaticResource SectionHeader}" Text="{l:L Modules}" />
     <UniformGrid x:Name="ModuleCells" Columns="2" />
 

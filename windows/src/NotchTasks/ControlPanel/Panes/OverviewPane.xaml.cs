@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.IO;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
@@ -27,6 +28,9 @@ public partial class OverviewPane : SettingsPane
     private readonly AppState _state;
     private readonly RegistryAccess _registry = new();
 
+    /// The error of the last hook switch that could not be saved, until the next one that works.
+    private string? _actionError;
+
     public OverviewPane(SettingsStore store, AppState state) : base(store)
     {
         _state = state;
@@ -54,6 +58,8 @@ public partial class OverviewPane : SettingsPane
 
         RenderStats(modules.Count, installed.Count);
         RenderNextSteps(NextSteps.Compute(items, modules, Store.SystemNotifications, present, installed), items);
+        ErrorText.Text = _actionError ?? string.Empty;
+        ErrorText.Visibility = _actionError is null ? Visibility.Collapsed : Visibility.Visible;
         RenderModules();
     }
 
@@ -107,10 +113,29 @@ public partial class OverviewPane : SettingsPane
             case NextStep.Agent agent:
                 var name = AgentKinds.Spec(agent.Kind).Name;
                 return Row(AgentGlyph, name + " · " + L10n.L("Answer agents on the notch"), L10n.L("On"),
-                    () => ControlPanelWindow.Show(_state, PaneId.Watching));
+                    () => TurnOnHook(agent.Kind));
             default:
                 throw new ArgumentOutOfRangeException(nameof(step));
         }
+    }
+
+    /// Installs the agent's hook, as the Watching pane's switch does, then draws the pane again: the step is gone once the hook is
+    /// on. A settings file that cannot be edited keeps its file as it is: the error is shown here, and Watching opens so the
+    /// user can look at the agent's row there.
+    private void TurnOnHook(AgentKind kind)
+    {
+        var name = AgentKinds.Spec(kind).Name;
+        try
+        {
+            HookInstaller.Install(kind, AppFiles.HookExe, AppFiles.Home);
+            _actionError = null;
+        }
+        catch (Exception e) when (e is InvalidDataException or IOException or UnauthorizedAccessException)
+        {
+            _actionError = L10n.L("Couldn't edit {0}'s settings: {1}", name, e.Message);
+            ControlPanelWindow.Show(_state, PaneId.Watching);
+        }
+        ApplyStored();
     }
 
     private void OpenPermission(PermItem item)
