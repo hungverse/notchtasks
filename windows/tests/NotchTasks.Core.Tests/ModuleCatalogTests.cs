@@ -28,13 +28,17 @@ public sealed class ModuleCatalogTests
     }
 
     [Fact]
-    public void Built_OnlyAgentsInPhase2()
+    public void Built_IncludesPhase3aModules()
     {
-        Assert.True(ModuleCatalog.Built("agents"));
-        Assert.False(ModuleCatalog.Built("ci"));
-        Assert.False(ModuleCatalog.Built("privacy"));
-        Assert.False(ModuleCatalog.Built("mirror"));
-        Assert.False(ModuleCatalog.Built("bogus"));
+        // Phase 3a builds these seven; the rest stay "Coming soon" (ci, media, shelf, limits, devices, mirror are later phases).
+        foreach (var id in new[] { "agents", "timer", "battery", "network", "downloads", "health", "privacy", "calls" })
+        {
+            Assert.True(ModuleCatalog.Built(id), id);
+        }
+        foreach (var id in new[] { "ci", "media", "shelf", "limits", "devices", "mirror", "bogus" })
+        {
+            Assert.False(ModuleCatalog.Built(id), id);
+        }
     }
 
     [Fact]

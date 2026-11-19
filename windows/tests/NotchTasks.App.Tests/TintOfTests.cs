@@ -74,4 +74,28 @@ public sealed class TintOfTests
             Assert.Equal(Green, TimerCard.TintOf(state, Chosen));
         });
     }
+
+    [Fact]
+    public void CallTime_NoModuleColor_IsGreen_AndRedWhenMuted()
+    {
+        Assert.Equal(CallDefault, ChipView.CallTimeTint(false, NoColors));
+        Assert.Equal(Color.FromRgb(0xFF, 0x45, 0x3A), ChipView.CallTimeTint(true, NoColors));
+    }
+
+    [Fact]
+    public void CallTime_ModuleColor_WinsWhenNotMuted()
+    {
+        var blue = new Dictionary<string, string> { ["calls"] = "#0A84FF" };
+        Assert.Equal(Color.FromRgb(0x0A, 0x84, 0xFF), ChipView.CallTimeTint(false, blue));
+        // Muted stays red, as the Mac's `c.muted ? .red : color(for: .calls) ?? .green`.
+        Assert.Equal(Color.FromRgb(0xFF, 0x45, 0x3A), ChipView.CallTimeTint(true, blue));
+    }
+
+    [Fact]
+    public void PrivacyMic_NoModuleColor_IsOrange_ModuleColorWins()
+    {
+        Assert.Equal(Orange, SensorRow.MicTintOf(NoColors));
+        var teal = new Dictionary<string, string> { ["privacy"] = "#00FFFF" };
+        Assert.Equal(Color.FromRgb(0x00, 0xFF, 0xFF), SensorRow.MicTintOf(teal));
+    }
 }

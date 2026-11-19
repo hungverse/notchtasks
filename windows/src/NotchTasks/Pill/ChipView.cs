@@ -104,7 +104,7 @@ public static class ChipView
                 return new TextBlock
                 {
                     Text = TimerState.Mmss(now - call.Since),
-                    Foreground = new SolidColorBrush(call.Muted ? CallRed : CallGreen),
+                    Foreground = new SolidColorBrush(CallTimeTint(call.Muted, moduleColors)),
                     FontSize = size,
                     FontWeight = FontWeights.Bold,
                     Margin = new Thickness(6, 0, 6, 0),
@@ -175,6 +175,19 @@ public static class ChipView
             return HexColor.ToColor(normalized);
         }
         return accent ?? DefaultTint(chip.Kind);
+    }
+
+    /// The colour of a call's time: red while the mic is muted, else the calls module's colour, else green (the Mac's
+    /// `c.muted ? .red : color(for: .calls) ?? .green`).
+    public static Color CallTimeTint(bool muted, IReadOnlyDictionary<string, string> moduleColors)
+    {
+        if (muted)
+        {
+            return CallRed;
+        }
+        return moduleColors.TryGetValue("calls", out var hex) && HexColor.TryNormalize(hex, out var normalized)
+            ? HexColor.ToColor(normalized)
+            : CallGreen;
     }
 
     private static Color DefaultTint(ChipKind kind) => kind switch

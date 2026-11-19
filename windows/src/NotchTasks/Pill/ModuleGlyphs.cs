@@ -9,7 +9,7 @@ public static class ModuleGlyphs
 
     private static readonly IReadOnlyDictionary<string, string> Map = new Dictionary<string, string>(StringComparer.Ordinal)
     {
-        ["hand"] = "",      // an agent's approval (AskCard)
+        ["hand"] = "",      // an agent's approval (AskCard): a pointing hand; E6BA is not in the font (it drew a box)
         ["question"] = "",  // an agent's question (AskCard)
         ["timer"] = "",
         ["download"] = "",
@@ -21,8 +21,8 @@ public static class ModuleGlyphs
         ["phonedown"] = "",  // handset with a down arrow: the call ended
         ["camera"] = "",
         ["wifi"] = "",
-        ["network"] = "",
-        ["vpn"] = "",
+        ["network"] = "",
+        ["vpn"] = "",
         ["wifioff"] = "",  // wifi arcs with a cross: network disconnected (Segoe Fluent Icons)
         ["vpnoff"] = "",   // open padlock: VPN off
         ["battery"] = "",

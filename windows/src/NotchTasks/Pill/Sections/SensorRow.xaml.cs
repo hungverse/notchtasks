@@ -1,4 +1,6 @@
 using System.Windows.Controls;
+using System.Windows.Media;
+using NotchTasks.ControlPanel;
 using NotchTasks.Core;
 using NotchTasks.Core.Modules;
 using NotchTasks.Services;
@@ -14,6 +16,12 @@ public partial class SensorRow : UserControl
         InitializeComponent();
     }
 
+    /// The mic's colour: the privacy module's colour when it has one, else orange (the Mac's `color(for: .privacy) ?? .orange`).
+    public static Color MicTintOf(IReadOnlyDictionary<string, string> moduleColors) =>
+        moduleColors.TryGetValue("privacy", out var hex) && HexColor.TryNormalize(hex, out var normalized)
+            ? HexColor.ToColor(normalized)
+            : Color.FromRgb(0xFF, 0x9F, 0x0A);
+
     /// Refreshes the row and returns true. Returns false, and leaves the row alone, when a call is on or nothing is in use.
     public bool Update(AppState state)
     {
@@ -23,6 +31,7 @@ public partial class SensorRow : UserControl
             return false;
         }
         MicGlyph.Text = ModuleGlyphs.Get("mic");
+        MicGlyph.Foreground = new SolidColorBrush(MicTintOf(state.Settings.ModuleColors));
         MicGlyph.Visibility = sensors.Mic ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
         MicText.Text = sensors.Mic ? L10n.L("Micro: ") + string.Join(", ", sensors.MicApps.Select(CallApps.Name)) : string.Empty;
         MicText.Visibility = MicGlyph.Visibility;

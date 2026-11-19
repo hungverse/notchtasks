@@ -16,7 +16,8 @@ public sealed class NextStepsTests
     private static PermItem Hook(PermState state = PermState.NotAsked) => Item("hook.claude", state, "agents");
 
     // Mic and camera rows need privacy, calls and mirror, which are not built yet: they are never a step in Phase 2.
-    private static PermItem Mic(PermState state = PermState.NotAsked) => Item("mic", state, "privacy", "calls");
+    // The real mic row has no modules (ruling P3-R4): privacy and calls never make it a step.
+    private static PermItem Mic(PermState state = PermState.NotAsked) => Item("mic", state);
 
     [Fact]
     public void NextSteps_PermissionsFollowChoices()
@@ -78,7 +79,8 @@ public sealed class NextStepsTests
     [Fact]
     public void NextSteps_IgnoresUnbuiltModules()
     {
-        // Only the modules that are on and built ask for permissions: privacy and ci are not built in Phase 2.
+        // Only the modules that are on and built ask for permissions. Privacy is built now, but the mic row has no modules (P3-R4),
+        // so it is never a step; ci is not built yet.
         Assert.Empty(NextSteps.Compute(new[] { Mic() }, new HashSet<string> { "privacy" }, notifications: false,
             present: [], installed: new HashSet<AgentKind>()));
         Assert.Empty(NextSteps.Compute(new[] { Item("notifications", PermState.NotAsked) }, new HashSet<string> { "ci" },

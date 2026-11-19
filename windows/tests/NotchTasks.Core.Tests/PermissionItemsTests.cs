@@ -53,6 +53,25 @@ public sealed class PermissionItemsTests
     }
 
     [Fact]
+    public void Needed_PrivacyAndCalls_AskForNoPermission()
+    {
+        // With the privacy and calls modules on (and built), no row is needed: the mic row has no modules (P3-R4) and
+        // notifications need the agents or ci modules.
+        var items = PermissionItems.Build(Facts(mic: false, camera: false,
+            hooks: new Dictionary<AgentKind, bool?> { [AgentKind.Claude] = false }));
+        var modules = new HashSet<string> { "privacy", "calls" };
+
+        foreach (var item in items)
+        {
+            Assert.False(PermissionItems.Needed(item, modules, notifications: true), item.Id);
+            if (item.Id != PermissionItems.LoginId)  // start at login is always in use
+            {
+                Assert.Equal(PermGroup.NotInUse, PermissionItems.GroupOf(item, modules, notifications: true));
+            }
+        }
+    }
+
+    [Fact]
     public void Needed_NotificationsOnlyWithAgentsOrCi()
     {
         var notifications = Item("notifications");

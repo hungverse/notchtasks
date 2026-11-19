@@ -14,7 +14,10 @@ public static class ModuleCatalog
 
     /// The modules this build actually does. Phase 2 builds only the agents; the others show "Coming soon" and ask for no
     /// permission (PermissionItems.Needed, NextSteps).
-    private static readonly HashSet<string> BuiltIds = new(StringComparer.Ordinal) { "agents" };
+    private static readonly HashSet<string> BuiltIds = new(StringComparer.Ordinal)
+    {
+        "agents", "timer", "battery", "network", "downloads", "health", "privacy", "calls",
+    };
 
     /// Every module id, in the Mac's order.
     public static IReadOnlyList<string> All => Ids;

@@ -13,7 +13,6 @@ namespace NotchTasks.Pill.Sections;
 /// once a second while a call is live, which keeps the time current without a clock of the card's own.
 public partial class CallCard : UserControl
 {
-    private static readonly Color Green = Color.FromRgb(0x30, 0xD1, 0x58);
     private static readonly Color Red = Color.FromRgb(0xFF, 0x45, 0x3A);
 
     private AppState? _state;
@@ -52,7 +51,7 @@ public partial class CallCard : UserControl
         }
         var elapsed = TimerState.Mmss(DateTimeOffset.Now - call.Since);
         TimeText.Text = call.Muted ? elapsed + L10n.L(" · Mic muted") : elapsed;
-        TimeText.Foreground = new SolidColorBrush(call.Muted ? Red : Green);
+        TimeText.Foreground = new SolidColorBrush(ChipView.CallTimeTint(call.Muted, _state.Settings.ModuleColors));
     }
 
     /// Mute or unmute the mic, then take the sensors' reading again.
