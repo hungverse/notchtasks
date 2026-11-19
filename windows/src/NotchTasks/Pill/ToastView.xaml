@@ -55,13 +55,13 @@
           <TextBlock x:Name="SubtitleText" Foreground="#99FFFFFF" TextTrimming="CharacterEllipsis" />
         </StackPanel>
         <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
-          <Button x:Name="ReplyButton" Style="{StaticResource PrimaryChoice}" Height="24" Padding="11,0" Visibility="Collapsed" />
+          <Button Focusable="False" x:Name="ReplyButton" Style="{StaticResource PrimaryChoice}" Height="24" Padding="11,0" Visibility="Collapsed" />
           <StackPanel x:Name="ApprovalButtons" Orientation="Horizontal">
-            <Button x:Name="DenyButton" Style="{StaticResource ChoiceButton}" Height="24" Padding="11,0" Margin="0,0,6,0" />
-            <Button x:Name="AllowButton" Style="{StaticResource PrimaryChoice}" Height="24" Padding="11,0" />
+            <Button Focusable="False" x:Name="DenyButton" Style="{StaticResource ChoiceButton}" Height="24" Padding="11,0" Margin="0,0,6,0" />
+            <Button Focusable="False" x:Name="AllowButton" Style="{StaticResource PrimaryChoice}" Height="24" Padding="11,0" />
           </StackPanel>
-          <Button x:Name="ActionButton" Style="{StaticResource PrimaryChoice}" Height="24" Padding="11,0" Visibility="Collapsed" />
-          <Button x:Name="HideButton" Style="{StaticResource CloseButton}" Margin="6,0,0,0">
+          <Button Focusable="False" x:Name="ActionButton" Style="{StaticResource PrimaryChoice}" Height="24" Padding="11,0" Visibility="Collapsed" />
+          <Button Focusable="False" x:Name="HideButton" Style="{StaticResource CloseButton}" Margin="6,0,0,0">
             <TextBlock Text="&#xE711;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="9" FontWeight="Bold"
                        Foreground="#B3FFFFFF" />
           </Button>

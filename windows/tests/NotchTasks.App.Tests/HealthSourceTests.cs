@@ -30,7 +30,7 @@ public sealed class HealthSourceTests
     private static AppState NewState(HealthReaders readers)
     {
         var settings = SettingsStore.Load(AppPaths.SettingsFile);
-        return new AppState(settings, new AskStore(AppPaths.AsksDir), readers);
+        return new AppState(settings, new AskStore(AppPaths.AsksDir), Fixture.Inert(settings) with { Health = readers });
     }
 
     [Fact]

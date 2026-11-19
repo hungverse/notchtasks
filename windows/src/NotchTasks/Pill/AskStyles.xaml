@@ -38,6 +38,7 @@
     <Setter Property="Padding" Value="13,0" />
     <Setter Property="Cursor" Value="Hand" />
     <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+    <Setter Property="Focusable" Value="False" />
     <Setter Property="Template" Value="{StaticResource CapsuleTemplate}" />
     <Style.Triggers>
       <Trigger Property="IsMouseOver" Value="True">
@@ -56,6 +57,7 @@
     <Setter Property="Padding" Value="13,0" />
     <Setter Property="Cursor" Value="Hand" />
     <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+    <Setter Property="Focusable" Value="False" />
     <Setter Property="Template" Value="{StaticResource CapsuleTemplate}" />
     <Style.Triggers>
       <Trigger Property="IsMouseOver" Value="True">
@@ -73,6 +75,7 @@
     <Setter Property="Padding" Value="10,7" />
     <Setter Property="Cursor" Value="Hand" />
     <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+    <Setter Property="Focusable" Value="False" />
     <Setter Property="Template" Value="{StaticResource OptionTemplate}" />
     <Style.Triggers>
       <Trigger Property="IsMouseOver" Value="True">
@@ -89,6 +92,7 @@
     <Setter Property="Height" Value="22" />
     <Setter Property="Cursor" Value="Hand" />
     <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+    <Setter Property="Focusable" Value="False" />
     <Setter Property="Template" Value="{StaticResource CircleTemplate}" />
     <Style.Triggers>
       <Trigger Property="IsMouseOver" Value="True">
@@ -104,6 +108,7 @@
     <Setter Property="Cursor" Value="Hand" />
     <Setter Property="Padding" Value="0" />
     <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+    <Setter Property="Focusable" Value="False" />
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="Button">

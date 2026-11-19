@@ -17,15 +17,16 @@ public sealed class TimerSourceTests
     }
 
     [Fact]
-    public void TimerSource_TimerRunsOnlyWhileStartedAndATimerRuns()
+    public void TimerSource_ClockRunsOnlyWhileStartedAndATimerRuns()
     {
         Sta.Run(() =>
         {
             var module = new TimerModule(new DropAnnouncer());
-            var source = new TimerSource(module, () => { });
+            var clock = new SharedClock(() => { });
+            var source = new TimerSource(module, clock);
             try
             {
-                var timer = Fixture.Field<DispatcherTimer>(source, "_timer");
+                var timer = Fixture.Field<DispatcherTimer>(clock, "_timer");
 
                 source.Start();
                 Assert.False(timer.IsEnabled);

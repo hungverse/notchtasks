@@ -13,6 +13,7 @@ namespace NotchTasks.Pill;
 public static class ChipView
 {
     private const string SegoeFont = "Segoe Fluent Icons, Segoe MDL2 Assets";
+    private static readonly FontFamily SegoeFamily = new(SegoeFont);  // made once: a FontFamily per glyph was a cost each rebuild
     private const string ChipTag = "chip";  // the Tag of a chip's panel in a wing: what a rebuild removes
     private static readonly Color AskOrange = Color.FromRgb(0xFF, 0x9F, 0x0A);
     private static readonly Color CallGreen = Color.FromRgb(0x30, 0xD1, 0x58);  // the Mac's green: a call's time
@@ -66,7 +67,7 @@ public static class ChipView
     private static TextBlock Glyph(string name, double size, Brush brush) => new()
     {
         Text = ModuleGlyphs.Get(name),
-        FontFamily = new FontFamily(SegoeFont),
+        FontFamily = SegoeFamily,
         FontSize = size,
         Foreground = brush,
         VerticalAlignment = VerticalAlignment.Center,

@@ -20,6 +20,11 @@ public sealed record TimerState(DateTimeOffset End, TimeSpan Total)
 public sealed record SensorState(IReadOnlyList<string> MicApps, bool Camera, bool MicMuted)
 {
     public bool Mic => MicApps.Count > 0;
+
+    /// The same reading: the same mic apps in the same order (the registry lists them in a stable order), and the same flags.
+    /// A record's own equality compares the list by reference, so this is the check to use.
+    public bool Same(SensorState other) =>
+        Camera == other.Camera && MicMuted == other.MicMuted && MicApps.SequenceEqual(other.MicApps);
 }
 
 /// A live call: the app, the caller's name, when it started, and whether it is video and muted.

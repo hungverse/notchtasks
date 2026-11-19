@@ -36,13 +36,13 @@
           <ColumnDefinition Width="*" />
           <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
-        <Button x:Name="LinkButton" Grid.Column="0" Style="{StaticResource LinkChoice}" VerticalAlignment="Center">
+        <Button Focusable="False" x:Name="LinkButton" Grid.Column="0" Style="{StaticResource LinkChoice}" VerticalAlignment="Center">
           <TextBlock x:Name="LinkText" TextDecorations="Underline" />
         </Button>
         <StackPanel Grid.Column="2" Orientation="Horizontal">
-          <Button x:Name="SendButton" Style="{StaticResource PrimaryChoice}" Visibility="Collapsed" />
-          <Button x:Name="DenyButton" Style="{StaticResource ChoiceButton}" Margin="0,0,6,0" Visibility="Collapsed" />
-          <Button x:Name="AllowButton" Style="{StaticResource PrimaryChoice}" Visibility="Collapsed" />
+          <Button Focusable="False" x:Name="SendButton" Style="{StaticResource PrimaryChoice}" Visibility="Collapsed" />
+          <Button Focusable="False" x:Name="DenyButton" Style="{StaticResource ChoiceButton}" Margin="0,0,6,0" Visibility="Collapsed" />
+          <Button Focusable="False" x:Name="AllowButton" Style="{StaticResource PrimaryChoice}" Visibility="Collapsed" />
         </StackPanel>
       </Grid>
     </StackPanel>

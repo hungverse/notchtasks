@@ -24,15 +24,18 @@ public sealed class SensorHelperTests
         public string? LastArguments;
         public Exception? Throws;
 
-        public Process? RunAs(string fileName, string arguments)
+        /// When set, the launch (the UAC prompt) is pending until the test completes it.
+        public TaskCompletionSource<Process?>? Pending;
+
+        public Task<Process?> RunAsAsync(string fileName, string arguments)
         {
             Calls++;
             LastArguments = arguments;
             if (Throws is not null)
             {
-                throw Throws;
+                return Task.FromException<Process?>(Throws);
             }
-            return null;
+            return Pending?.Task ?? Task.FromResult<Process?>(null);
         }
     }
 
@@ -231,6 +234,45 @@ public sealed class SensorHelperTests
         Assert.Equal(HelperState.Unavailable, helper.State);
         Assert.False(settings.SensorHelper);
         Assert.Equal(1, stop.Signals);
+    }
+
+    [Fact]
+    public void Probe_AtStart_NoZones_ShowsUnavailable_WithoutWritingFlagsOrSignallingTheHelper()
+    {
+        using var root = new TempRoot();
+        File.WriteAllText(AppPaths.SettingsFile, "{\"sensorHelper\": true, \"sensorHelperAtSignIn\": true}");
+        using var settings = SettingsStore.Load(AppPaths.SettingsFile);
+        var (helper, launcher, pipe, stop) = NewHelper(settings, marker: true);
+        pipe.Answer = Array.Empty<ThermalReading>();  // the helper answers, with no zones
+
+        helper.Start();
+
+        // Only a user's click may change the settings: the probe shows Unavailable and leaves the flags and the helper alone.
+        Assert.Equal(HelperState.Unavailable, helper.State);
+        Assert.True(settings.SensorHelper);
+        Assert.True(settings.SensorHelperAtSignIn);
+        Assert.Equal(0, stop.Signals);
+        Assert.Equal(0, launcher.Calls);
+    }
+
+    [Fact]
+    public async Task TurnOn_LaunchStillPending_DoesNotBlockTheCaller()
+    {
+        using var root = new TempRoot();
+        using var settings = SettingsStore.Load(AppPaths.SettingsFile);
+        var (helper, launcher, pipe, _) = NewHelper(settings);
+        launcher.Pending = new TaskCompletionSource<Process?>();
+        pipe.Answer = new[] { new ThermalReading("TZ00", 55) };
+
+        // The UAC prompt is up: the call returns at once (the launch is awaited, not run on this thread), and the state is Starting.
+        var turnOn = helper.TurnOnAsync(atSignIn: false);
+        Assert.False(turnOn.IsCompleted);
+        Assert.Equal(HelperState.Starting, helper.State);
+
+        launcher.Pending.SetResult(null);  // the prompt is answered
+        await turnOn;
+
+        Assert.Equal(HelperState.On, helper.State);
     }
 
     [Fact]

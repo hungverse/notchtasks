@@ -51,6 +51,10 @@ public partial class PillWindow : Window
     private readonly DispatcherTimer _closeTimer = new() { Interval = TimeSpan.FromMilliseconds(100) };
     private readonly DispatcherTimer _toastTimer = new() { Interval = ToastTick };
     private readonly BlurEffect _cardBlur = new() { Radius = 6 };
+    // The shadows are made once: ApplyAppearance runs on every publish, so it only picks one of these (never makes a new one).
+    private readonly DropShadowEffect _openShadow = Shadow(opacity: 0.45, blur: 14, depth: 6);
+    private readonly DropShadowEffect _closedShadow = Shadow(opacity: 0.3, blur: 6, depth: 2);
+    private DropShadowEffect? _glow;  // made again only when the accent changes
     private nint _hwnd;
     private bool _open;
     private bool _closing;
@@ -774,15 +778,17 @@ public partial class PillWindow : Window
 
         // The shadow and glow effects live on the backing borders behind the pill; setting them here is per state change only.
         ShadowShape.Opacity = PillShape.Opacity;
-        ShadowShape.Effect = _open
-            ? Shadow(opacity: 0.45, blur: 14, depth: 6)
-            : Shadow(opacity: 0.3, blur: 6, depth: 2);
+        ShadowShape.Effect = _open ? _openShadow : _closedShadow;
 
         var glow = settings.Background == "glow" && (_open || _hasCollapsed);
         var accentBrush = Frozen(new SolidColorBrush(_accent) { Opacity = 0.9 });
         GlowBacking.Visibility = glow ? Visibility.Visible : Visibility.Collapsed;
         GlowBacking.BorderBrush = accentBrush;
-        GlowBacking.Effect = new DropShadowEffect { Color = _accent, BlurRadius = 6, ShadowDepth = 0, Opacity = 1 };
+        if (_glow is null || _glow.Color != _accent)
+        {
+            _glow = new DropShadowEffect { Color = _accent, BlurRadius = 6, ShadowDepth = 0, Opacity = 1 };
+        }
+        GlowBacking.Effect = _glow;
         GlowRing.Visibility = glow ? Visibility.Visible : Visibility.Collapsed;
         GlowRing.BorderBrush = accentBrush;
     }

@@ -8,7 +8,7 @@ namespace NotchTasks.Services.Modules;
 /// setting is on, the helper is On and the health module runs (the source is started with it). Each answer goes through
 /// Thermals.Hottest; a change of the shown degrees or the zone is published, and nothing else is. Stopping, closing the pill or
 /// turning a gate off publishes no reading, so the header shows nothing.
-public sealed class ThermalSource : IModuleSource
+public sealed class ThermalSource : IModuleSource, IDisposable
 {
     private static readonly TimeSpan Every = TimeSpan.FromSeconds(2);
 
@@ -41,6 +41,13 @@ public sealed class ThermalSource : IModuleSource
     {
         _started = false;
         SettingsChanged();
+    }
+
+    /// Unsubscribes from the helper's state and stops the timer. The source is not used after this.
+    public void Dispose()
+    {
+        _helper.StateChanged -= SettingsChanged;
+        _timer.Stop();
     }
 
     /// The pill opened or closed: the helper is asked only while it is open.

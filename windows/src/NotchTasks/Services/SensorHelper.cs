@@ -26,21 +26,23 @@ public enum HelperState
 }
 
 /// Starts a program elevated (UAC), or fails with Win32Exception 1223 when the prompt is cancelled. Only the user's clicks in the
-/// Permissions pane reach it, through SensorHelper.TurnOnAsync and TurnOffAsync. Tests pass a fake.
+/// Permissions pane reach it, through SensorHelper.TurnOnAsync and TurnOffAsync. Tests pass a fake. The UAC prompt is modal, so
+/// the real launcher starts the program off the UI thread and the caller awaits it.
 public interface IProcessLauncher
 {
-    Process? RunAs(string fileName, string arguments);
+    Task<Process?> RunAsAsync(string fileName, string arguments);
 }
 
-/// The real launcher: ShellExecute with the runas verb, so Windows shows the UAC prompt.
+/// The real launcher: ShellExecute with the runas verb, so Windows shows the UAC prompt. Process.Start runs on a thread-pool thread,
+/// so the UI thread is not blocked while the prompt is up; a cancelled prompt surfaces as Win32Exception 1223 through the await.
 public sealed class ElevatedLauncher : IProcessLauncher
 {
-    public Process? RunAs(string fileName, string arguments) => Process.Start(new ProcessStartInfo(fileName, arguments)
+    public Task<Process?> RunAsAsync(string fileName, string arguments) => Task.Run<Process?>(() => Process.Start(new ProcessStartInfo(fileName, arguments)
     {
         Verb = "runas",
         UseShellExecute = true,
         WindowStyle = ProcessWindowStyle.Hidden,
-    });
+    }));
 }
 
 /// One request to the helper's pipe. Null when no answer came (the helper is not running, or the read failed).
@@ -214,7 +216,7 @@ public sealed class SensorHelper
                 : SensorArgs.Serve(_sid, _appPid);
             try
             {
-                using var started = _launcher.RunAs(_helperExe, arguments);
+                using var started = await _launcher.RunAsAsync(_helperExe, arguments);
             }
             catch (Win32Exception e) when (e.NativeErrorCode == 1223)
             {
@@ -243,7 +245,7 @@ public sealed class SensorHelper
                 SetState(HelperState.Off);
                 return;
             }
-            Settle(answer);
+            Settle(answer, fromUser: true);
         }
         finally
         {
@@ -267,7 +269,7 @@ public sealed class SensorHelper
             {
                 try
                 {
-                    using var uninstall = _launcher.RunAs(_helperExe, SensorArgs.UninstallLogonArgs(_sid));
+                    using var uninstall = await _launcher.RunAsAsync(_helperExe, SensorArgs.UninstallLogonArgs(_sid));
                     if (uninstall is null)
                     {
                         ErrorLog.Write(new InvalidOperationException("NotchTasks: the sensor helper uninstall did not start."));
@@ -323,7 +325,7 @@ public sealed class SensorHelper
             }
             if (answer is not null)
             {
-                Settle(answer);
+                Settle(answer, fromUser: false);
                 return;
             }
             await Task.Delay(StartEvery);
@@ -349,13 +351,18 @@ public sealed class SensorHelper
         return null;
     }
 
-    /// An answer decides: zones make it On; no zones make it Unavailable, which stops the helper and clears the setting.
-    private void Settle(IReadOnlyList<ThermalReading> answer)
+    /// An answer decides: zones make it On; no zones make it Unavailable. Only the user's click (fromUser) may change the settings:
+    /// there, no zones stop the helper and clear the setting. The start-up probe (fromUser false) never writes a flag and never
+    /// signals the helper; it only shows Unavailable.
+    private void Settle(IReadOnlyList<ThermalReading> answer, bool fromUser)
     {
         if (answer.Count == 0)
         {
-            _stop.Signal();
-            ClearSettings();
+            if (fromUser)
+            {
+                _stop.Signal();
+                ClearSettings();
+            }
             SetState(HelperState.Unavailable);
             return;
         }

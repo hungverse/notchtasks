@@ -6,6 +6,49 @@ using NotchTasks.Core.Modules;
 
 namespace NotchTasks.Services.Modules;
 
+/// The OS reads the network source makes: the interfaces as the judge reads them, and the subscription to the network's change
+/// events. The defaults read this PC; tests pass fakes, so no test reads an adapter or subscribes to NetworkChange.
+public sealed record NetworkReaders(Func<List<NetIf>> Interfaces, Func<Action, IDisposable> Watch)
+{
+    /// This PC: its adapters, and NetworkChange's availability and address events.
+    public static NetworkReaders Default { get; } = new(ReadInterfaces, onChange => new NetworkChangeWatch(onChange));
+
+    /// The interfaces as the judge reads them: IPv4 addresses and a non-zero IPv4 gateway.
+    private static List<NetIf> ReadInterfaces() =>
+        NetworkInterface.GetAllNetworkInterfaces().Select(n =>
+        {
+            var props = n.GetIPProperties();
+            return new NetIf(
+                n.Name,
+                n.Description,
+                n.NetworkInterfaceType,
+                n.OperationalStatus == OperationalStatus.Up,
+                props.UnicastAddresses.Any(a => a.Address.AddressFamily == AddressFamily.InterNetwork),
+                props.GatewayAddresses.Any(g => g.Address.AddressFamily == AddressFamily.InterNetwork && !g.Address.Equals(IPAddress.Any)));
+        }).ToList();
+}
+
+/// Subscribes to NetworkChange's availability and address events. The callback runs on a thread-pool thread; Dispose unsubscribes.
+internal sealed class NetworkChangeWatch : IDisposable
+{
+    private readonly NetworkAvailabilityChangedEventHandler _onAvailability;
+    private readonly NetworkAddressChangedEventHandler _onAddress;
+
+    public NetworkChangeWatch(Action onChange)
+    {
+        _onAvailability = (_, _) => onChange();
+        _onAddress = (_, _) => onChange();
+        NetworkChange.NetworkAvailabilityChanged += _onAvailability;
+        NetworkChange.NetworkAddressChanged += _onAddress;
+    }
+
+    public void Dispose()
+    {
+        NetworkChange.NetworkAvailabilityChanged -= _onAvailability;
+        NetworkChange.NetworkAddressChanged -= _onAddress;
+    }
+}
+
 /// The network module's feed. Start subscribes to NetworkChange's availability and address events and judges once to set the
 /// baseline. The events come on thread-pool threads, so each is marshalled to the dispatcher, and a burst of them judges once
 /// (a 300 ms debounce). A one-shot timer runs only while an online change is pending (NetworkModule.PendingDue), then calls
@@ -15,20 +58,20 @@ public sealed class NetworkSource : IModuleSource
     private static readonly TimeSpan Debounce = TimeSpan.FromMilliseconds(300);
 
     private readonly NetworkModule _module;
+    private readonly NetworkReaders _readers;
     private readonly Dispatcher _dispatcher;
-    private readonly NetworkAvailabilityChangedEventHandler _onAvailability;
-    private readonly NetworkAddressChangedEventHandler _onAddress;
     private readonly DispatcherTimer _debounce = new() { Interval = Debounce };
     private readonly DispatcherTimer _settle = new();
+    private IDisposable? _watch;
     private bool _started;
 
-    /// The source of `module`. It is made on the UI thread, which the events are marshalled to.
-    public NetworkSource(NetworkModule module)
+    /// The source of `module`. It is made on the UI thread, which the events are marshalled to. readers are the OS reads; null
+    /// takes this PC's (NetworkReaders.Default).
+    public NetworkSource(NetworkModule module, NetworkReaders? readers = null)
     {
         _module = module;
+        _readers = readers ?? NetworkReaders.Default;
         _dispatcher = Dispatcher.CurrentDispatcher;
-        _onAvailability = (_, _) => Post();
-        _onAddress = (_, _) => Post();
         _debounce.Tick += (_, _) =>
         {
             _debounce.Stop();
@@ -46,8 +89,7 @@ public sealed class NetworkSource : IModuleSource
     public void Start()
     {
         _started = true;
-        NetworkChange.NetworkAvailabilityChanged += _onAvailability;
-        NetworkChange.NetworkAddressChanged += _onAddress;
+        _watch = _readers.Watch(Post);
         Judge();
     }
 
@@ -55,8 +97,8 @@ public sealed class NetworkSource : IModuleSource
     public void Stop()
     {
         _started = false;
-        NetworkChange.NetworkAvailabilityChanged -= _onAvailability;
-        NetworkChange.NetworkAddressChanged -= _onAddress;
+        _watch?.Dispose();
+        _watch = null;
         _debounce.Stop();
         _settle.Stop();
         _module.Reset();
@@ -82,7 +124,7 @@ public sealed class NetworkSource : IModuleSource
         }
         try
         {
-            var (online, wifi, vpn) = NetworkJudge.Judge(ReadInterfaces());
+            var (online, wifi, vpn) = NetworkJudge.Judge(_readers.Interfaces());
             _module.Observe((online, wifi, vpn), DateTimeOffset.Now);
         }
         catch (Exception e)
@@ -103,18 +145,4 @@ public sealed class NetworkSource : IModuleSource
             _settle.Start();
         }
     }
-
-    /// The interfaces as the judge reads them: IPv4 addresses and a non-zero IPv4 gateway.
-    private static List<NetIf> ReadInterfaces() =>
-        NetworkInterface.GetAllNetworkInterfaces().Select(n =>
-        {
-            var props = n.GetIPProperties();
-            return new NetIf(
-                n.Name,
-                n.Description,
-                n.NetworkInterfaceType,
-                n.OperationalStatus == OperationalStatus.Up,
-                props.UnicastAddresses.Any(a => a.Address.AddressFamily == AddressFamily.InterNetwork),
-                props.GatewayAddresses.Any(g => g.Address.AddressFamily == AddressFamily.InterNetwork && !g.Address.Equals(IPAddress.Any)));
-        }).ToList();
 }

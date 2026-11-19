@@ -24,6 +24,11 @@ public sealed class SensorsSourceTests
     }
 
     private static readonly SensorState Quiet = new(Array.Empty<string>(), false, false);
+    private static readonly SensorState WithCamera = new(Array.Empty<string>(), true, false);
+
+    /// Sensor readers with the given reading and a watch made by watch. The mute is not used by these tests.
+    private static SensorReaders Readers(Func<SensorState> read, Func<Action, ISensorWatch> watch) =>
+        new(read, watch, _ => false, () => false);
 
     [Fact]
     public void Start_IsReferenceCounted_AcrossPrivacyAndCalls()
@@ -32,12 +37,12 @@ public sealed class SensorsSourceTests
         {
             var module = new SensorsModule(new QuietAnnouncer(), () => true, () => true);
             var watches = new List<FakeWatch>();
-            var source = new SensorsSource(module, () => { }, () => Quiet, _ =>
+            var source = new SensorsSource(module, () => { }, new SharedClock(() => { }), Readers(() => Quiet, _ =>
             {
                 var watch = new FakeWatch();
                 watches.Add(watch);
                 return watch;
-            });
+            }));
 
             source.Start();  // privacy comes on
             Assert.Single(watches);
@@ -64,12 +69,12 @@ public sealed class SensorsSourceTests
         {
             var module = new SensorsModule(new QuietAnnouncer(), () => true, () => true);
             var watches = new List<FakeWatch>();
-            var source = new SensorsSource(module, () => { }, () => Quiet, _ =>
+            var source = new SensorsSource(module, () => { }, new SharedClock(() => { }), Readers(() => Quiet, _ =>
             {
                 var watch = new FakeWatch();
                 watches.Add(watch);
                 return watch;
-            });
+            }));
             var host = new ModuleHost(
                 new Dictionary<string, IModuleSource>(StringComparer.Ordinal) { ["privacy"] = source, ["calls"] = source },
                 _ => { });
@@ -82,6 +87,49 @@ public sealed class SensorsSourceTests
             Assert.Equal(1, watches[0].Stops);
             host.StopAll();
             Assert.Equal(1, watches[0].Stops);
+        });
+    }
+
+    [Fact]
+    public void UnchangedReading_DoesNotPublish_AChangedOneDoes()
+    {
+        Sta.Run(() =>
+        {
+            var module = new SensorsModule(new QuietAnnouncer(), () => true, () => true);
+            var reading = Quiet;
+            Action? captured = null;
+            var published = 0;
+            var source = new SensorsSource(module, () => published++, new SharedClock(() => { }),
+                Readers(() => reading, onChange =>
+                {
+                    captured = onChange;
+                    return new FakeWatch();
+                }));
+            try
+            {
+                source.Start();
+                captured!();  // the baseline: the same as the quiet state the module starts from
+                Fixture.Flush();
+                Assert.Equal(0, published);
+
+                reading = Quiet with { };  // the registry notified, but the same sensors
+                captured!();
+                Fixture.Flush();
+                Assert.Equal(0, published);
+
+                reading = WithCamera;  // a change is shown
+                captured!();
+                Fixture.Flush();
+                Assert.Equal(1, published);
+
+                captured!();  // the same again
+                Fixture.Flush();
+                Assert.Equal(1, published);
+            }
+            finally
+            {
+                source.Stop();
+            }
         });
     }
 }

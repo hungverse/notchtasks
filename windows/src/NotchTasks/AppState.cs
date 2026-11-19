@@ -22,6 +22,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
     private readonly AskStore _store;
     private readonly AskTracker _tracker = new();
     private readonly ModuleHost _host;
+    private readonly SharedClock _clock;
     private readonly BatterySource _batterySource;
     private readonly HealthSource _healthSource;
     private readonly SensorsSource _sensorsSource;
@@ -29,28 +30,30 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
     private AskWatcher? _watcher;
     private bool _disposed;
 
-    /// Creates the state on the UI thread. Call StartWatching next. The modules that are on start here. helper is the temperature
-    /// helper (the real one when null); tests pass a fake.
-    public AppState(SettingsStore settings, AskStore store, HealthReaders? readers = null, SensorHelper? helper = null)
+    /// Creates the state on the UI thread. Call StartWatching next. The modules that are on start here. options holds the OS
+    /// readers (AppStateOptions): null, or the default options, reads this PC; tests pass fakes for each reader.
+    public AppState(SettingsStore settings, AskStore store, AppStateOptions? options = null)
     {
+        var o = options ?? AppStateOptions.Production;
         Settings = settings;
         _store = store;
         _dispatcher = Dispatcher.CurrentDispatcher;
         Asks = new ObservableCollection<AgentAsk>();
+        _clock = new SharedClock(Publish);
         Timer = new TimerModule(this);
         Battery = new BatteryModule(this);
-        _batterySource = new BatterySource(Battery, Publish);
+        _batterySource = new BatterySource(Battery, Publish, o.Power);
         Network = new NetworkModule(this);
-        Downloads = new DownloadsModule(this, DownloadFolder.Locate() ?? string.Empty);
+        Downloads = new DownloadsModule(this, o.DownloadsFolder ?? DownloadFolder.Locate() ?? string.Empty);
         Health = new HealthModule(this);
-        _healthSource = new HealthSource(Health, PublishLoad, settings, readers);
-        Helper = helper ?? SensorHelper.Create(settings);
+        _healthSource = new HealthSource(Health, PublishLoad, settings, o.Health);
+        Helper = o.Helper ?? SensorHelper.Create(settings);
         _thermalSource = new ThermalSource(settings, Helper, PublishThermal);
         Sensors = new SensorsModule(this,
             () => ActiveModules(settings).Contains("privacy"),
             () => ActiveModules(settings).Contains("calls"));
-        _sensorsSource = new SensorsSource(Sensors, Publish);
-        _host = new ModuleHost(CreateSources(), OnTurnedOff, (message, e) => ErrorLog.Write(new InvalidOperationException(message, e)));
+        _sensorsSource = new SensorsSource(Sensors, Publish, _clock, o.Sensors);
+        _host = new ModuleHost(CreateSources(o.Network), OnTurnedOff, (message, e) => ErrorLog.Write(new InvalidOperationException(message, e)));
         Helper.Start();  // no UAC here: the helper is only started by the user's click (SensorHelper)
         _host.Apply(ActiveModules(settings));
         Snapshot = BuildSnapshot();
@@ -246,12 +249,12 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
 
     /// The module sources by module id, built once before the first Apply. Modules register their sources here: a module
     /// with no entry is active but runs nothing. Timer is made before this runs.
-    private IReadOnlyDictionary<string, IModuleSource> CreateSources() =>
+    private IReadOnlyDictionary<string, IModuleSource> CreateSources(NetworkReaders? network) =>
         new Dictionary<string, IModuleSource>(StringComparer.Ordinal)
         {
-            ["timer"] = new TimerSource(Timer, Publish),
+            ["timer"] = new TimerSource(Timer, _clock),
             ["battery"] = _batterySource,
-            ["network"] = new NetworkSource(Network),
+            ["network"] = new NetworkSource(Network, network),
             ["downloads"] = new DownloadsSource(Downloads),
             // one source for both: the temperature feed runs only while the health module runs and the pill is open
             ["health"] = new CompositeSource(_healthSource, _thermalSource),
@@ -322,10 +325,15 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         Publish();
     }
 
-    /// A module was turned off: its toasts go.
+    /// A module was turned off: its toasts go. The calls module turned off during a call forgets the call at once, with no
+    /// toast (privacy keeps the sensors, if it is on).
     private void OnTurnedOff(string id)
     {
         Toasts.DropModule(id, DateTimeOffset.Now);
+        if (id == "calls")
+        {
+            _sensorsSource.ForgetCall();
+        }
         Publish();
     }
 
@@ -341,5 +349,6 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         Settings.Changed -= OnSettingsChanged;
         _watcher?.Dispose();
         _host.StopAll();
+        _thermalSource.Dispose();  // unsubscribes from the helper's StateChanged
     }
 }

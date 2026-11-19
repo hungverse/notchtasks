@@ -84,6 +84,13 @@ public sealed class SensorsModule
     public void Reset()
     {
         Sensors = new SensorState(Array.Empty<string>(), false, false);
+        ForgetCall();
+    }
+
+    /// Forgets the live call at once, without a toast, and keeps the sensors: the calls module was turned off during a call.
+    /// Privacy still sees the mic and camera, so its toasts and the sensor chip carry on.
+    public void ForgetCall()
+    {
         Call = null;
         _callEnded = null;
     }

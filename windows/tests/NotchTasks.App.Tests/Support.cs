@@ -6,7 +6,11 @@ using System.Windows;
 using System.Windows.Threading;
 using NotchTasks.Core;
 using NotchTasks.Core.Asks;
+using NotchTasks.Core.Modules;
+using NotchTasks.Core.Notch;
 using NotchTasks.Core.Settings;
+using NotchTasks.Services;
+using NotchTasks.Services.Modules;
 
 namespace NotchTasks.AppTests;
 
@@ -115,12 +119,61 @@ internal sealed class TempRoot : IDisposable
 
 internal static class Fixture
 {
-    /// The app state over a temp settings file and a temp asks folder (both under TempRoot).
+    /// The app state over a temp settings file and a temp asks folder (both under TempRoot), with inert OS readers (Inert).
     public static AppState NewState()
     {
         var settings = SettingsStore.Load(AppPaths.SettingsFile);
-        return new AppState(settings, new AskStore(AppPaths.AsksDir));
+        return new AppState(settings, new AskStore(AppPaths.AsksDir), Inert(settings));
     }
+
+    /// The OS readers every App test runs on. Nothing here touches the real system: the Downloads folder is a folder that does
+    /// not exist under the temp root (so nothing is watched), the network reads no adapter and subscribes to nothing, the power is
+    /// a PC with no battery, the disk has 100 GB free, the sensors read quiet and watch nothing, the mic is not muted, and the
+    /// helper is a fake that is off and never launches or pipes. Tests replace one reader with `with`.
+    public static AppStateOptions Inert(SettingsStore settings) => new(
+        DownloadsFolder: Path.Combine(AppPaths.Root, "NoDownloads"),
+        Network: new NetworkReaders(() => new List<NetIf>(), _ => new NoopWatch()),
+        Power: () => new PowerFacts(HasBattery: false, Percent: 0, Charging: false, Plugged: false),
+        Health: new HealthReaders(() => new CpuTimes(0, 0, 0), () => 0.4, _ => 100L * 1_000_000_000L),
+        Sensors: new SensorReaders(() => QuietSensors, _ => new NoopWatch(), _ => false, () => false),
+        Helper: new SensorHelper(settings, new InertLauncher(), new InertPipe(), new InertStop(), "NotchTasksSensors.exe",
+            "S-1-5-21-0-0-0-1001", 1, _ => false));
+
+    /// The sensors of a quiet PC: no mic app, no camera, not muted.
+    public static readonly SensorState QuietSensors = new(Array.Empty<string>(), false, false);
+
+    /// A watch that does nothing. It is both the sensor watch and the network watch's disposable.
+    public sealed class NoopWatch : ISensorWatch, IDisposable
+    {
+        public void Stop()
+        {
+        }
+
+        public void Dispose()
+        {
+        }
+    }
+
+    private sealed class InertLauncher : IProcessLauncher
+    {
+        public Task<System.Diagnostics.Process?> RunAsAsync(string fileName, string arguments) =>
+            Task.FromResult<System.Diagnostics.Process?>(null);
+    }
+
+    private sealed class InertPipe : ISensorPipe
+    {
+        public Task<IReadOnlyList<ThermalReading>?> QueryAsync(CancellationToken ct) =>
+            Task.FromResult<IReadOnlyList<ThermalReading>?>(null);
+    }
+
+    private sealed class InertStop : IHelperStop
+    {
+        public bool Signal() => false;
+    }
+
+    /// Runs the posted work queued before this call on the UI thread (the sensor and settings callbacks post to it).
+    public static void Flush() => System.Windows.Threading.Dispatcher.CurrentDispatcher.Invoke(
+        () => { }, System.Windows.Threading.DispatcherPriority.Background);
 
     /// Creates a window or page through its constructor, without the public Show that would open it.
     public static T Create<T>(params object?[] args) where T : class =>

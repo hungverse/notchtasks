@@ -32,11 +32,11 @@
         <TextBlock x:Name="TimeText" FontSize="20" FontWeight="SemiBold" Text="0:00" />
         <TextBlock x:Name="CaptionText" FontSize="11" Foreground="#8E8E93" />
       </StackPanel>
-      <Button x:Name="PlusOneButton" Grid.Column="3" Style="{StaticResource ChoiceButton}" Content="+1&#x2032;"
+      <Button Focusable="False" x:Name="PlusOneButton" Grid.Column="3" Style="{StaticResource ChoiceButton}" Content="+1&#x2032;"
               Margin="0,0,6,0" Click="OnPlusOne" />
-      <Button x:Name="PlusFiveButton" Grid.Column="4" Style="{StaticResource ChoiceButton}" Content="+5&#x2032;"
+      <Button Focusable="False" x:Name="PlusFiveButton" Grid.Column="4" Style="{StaticResource ChoiceButton}" Content="+5&#x2032;"
               Margin="0,0,6,0" Click="OnPlusFive" />
-      <Button x:Name="StopButton" Grid.Column="5" Width="26" Height="26" Padding="0" Cursor="Hand"
+      <Button Focusable="False" x:Name="StopButton" Grid.Column="5" Width="26" Height="26" Padding="0" Cursor="Hand"
               FocusVisualStyle="{x:Null}" Background="#B3FF3B30" Foreground="White"
               FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="11" FontWeight="Bold"
               Content="&#xE71A;" ToolTip="{l:L Stop timer}" Click="OnStop">

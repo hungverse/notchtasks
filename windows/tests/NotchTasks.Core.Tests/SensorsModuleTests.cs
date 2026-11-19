@@ -262,6 +262,47 @@ public class SensorsModuleTests
     }
 
     [Fact]
+    public void ForgetCall_ClearsTheCall_WithoutAToast_AndNoEndedToastComesLater()
+    {
+        var announce = new RecordingAnnouncer();
+        var callsOn = true;
+        var module = new SensorsModule(announce, () => true, () => callsOn);
+        module.Apply(Mic("zoom.exe"), T0);
+
+        // The calls module is turned off while the call is live: the call goes at once, and nothing is announced.
+        callsOn = false;
+        module.ForgetCall();
+        module.Tick(T0.AddSeconds(30));
+
+        Assert.Null(module.Call);
+        Assert.Null(module.EndDue);
+        Assert.Single(announce.Calls);  // only the start
+        Assert.Equal("On a call", announce.Calls[0].Toast.Title);
+    }
+
+    [Fact]
+    public void ForgetCall_KeepsTheSensors_SoPrivacyStillSeesThem()
+    {
+        var module = Make(new RecordingAnnouncer());
+        module.Apply(Mic("zoom.exe"), T0);
+
+        module.ForgetCall();
+
+        Assert.Equal(new[] { "zoom.exe" }, module.Sensors.MicApps);
+    }
+
+    [Fact]
+    public void SensorState_Same_ComparesTheMicAppsInOrder_AndTheFlags()
+    {
+        var a = new SensorState(new List<string> { "zoom.exe", "teams.exe" }, true, false);
+
+        Assert.True(a.Same(new SensorState(new[] { "zoom.exe", "teams.exe" }, true, false)));
+        Assert.False(a.Same(new SensorState(new[] { "teams.exe", "zoom.exe" }, true, false)));
+        Assert.False(a.Same(new SensorState(new[] { "zoom.exe", "teams.exe" }, false, false)));
+        Assert.False(a.Same(new SensorState(new[] { "zoom.exe", "teams.exe" }, true, true)));
+    }
+
+    [Fact]
     public void CallApp_DedicatedBeatsBrowser()
     {
         Assert.Equal("zoom.exe", CallApps.CallApp(new[] { "chrome.exe", "zoom.exe" }));

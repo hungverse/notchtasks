@@ -22,17 +22,17 @@
       <TextBlock x:Name="TimerGlyph" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12"
                  Foreground="#8E8E93" VerticalAlignment="Center" Margin="0,0,8,0" />
       <StackPanel x:Name="TimerPills" Orientation="Horizontal" VerticalAlignment="Center">
-        <Button x:Name="Timer5" Tag="5" Style="{StaticResource ChoiceButton}" Padding="9,0" Margin="0,0,4,0" Content="5&#x2032;" />
-        <Button x:Name="Timer15" Tag="15" Style="{StaticResource ChoiceButton}" Padding="9,0" Margin="0,0,4,0" Content="15&#x2032;" />
-        <Button x:Name="Timer25" Tag="25" Style="{StaticResource ChoiceButton}" Padding="9,0" Margin="0,0,4,0" Content="25&#x2032;" />
-        <Button x:Name="Timer45" Tag="45" Style="{StaticResource ChoiceButton}" Padding="9,0" Content="45&#x2032;" />
+        <Button Focusable="False" x:Name="Timer5" Tag="5" Style="{StaticResource ChoiceButton}" Padding="9,0" Margin="0,0,4,0" Content="5&#x2032;" />
+        <Button Focusable="False" x:Name="Timer15" Tag="15" Style="{StaticResource ChoiceButton}" Padding="9,0" Margin="0,0,4,0" Content="15&#x2032;" />
+        <Button Focusable="False" x:Name="Timer25" Tag="25" Style="{StaticResource ChoiceButton}" Padding="9,0" Margin="0,0,4,0" Content="25&#x2032;" />
+        <Button Focusable="False" x:Name="Timer45" Tag="45" Style="{StaticResource ChoiceButton}" Padding="9,0" Content="45&#x2032;" />
       </StackPanel>
     </StackPanel>
     <!-- The Control Panel (gear) and Quit (power), at the right, as on the Mac. -->
     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-      <Button x:Name="ControlPanelButton" Style="{StaticResource FooterButton}" Margin="0,0,6,0"
+      <Button Focusable="False" x:Name="ControlPanelButton" Style="{StaticResource FooterButton}" Margin="0,0,6,0"
               Content="&#xE713;" ToolTip="{l:L Control Panel}" />
-      <Button x:Name="QuitButton" Style="{StaticResource FooterButton}"
+      <Button Focusable="False" x:Name="QuitButton" Style="{StaticResource FooterButton}"
               Content="&#xE7E8;" ToolTip="{l:L Quit}" />
     </StackPanel>
   </Grid>

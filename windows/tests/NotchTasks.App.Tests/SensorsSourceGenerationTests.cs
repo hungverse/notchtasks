@@ -38,11 +38,11 @@ public sealed class SensorsSourceGenerationTests
             var module = new SensorsModule(new QuietAnnouncer(), () => true, () => true);
             var reading = Quiet;
             Action? captured = null;
-            var source = new SensorsSource(module, () => { }, () => reading, onChange =>
+            var source = new SensorsSource(module, () => { }, new SharedClock(() => { }), new SensorReaders(() => reading, onChange =>
             {
                 captured = onChange;
                 return new CapturingWatch();
-            });
+            }, _ => false, () => false));
 
             source.Start();
             Assert.Equal(Quiet, module.Sensors);  // Start itself reads nothing: the watch thread takes the baseline
@@ -63,11 +63,11 @@ public sealed class SensorsSourceGenerationTests
             var module = new SensorsModule(new QuietAnnouncer(), () => true, () => true);
             var reading = Quiet;
             var callbacks = new List<Action>();
-            var source = new SensorsSource(module, () => { }, () => reading, onChange =>
+            var source = new SensorsSource(module, () => { }, new SharedClock(() => { }), new SensorReaders(() => reading, onChange =>
             {
                 callbacks.Add(onChange);
                 return new CapturingWatch();
-            });
+            }, _ => false, () => false));
 
             source.Start();
             reading = WithCamera;

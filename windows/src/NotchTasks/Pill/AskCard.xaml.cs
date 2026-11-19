@@ -168,6 +168,7 @@ public partial class AskCard : UserControl
         var button = new Button
         {
             Style = (Style)FindResource("OptionButton"),
+            Focusable = false,  // the pill never takes the keyboard focus: its buttons do not activate or focus the window
             Margin = new Thickness(0, 0, 6, 6),
             Background = OptionOff,
             Foreground = Brushes.White,

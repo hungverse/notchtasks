@@ -19,7 +19,7 @@ public sealed class PermissionsPaneTurnOffTests
 
     private sealed class NoLaunch : IProcessLauncher
     {
-        public Process? RunAs(string fileName, string arguments) => null;
+        public Task<Process?> RunAsAsync(string fileName, string arguments) => Task.FromResult<Process?>(null);
     }
 
     private sealed class NoPipe : ISensorPipe

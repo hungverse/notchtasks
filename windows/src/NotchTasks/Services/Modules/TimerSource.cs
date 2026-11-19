@@ -1,27 +1,25 @@
-using System.Windows.Threading;
 using NotchTasks.Core.Modules;
 
 namespace NotchTasks.Services.Modules;
 
-/// The timer module's feed. A DispatcherTimer at 1 s runs only while the source is started and a timer runs, so an idle
-/// timer module costs no wake-ups. Each tick ends the timer when its time is up, and publishes the app state while a timer
-/// runs, so the chip's and the card's mm:ss follow the clock. Stop stops the timer and clears the module (it keeps no state).
-public sealed class TimerSource : IModuleSource
+/// The timer module's feed. While the source is started and a timer runs, the shared one-second clock ticks it: each tick ends
+/// the timer when its time is up, and asks for a publish while a timer runs, so the chip's and the card's mm:ss follow the
+/// clock. An idle timer module costs no wake-ups. Stop stops following the module and clears it (it keeps no state).
+public sealed class TimerSource : IModuleSource, IClockUser
 {
     private readonly TimerModule _module;
-    private readonly Action _publish;
-    private readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromSeconds(1) };
+    private readonly SharedClock _clock;
     private bool _started;
 
-    /// The source of `module`, which publishes the app state through `publish` (on the UI thread).
-    public TimerSource(TimerModule module, Action publish)
+    /// The source of `module`. clock is the app's shared one-second ticker, which publishes for the timer and the calls.
+    public TimerSource(TimerModule module, SharedClock clock)
     {
         _module = module;
-        _publish = publish;
-        _timer.Tick += OnTick;
+        _clock = clock;
+        _clock.Add(this);
     }
 
-    /// Starts following the module: the timer runs while a timer is running.
+    /// Starts following the module: the clock runs while a timer is running.
     public void Start()
     {
         _started = true;
@@ -30,35 +28,24 @@ public sealed class TimerSource : IModuleSource
         Sync();
     }
 
-    /// Stops the timer, stops following the module and clears it (the source keeps no state).
+    /// Stops following the module and clears it (the source keeps no state). The clock stops with it, unless a call needs it.
     public void Stop()
     {
         _started = false;
         _module.Changed -= Sync;
-        _timer.Stop();
         _module.Stop();
+        _clock.Sync();
     }
 
-    /// The timer runs while the source is started and a timer is running; otherwise it is stopped.
-    private void Sync()
+    /// True while the source is started and a timer runs.
+    public bool NeedsClock => _started && _module.State is not null;
+
+    /// One second passed: the timer ends when its time is up. Returns true while a timer runs, or when it has just ended.
+    public bool ClockTick(DateTimeOffset now)
     {
-        var running = _started && _module.State is not null;
-        if (!running)
-        {
-            _timer.Stop();
-        }
-        else if (!_timer.IsEnabled)
-        {
-            _timer.Start();
-        }
+        var ended = _module.Tick(now);
+        return ended || _module.State is not null;
     }
 
-    private void OnTick(object? sender, EventArgs e)
-    {
-        var ended = _module.Tick(DateTimeOffset.Now);
-        if (ended || _module.State is not null)
-        {
-            _publish();
-        }
-    }
+    private void Sync() => _clock.Sync();
 }

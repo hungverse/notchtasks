@@ -62,6 +62,7 @@ public sealed class LoadMeter : StackPanel
         Orientation = Orientation.Horizontal;
         VerticalAlignment = VerticalAlignment.Center;
         Cursor = Cursors.Hand;
+        Focusable = false;  // a click target only: the pill never takes the keyboard focus
 
         var ring = new Grid { Width = Size, Height = Size };
         ring.Children.Add(new Ellipse
