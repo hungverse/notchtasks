@@ -11,6 +11,7 @@ namespace NotchTasks.Pill.Sections;
 /// not lost when the pill rebuilds its sections each second: Update refreshes it from the app state.
 public partial class TimerCard : UserControl
 {
+    private static readonly Color OrangeTint = Color.FromRgb(0xFF, 0x9F, 0x0A);  // the Mac's .orange, the timer's default
     private const double RingRadius = 15.5;  // the ring's centre line, in the 34 px box
     private const double RingCentre = 17;
 
@@ -21,19 +22,19 @@ public partial class TimerCard : UserControl
         InitializeComponent();
     }
 
-    /// The timer's tint: its module colour, else the accent, else orange (the Mac's default). The chip and the quick bar's
-    /// glyph use the same tint.
-    public static Color TintOf(AppState state, Color accent)
+    /// The timer's tint, as the Mac's `color(for: .timer) ?? accentColor ?? .orange`: its module colour, else the chosen accent
+    /// (null when the accent is "auto"), else orange. The chip uses the same rule (ChipView.TintOf).
+    public static Color TintOf(AppState state, Color? accent)
     {
         if (state.Settings.ModuleColors.TryGetValue("timer", out var hex) && HexColor.TryNormalize(hex, out var normalized))
         {
             return HexColor.ToColor(normalized);
         }
-        return accent;
+        return accent ?? OrangeTint;
     }
 
     /// Refreshes the card from the running timer and returns true. Returns false, and leaves the card alone, when no timer runs.
-    public bool Update(AppState state, Color accent)
+    public bool Update(AppState state, Color? accent)
     {
         if (state.Timer.State is not { } timer)
         {

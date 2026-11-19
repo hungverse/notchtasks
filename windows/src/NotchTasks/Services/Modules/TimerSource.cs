@@ -19,18 +19,22 @@ public sealed class TimerSource : IModuleSource
         _module = module;
         _publish = publish;
         _timer.Tick += OnTick;
-        _module.Changed += Sync;
     }
 
+    /// Starts following the module: the timer runs while a timer is running.
     public void Start()
     {
         _started = true;
+        _module.Changed -= Sync;  // never subscribed twice
+        _module.Changed += Sync;
         Sync();
     }
 
+    /// Stops the timer, stops following the module and clears it (the source keeps no state).
     public void Stop()
     {
         _started = false;
+        _module.Changed -= Sync;
         _timer.Stop();
         _module.Stop();
     }

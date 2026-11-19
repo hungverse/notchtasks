@@ -18,8 +18,9 @@
     </Grid.ColumnDefinitions>
     <!-- The timer's glyph and quick-start pills, at the left: shown while the timer module is on and no timer runs. -->
     <StackPanel x:Name="TimerBar" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+      <!-- Grey, as the Mac's quick bar (.foregroundStyle(.gray)); the card and the chip take the timer's tint. -->
       <TextBlock x:Name="TimerGlyph" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12"
-                 VerticalAlignment="Center" Margin="0,0,8,0" />
+                 Foreground="#8E8E93" VerticalAlignment="Center" Margin="0,0,8,0" />
       <StackPanel x:Name="TimerPills" Orientation="Horizontal" VerticalAlignment="Center">
         <Button x:Name="Timer5" Tag="5" Style="{StaticResource ChoiceButton}" Padding="9,0" Margin="0,0,4,0" Content="5&#x2032;" />
         <Button x:Name="Timer15" Tag="15" Style="{StaticResource ChoiceButton}" Padding="9,0" Margin="0,0,4,0" Content="15&#x2032;" />

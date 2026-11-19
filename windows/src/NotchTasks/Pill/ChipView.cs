@@ -92,7 +92,7 @@ public static class ChipView
 
     /// Fills the wings with the closed pill's chips, after the badges already in them. A lone chip shows its lead on the left
     /// and its trail on the right; the others sit whole in the wing ChipBoard.Sides puts them in. Returns how many chips there are.
-    public static int FillWings(StackPanel left, StackPanel right, AppState state, Color accent)
+    public static int FillWings(StackPanel left, StackPanel right, AppState state, Color? accent)
     {
         RemoveChips(left);
         RemoveChips(right);
@@ -116,7 +116,7 @@ public static class ChipView
         return chips.Count;
     }
 
-    private static void AddTo(StackPanel wing, Chip chip, Color accent, IReadOnlyDictionary<string, string> colors,
+    private static void AddTo(StackPanel wing, Chip chip, Color? accent, IReadOnlyDictionary<string, string> colors,
         DateTimeOffset now, bool lead, bool trail)
     {
         if (Panel(chip, accent, colors, now, lead, trail) is { } panel)
@@ -137,9 +137,9 @@ public static class ChipView
         }
     }
 
-    /// The chip's colour: its module's colour when it has one, else the accent, else the chip's own default.
-    /// The ask chip is always orange, as the Mac's.
-    private static Color TintOf(Chip chip, Color? accent, IReadOnlyDictionary<string, string> moduleColors)
+    /// The chip's colour: its module's colour when it has one, else the chosen accent (null for "auto", as the Mac's accentColor
+    /// is nil then), else the chip's own default (the timer's is orange). The ask chip is always orange, as the Mac's.
+    public static Color TintOf(Chip chip, Color? accent, IReadOnlyDictionary<string, string> moduleColors)
     {
         if (chip.Kind == ChipKind.Ask)
         {
@@ -156,6 +156,7 @@ public static class ChipView
     {
         ChipKind.Call => Color.FromRgb(0x30, 0xD1, 0x58),
         ChipKind.Sensor => AskOrange,
+        ChipKind.Timer => AskOrange,
         _ => Color.FromRgb(0x32, 0xD2, 0xFF),
     };
 

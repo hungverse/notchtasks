@@ -60,7 +60,9 @@ public partial class PillWindow : Window
     private string _badgesKey = string.Empty;
     private int _badgeCount;
     private bool _hasCollapsed;
-    private Color _accent = Color.FromRgb(0x32, 0xD2, 0xFF);
+    private Color _accent = Color.FromRgb(0x32, 0xD2, 0xFF);  // the resolved accent: the badges' colour, and never null
+    private Color? _chosenAccent;  // the accent the user chose: null for "auto" (the Mac's accentColor is nil then)
+    private int _sectionRebuilds;  // how often the sections were taken out and put back (a rebuild, not a margin change)
 
     /// The shape the pill is animating to: closed, the toast, or open.
     private enum Mode
@@ -112,7 +114,7 @@ public partial class PillWindow : Window
         _agentsSection = _ => _state.Asks.Count > 0 ? _asks.Panel : null;
         SectionRegistry.Register("agents", _agentsSection);
         // The timer's section is its card while a timer runs.
-        _timerSection = state => _timerCard.Update(state, _accent) ? _timerCard : null;
+        _timerSection = state => _timerCard.Update(state, _chosenAccent) ? _timerCard : null;
         SectionRegistry.Register("timer", _timerSection);
 
         SourceInitialized += OnSourceInitialized;
@@ -568,16 +570,42 @@ public partial class PillWindow : Window
 
     /// The open pill's sections, from the registry: the active modules' order, with calls first. The placeholder shows when
     /// no section has anything.
+    /// The children are replaced only when the sections differ: a publish that changes nothing (the timer's tick) leaves them in
+    /// place, so a press on one of them is not lost to a removal. Only the margins are set again.
     private void SyncSections()
     {
-        SectionList.Children.Clear();
-        foreach (var section in SectionRegistry.For(_state))
+        var sections = SectionRegistry.For(_state);
+        if (!SameChildren(sections))
         {
-            section.Margin = new Thickness(0, SectionList.Children.Count == 0 ? 0 : 8, 0, 0);
-            SectionList.Children.Add(section);
+            _sectionRebuilds++;
+            SectionList.Children.Clear();
+            foreach (var section in sections)
+            {
+                SectionList.Children.Add(section);
+            }
         }
-        var any = SectionList.Children.Count > 0;
-        SectionScroll.Visibility = any ? Visibility.Visible : Visibility.Collapsed;
+        for (var i = 0; i < sections.Count; i++)
+        {
+            sections[i].Margin = new Thickness(0, i == 0 ? 0 : 8, 0, 0);
+        }
+        SectionScroll.Visibility = sections.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    /// True when the panel holds exactly these elements, in this order.
+    private bool SameChildren(IReadOnlyList<FrameworkElement> sections)
+    {
+        if (SectionList.Children.Count != sections.Count)
+        {
+            return false;
+        }
+        for (var i = 0; i < sections.Count; i++)
+        {
+            if (!ReferenceEquals(SectionList.Children[i], sections[i]))
+            {
+                return false;
+            }
+        }
+        return true;
     }
 
     /// Each card's "Waiting m:ss", once a second while the open pill shows them.
@@ -591,7 +619,7 @@ public partial class PillWindow : Window
     {
         RebuildChips();
         SyncSections();
-        Bar.Update(_state, _accent);
+        Bar.Update(_state);
         HeaderSummary.Text = PillSummary.For(_state.Snapshot);
         SyncWaitTimer();
         if (_open)
@@ -616,6 +644,7 @@ public partial class PillWindow : Window
         var badges = settings.Badges;
         var hex = Appearance.ResolveAccent(settings.Accent, settings.CustomAccent, SystemAccent.Hex()) ?? "#32D2FF";
         _accent = (Color)ColorConverter.ConvertFromString(hex)!;
+        _chosenAccent = ChosenAccent(settings);
         // The badges take the accent when they have no colour of their own, so a new accent rebuilds them too.
         var key = hex + "|" + badges.ToJsonString();
         if (key != _badgesKey)
@@ -624,8 +653,19 @@ public partial class PillWindow : Window
             RebuildBadges(badges);
         }
         RebuildChips();  // the chips follow the accent and the module colours
-        Bar.Update(_state, _accent);  // the quick bar's timer glyph follows them too
+        Bar.Update(_state);
         ApplyAppearance();
+    }
+
+    /// The accent the user chose, for the chips and the timer card: null for "auto", which uses the Mac's defaults (orange for
+    /// the timer). The system accent is not used here, as the Mac's accentColor is nil for "auto".
+    private static Color? ChosenAccent(SettingsStore settings)
+    {
+        if (settings.Accent == "auto" || Appearance.ResolveAccent(settings.Accent, settings.CustomAccent, null) is not { } hex)
+        {
+            return null;
+        }
+        return HexColor.TryNormalize(hex, out var normalized) ? HexColor.ToColor(normalized) : null;
     }
 
     /// The surface, shadow, glow and visibility for the current state (open, closing, closed, idle).
@@ -688,7 +728,7 @@ public partial class PillWindow : Window
     /// The closed pill's chips, after the badges in the wings. A pill with a badge or a chip shows.
     private void RebuildChips()
     {
-        var chips = ChipView.FillWings(LeftWing, RightWing, _state, _accent);
+        var chips = ChipView.FillWings(LeftWing, RightWing, _state, _chosenAccent);
         _hasCollapsed = _badgeCount > 0 || chips > 0;
     }
 

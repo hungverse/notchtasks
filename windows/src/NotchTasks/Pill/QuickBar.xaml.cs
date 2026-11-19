@@ -1,8 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
 using NotchTasks.Core;
-using NotchTasks.Pill.Sections;
 
 namespace NotchTasks.Pill;
 
@@ -30,12 +28,11 @@ public partial class QuickBar : UserControl
     public event Action? QuitRequested;
 
     /// Brings the bar in line with the app state: the timer's glyph and pills show while the timer module is on and no timer
-    /// runs. The glyph takes the timer's tint, as the card does. The pill window calls this on every published change.
-    public void Update(AppState state, Color accent)
+    /// runs. The pill window calls this on every published change.
+    public void Update(AppState state)
     {
         _state = state;
         TimerGlyph.Text = ModuleGlyphs.Get("timer");
-        TimerGlyph.Foreground = new SolidColorBrush(TimerCard.TintOf(state, accent));
         var show = state.Snapshot.ActiveModules.Contains("timer") && state.Timer.State is null;
         TimerBar.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
     }
