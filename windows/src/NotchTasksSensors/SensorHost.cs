@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.IO.Pipes;
 using System.Security.AccessControl;
 using System.Security.Principal;
+using System.Threading.Tasks;
 using NotchTasks.Core.Sensors;
 
 namespace NotchTasksSensors;
@@ -13,14 +14,14 @@ internal static class SensorHost
 {
     private const int PipeBufferBytes = 1024;
 
-    /// Serves until the parent process ends (when parentPid is given), or the stop event is set, or the helper is not the first
-    /// with this user's names. Returns the exit code.
+    /// Serves until the parent process ends (when parentPid is given), or the stop event is set. A second helper for the same user
+    /// (the stop event or the pipe is already taken) exits 0 quietly. A failed connection is logged once and the next one is served.
     public static async Task<int> ServeAsync(string sid, int? parentPid, IThermalReader reader)
     {
         using var stop = CreateStopEvent(sid);
         if (stop is null)
         {
-            return 1;  // another helper already owns this user's stop event: this one does not share it
+            return 0;  // a helper for this user is already running
         }
 
         using var cts = new CancellationTokenSource();
@@ -48,7 +49,7 @@ internal static class SensorHost
             }
             catch (IOException)
             {
-                return 1;  // the name is taken by another instance
+                return 0;  // FirstPipeInstance: this user's pipe is taken by another instance
             }
 
             using (pipe)
@@ -56,23 +57,16 @@ internal static class SensorHost
                 try
                 {
                     await pipe.WaitForConnectionAsync(cts.Token);
+                    await SensorProtocol.ServeAsync(pipe, reader, cts.Token);
                 }
-                catch (OperationCanceledException)
+                catch (OperationCanceledException) when (cts.IsCancellationRequested)
                 {
                     break;
                 }
-                catch (IOException)
+                catch (Exception e)
                 {
-                    continue;
-                }
-
-                try
-                {
-                    await SensorProtocol.ServeAsync(pipe, reader, cts.Token);
-                }
-                catch (IOException)
-                {
-                    // The client went away mid-answer: the next connection is served as usual.
+                    HelperLog.Once(e);
+                    await Task.Delay(TimeSpan.FromMilliseconds(100));
                 }
             }
         }
@@ -174,5 +168,30 @@ internal static class SensorHost
         };
         thread.Start();
         return true;
+    }
+}
+
+/// The helper's own error log: the first failure of a run is written, the rest are not (the helper has no window).
+internal static class HelperLog
+{
+    private static bool _written;
+
+    public static void Once(Exception error)
+    {
+        if (_written)
+        {
+            return;
+        }
+        _written = true;
+        try
+        {
+            File.AppendAllText(
+                Path.Combine(AppContext.BaseDirectory, "NotchTasksSensors.log"),
+                $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {error}{Environment.NewLine}");
+        }
+        catch (Exception)
+        {
+            // Logging never throws.
+        }
     }
 }

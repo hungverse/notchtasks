@@ -1,3 +1,4 @@
+using System.Security.AccessControl;
 using NotchTasks.Core.Sensors;
 using Xunit;
 
@@ -97,4 +98,88 @@ public sealed class SensorInstallTests : IDisposable
     [InlineData("", false)]
     public void IsSid_OnlyAcceptsSidText(string text, bool expected) =>
         Assert.Equal(expected, SensorNames.IsSid(text));
+
+    [Fact]
+    public void LogonTask_RunsAsSystem_TriggeredByTheUsersLogon()
+    {
+        var xml = SensorTask.Xml(Sid, @"C:\Program Files\NotchTasks Sensors\NotchTasksSensors.exe", SensorArgs.Serve(Sid, null));
+
+        // The principal is SYSTEM, never the user: no user environment reaches it.
+        var principal = xml.Substring(xml.IndexOf("<Principals>", StringComparison.Ordinal));
+        Assert.Contains("<UserId>S-1-5-18</UserId>", principal);
+        Assert.Contains("<LogonType>ServiceAccount</LogonType>", principal);
+        Assert.DoesNotContain("InteractiveToken", xml);
+        Assert.Contains("<RunLevel>HighestAvailable</RunLevel>", principal);
+        // The trigger fires only for the user's own logon: the user's SID sits inside the LogonTrigger element.
+        var trigger = xml.Substring(xml.IndexOf("<LogonTrigger>", StringComparison.Ordinal),
+            xml.IndexOf("</LogonTrigger>", StringComparison.Ordinal) - xml.IndexOf("<LogonTrigger>", StringComparison.Ordinal));
+        Assert.Contains($"<UserId>{Sid}</UserId>", trigger);
+    }
+
+    [Fact]
+    public void LogonTask_ActionIsTheAbsoluteProgramFilesPath()
+    {
+        var exe = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "NotchTasks Sensors", "NotchTasksSensors.exe");
+        var xml = SensorTask.Xml(Sid, exe, SensorArgs.Serve(Sid, null));
+
+        Assert.Contains($"<Command>{exe}</Command>", xml);
+        Assert.Contains($"<Arguments>--serve --user {Sid}</Arguments>", xml);
+    }
+
+    [Fact]
+    public void LogonTask_RejectsARelativeAction()
+    {
+        Assert.Throws<ArgumentException>(() => SensorTask.Xml(Sid, "NotchTasksSensors.exe", "--serve"));
+    }
+
+    [Fact]
+    public void TaskAndMarkerNames_ArePerUser()
+    {
+        var other = "S-1-5-21-1111111111-2222222222-3333333333-1002";
+
+        Assert.Equal("NotchTasks Sensors " + Sid, SensorNames.TaskName(Sid));
+        Assert.NotEqual(SensorNames.TaskName(Sid), SensorNames.TaskName(other));
+        Assert.Equal(Sid + ".signin", SensorNames.MarkerName(Sid));
+        Assert.EndsWith(SensorNames.MarkerName(Sid), SensorNames.MarkerPath(Sid), StringComparison.Ordinal);
+    }
+}
+
+public sealed class SensorFolderRulesTests
+{
+    private const string Users = "S-1-5-32-545";
+    private const string AuthenticatedUsers = "S-1-5-11";
+    private const string Everyone = "S-1-1-0";
+    private const string Interactive = "S-1-5-4";
+    private const string Administrators = "S-1-5-32-544";
+
+    [Fact]
+    public void UsersReadAndExecute_IsAllowed()
+    {
+        // Program Files gives Users:(RX). The read bits are not write-type bits, so the folder is kept.
+        Assert.False(SensorFolderRules.IsOrdinaryWrite(Users, AccessControlType.Allow, FileSystemRights.ReadAndExecute));
+        Assert.False(SensorFolderRules.GrantsWrite(FileSystemRights.ReadAndExecute));
+    }
+
+    [Fact]
+    public void UsersModify_IsRejected()
+    {
+        Assert.True(SensorFolderRules.IsOrdinaryWrite(Users, AccessControlType.Allow, FileSystemRights.Modify));
+        Assert.True(SensorFolderRules.GrantsWrite(FileSystemRights.Modify));
+    }
+
+    [Theory]
+    [InlineData(AuthenticatedUsers, FileSystemRights.WriteData)]
+    [InlineData(Everyone, FileSystemRights.AppendData)]
+    [InlineData(Interactive, FileSystemRights.WriteAttributes)]
+    [InlineData(Users, FileSystemRights.Delete)]
+    [InlineData(Users, FileSystemRights.TakeOwnership)]
+    public void OtherOrdinaryIdentities_WithAWriteRight_AreRejected(string sid, FileSystemRights rights) =>
+        Assert.True(SensorFolderRules.IsOrdinaryWrite(sid, AccessControlType.Allow, rights));
+
+    [Fact]
+    public void DenyRules_AndAdministrators_AreNotOrdinaryWrite()
+    {
+        Assert.False(SensorFolderRules.IsOrdinaryWrite(Users, AccessControlType.Deny, FileSystemRights.Modify));
+        Assert.False(SensorFolderRules.IsOrdinaryWrite(Administrators, AccessControlType.Allow, FileSystemRights.FullControl));
+    }
 }

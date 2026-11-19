@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using NotchTasks.Core;
 using NotchTasks.Core.Modules;
+using NotchTasks.Core.Sensors;
 using NotchTasks.Core.Settings;
 using NotchTasks.Services;
 using Xunit;
@@ -58,13 +59,76 @@ public sealed class SensorHelperTests
         }
     }
 
-    private static (SensorHelper Helper, FakeLauncher Launcher, FakePipe Pipe, FakeStop Stop) NewHelper(SettingsStore settings)
+    /// The helper over fakes. marker says whether this user's sign-in marker is in place (the only file the helper looks at).
+    private static (SensorHelper Helper, FakeLauncher Launcher, FakePipe Pipe, FakeStop Stop) NewHelper(SettingsStore settings, bool marker = false)
     {
         var launcher = new FakeLauncher();
         var pipe = new FakePipe();
         var stop = new FakeStop();
-        var helper = new SensorHelper(settings, launcher, pipe, stop, HelperExe, Sid, AppPid);
+        var markerPath = SensorNames.MarkerPath(Sid);
+        var helper = new SensorHelper(settings, launcher, pipe, stop, HelperExe, Sid, AppPid,
+            path => marker && path == markerPath);
         return (helper, launcher, pipe, stop);
+    }
+
+    [Fact]
+    public async Task TurnOff_WithMarker_RunsUninstall_EvenWhenTheSyncedFlagIsOff()
+    {
+        using var root = new TempRoot();
+        File.WriteAllText(AppPaths.SettingsFile, "{\"sensorHelper\": true, \"sensorHelperAtSignIn\": false}");
+        using var settings = SettingsStore.Load(AppPaths.SettingsFile);
+        var (helper, launcher, _, stop) = NewHelper(settings, marker: true);
+
+        // The launcher returns no process here (no UAC in tests): the uninstall is then not run to an end, and nothing changes.
+        await helper.TurnOffAsync();
+
+        Assert.Equal(1, launcher.Calls);
+        Assert.Equal($"--uninstall-logon {Sid}", launcher.LastArguments);
+        Assert.Equal(0, stop.Signals);
+        Assert.True(settings.SensorHelper);
+    }
+
+    [Fact]
+    public async Task TurnOff_WithoutMarker_NoUac_EvenIfTheSyncedSignInFlagIsOn()
+    {
+        using var root = new TempRoot();
+        File.WriteAllText(AppPaths.SettingsFile, "{\"sensorHelper\": true, \"sensorHelperAtSignIn\": true}");
+        using var settings = SettingsStore.Load(AppPaths.SettingsFile);
+        var (helper, launcher, _, stop) = NewHelper(settings, marker: false);
+        helper.Start();
+
+        await helper.TurnOffAsync();
+
+        Assert.Equal(0, launcher.Calls);
+        Assert.Equal(1, stop.Signals);
+        Assert.False(settings.SensorHelper);
+        Assert.Equal(HelperState.Off, helper.State);
+    }
+
+    [Fact]
+    public void Start_WithoutMarker_AndSyncedSignIn_IsOff_NeverLaunches()
+    {
+        using var root = new TempRoot();
+        File.WriteAllText(AppPaths.SettingsFile, "{\"sensorHelper\": true, \"sensorHelperAtSignIn\": true}");
+        using var settings = SettingsStore.Load(AppPaths.SettingsFile);
+        var (helper, launcher, pipe, _) = NewHelper(settings, marker: false);
+
+        helper.Start();
+
+        Assert.Equal(HelperState.Off, helper.State);
+        Assert.False(helper.HasSignInTask);
+        Assert.Equal(0, launcher.Calls);
+        Assert.Equal(0, pipe.Calls);
+    }
+
+    [Fact]
+    public void HasSignInTask_FollowsTheLocalMarker_NotTheSettings()
+    {
+        using var root = new TempRoot();
+        using var settings = SettingsStore.Load(AppPaths.SettingsFile);
+
+        Assert.False(NewHelper(settings, marker: false).Helper.HasSignInTask);
+        Assert.True(NewHelper(settings, marker: true).Helper.HasSignInTask);
     }
 
     [Fact]

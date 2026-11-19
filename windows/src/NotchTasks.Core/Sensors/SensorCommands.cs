@@ -103,8 +103,18 @@ public static class SensorArgs
 /// The names the app and the helper agree on. The pipe and the stop event are per user, so one user's helper is not another's.
 public static class SensorNames
 {
-    /// The scheduled task that runs the helper at logon.
-    public const string TaskName = "NotchTasks Sensors";
+    /// The scheduled task that runs this user's helper at logon: "NotchTasks Sensors <SID>", one per user.
+    public static string TaskName(string sid) => "NotchTasks Sensors " + sid;
+
+    /// The marker file, in the shared folder, that says this user has a sign-in helper. Install writes it, uninstall deletes it.
+    public static string MarkerName(string sid) => sid + ".signin";
+
+    /// The shared Program Files folder: the copy the logon tasks run (as SYSTEM), and the markers.
+    public static string ProgramFilesFolder =>
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), FolderName);
+
+    /// The full path of this user's marker.
+    public static string MarkerPath(string sid) => Path.Combine(ProgramFilesFolder, MarkerName(sid));
 
     /// The Program Files folder the helper runs from when it is started at logon.
     public const string FolderName = "NotchTasks Sensors";
@@ -201,12 +211,23 @@ public static class SensorFiles
     }
 }
 
-/// The logon task's definition (Task Scheduler XML). It runs one exe for one user at that user's logon, with the highest
-/// privileges the user has, and never stops for time or power.
+/// The logon task's definition (Task Scheduler XML). It runs as SYSTEM, never as the user: a user-level program can write the
+/// user's environment and so the environment of anything the user starts, but not SYSTEM's. It starts at that user's logon and
+/// never stops for time or power.
 public static class SensorTask
 {
-    /// The task XML for the user's SID, the exe and its arguments. Values are escaped for XML.
-    public static string Xml(string sid, string exePath, string arguments) => $"""
+    /// The task XML for the user's SID, the absolute exe path and its arguments. Values are escaped for XML. Throws when the path
+    /// is not absolute: the action must name the exact copy in Program Files.
+    public static string Xml(string sid, string exePath, string arguments)
+    {
+        if (!Path.IsPathFullyQualified(exePath))
+        {
+            throw new ArgumentException("The task action must be an absolute path.", nameof(exePath));
+        }
+        return Build(sid, exePath, arguments);
+    }
+
+    private static string Build(string sid, string exePath, string arguments) => $"""
         <?xml version="1.0" encoding="UTF-16"?>
         <Task version="1.4" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
           <RegistrationInfo>
@@ -220,8 +241,8 @@ public static class SensorTask
           </Triggers>
           <Principals>
             <Principal id="Author">
-              <UserId>{Escape(sid)}</UserId>
-              <LogonType>InteractiveToken</LogonType>
+              <UserId>S-1-5-18</UserId>
+              <LogonType>ServiceAccount</LogonType>
               <RunLevel>HighestAvailable</RunLevel>
             </Principal>
           </Principals>

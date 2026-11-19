@@ -173,6 +173,12 @@ public partial class PermissionsPane : SettingsPane
                 break;
         }
 
+        // The sign-in helper is installed (its marker is there) in any state: Turn off is offered, so an orphaned task can be removed.
+        if (_helper.HasSignInTask && _helper.State != HelperState.On)
+        {
+            line.Children.Add(ActionButton(L10n.L("Turn off"), TurnOffFromClick));
+        }
+
         if (text.Children.Count > 0)
         {
             stack.Children.Add(text);

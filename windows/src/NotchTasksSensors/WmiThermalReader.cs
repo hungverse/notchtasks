@@ -15,7 +15,11 @@ internal sealed class WmiThermalReader : IThermalReader
     public IReadOnlyList<ThermalReading> Read()
     {
         var zones = new List<(string zone, int tenths)>();
-        using var searcher = new ManagementObjectSearcher(Scope, Query);
+        // A query that hangs gives up after 2 s: the helper then answers nothing, and the app keeps what it has.
+        using var searcher = new ManagementObjectSearcher(
+            new ManagementScope(Scope),
+            new ObjectQuery(Query),
+            new System.Management.EnumerationOptions { Timeout = TimeSpan.FromSeconds(2) });
         using var results = searcher.Get();
         foreach (ManagementObject zone in results)
         {

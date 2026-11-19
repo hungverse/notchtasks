@@ -7,6 +7,8 @@
     <RootNamespace>NotchTasksSensors</RootNamespace>
     <AssemblyName>NotchTasksSensors</AssemblyName>
     <InvariantGlobalization>true</InvariantGlobalization>
+    <!-- Runs as SYSTEM from a logon task: no startup hook from the environment (DOTNET_STARTUP_HOOKS) may load code into it. -->
+    <StartupHookSupport>false</StartupHookSupport>
   </PropertyGroup>
 
   <ItemGroup>
