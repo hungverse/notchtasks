@@ -1,0 +1,292 @@
+using NotchTasks.Core.Agents;
+using NotchTasks.Core.Modules;
+using NotchTasks.Core.Notch;
+using Xunit;
+
+namespace NotchTasks.Core.Tests;
+
+// Ported from electron/src/main/main.js (treeCpu, procJob, itemStates, announceFinished) and the Mac's announceFinished.
+// Pure: hand-built snapshots, a manual clock, and a CpuMeter fed by the module itself. No OS calls.
+public class AgentsModuleTests
+{
+    /// An announcer that keeps every toast.
+    private sealed class RecordingAnnouncer : IAnnouncer
+    {
+        public List<Toast> Toasts { get; } = new();
+
+        public void Announce(Toast t, bool notify = true) => Toasts.Add(t);
+    }
+
+    private static readonly Func<ProcInfo, IReadOnlyList<string>> NoArgv = _ => Array.Empty<string>();
+
+    /// A process with a stable start time (so CpuMeter does not read it as a reused pid).
+    private static ProcInfo P(int pid, int ppid, string name, long cpuTicks = 0) => new(pid, ppid, name, pid * 1000L, cpuTicks);
+
+    /// CPU ticks (100 ns units) that make a process use pct % over dtMs.
+    private static long Ticks(double pct, long dtMs) => (long)(pct * dtMs * 100);
+
+    private static ProcSnapshot Snap(params ProcInfo[] procs) => new(procs);
+
+    private static AgentInputs Inputs(
+        IReadOnlyList<WatchItem> items,
+        ProcSnapshot snap,
+        CpuMeter cpu,
+        bool agentsOn = true,
+        IReadOnlyList<Job>? claude = null,
+        IReadOnlyList<Job>? codex = null,
+        IReadOnlyDictionary<string, IReadOnlyList<string>>? models = null,
+        double doneAfter = 30,
+        Func<ProcInfo, IReadOnlyList<string>>? argv = null) =>
+        new(items, agentsOn, snap, cpu, argv ?? NoArgv, claude ?? Array.Empty<Job>(), codex ?? Array.Empty<Job>(),
+            Array.Empty<Job>(), models ?? new Dictionary<string, IReadOnlyList<string>>(), doneAfter);
+
+    private static WatchItem ProcessItem(string process, bool childTasks = false) =>
+        new("proc-1", process, WatchKind.Process, Process: process, ChildTasks: childTasks);
+
+    private static readonly WatchItem Claude = new("claude-1", "Claude", WatchKind.Claude);
+
+    [Fact]
+    public void ProcessItem_WorkingAboveThreshold_ShowsTopChild()
+    {
+        // root uses 10 %, child "git" 30 %: the tree is 40 %, and git is the busiest child
+        var module = new AgentsModule(new RecordingAnnouncer());
+        var cpu = new CpuMeter();
+        var item = ProcessItem("node");
+
+        module.Update(Inputs(new[] { item }, Snap(P(100, 1, "node"), P(101, 100, "git")), cpu), 0);
+        module.Update(Inputs(new[] { item }, Snap(P(100, 1, "node", Ticks(10, 1000)), P(101, 100, "git", Ticks(30, 1000))), cpu), 1000);
+
+        var job = Assert.Single(Assert.Single(module.States).Jobs);
+        Assert.True(job.Working);
+        Assert.Equal("▶ git · 40% CPU", job.Detail);
+    }
+
+    [Fact]
+    public void Working_Sticky6s_ThenWaiting()
+    {
+        var module = new AgentsModule(new RecordingAnnouncer());
+        var cpu = new CpuMeter();
+        var item = ProcessItem("node");
+        var busy = Snap(P(100, 1, "node", Ticks(10, 1000)), P(101, 100, "git", Ticks(30, 1000)));
+        var quiet = Snap(P(100, 1, "node", Ticks(10, 1000)), P(101, 100, "git", Ticks(30, 1000)));
+
+        module.Update(Inputs(new[] { item }, Snap(P(100, 1, "node"), P(101, 100, "git")), cpu), 0);
+        module.Update(Inputs(new[] { item }, busy, cpu), 1000);
+
+        // no CPU after the busy sample at 1000 ms: still working until 6 s have passed
+        module.Update(Inputs(new[] { item }, quiet, cpu), 4000);
+        Assert.True(Assert.Single(Assert.Single(module.States).Jobs).Working);
+        module.Update(Inputs(new[] { item }, quiet, cpu), 6999);
+        Assert.True(Assert.Single(Assert.Single(module.States).Jobs).Working);
+
+        module.Update(Inputs(new[] { item }, quiet, cpu), 7000);
+        var job = Assert.Single(Assert.Single(module.States).Jobs);
+        Assert.False(job.Working);
+        Assert.Equal("Waiting", job.Detail);
+    }
+
+    [Fact]
+    public void AppItem_SkipsChildProcessesOfSameExe()
+    {
+        var module = new AgentsModule(new RecordingAnnouncer());
+        var cpu = new CpuMeter();
+        var item = new WatchItem("cursor-1", "Cursor", WatchKind.App, BundleID: "com.todesktop.230313mzl4w4u92");
+
+        module.Update(Inputs(new[] { item }, Snap(
+            P(200, 1, "Cursor.exe"),
+            P(201, 200, "Cursor.exe"),
+            P(202, 200, "Cursor.exe"),
+            P(300, 1, "Code.exe")), cpu), 0);
+
+        var state = Assert.Single(module.States);
+        var job = Assert.Single(state.Jobs);
+        Assert.Equal("Cursor", job.Title);
+        Assert.Equal("Open", job.Detail);
+    }
+
+    [Fact]
+    public void ChildTasks_OneJobPerChild_TitledByFolder()
+    {
+        var module = new AgentsModule(new RecordingAnnouncer());
+        var cpu = new CpuMeter();
+        var item = ProcessItem("node", childTasks: true);
+        var argv = new Dictionary<int, string[]>
+        {
+            [100] = new[] { "node" },
+            [101] = new[] { "node", @"C:\src\Shop\Shop.sln" },
+            [102] = new[] { "node", @"C:\src\Api\server.ts" },
+        };
+
+        module.Update(Inputs(new[] { item }, Snap(
+            P(100, 1, "node"),
+            P(101, 100, "node"),
+            P(102, 100, "node")), cpu, argv: p => argv[p.Pid]), 0);
+
+        var state = Assert.Single(module.States);
+        Assert.Equal(new[] { "Shop", "Api" }, state.Jobs.Select(j => j.Title));
+        Assert.All(state.Jobs, j => Assert.Equal("Waiting", j.Detail));
+    }
+
+    [Fact]
+    public void Done_AfterGone20s_IfRanLongEnough()
+    {
+        var announcer = new RecordingAnnouncer();
+        var module = new AgentsModule(announcer);
+        var cpu = new CpuMeter();
+        var busy = new[] { new Job("s1", "proj", "Working · 1 sec", true) };
+
+        module.Update(Inputs(new[] { Claude }, Snap(), cpu, claude: busy, doneAfter: 30), 0);
+        module.Update(Inputs(new[] { Claude }, Snap(), cpu, claude: busy, doneAfter: 30), 20_000);
+        module.Update(Inputs(new[] { Claude }, Snap(), cpu, claude: busy, doneAfter: 30), 40_000);
+        Assert.Empty(announcer.Toasts);
+
+        // gone at 60 s: 20 s after the last busy sample, and it ran 40 s (at least 30 s)
+        module.Update(Inputs(new[] { Claude }, Snap(), cpu, doneAfter: 30), 60_000);
+
+        var toast = Assert.Single(announcer.Toasts);
+        Assert.Equal("Claude done", toast.Title);
+        Assert.Equal("proj · 40 sec", toast.Subtitle);
+        Assert.Equal("check", toast.Glyph);
+        Assert.Equal("#30D158", toast.Tint);
+        Assert.Equal("taskDone", toast.Event);
+        Assert.Equal("agents", toast.Module);
+    }
+
+    [Fact]
+    public void Blink_Under20s_NoToast()
+    {
+        var announcer = new RecordingAnnouncer();
+        var module = new AgentsModule(announcer);
+        var cpu = new CpuMeter();
+        var busy = new[] { new Job("s1", "proj", "Working", true) };
+
+        module.Update(Inputs(new[] { Claude }, Snap(), cpu, claude: busy), 0);
+        module.Update(Inputs(new[] { Claude }, Snap(), cpu), 10_000);   // gone for one poll
+        module.Update(Inputs(new[] { Claude }, Snap(), cpu, claude: busy), 15_000);
+        module.Update(Inputs(new[] { Claude }, Snap(), cpu), 30_000);   // gone 15 s, under 20 s
+
+        Assert.Empty(announcer.Toasts);
+    }
+
+    [Fact]
+    public void Short_UnderDoneAfter_NoToast()
+    {
+        var announcer = new RecordingAnnouncer();
+        var module = new AgentsModule(announcer);
+        var cpu = new CpuMeter();
+        var busy = new[] { new Job("s1", "proj", "Working", true) };
+
+        module.Update(Inputs(new[] { Claude }, Snap(), cpu, claude: busy, doneAfter: 30), 0);
+        module.Update(Inputs(new[] { Claude }, Snap(), cpu, claude: busy, doneAfter: 30), 10_000);  // ran 10 s
+        module.Update(Inputs(new[] { Claude }, Snap(), cpu, doneAfter: 30), 40_000);                // gone 30 s
+
+        Assert.Empty(announcer.Toasts);
+    }
+
+    [Fact]
+    public void AgentsOff_NoStates_NoToasts_ClearsMemory()
+    {
+        var announcer = new RecordingAnnouncer();
+        var module = new AgentsModule(announcer);
+        var cpu = new CpuMeter();
+        var busy = new[] { new Job("s1", "proj", "Working", true) };
+
+        module.Update(Inputs(new[] { Claude }, Snap(), cpu, claude: busy), 0);
+        module.Update(Inputs(new[] { Claude }, Snap(), cpu, claude: busy), 40_000);
+
+        var changed = module.Update(Inputs(new[] { Claude }, Snap(), cpu, agentsOn: false, claude: busy), 45_000);
+
+        Assert.True(changed);
+        Assert.Empty(module.States);
+        Assert.Empty(announcer.Toasts);
+
+        // the memory is gone: with agents back on and the job gone, there is no finished job to announce
+        module.Update(Inputs(new[] { Claude }, Snap(), cpu, doneAfter: 30), 70_000);
+        Assert.Empty(announcer.Toasts);
+    }
+
+    [Fact]
+    public void LocalModel_TitleIsModel_DetailLoaded()
+    {
+        var module = new AgentsModule(new RecordingAnnouncer());
+        var cpu = new CpuMeter();
+        var item = new WatchItem("lm-1", "LM Studio", WatchKind.App, BundleID: "ai.elementlabs.lmstudio");
+        var procs = Snap(P(300, 1, "LM Studio.exe"));
+        var models = new Dictionary<string, IReadOnlyList<string>>
+        {
+            ["lmstudio"] = new[] { "qwen3-8b", "llama-3" },
+        };
+
+        module.Update(Inputs(new[] { item }, procs, cpu, models: models), 0);
+
+        var job = Assert.Single(Assert.Single(module.States).Jobs);
+        Assert.Equal("qwen3-8b, llama-3", job.Title);
+        Assert.Equal("Loaded qwen3-8b, llama-3", job.Detail);
+
+        module.Update(Inputs(new[] { item }, procs, cpu), 2000);
+        Assert.Equal("No model loaded", Assert.Single(Assert.Single(module.States).Jobs).Detail);
+    }
+
+    [Fact]
+    public void Running_KeepsOnlyWorkingJobs()
+    {
+        var module = new AgentsModule(new RecordingAnnouncer());
+        var cpu = new CpuMeter();
+        var codex = new WatchItem("codex-1", "Codex", WatchKind.Codex);
+        var claudeJobs = new[]
+        {
+            new Job("idle", "quiet", "Waiting", false),
+            new Job("busy", "proj", "Working · 1 sec", true),
+        };
+        var codexJobs = new[] { new Job("c1", "repo", "Waiting", false) };
+
+        module.Update(Inputs(new[] { Claude, codex }, Snap(), cpu, claude: claudeJobs, codex: codexJobs), 0);
+
+        // working jobs come first in each state
+        Assert.Equal(new[] { "busy", "idle" }, module.States[0].Jobs.Select(j => j.Id));
+
+        var running = Assert.Single(module.Running);
+        Assert.Equal("Claude", running.Item.Name);
+        var job = Assert.Single(running.Jobs);
+        Assert.Equal("busy", job.Id);
+        Assert.True(job.Working);
+    }
+
+    [Fact]
+    public void Update_ReturnsWhetherStatesChanged()
+    {
+        var module = new AgentsModule(new RecordingAnnouncer());
+        var cpu = new CpuMeter();
+        var jobs = new[] { new Job("s1", "proj", "Waiting", false) };
+
+        Assert.True(module.Update(Inputs(new[] { Claude }, Snap(), cpu, claude: jobs), 0));
+        Assert.False(module.Update(Inputs(new[] { Claude }, Snap(), cpu, claude: jobs), 1000));
+    }
+
+    [Fact]
+    public void BuildItemsAndDisabledItems_AreSkipped()
+    {
+        var module = new AgentsModule(new RecordingAnnouncer());
+        var cpu = new CpuMeter();
+        var msbuild = new WatchItem("msb-1", "MSBuild", WatchKind.Process, Process: "msbuild", Build: true);
+        var disabled = Claude with { Enabled = false };
+
+        module.Update(Inputs(new[] { msbuild, disabled, WatchItems.BuildItem }, Snap(P(500, 1, "msbuild")), cpu,
+            claude: new[] { new Job("s1", "proj", "Waiting", false) }), 0);
+
+        Assert.Empty(module.States);
+    }
+
+    [Fact]
+    public void ItemState_ValueEquality_ComparesJobs()
+    {
+        var job = new Job("s1", "proj", "Waiting", false);
+        var a = new ItemState(Claude, new[] { job });
+        var b = new ItemState(Claude, new[] { job });
+        var c = new ItemState(Claude, new[] { job with { Detail = "Working" } });
+
+        Assert.Equal(a, b);
+        Assert.Equal(a.GetHashCode(), b.GetHashCode());
+        Assert.NotEqual(a, c);
+    }
+}
