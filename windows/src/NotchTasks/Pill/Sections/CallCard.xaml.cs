@@ -1,7 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using System.Windows.Threading;
 using NotchTasks.Core;
 using NotchTasks.Core.Notch;
 using NotchTasks.Services;
@@ -10,22 +9,18 @@ using NotchTasks.Services.Modules;
 namespace NotchTasks.Pill.Sections;
 
 /// The live call's card in the open pill (Mac CallCard). One element kept for the pill's life, so a click on its buttons is not
-/// lost when the pill rebuilds its sections: Update refreshes it from the sensors. Its clock ticks while the pill shows it, so
-/// the time follows the clock as the Mac's TimelineView does.
+/// lost when the pill rebuilds its sections. Update refreshes it from the sensors on every publish; the sensors source publishes
+/// once a second while a call is live, which keeps the time current without a clock of the card's own.
 public partial class CallCard : UserControl
 {
     private static readonly Color Green = Color.FromRgb(0x30, 0xD1, 0x58);
     private static readonly Color Red = Color.FromRgb(0xFF, 0x45, 0x3A);
 
-    private readonly DispatcherTimer _clock = new() { Interval = TimeSpan.FromSeconds(1) };
     private AppState? _state;
 
     public CallCard()
     {
         InitializeComponent();
-        _clock.Tick += (_, _) => RefreshTime();
-        Loaded += (_, _) => _clock.Start();
-        Unloaded += (_, _) => _clock.Stop();
     }
 
     /// Raised after Open is clicked: the pill closes (the Mac's openCallApp collapses the pill).

@@ -8,11 +8,11 @@ namespace NotchTasks.Services.Modules;
 /// The feed of the calls and privacy modules: one source for both ids. The modules register it under "privacy" and "calls",
 /// so it runs while either is started: Start and Stop count, and the watch runs while the count is above zero.
 ///
-/// Start reads the sensors once (the baseline), then starts the registry watch. The watch thread reads the sensors again on
-/// each change (ConsentStore and the mic mute), and the reading is posted to the UI thread, where it is applied. A one-shot
-/// timer runs only while a call is ending (SensorsModule.EndDue), then calls Tick. A one-second timer publishes while a call
-/// is live, so the call's clock follows the time. Nothing else polls. Stop at the last count stops the watch and forgets the
-/// state.
+/// The watch thread takes the baseline reading right after it arms the registry keys, then one reading per change (ConsentStore
+/// and the mic mute). Each reading is posted to the UI thread with the generation it was taken in: a reading from before a Stop
+/// never applies after a later Start. A one-shot timer runs only while a call is ending (SensorsModule.EndDue), then calls Tick.
+/// A one-second timer publishes while a call is live, so the call's clock follows the time. Nothing else polls. Stop at the last
+/// count stops the watch and forgets the state.
 public sealed class SensorsSource : IModuleSource
 {
     private readonly SensorsModule _module;
@@ -24,6 +24,8 @@ public sealed class SensorsSource : IModuleSource
     private readonly DispatcherTimer _clock = new() { Interval = TimeSpan.FromSeconds(1) };
     private ISensorWatch? _watcher;
     private int _starts;
+    private int _generation;             // bumped by each Start and each last Stop: readings from an older one are dropped
+    private bool _readFailureLogged;
 
     /// The source of `module`, which publishes the app state through `publish` on the UI thread. read and watch are the seams
     /// for tests: by default the sensors are read from the registry and the mute, and the watch is the registry watch.
@@ -43,7 +45,8 @@ public sealed class SensorsSource : IModuleSource
         _clock.Tick += (_, _) => _publish();
     }
 
-    /// Counts a start. The first one reads the sensors and starts the watch; later ones only count.
+    /// Counts a start. The first one starts the watch; its baseline comes from the watch thread, so Start never reads the
+    /// sensors itself. A watch that cannot be made is logged, and the sensors stay as they were.
     public void Start()
     {
         _starts++;
@@ -51,10 +54,11 @@ public sealed class SensorsSource : IModuleSource
         {
             return;
         }
+        _generation++;
+        var generation = _generation;
         try
         {
-            OnReading(_read(), publish: false);
-            _watcher = _watch(OnRegistryChanged);
+            _watcher = _watch(() => OnRegistryChanged(generation));
         }
         catch (Exception e)
         {
@@ -74,6 +78,7 @@ public sealed class SensorsSource : IModuleSource
         {
             return;
         }
+        _generation++;  // readings still queued from this run are now stale
         _endTimer.Stop();
         _clock.Stop();
         var watcher = _watcher;
@@ -82,16 +87,23 @@ public sealed class SensorsSource : IModuleSource
         _module.Reset();
     }
 
-    /// The mute button of the call card (the user's own click): sets the default mic's mute, then reads the sensors again and
-    /// applies the reading. Nothing happens when no call is on.
+    /// The mute button of the call card (the user's own click). When the mute is set, the sensors are read again and applied.
+    /// If the mute cannot be read again, the value SetMuted just set is kept.
     public void ToggleMute()
     {
-        _module.ToggleMute(MicMute.SetMuted);
-        OnReading(_read(), publish: true);
+        if (!_module.ToggleMute(MicMute.SetMuted))
+        {
+            _publish();
+            return;
+        }
+        var reading = _read();
+        var muted = MicMute.IsMuted();
+        var wanted = muted ?? _module.Sensors.MicMuted;
+        OnReading(reading with { MicMuted = wanted });
     }
 
-    /// Called on the watch's thread: the reading is taken here, and applied on the UI thread.
-    private void OnRegistryChanged()
+    /// Called on the watch's thread: the reading is taken here, and applied on the UI thread if its generation is still current.
+    private void OnRegistryChanged(int generation)
     {
         SensorState next;
         try
@@ -100,31 +112,27 @@ public sealed class SensorsSource : IModuleSource
         }
         catch (Exception e)
         {
-            ErrorLog.Write(e);
+            if (!_readFailureLogged)
+            {
+                _readFailureLogged = true;
+                ErrorLog.Write(e);
+            }
             return;
         }
         _dispatcher.BeginInvoke(new Action(() =>
         {
-            if (_starts > 0)
+            if (generation == _generation && _starts > 0)
             {
-                OnReading(next, publish: true);
+                OnReading(next);
             }
         }));
     }
 
-    /// Applies a reading and reschedules the timers. It publishes when asked (the baseline at Start does not: the pill is not
-    /// built yet).
-    private void OnReading(SensorState next, bool publish)
+    /// Applies a reading, reschedules the timers and publishes the state.
+    private void OnReading(SensorState next)
     {
         _module.Apply(next, DateTimeOffset.Now);
-        if (publish)
-        {
-            Changed();
-        }
-        else
-        {
-            Reschedule();
-        }
+        Changed();
     }
 
     /// Publishes the state and reschedules the timers for it.

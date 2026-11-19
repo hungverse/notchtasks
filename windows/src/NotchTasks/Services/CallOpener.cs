@@ -23,7 +23,11 @@ internal static class CallOpener
                     {
                         continue;
                     }
-                    Win32.ShowWindow(window, Win32.SW_RESTORE);
+                    // restore only a minimised window: a normal one keeps its size and place
+                    if (Win32.IsIconic(window))
+                    {
+                        Win32.ShowWindow(window, Win32.SW_RESTORE);
+                    }
                     Win32.SetForegroundWindow(window);
                     return true;
                 }

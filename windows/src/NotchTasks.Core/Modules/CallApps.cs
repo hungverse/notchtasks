@@ -48,13 +48,30 @@ public static class CallApps
         return known.FirstOrDefault(id => !Browsers.Contains(id, StringComparer.OrdinalIgnoreCase)) ?? known[0];
     }
 
-    /// The display name of an app: its name when it is known, else its exe name without ".exe".
+    /// The display name of an app: its name when it is known. An unknown exe is its file name without ".exe". An unknown packaged
+    /// family name is made friendly: the publisher hash after '_' is dropped, the part after the last '.' is kept, and its first
+    /// letter is capitalised (microsoft.windowscamera_8wekyb3d8bbwe reads "Windowscamera").
     public static string Name(string id)
     {
         if (Names.TryGetValue(id, out var name))
         {
             return name;
         }
-        return id.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) ? id[..^4] : id;
+        if (id.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+        {
+            return id[..^4];
+        }
+        var family = id;
+        var underscore = family.LastIndexOf('_');
+        if (underscore > 0)
+        {
+            family = family[..underscore];
+        }
+        var dot = family.LastIndexOf('.');
+        if (dot >= 0)
+        {
+            family = family[(dot + 1)..];
+        }
+        return family.Length == 0 ? id : char.ToUpperInvariant(family[0]) + family[1..];
     }
 }

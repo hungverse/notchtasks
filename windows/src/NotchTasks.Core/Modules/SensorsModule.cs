@@ -4,9 +4,10 @@ using static NotchTasks.Core.L10n;
 namespace NotchTasks.Core.Modules;
 
 /// The calls and the privacy sensors (Mac: Model.swift applySensors, toggleMute). A call is a call app holding the mic; it
-/// ends only after its app has been gone for 8 s, and a call back within 8 s of its end carries on as the same call. A mic
-/// or camera that comes on outside a call is announced once. Pure: the source reads the sensors and calls Apply, and calls
-/// Tick when EndDue comes; the toasts go to the announcer.
+/// ends only after its app has been gone for 8 s. An app back inside that grace (the call still exists) keeps the call and
+/// its Since; an app that appears when there is no call is always a new call. A mic or camera that comes on outside a call is
+/// announced once. Pure: the source reads the sensors and calls Apply, and calls Tick when EndDue comes; the toasts go to the
+/// announcer.
 public sealed class SensorsModule
 {
     /// How long a call's app may be gone before the call ends, and how soon a returning app counts as the same call.
@@ -20,8 +21,6 @@ public sealed class SensorsModule
     private readonly Func<bool> _privacyOn;
     private readonly Func<bool> _callsOn;
     private DateTimeOffset? _callEnded;      // the end mark: when the call's app first left, while the call is ending
-    private DateTimeOffset? _lastCallStart;  // when the current or the last call started
-    private DateTimeOffset? _lastEnd;        // when the last call was announced as ended
 
     /// The toasts go to announce. privacyOn and callsOn say whether those modules are on (read at each change).
     public SensorsModule(IAnnouncer announce, Func<bool> privacyOn, Func<bool> callsOn)
@@ -87,8 +86,6 @@ public sealed class SensorsModule
         Sensors = new SensorState(Array.Empty<string>(), false, false);
         Call = null;
         _callEnded = null;
-        _lastCallStart = null;
-        _lastEnd = null;
     }
 
     private void Evaluate(SensorState prev, DateTimeOffset now)
@@ -99,21 +96,16 @@ public sealed class SensorsModule
         {
             if (Call is null)
             {
-                // back within 8 s of the last end: the same call carrying on (a reconnect), not a new one
-                var resumed = _lastEnd is { } end && now - end < EndGrace;
-                Call = new CallInfo(app, CallApps.Name(app), resumed ? (_lastCallStart ?? now) : now, next.Camera, next.MicMuted);
-                if (!resumed)
-                {
-                    _lastCallStart = now;
-                    Announce(new Toast(
-                        Glyph: "phone",
-                        Tint: Green,
-                        Title: L("On a call"),
-                        Subtitle: CallApps.Name(app),
-                        Event: "callStart",
-                        Compact: true,
-                        Module: "calls"));
-                }
+                // no call is on (none, or the last one has already ended): this app starts a new call
+                Call = new CallInfo(app, CallApps.Name(app), now, next.Camera, next.MicMuted);
+                Announce(new Toast(
+                    Glyph: "phone",
+                    Tint: Green,
+                    Title: L("On a call"),
+                    Subtitle: CallApps.Name(app),
+                    Event: "callStart",
+                    Compact: true,
+                    Module: "calls"));
             }
             else
             {
@@ -129,7 +121,6 @@ public sealed class SensorsModule
             {
                 Call = null;
                 _callEnded = null;
-                _lastEnd = now;
                 Announce(new Toast(
                     Glyph: "phonedown",
                     Tint: Red,

@@ -75,36 +75,42 @@ public class SensorsModuleTests
     }
 
     [Fact]
-    public void CallBackWithin8s_KeepsSince_NoNewToast()
+    public void BackInsideGrace_KeepsTheCall_SinceAndNoToast()
     {
+        // The Mac: callEnded is set while the call still exists, so an app back inside the 8 s grace is the same call.
         var announce = new RecordingAnnouncer();
         var module = Make(announce);
         module.Apply(Mic("zoom.exe"), T0);
         module.Apply(Quiet, T0 + TimeSpan.FromSeconds(10));
-        module.Tick(T0 + TimeSpan.FromSeconds(18));  // the call ended here
-        Assert.Null(module.Call);
+        Assert.NotNull(module.Call);
 
-        module.Apply(Mic("zoom.exe"), T0 + TimeSpan.FromSeconds(20));  // back 2 s after the end
+        module.Apply(Mic("zoom.exe"), T0 + TimeSpan.FromSeconds(15));  // back 5 s into the grace
 
         Assert.NotNull(module.Call);
-        Assert.Equal(T0, module.Call!.Since);  // the same call carrying on
-        Assert.Equal(2, announce.Calls.Count);  // the start and the end only
+        Assert.Equal(T0, module.Call!.Since);
+        Assert.Null(module.EndDue);
+        Assert.Single(announce.Calls);  // only the start: no new call toast
     }
 
     [Fact]
-    public void CallBackAfter8s_IsANewCall()
+    public void BackAfterEnded_IsANewCall_WithItsOwnToast()
     {
+        // After "Ended" the call is gone (Call == null): the app that comes back starts a new call, as on the Mac.
         var announce = new RecordingAnnouncer();
         var module = Make(announce);
         module.Apply(Mic("zoom.exe"), T0);
         module.Apply(Quiet, T0 + TimeSpan.FromSeconds(10));
-        module.Tick(T0 + TimeSpan.FromSeconds(18));
+        module.Tick(T0 + TimeSpan.FromSeconds(18));  // "Ended" here
+        Assert.Null(module.Call);
 
-        module.Apply(Mic("zoom.exe"), T0 + TimeSpan.FromSeconds(60));
+        var back = T0 + TimeSpan.FromSeconds(20);  // end + 2 s
+        module.Apply(Mic("zoom.exe"), back);
 
-        Assert.Equal(T0 + TimeSpan.FromSeconds(60), module.Call!.Since);
+        Assert.NotNull(module.Call);
+        Assert.Equal(back, module.Call!.Since);
         Assert.Equal(3, announce.Calls.Count);
         Assert.Equal("callStart", announce.Calls[2].Toast.Event);
+        Assert.Equal("On a call", announce.Calls[2].Toast.Title);
     }
 
     [Fact]
@@ -269,5 +275,7 @@ public class SensorsModuleTests
         Assert.Equal("Teams", CallApps.Name("msteams_8wekyb3d8bbwe"));
         Assert.Equal("Edge", CallApps.Name("msedge.exe"));
         Assert.Equal("spotify", CallApps.Name("spotify.exe"));
+        Assert.Equal("Windowscamera", CallApps.Name("microsoft.windowscamera_8wekyb3d8bbwe"));
+        Assert.Equal("Spotify", CallApps.Name("spotify"));
     }
 }

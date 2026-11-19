@@ -1,3 +1,4 @@
+using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 using NotchTasks.Core.Modules;
@@ -13,8 +14,10 @@ public interface ISensorWatch
 }
 
 /// The registry watch: a background thread waits on RegNotifyChangeKeyValue for the mic and camera consent keys (their
-/// subtrees: an app's last-used times live below the key), and calls onChange on that thread for each change. Nothing polls:
-/// the thread sleeps in WaitAny until a key changes or Stop is called. A key that is missing is not watched.
+/// subtrees: an app's last-used times live below the key), and calls onChange on that thread: once right after the keys are
+/// armed (the baseline), then once for each change. Nothing polls: the thread sleeps in WaitAny until a key changes or Stop
+/// is called. A key that is missing is not watched. If no key opens, or the registry refuses a watch, the failure is logged
+/// once and the thread ends cleanly.
 internal sealed class RegistryWatch : ISensorWatch
 {
     private const uint KeyNotify = 0x0010;
@@ -65,6 +68,7 @@ internal sealed class RegistryWatch : ISensorWatch
             }
             if (keys.Count == 0)
             {
+                Fail("neither sensor consent key could be opened");
                 return;
             }
 
@@ -72,9 +76,17 @@ internal sealed class RegistryWatch : ISensorWatch
             for (var i = 0; i < events.Count; i++)
             {
                 waits[i] = events[i];
-                Arm(keys[i], events[i]);
+                if (!Arm(keys[i], events[i]))
+                {
+                    Fail("a sensor consent key could not be watched");
+                    return;
+                }
             }
             waits[^1] = _stop;
+
+            // The baseline: the sensors as they are now, read on this thread right after the first arm, so a change between
+            // the arm and the read is not lost (it signals the event, and is read again).
+            _onChange();
 
             while (true)
             {
@@ -83,7 +95,12 @@ internal sealed class RegistryWatch : ISensorWatch
                 {
                     return;  // the stop event
                 }
-                Arm(keys[index], events[index]);  // a notification is one-shot: arm it again before reading
+                // a notification is one-shot: arm it again before reading
+                if (!Arm(keys[index], events[index]))
+                {
+                    Fail("a sensor consent key could not be watched again");
+                    return;
+                }
                 _onChange();
             }
         }
@@ -104,14 +121,19 @@ internal sealed class RegistryWatch : ISensorWatch
         }
     }
 
+    /// Logs why the watch has stopped (once: the thread ends with it) and leaves the sensors as they were.
+    private static void Fail(string reason) =>
+        ErrorLog.Write(new IOException("NotchTasks: the sensor watch stopped: " + reason));
+
     /// Asks for one notification on the key: a change to a value or a subkey name, anywhere below the key, signals the event.
-    private static void Arm(SafeRegistryHandle key, AutoResetEvent evt) =>
+    /// False when the registry refuses the request.
+    private static bool Arm(SafeRegistryHandle key, AutoResetEvent evt) =>
         RegistryNative.RegNotifyChangeKeyValue(
             key.DangerousGetHandle(),
             watchSubtree: true,
             RegNotifyChangeLastSet | RegNotifyChangeName,
             evt.SafeWaitHandle.DangerousGetHandle(),
-            asynchronous: true);
+            asynchronous: true) == 0;
 }
 
 /// The registry calls the watch needs. The handles are raw; the watch wraps the open key in a SafeRegistryHandle.
