@@ -27,6 +27,7 @@ public partial class ToastView : UserControl
 {
     private const double CompactSide = 52;        // the Mac's side column of a compact toast
     private const double CompactTitleSide = 170;  // the side column of a title in the compact style
+    private const double CompactPadding = 14;     // the Mac's padding outside the compact row's columns
     private const double CardWidth = 380;
     private const double CardRadius = 18;
     private const double IslandWidth = 340;       // max(200 + 150, 340)
@@ -71,7 +72,7 @@ public partial class ToastView : UserControl
     /// banner, and an island with an ask, 520; any other island 340.
     public static double WidthOf(Toast t, string style, AgentAsk? ask) => LookOf(t, style) switch
     {
-        ToastLook.Compact => 2 * SideOf(t) + PillGeometry.ClosedWidth,
+        ToastLook.Compact => 2 * SideOf(t) + PillGeometry.ClosedWidth + 2 * CompactPadding,
         ToastLook.Card => CardWidth,
         ToastLook.Banner => PillGeometry.OpenWidth,
         _ => ask is null ? IslandWidth : PillGeometry.OpenWidth,

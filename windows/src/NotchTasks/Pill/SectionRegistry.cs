@@ -12,17 +12,22 @@ public static class SectionRegistry
     /// Sets how a module's section is built. A later registration for the same module replaces the earlier one.
     public static void Register(string module, Func<AppState, FrameworkElement?> build) => Builders[module] = build;
 
+    /// Removes a module's builder: its section no longer shows. Called when the pill that registered it closes.
+    public static void Unregister(string module) => Builders.Remove(module);
+
     /// The section of one module, or null when the module has none registered or nothing to show.
     public static FrameworkElement? Section(string module, AppState state) =>
         Builders.TryGetValue(module, out var build) ? build(state) : null;
 
-    /// The sections to show now: the active modules' sections in Snapshot.ActiveModules order, calls first.
+    /// The modules in section order: "calls" first, then the rest in their own order.
+    public static IReadOnlyList<string> Order(IReadOnlyList<string> modules) =>
+        modules.Where(m => m == "calls").Concat(modules.Where(m => m != "calls")).ToList();
+
+    /// The sections to show now: the active modules' sections in Order.
     public static IReadOnlyList<FrameworkElement> For(AppState state)
     {
-        var modules = state.Snapshot.ActiveModules;
-        var ordered = modules.Where(m => m == "calls").Concat(modules.Where(m => m != "calls"));
         var sections = new List<FrameworkElement>();
-        foreach (var module in ordered)
+        foreach (var module in Order(state.Snapshot.ActiveModules))
         {
             if (Section(module, state) is { } section)
             {

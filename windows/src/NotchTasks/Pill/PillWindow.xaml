@@ -95,10 +95,12 @@
           <!-- The open pill: the sections (the agents' cards, and the others), or the placeholder when none has anything.
                Hit-testable only while open. -->
           <Grid x:Name="CardLayer" Margin="0,32,0,0" Opacity="0" IsHitTestVisible="False">
-            <TextBlock x:Name="CardText" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="15" />
-            <!-- The bottom 32 DIP are kept for the quick bar, so the sections never sit under its buttons. -->
+            <!-- The header: the summary at the left, in grey (Mac expandedView). -->
+            <TextBlock x:Name="HeaderSummary" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="16,8,0,0"
+                       FontSize="11" FontWeight="SemiBold" Foreground="Gray" />
+            <!-- The bottom 32 DIP are kept for the quick bar, so the sections never sit under its buttons; the top 26 for the header. -->
             <ScrollViewer x:Name="SectionScroll" Width="520" HorizontalAlignment="Center" VerticalAlignment="Stretch"
-                          Margin="0,0,0,32" Padding="10" Background="Transparent" BorderThickness="0"
+                          Margin="0,26,0,32" Padding="10" Background="Transparent" BorderThickness="0"
                           HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
               <StackPanel x:Name="SectionList" />
             </ScrollViewer>

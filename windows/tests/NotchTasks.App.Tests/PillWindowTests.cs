@@ -44,6 +44,11 @@ public sealed class PillWindowTests
 
             view.Show(toast, "compact", null);
             Assert.Equal(Visibility.Visible, Fixture.Named<UIElement>(view, "CompactRow").Visibility);
+            // A title in the compact style: two 170 px side columns, the pill's 200 px, and the Mac's 14 px padding outside.
+            Assert.Equal(568.0, view.Width);
+            view.Show(new Toast("hand", "#FF9F0A", "3:00", "4:59", Compact: true), "island", null);
+            // A compact toast: two 52 px side columns, the same 200 px and the same padding.
+            Assert.Equal(332.0, view.Width);
             Assert.Equal(Visibility.Collapsed, Fixture.Named<UIElement>(view, "WideBody").Visibility);
 
             view.Show(toast, "banner", null);
@@ -126,15 +131,52 @@ public sealed class PillWindowTests
             var pill = new PillWindow(state);
             try
             {
-                var placeholder = Fixture.Named<TextBlock>(pill, "CardText");
-                Assert.Equal("Nothing running", placeholder.Text);
-                Assert.Equal(Visibility.Visible, placeholder.Visibility);
+                Fixture.Call(pill, "OpenPill");
+                Assert.Equal("Nothing running", Fixture.Named<TextBlock>(pill, "HeaderSummary").Text);
+                Assert.Equal(Visibility.Collapsed, Fixture.Named<UIElement>(pill, "SectionScroll").Visibility);
             }
             finally
             {
                 pill.Close();
             }
         });
+    }
+
+    [Fact]
+    public void Pill_WaitingAsk_ShowsInSummary()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            var pill = new PillWindow(state);
+            try
+            {
+                state.Asks.Add(new AgentAsk("s1", 1, "work", "Bash", "ls", Array.Empty<AskQuestion>(), DateTimeOffset.Now, "claude"));
+                state.Publish();
+                Assert.Equal("1 waiting", Fixture.Named<TextBlock>(pill, "HeaderSummary").Text);
+            }
+            finally
+            {
+                pill.Close();
+            }
+        });
+    }
+
+    [Fact]
+    public void ModuleGlyphs_UnknownName_GivesFallback()
+    {
+        Assert.Equal(ModuleGlyphs.Fallback, ModuleGlyphs.Get("no-such-glyph"));
+        Assert.False(string.IsNullOrEmpty(ModuleGlyphs.Get("")));
+        Assert.Equal("", ModuleGlyphs.Get("timer"));
+    }
+
+    [Fact]
+    public void SectionRegistry_Order_CallsFirstThenActiveModulesOrder()
+    {
+        Assert.Equal(new[] { "calls", "timer", "agents" }, SectionRegistry.Order(new[] { "timer", "calls", "agents" }));
+        Assert.Equal(new[] { "calls", "agents" }, SectionRegistry.Order(new[] { "agents", "calls" }));
+        Assert.Equal(new[] { "agents", "timer" }, SectionRegistry.Order(new[] { "agents", "timer" }));
     }
 
     /// True when a text block under `node` shows `text`.

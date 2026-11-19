@@ -48,6 +48,23 @@ public sealed class AppStateTests
     }
 
     [Fact]
+    public void AppState_WaitingAsk_WithAgentsOff_GivesNoToast()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            state.Settings.Set("disabled", JsonNode.Parse("[\"agents\"]"));
+            var ask = new AgentAsk("ask4", 1, "work", "Bash", "ls", Array.Empty<AskQuestion>(), DateTimeOffset.Now, "claude");
+
+            Fixture.Call(state, "SyncAsks", new List<AgentAsk> { ask });
+
+            Assert.Null(state.Toasts.Current);
+            Assert.Equal(0, state.Snapshot.AskCount);
+        });
+    }
+
+    [Fact]
     public void AppState_RepeatedSyncAsks_SameAsk_EnqueuesOnlyOneToast()
     {
         Sta.Run(() =>

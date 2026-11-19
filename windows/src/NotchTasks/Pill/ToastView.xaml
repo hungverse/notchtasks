@@ -16,15 +16,16 @@
             Background="#EB000000" IsHitTestVisible="False" />
     <!-- Compact: one row on the pill's own line. The glyph sits in the left column, the value in the right; the pill's own
          200 px sits between the two columns. -->
-    <Grid x:Name="CompactRow" Height="32" VerticalAlignment="Top" Visibility="Collapsed">
+    <!-- The 14 px padding is outside the side columns, as on the Mac: the value gets its whole column. -->
+    <Grid x:Name="CompactRow" Height="32" Margin="14,0,14,0" VerticalAlignment="Top" Visibility="Collapsed">
       <Grid.ColumnDefinitions>
         <ColumnDefinition x:Name="CompactLeft" Width="52" />
         <ColumnDefinition Width="200" />
         <ColumnDefinition x:Name="CompactRight" Width="52" />
       </Grid.ColumnDefinitions>
-      <TextBlock x:Name="CompactGlyph" Grid.Column="0" Margin="14,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center"
+      <TextBlock x:Name="CompactGlyph" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center"
                  FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" />
-      <TextBlock x:Name="CompactText" Grid.Column="2" Margin="0,0,14,0" HorizontalAlignment="Right" VerticalAlignment="Center"
+      <TextBlock x:Name="CompactText" Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Center"
                  FontSize="12" FontWeight="Bold" TextTrimming="CharacterEllipsis" />
     </Grid>
     <!-- Island, banner and card: the notch row carries the glyph (island and banner); the text and the buttons sit under it. -->

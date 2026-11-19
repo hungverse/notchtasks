@@ -35,6 +35,8 @@ public partial class PillWindow : Window
     private static readonly TimeSpan SlowPollInterval = TimeSpan.FromMilliseconds(100);  // 10 Hz, otherwise
     private static readonly TimeSpan ToastTick = TimeSpan.FromMilliseconds(300);  // the toast queue, while a toast is up
     private const double NearMargin = 40;  // DIP from the pill's shape
+    private const double HeaderHeight = 26;  // the open pill's summary strip, under its top row (XAML SectionScroll margin)
+    private const double QuickBarHeight = 32;  // the open pill's quick bar, under the sections (XAML SectionScroll margin)
     private static readonly TimeSpan MaxFadeDuration = TimeSpan.FromMilliseconds(350);
 
     /// The corner radius of the pill; animated by the spring, bound to every shape through RadiusConverter.
@@ -75,6 +77,7 @@ public partial class PillWindow : Window
     private int _animation;  // counts the animations; only the last one's completion clears _closing
     private bool _animating;  // a shape animation runs: the poll evaluates click-through on every tick
     private double _targetWidth, _targetHeight, _targetRadius;  // the shape the running animation springs to
+    private Mode _targetMode = Mode.Closed;  // the mode of that shape
 
     /// Creates the pill for the app state. Call Show next (the window is placed when its handle exists).
     public PillWindow(AppState state)
@@ -82,7 +85,7 @@ public partial class PillWindow : Window
         _state = state;
         InitializeComponent();
 
-        CardText.Text = L10n.L("Nothing running");
+        HeaderSummary.Text = PillSummary.For(_state.Snapshot);
         CardLayer.Effect = _cardBlur;
         // The gear opens the Control Panel and closes the pill; the power button quits (as the tray's Quit does).
         Bar.ControlPanelRequested += () =>
@@ -307,10 +310,23 @@ public partial class PillWindow : Window
         Animate(Mode.Open);
         ApplyAppearance();
         _closeTimer.Start();
-        if (_state.Asks.Count > 0)
+        SyncWaitTimer();
+    }
+
+    /// The cards' "Waiting m:ss" ticks once a second, while the open pill shows a waiting ask.
+    private void SyncWaitTimer()
+    {
+        if (_open && _state.Snapshot.AskCount > 0)
         {
+            if (!_waitTimer.IsEnabled)
+            {
+                _waitTimer.Start();
+            }
             TickWaiting();
-            _waitTimer.Start();
+        }
+        else
+        {
+            _waitTimer.Stop();
         }
     }
 
@@ -360,7 +376,8 @@ public partial class PillWindow : Window
     /// The toast timer: the queue moves on when the toast's time is up and the pointer has been off the pill (Toasts.Tick).
     private void TickToast()
     {
-        var hovered = Win32.GetCursorPos(out var point) && IsInsidePill(point);
+        // A toast queued while the pill is open still expires; the pointer holds it only over the toast itself.
+        var hovered = !_open && Win32.GetCursorPos(out var point) && IsInsidePill(point);
         _state.Toasts.Tick(DateTimeOffset.Now, hovered);
     }
 
@@ -379,18 +396,25 @@ public partial class PillWindow : Window
 
     /// The Mac's spring for the shape, towards the size of the mode. The card and the toast fade and the top row fades
     /// out behind a toast, over min(Settle, 0.35 s); the card un-blurs when it shows, and only opacity moves when reduced.
-    /// Returns the width animation (the one that finishes last on the way down).
-    private DoubleAnimation Animate(Mode mode)
+    /// A call for the target the shape already has does nothing.
+    private void Animate(Mode mode)
     {
         var settings = _state.Settings;
         var animationsOn = SystemParameters.ClientAreaAnimation;
         var reduced = !animationsOn || settings.Motion == "reduced";
         var (width, height, radius) = Target(mode);
+        if (mode == _targetMode && Near(width, _targetWidth) && Near(height, _targetHeight) && Near(radius, _targetRadius))
+        {
+            // The shape already springs to this target: a repeat (an ask, then the sections it changed) does not restart it.
+            ReevaluateClickThrough();
+            return;
+        }
         var curve = SpringCurve.For(settings.Motion, mode != Mode.Closed, animationsOn);
 
         var token = ++_animation;
         _closing = mode == Mode.Closed;
         _animating = true;
+        _targetMode = mode;
         (_targetWidth, _targetHeight, _targetRadius) = (width, height, radius);
         var widthAnimation = Spring(PillShape, FrameworkElement.WidthProperty, width, curve);
         Spring(PillShape, FrameworkElement.HeightProperty, height, curve);
@@ -417,8 +441,9 @@ public partial class PillWindow : Window
         };
         // The pointer may already be over the target shape: the window must take its clicks from this frame on.
         ReevaluateClickThrough();
-        return widthAnimation;
     }
+
+    private static bool Near(double a, double b) => Math.Abs(a - b) < 0.5;
 
     /// Sets click-through from the pointer now, against the shape the pill is springing to as well as the one it is.
     /// The poll alone waits for the pointer to move, so a toast under a still pointer would pass its first click through.
@@ -446,7 +471,7 @@ public partial class PillWindow : Window
             return PillGeometry.OpenHeight;
         }
         SectionScroll.Measure(new Size(PillGeometry.OpenWidth, double.PositiveInfinity));
-        return Math.Min(PillGeometry.MaxOpenHeight, PillGeometry.ClosedHeight + SectionScroll.DesiredSize.Height);
+        return Math.Min(PillGeometry.MaxOpenHeight, PillGeometry.ClosedHeight + HeaderHeight + SectionScroll.DesiredSize.Height + QuickBarHeight);
     }
 
     /// The toast's measured height for its current text.
@@ -529,19 +554,7 @@ public partial class PillWindow : Window
         SyncSections();
         if (_open)
         {
-            Animate(Mode.Open);  // the open pill's height follows the cards
-            if (_state.Asks.Count > 0)
-            {
-                if (!_waitTimer.IsEnabled)
-                {
-                    _waitTimer.Start();
-                }
-                TickWaiting();
-            }
-            else
-            {
-                _waitTimer.Stop();
-            }
+            Animate(Mode.Open);  // the open pill's height follows the sections; the same height again does nothing
         }
         ApplyAppearance();
     }
@@ -558,7 +571,6 @@ public partial class PillWindow : Window
         }
         var any = SectionList.Children.Count > 0;
         SectionScroll.Visibility = any ? Visibility.Visible : Visibility.Collapsed;
-        CardText.Visibility = any ? Visibility.Collapsed : Visibility.Visible;
     }
 
     /// Each card's "Waiting m:ss", once a second while the open pill shows them.
@@ -572,9 +584,11 @@ public partial class PillWindow : Window
     {
         RebuildChips();
         SyncSections();
+        HeaderSummary.Text = PillSummary.For(_state.Snapshot);
+        SyncWaitTimer();
         if (_open)
         {
-            Animate(Mode.Open);  // the open pill's height follows its sections
+            Animate(Mode.Open);  // the open pill's height follows its sections; the same height again does nothing
         }
         ApplyAppearance();
     }
@@ -611,7 +625,7 @@ public partial class PillWindow : Window
         var settings = _state.Settings;
         // Idle (no badges, no ask, closed) hides the pill only once the close spring has finished; its hover area stays.
         // A toast, a waiting ask and any chip or badge show the pill too.
-        PillShape.Opacity = _open || _closing || _shownToast is not null || _hasCollapsed || _state.Asks.Count > 0 ? 1 : 0;
+        PillShape.Opacity = _open || _closing || _shownToast is not null || _hasCollapsed || _state.Snapshot.AskCount > 0 ? 1 : 0;
         // Only the open sections and the toast take the pointer; the closed pill's wings never do.
         CardLayer.IsHitTestVisible = _open;
         ToastBox.IsHitTestVisible = _shownToast is not null;
@@ -681,13 +695,14 @@ public partial class PillWindow : Window
         _state.NotchChanged -= OnNotchChanged;
         _state.Toasts.Changed -= OnToastsChanged;
         L10n.Changed -= OnLanguageChanged;
+        SectionRegistry.Unregister("agents");
     }
 
     /// Re-reads the pill's own texts after a language change. The ask cards and the toast keep the text they were made
     /// with until they are made again: rebuilding a card would lose what was picked in it.
     private void OnLanguageChanged()
     {
-        CardText.Text = L10n.L("Nothing running");
+        HeaderSummary.Text = PillSummary.For(_state.Snapshot);
         RebuildChips();
         ApplyAppearance();
     }

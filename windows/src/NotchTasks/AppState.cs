@@ -118,6 +118,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
             return;
         }
         var visible = _tracker.Filter(list);
+        var agentsOn = ActiveModules(Settings).Contains("agents");
         var wanted = new HashSet<string>(visible.Select(a => a.Id), StringComparer.Ordinal);
         var left = new HashSet<string>(StringComparer.Ordinal);
         for (var i = Asks.Count - 1; i >= 0; i--)
@@ -140,7 +141,11 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
                 continue;
             }
             Asks.Insert(Math.Min(i, Asks.Count), visible[i]);
-            Announce(AskToast(visible[i]));
+            // An ask belongs to the agents module: with it off, the ask is kept but makes no toast and no sound.
+            if (agentsOn)
+            {
+                Announce(AskToast(visible[i]));
+            }
         }
         Publish();
     }
@@ -162,14 +167,19 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
     private static IReadOnlyDictionary<string, IModuleSource> CreateSources() =>
         new Dictionary<string, IModuleSource>(StringComparer.Ordinal);
 
-    private NotchSnapshot BuildSnapshot() => new(
-        ActiveModules(Settings),
-        Asks.Count,
+    /// The snapshot's ask count: the asks belong to the agents module, so none count while it is off.
+    private NotchSnapshot BuildSnapshot()
+    {
+        var modules = ActiveModules(Settings);
+        return new NotchSnapshot(
+        modules,
+        modules.Contains("agents") ? Asks.Count : 0,
         null,
         null,
         new SensorState(Array.Empty<string>(), false, false),
         null,
         null);
+    }
 
     /// Starts and stops the module sources when the modules or the disabled list change.
     private void OnSettingsChanged(IReadOnlyCollection<string> keys) =>
