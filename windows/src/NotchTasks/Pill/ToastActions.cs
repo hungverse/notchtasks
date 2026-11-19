@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using NotchTasks.ControlPanel;
 using NotchTasks.Core.Notch;
 using NotchTasks.Services;
@@ -39,9 +40,15 @@ public static class ToastActions
         }
     }
 
-    /// True when the url is a file on this PC; path is its local path.
+    /// True when the url is a file on this PC; path is its local path. A full local path (C:\..., or a UNC path) is a file, as
+    /// the downloads toast's url is; a file:// URI is one too. Anything else is a link.
     private static bool IsFile(string url, out string path)
     {
+        if (Path.IsPathFullyQualified(url))
+        {
+            path = url;
+            return true;
+        }
         if (Uri.TryCreate(url, UriKind.Absolute, out var uri) && uri.IsFile)
         {
             path = uri.LocalPath;

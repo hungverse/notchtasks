@@ -28,6 +28,14 @@ internal static partial class NativeMethods
 
     [LibraryImport("ntdll.dll")]
     public static partial int NtQueryInformationProcess(nint process, int informationClass, ref ProcessBasicInformation information, int length, out int returnLength);
+
+    /// The full path of a known folder as a UTF-16 string allocated by the shell (free it with CoTaskMemFree). The result is an HRESULT.
+    [LibraryImport("shell32.dll")]
+    public static partial int SHGetKnownFolderPath(in Guid folderId, uint flags, nint token, out nint path);
+
+    /// Frees a string the shell or COM allocated (the path from SHGetKnownFolderPath).
+    [LibraryImport("ole32.dll")]
+    public static partial void CoTaskMemFree(nint memory);
 }
 
 /// PROCESS_BASIC_INFORMATION: only InheritedFromUniqueProcessId (the parent pid) is read.

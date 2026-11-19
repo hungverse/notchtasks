@@ -37,6 +37,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         Battery = new BatteryModule(this);
         _batterySource = new BatterySource(Battery, Publish);
         Network = new NetworkModule(this);
+        Downloads = new DownloadsModule(this, DownloadFolder.Locate() ?? string.Empty);
         _host = new ModuleHost(CreateSources(), OnTurnedOff, (message, e) => ErrorLog.Write(new InvalidOperationException(message, e)));
         _host.Apply(ActiveModules(settings));
         Snapshot = BuildSnapshot();
@@ -59,6 +60,9 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
 
     /// The network: it only makes toasts (no snapshot field), so Publish is not needed.
     public NetworkModule Network { get; }
+
+    /// The downloads: it only makes toasts (no snapshot field), so Publish is not needed.
+    public DownloadsModule Downloads { get; }
 
     /// The state the closed pill's chips are built from. Rebuilt by Publish.
     public NotchSnapshot Snapshot { get; private set; }
@@ -194,6 +198,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
             ["timer"] = new TimerSource(Timer, Publish),
             ["battery"] = _batterySource,
             ["network"] = new NetworkSource(Network),
+            ["downloads"] = new DownloadsSource(Downloads),
         };
 
     /// The snapshot's ask count: the asks belong to the agents module, so none count while it is off.
