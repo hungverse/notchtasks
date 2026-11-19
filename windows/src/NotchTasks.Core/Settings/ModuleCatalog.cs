@@ -94,9 +94,15 @@ public static class ModuleCatalog
     /// The stored list with `id` swapped with the previous (delta -1) or next (delta 1) visible Windows module. Only the
     /// visible modules move among themselves: every other stored id (hidden on Windows, unknown) keeps its position. A
     /// move past either end, or of an id that is not visible, returns the stored list unchanged.
-    public static IReadOnlyList<string> Reorder(IReadOnlyList<string> stored, string id, int delta)
+    public static IReadOnlyList<string> Reorder(IReadOnlyList<string> stored, string id, int delta) =>
+        Reorder(stored, id, delta, _ => true);
+
+    /// Reorder, where only the visible modules `shown` accepts move. A visible module that `shown` rejects (a row hidden on
+    /// this PC, the battery without a battery) keeps its stored place, as a hidden id does, so a move swaps only with the
+    /// nearest shown neighbour and the stored list keeps every other id where it was.
+    public static IReadOnlyList<string> Reorder(IReadOnlyList<string> stored, string id, int delta, Func<string, bool> shown)
     {
-        var visible = Order(stored).ToList();
+        var visible = Order(stored).Where(shown).ToList();
         var index = visible.IndexOf(id);
         var target = index + delta;
         if (index < 0 || target < 0 || target >= visible.Count)
@@ -111,7 +117,7 @@ public static class ModuleCatalog
         var next = 0;
         foreach (var item in stored)
         {
-            if (!OnWindows(item))
+            if (!OnWindows(item) || !shown(item))
             {
                 result.Add(item);
             }

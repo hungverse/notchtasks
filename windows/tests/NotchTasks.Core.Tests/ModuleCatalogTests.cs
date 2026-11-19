@@ -97,4 +97,15 @@ public sealed class ModuleCatalogTests
         Assert.Equal(stored, ModuleCatalog.Reorder(stored, "timer", -1));
         Assert.Equal(stored, ModuleCatalog.Reorder(stored, "mirror", 1));
     }
+
+    [Fact]
+    public void Reorder_WithShownPredicate_KeepsAHiddenIdAtItsPlace()
+    {
+        // battery is hidden on this PC: a move of timer swaps only with media, and battery stays at index 2.
+        var stored = new[] { "agents", "ci", "battery", "media", "timer" };
+
+        var result = ModuleCatalog.Reorder(stored, "timer", -1, id => id != "battery");
+
+        Assert.Equal(new[] { "agents", "ci", "battery", "timer", "media" }, result.Take(5));
+    }
 }

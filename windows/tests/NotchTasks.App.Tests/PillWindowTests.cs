@@ -42,21 +42,21 @@ public sealed class PillWindowTests
             var view = new ToastView();
             var toast = new Toast("hand", "#FF9F0A", "Agent wants to run", "echo hi");
 
-            view.Show(toast, "compact", null);
+            view.Show(toast, "compact", null, "bouncy");
             Assert.Equal(Visibility.Visible, Fixture.Named<UIElement>(view, "CompactRow").Visibility);
             // A title in the compact style: two 170 px side columns, the pill's 200 px, and the Mac's 14 px padding outside.
             Assert.Equal(568.0, view.Width);
-            view.Show(new Toast("hand", "#FF9F0A", "3:00", "4:59", Compact: true), "island", null);
+            view.Show(new Toast("hand", "#FF9F0A", "3:00", "4:59", Compact: true), "island", null, "bouncy");
             // A compact toast: two 52 px side columns, the same 200 px and the same padding.
             Assert.Equal(332.0, view.Width);
             Assert.Equal(Visibility.Collapsed, Fixture.Named<UIElement>(view, "WideBody").Visibility);
 
-            view.Show(toast, "banner", null);
+            view.Show(toast, "banner", null, "bouncy");
             Assert.Equal(Visibility.Collapsed, Fixture.Named<UIElement>(view, "CompactRow").Visibility);
             Assert.Equal(Visibility.Visible, Fixture.Named<UIElement>(view, "BannerBar").Visibility);
             Assert.Equal(520.0, view.Width);
 
-            view.Show(toast, "island", null);
+            view.Show(toast, "island", null, "bouncy");
             Assert.Equal(Visibility.Collapsed, Fixture.Named<UIElement>(view, "BannerBar").Visibility);
             Assert.Equal(340.0, view.Width);
         });
@@ -72,11 +72,11 @@ public sealed class PillWindowTests
             var question = new AgentAsk("q1", 1, "work", "AskUserQuestion", "Which one?",
                 new[] { new AskQuestion("Pick one", null, new[] { "A", "B" }, false) }, DateTimeOffset.Now, "claude");
 
-            view.Show(new Toast("hand", "#FF9F0A", "Run", "rm", AskId: "a1", Module: "agents"), "island", approval);
+            view.Show(new Toast("hand", "#FF9F0A", "Run", "rm", AskId: "a1", Module: "agents"), "island", approval, "bouncy");
             Assert.Equal(Visibility.Visible, Fixture.Named<UIElement>(view, "ApprovalButtons").Visibility);
             Assert.Equal(Visibility.Collapsed, Fixture.Named<UIElement>(view, "ReplyButton").Visibility);
 
-            view.Show(new Toast("question", "#FF9F0A", "Ask", "Which one?", AskId: "q1", Module: "agents"), "island", question);
+            view.Show(new Toast("question", "#FF9F0A", "Ask", "Which one?", AskId: "q1", Module: "agents"), "island", question, "bouncy");
             Assert.Equal(Visibility.Collapsed, Fixture.Named<UIElement>(view, "ApprovalButtons").Visibility);
             Assert.Equal(Visibility.Visible, Fixture.Named<UIElement>(view, "ReplyButton").Visibility);
         });

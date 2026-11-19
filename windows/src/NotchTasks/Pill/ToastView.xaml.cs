@@ -81,7 +81,7 @@ public partial class ToastView : UserControl
 
     /// Shows the toast in a style: its glyph, title, subtitle and the buttons it needs. `ask` is the agent's ask the toast
     /// stands for, or null. `motion` is the Motion setting, which a battery toast's art springs by.
-    public void Show(Toast t, string style, AgentAsk? ask, string motion = "bouncy")
+    public void Show(Toast t, string style, AgentAsk? ask, string motion)
     {
         _toast = t;
         _ask = ask;

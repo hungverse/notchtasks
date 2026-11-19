@@ -4,6 +4,7 @@ using System.Windows.Media;
 using NotchTasks.ControlPanel.Panes;
 using NotchTasks.Core;
 using NotchTasks.Core.Settings;
+using System.Text.Json.Nodes;
 using Xunit;
 
 namespace NotchTasks.AppTests;
@@ -51,6 +52,36 @@ public sealed class ModulesPaneBatteryTests
             Assert.Contains(battery, withBattery);
             Assert.DoesNotContain(battery, withoutBattery);
             Assert.Equal(withBattery.Count - 1, withoutBattery.Count);
+        });
+    }
+
+    [Fact]
+    public void Move_KeepsAHiddenBatteryAtItsStoredPlace()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            var stored = new[] { "agents", "ci", "battery", "media", "timer" };
+            var array = new JsonArray();
+            foreach (var id in stored)
+            {
+                array.Add(JsonValue.Create(id));
+            }
+            state.Settings.Set("modules", array);
+            var pane = Fixture.Create<ModulesPane>(state.Settings, new Func<bool>(() => false));
+
+            // Down: media swaps with timer, the nearest shown neighbour; battery keeps index 2.
+            Fixture.Call(pane, "Move", "media", 1);
+            Assert.Equal(
+                new[] { "agents", "ci", "battery", "timer", "media", "shelf", "limits", "devices", "calls", "privacy", "network", "downloads", "health", "mirror" },
+                state.Settings.Modules);
+
+            // Up: back to the stored order.
+            Fixture.Call(pane, "Move", "media", -1);
+            Assert.Equal(
+                new[] { "agents", "ci", "battery", "media", "timer", "shelf", "limits", "devices", "calls", "privacy", "network", "downloads", "health", "mirror" },
+                state.Settings.Modules);
         });
     }
 }

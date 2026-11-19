@@ -172,6 +172,21 @@ public class BatteryModuleTests
         Assert.Equal(new BatteryState(40, false, false), module.State);
         Assert.Empty(announcer.Calls);
     }
+
+    [Fact]
+    public void UnknownAcLine_KeepsTheState_NoToast()
+    {
+        var announcer = new RecordingAnnouncer();
+        var module = new BatteryModule(announcer);
+        module.Update(Unplugged(60));
+
+        // AC 255 is unknown: the reading is ignored, so the plug state is not flipped to "unplugged".
+        var changed = module.Update(PowerFacts.FromStatus(255, 1, 40));
+
+        Assert.False(changed);
+        Assert.Equal(new BatteryState(60, false, false), module.State);
+        Assert.Empty(announcer.Calls);
+    }
 }
 
 public class PowerFactsTests
@@ -216,5 +231,21 @@ public class PowerFactsTests
         var facts = PowerFacts.FromStatus(0, 2, 37);
 
         Assert.Equal(new PowerFacts(true, 37, false, false), facts);
+    }
+
+    [Fact]
+    public void FromStatus_FlagUnknown255_IsNotCharging()
+    {
+        var facts = PowerFacts.FromStatus(1, 255, 50);
+
+        Assert.False(facts.Charging);
+    }
+
+    [Fact]
+    public void FromStatus_AcUnknown255_IsNotPluggedKnown()
+    {
+        Assert.False(PowerFacts.FromStatus(255, 1, 50).PluggedKnown);
+        Assert.True(PowerFacts.FromStatus(0, 1, 50).PluggedKnown);
+        Assert.True(PowerFacts.FromStatus(1, 1, 50).PluggedKnown);
     }
 }

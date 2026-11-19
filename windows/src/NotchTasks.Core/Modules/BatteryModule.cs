@@ -29,8 +29,9 @@ public sealed class BatteryModule
         {
             return Clear();
         }
-        if (f.Percent < 0)
+        if (f.Percent < 0 || !f.PluggedKnown)
         {
+            // An unknown level or AC line keeps the state: a reading that cannot say plugged or not is no change.
             return false;
         }
 

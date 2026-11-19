@@ -202,10 +202,10 @@ public partial class ModulesPane : SettingsPane
     /// Swaps the module with its neighbour and saves the whole order once. The moved row keeps the keyboard focus.
     private void Move(string id, int delta)
     {
-        // Hidden and unknown ids stay where they are in the stored list (ModuleCatalog.Reorder). A hidden row is left out
-        // of the list, so an arrow never swaps with it.
-        var stored = Store.Modules.Where(Shown).ToList();
-        var order = ModuleCatalog.Reorder(stored, id, delta);
+        // Hidden and unknown ids keep their stored places (ModuleCatalog.Reorder): a hidden row is not a neighbour, so an
+        // arrow swaps with the nearest shown module and the stored list keeps the hidden battery where it was.
+        var stored = Store.Modules;
+        var order = ModuleCatalog.Reorder(stored, id, delta, Shown);
         if (order.SequenceEqual(stored))
         {
             return;
