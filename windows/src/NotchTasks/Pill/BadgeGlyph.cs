@@ -28,6 +28,27 @@ public static class BadgeGlyph
         return HexColor.ToColor(hex);
     }
 
+    /// Puts the settings' badges in their wings, replacing the badges already there: a badge with "right" set goes to the
+    /// right wing. Returns how many badges there are.
+    public static int FillWings(StackPanel left, StackPanel right, JsonArray badges, Color accent)
+    {
+        left.Children.Clear();
+        right.Children.Clear();
+        foreach (var node in badges)
+        {
+            if (node is not JsonObject badge)
+            {
+                continue;
+            }
+            var wing = ReadBool(badge, "right") ? right : left;
+            var glyph = Create(badge, 18, accent);
+            glyph.Margin = new Thickness(3, 0, 3, 0);
+            glyph.VerticalAlignment = VerticalAlignment.Center;
+            wing.Children.Add(glyph);
+        }
+        return badges.Count;
+    }
+
     /// The badge at `size` DIP square, without margins (the caller places it).
     public static FrameworkElement Create(JsonObject badge, double size, Color accent)
     {

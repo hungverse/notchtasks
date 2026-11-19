@@ -1,0 +1,68 @@
+<UserControl x:Class="NotchTasks.Pill.ToastView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             HorizontalAlignment="Center" VerticalAlignment="Top"
+             FontFamily="Segoe UI Variable Text, Segoe UI" Foreground="White">
+  <UserControl.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="AskStyles.xaml" />
+      </ResourceDictionary.MergedDictionaries>
+    </ResourceDictionary>
+  </UserControl.Resources>
+  <Grid x:Name="Root" Background="Transparent">
+    <!-- The card style's frame: a rounded border in the toast's tint at half strength. -->
+    <Border x:Name="CardFrame" Visibility="Collapsed" CornerRadius="18" BorderThickness="1"
+            Background="#EB000000" IsHitTestVisible="False" />
+    <!-- Compact: one row on the pill's own line. The glyph sits in the left column, the value in the right; the pill's own
+         200 px sits between the two columns. -->
+    <Grid x:Name="CompactRow" Height="32" VerticalAlignment="Top" Visibility="Collapsed">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition x:Name="CompactLeft" Width="52" />
+        <ColumnDefinition Width="200" />
+        <ColumnDefinition x:Name="CompactRight" Width="52" />
+      </Grid.ColumnDefinitions>
+      <TextBlock x:Name="CompactGlyph" Grid.Column="0" Margin="14,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center"
+                 FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" />
+      <TextBlock x:Name="CompactText" Grid.Column="2" Margin="0,0,14,0" HorizontalAlignment="Right" VerticalAlignment="Center"
+                 FontSize="12" FontWeight="Bold" TextTrimming="CharacterEllipsis" />
+    </Grid>
+    <!-- Island, banner and card: the notch row carries the glyph (island and banner); the text and the buttons sit under it. -->
+    <StackPanel x:Name="WideBody" Visibility="Collapsed">
+      <Grid x:Name="TopRow" Height="32">
+        <TextBlock x:Name="TopGlyph" Margin="12,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center"
+                   FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14" />
+      </Grid>
+      <Grid x:Name="TextRow" Margin="18,2,18,10">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <!-- The banner's tint bar. -->
+        <Border x:Name="BannerBar" Grid.Column="0" Width="4" Height="34" CornerRadius="2" Margin="0,0,10,0"
+                VerticalAlignment="Center" Visibility="Collapsed" />
+        <!-- The card's glyph, at the left of its text. -->
+        <TextBlock x:Name="CardGlyph" Grid.Column="1" Margin="0,0,12,0" VerticalAlignment="Center" Visibility="Collapsed"
+                   FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="26" />
+        <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="0,0,8,0">
+          <TextBlock x:Name="TitleText" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+          <TextBlock x:Name="SubtitleText" Foreground="#99FFFFFF" TextTrimming="CharacterEllipsis" />
+        </StackPanel>
+        <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
+          <Button x:Name="ReplyButton" Style="{StaticResource PrimaryChoice}" Height="24" Padding="11,0" Visibility="Collapsed" />
+          <StackPanel x:Name="ApprovalButtons" Orientation="Horizontal">
+            <Button x:Name="DenyButton" Style="{StaticResource ChoiceButton}" Height="24" Padding="11,0" Margin="0,0,6,0" />
+            <Button x:Name="AllowButton" Style="{StaticResource PrimaryChoice}" Height="24" Padding="11,0" />
+          </StackPanel>
+          <Button x:Name="ActionButton" Style="{StaticResource PrimaryChoice}" Height="24" Padding="11,0" Visibility="Collapsed" />
+          <Button x:Name="HideButton" Style="{StaticResource CloseButton}" Margin="6,0,0,0">
+            <TextBlock Text="&#xE711;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="9" FontWeight="Bold"
+                       Foreground="#B3FFFFFF" />
+          </Button>
+        </StackPanel>
+      </Grid>
+    </StackPanel>
+  </Grid>
+</UserControl>
