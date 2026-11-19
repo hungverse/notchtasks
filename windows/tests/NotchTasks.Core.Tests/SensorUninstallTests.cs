@@ -12,12 +12,17 @@ public sealed class SensorUninstallTests
     private static readonly string Own = Path.Combine(Folder, Sid + ".signin");
     private static readonly string Exe = Path.Combine(Folder, "NotchTasksSensors.exe");
     private static readonly string CoreDll = Path.Combine(Folder, "NotchTasks.Core.dll");
+    private static readonly string Runtimes = Path.Combine(Folder, "runtimes");
+    private static readonly string RuntimesWin = Path.Combine(Runtimes, "win");
+    private static readonly string RuntimesLib = Path.Combine(RuntimesWin, "lib");
+    private static readonly string Nested = Path.Combine(RuntimesLib, "System.Management.dll");
     private static readonly string Other = Path.Combine(Folder, OtherSid + ".signin");
 
     private sealed class FakeSystem : ISensorSystem
     {
         public readonly List<string> Log = new();
         public readonly List<string> Files = new();
+        public readonly List<string> Folders = new();
         public readonly HashSet<string> FailingDeletes = new(StringComparer.OrdinalIgnoreCase);
         public bool TaskPresent = true;
         public bool DeleteTaskFails;
@@ -42,8 +47,14 @@ public sealed class SensorUninstallTests
 
         public IReadOnlyList<string> FilesIn(string folder)
         {
-            Log.Add("list");
+            Log.Add("list-files");
             return Files.ToList();
+        }
+
+        public IReadOnlyList<string> FoldersIn(string folder)
+        {
+            Log.Add("list-folders");
+            return Folders.ToList();
         }
 
         public bool TryDeleteFile(string path)
@@ -57,26 +68,35 @@ public sealed class SensorUninstallTests
             return true;
         }
 
-        public bool TryDeleteFolder(string folder)
+        public bool TryDeleteFolder(string path)
         {
-            Log.Add("folder");
+            Log.Add("folder " + Path.GetFileName(path));
+            if (FailingDeletes.Contains(path))
+            {
+                return false;
+            }
+            Folders.Remove(path);
             return true;
         }
 
         public int IndexOfLast(string entry) => Log.FindLastIndex(line => line == entry);
     }
 
-    private static FakeSystem NewSystem(params string[] files)
+    private static FakeSystem NewSystem(IEnumerable<string> files, IEnumerable<string>? folders = null)
     {
         var system = new FakeSystem();
         system.Files.AddRange(files);
+        system.Folders.AddRange(folders ?? Array.Empty<string>());
         return system;
     }
 
+    private static FakeSystem Install() =>
+        NewSystem(new[] { Exe, CoreDll, Nested, Own }, new[] { Runtimes, RuntimesWin, RuntimesLib });
+
     [Fact]
-    public void Order_EndThenDeleteThenStop_ThenFiles_ThenMarkerLast()
+    public void Order_EndThenDelete_ThenStop_ThenTree_ThenMarkerLast_ThenFolder()
     {
-        var system = NewSystem(Exe, CoreDll, Own);
+        var system = Install();
 
         var outcome = SensorUninstall.Run(Sid, Folder, system);
 
@@ -88,17 +108,43 @@ public sealed class SensorUninstallTests
         Assert.True(end >= 0 && end < delete, "the running copy ends before the task is deleted");
         Assert.True(delete < stop, "the task is deleted before the stop");
         Assert.True(stop < log.IndexOf("delete NotchTasksSensors.exe"), "the files go after the stop");
-        Assert.True(log.IndexOf("delete NotchTasksSensors.exe") < log.IndexOf("delete NotchTasks.Core.dll"));
-        // The marker is the last file deleted, and the folder goes after it.
-        Assert.True(system.IndexOfLast("delete " + Path.GetFileName(Own)) > system.IndexOfLast("delete NotchTasks.Core.dll"));
-        Assert.True(log.IndexOf("folder") > system.IndexOfLast("delete " + Path.GetFileName(Own)));
+        Assert.True(log.IndexOf("delete NotchTasks.Core.dll") < log.IndexOf("folder runtimes"), "files go before their folders");
+        Assert.True(log.IndexOf("folder runtimes") < system.IndexOfLast("delete " + Path.GetFileName(Own)), "the marker is last");
+        Assert.True(system.IndexOfLast("delete " + Path.GetFileName(Own)) < log.IndexOf("folder NotchTasks Sensors"),
+            "the folder itself goes after the marker");
         Assert.Empty(system.Files);
+        Assert.Empty(system.Folders);
+    }
+
+    [Fact]
+    public void NestedRuntimesFile_IsDeleted_BeforeTheFoldersAndTheMarker()
+    {
+        var system = Install();
+
+        Assert.Equal(UninstallOutcome.Removed, SensorUninstall.Run(Sid, Folder, system));
+
+        Assert.Contains("delete System.Management.dll", system.Log);
+        Assert.True(system.Log.IndexOf("delete System.Management.dll") < system.Log.IndexOf("folder lib"));
+        Assert.DoesNotContain(Nested, system.Files);
+    }
+
+    [Fact]
+    public void FoldersGoDeepestFirst()
+    {
+        var system = Install();
+
+        SensorUninstall.Run(Sid, Folder, system);
+
+        var lib = system.Log.IndexOf("folder lib");
+        var win = system.Log.IndexOf("folder win");
+        var runtimes = system.Log.IndexOf("folder runtimes");
+        Assert.True(lib < win && win < runtimes);
     }
 
     [Fact]
     public void FileInUse_KeepsTheMarker_AndReportsIt()
     {
-        var system = NewSystem(Exe, CoreDll, Own);
+        var system = Install();
         system.FailingDeletes.Add(Exe);
 
         var outcome = SensorUninstall.Run(Sid, Folder, system);
@@ -106,21 +152,37 @@ public sealed class SensorUninstallTests
         Assert.Equal(UninstallOutcome.FilesStillInUse, outcome);
         Assert.DoesNotContain("delete " + Path.GetFileName(Own), system.Log);
         Assert.Contains(Own, system.Files);
-        Assert.DoesNotContain("folder", system.Log);
+    }
+
+    [Fact]
+    public void NestedFileInUse_KeepsTheMarker_AndTheFolders()
+    {
+        // A file deep in runtimes\ cannot be deleted: nothing from the marker on is touched.
+        var system = Install();
+        system.FailingDeletes.Add(Nested);
+
+        var outcome = SensorUninstall.Run(Sid, Folder, system);
+
+        Assert.Equal(UninstallOutcome.FilesStillInUse, outcome);
+        Assert.DoesNotContain("delete " + Path.GetFileName(Own), system.Log);
+        Assert.DoesNotContain("folder NotchTasks Sensors", system.Log);
+        Assert.Contains(Own, system.Files);
+        Assert.Contains(Nested, system.Files);
     }
 
     [Fact]
     public void OtherUsersMarker_KeepsTheFiles_AndRemovesOnlyThisMarker()
     {
-        var system = NewSystem(Exe, CoreDll, Own, Other);
+        var system = NewSystem(new[] { Exe, CoreDll, Nested, Own, Other }, new[] { Runtimes, RuntimesWin, RuntimesLib });
 
         var outcome = SensorUninstall.Run(Sid, Folder, system);
 
         Assert.Equal(UninstallOutcome.Removed, outcome);
         Assert.DoesNotContain("delete NotchTasksSensors.exe", system.Log);
-        Assert.DoesNotContain("delete NotchTasks.Core.dll", system.Log);
+        Assert.DoesNotContain("delete System.Management.dll", system.Log);
+        Assert.DoesNotContain("folder runtimes", system.Log);
         Assert.Contains("delete " + Path.GetFileName(Own), system.Log);
-        Assert.DoesNotContain("folder", system.Log);
+        Assert.DoesNotContain("folder NotchTasks Sensors", system.Log);
         Assert.Contains(Other, system.Files);
         Assert.Contains(Exe, system.Files);
     }
@@ -128,7 +190,7 @@ public sealed class SensorUninstallTests
     [Fact]
     public void TaskNotDeleted_ChangesNothingElse()
     {
-        var system = NewSystem(Exe, Own);
+        var system = Install();
         system.DeleteTaskFails = true;
 
         var outcome = SensorUninstall.Run(Sid, Folder, system);
@@ -137,15 +199,5 @@ public sealed class SensorUninstallTests
         Assert.DoesNotContain("stop " + Sid, system.Log);
         Assert.DoesNotContain("delete " + Path.GetFileName(Own), system.Log);
         Assert.Contains(Exe, system.Files);
-    }
-
-    [Fact]
-    public void MarkerDeletesLast_AndNeverFirst()
-    {
-        // Even with no other file, the marker is not the first delete.
-        var system = NewSystem(Own);
-
-        Assert.Equal(UninstallOutcome.Removed, SensorUninstall.Run(Sid, Folder, system));
-        Assert.Equal("delete " + Path.GetFileName(Own), system.Log.Last(line => line.StartsWith("delete ", StringComparison.Ordinal)));
     }
 }

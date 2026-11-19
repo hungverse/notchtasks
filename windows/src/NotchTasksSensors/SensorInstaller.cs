@@ -245,7 +245,10 @@ internal sealed class RealSensorSystem : ISensorSystem
     }
 
     public IReadOnlyList<string> FilesIn(string folder) =>
-        Directory.Exists(folder) ? Directory.EnumerateFiles(folder).ToList() : Array.Empty<string>();
+        Directory.Exists(folder) ? Directory.EnumerateFiles(folder, "*", SearchOption.AllDirectories).ToList() : Array.Empty<string>();
+
+    public IReadOnlyList<string> FoldersIn(string folder) =>
+        Directory.Exists(folder) ? Directory.EnumerateDirectories(folder, "*", SearchOption.AllDirectories).ToList() : Array.Empty<string>();
 
     public bool TryDeleteFile(string path)
     {
@@ -267,6 +270,7 @@ internal sealed class RealSensorSystem : ISensorSystem
         return !File.Exists(path);
     }
 
+    /// Deletes an empty folder only (non-recursive): the uninstall empties the tree first, deepest folders first.
     public bool TryDeleteFolder(string folder)
     {
         try

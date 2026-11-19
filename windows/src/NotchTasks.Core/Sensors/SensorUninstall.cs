@@ -15,26 +15,30 @@ public interface ISensorSystem
     /// Sets the user's stop event (no-op when no helper holds it).
     void SignalStop(string sid);
 
-    /// The full paths of the files in the folder (none when the folder is gone).
+    /// Every file under the folder, at any depth (none when the folder is gone).
     IReadOnlyList<string> FilesIn(string folder);
+
+    /// Every folder under the folder, at any depth (none when the folder is gone).
+    IReadOnlyList<string> FoldersIn(string folder);
 
     /// Deletes the file, retrying while it is in use. True when the file is gone afterwards.
     bool TryDeleteFile(string path);
 
-    /// Deletes the folder when it is empty. True when the folder is gone afterwards.
-    bool TryDeleteFolder(string folder);
+    /// Deletes an empty folder. True when the folder is gone afterwards.
+    bool TryDeleteFolder(string path);
 }
 
 /// How an uninstall ended.
 public enum UninstallOutcome
 {
-    /// The task is gone, and this user's files and marker are removed (the files only with the last marker).
+    /// The task is gone, and this user's files, marker and folder are removed.
     Removed,
 
     /// The task could not be deleted: nothing else was touched.
     TaskStillRegistered,
 
-    /// A file is in use or could not be deleted: the marker is kept, so the row still offers Turn off and the user can retry.
+    /// A file or folder is in use or could not be deleted: the marker is kept, so the row still offers Turn off and the user can
+    /// retry.
     FilesStillInUse,
 }
 
@@ -43,8 +47,9 @@ public enum UninstallOutcome
 ///   2. delete the task (schtasks /Delete /F), and stop if it is still there,
 ///   3. set the user's stop event,
 ///   4. with other users' markers still in the folder: delete this user's marker and stop there,
-///   5. with no other marker: delete every other file in the folder, then delete this user's marker LAST, then the folder.
-/// If a file cannot be deleted in step 5, the marker stays, so the next Turn off finds the install and tries again.
+///   5. with no other marker (the last one): delete every file at any depth except this user's marker, then every subfolder
+///      deepest first, then this user's marker LAST, then the folder itself.
+/// If anything cannot be deleted before the marker, the marker stays, so the next Turn off finds the install and tries again.
 public static class SensorUninstall
 {
     public static UninstallOutcome Run(string sid, string folder, ISensorSystem system)
@@ -70,13 +75,18 @@ public static class SensorUninstall
 
         foreach (var file in system.FilesIn(folder))
         {
-            if (string.Equals(file, own, StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(file, own, StringComparison.OrdinalIgnoreCase) && !system.TryDeleteFile(file))
             {
-                continue;
+                return UninstallOutcome.FilesStillInUse;  // the marker stays: the tree is not all gone
             }
-            if (!system.TryDeleteFile(file))
+        }
+
+        // Deepest folders first, so each is empty when its turn comes.
+        foreach (var directory in system.FoldersIn(folder).OrderByDescending(d => d.Length))
+        {
+            if (!system.TryDeleteFolder(directory))
             {
-                return UninstallOutcome.FilesStillInUse;  // the marker stays: the files are not all gone
+                return UninstallOutcome.FilesStillInUse;
             }
         }
 
@@ -84,8 +94,7 @@ public static class SensorUninstall
         {
             return UninstallOutcome.FilesStillInUse;
         }
-        system.TryDeleteFolder(folder);
-        return UninstallOutcome.Removed;
+        return system.TryDeleteFolder(folder) ? UninstallOutcome.Removed : UninstallOutcome.FilesStillInUse;
     }
 
     /// True for a user's marker file name ("<SID>.signin").
