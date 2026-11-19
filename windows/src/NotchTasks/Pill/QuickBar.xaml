@@ -7,6 +7,7 @@
     <ResourceDictionary>
       <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="PillStyles.xaml" />
+        <ResourceDictionary Source="AskStyles.xaml" />
       </ResourceDictionary.MergedDictionaries>
     </ResourceDictionary>
   </UserControl.Resources>
@@ -15,8 +16,17 @@
       <ColumnDefinition Width="*" />
       <ColumnDefinition Width="Auto" />
     </Grid.ColumnDefinitions>
-    <!-- The timer pills of the timer module go here, at the left. -->
-    <StackPanel x:Name="TimerPills" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" />
+    <!-- The timer's glyph and quick-start pills, at the left: shown while the timer module is on and no timer runs. -->
+    <StackPanel x:Name="TimerBar" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+      <TextBlock x:Name="TimerGlyph" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12"
+                 VerticalAlignment="Center" Margin="0,0,8,0" />
+      <StackPanel x:Name="TimerPills" Orientation="Horizontal" VerticalAlignment="Center">
+        <Button x:Name="Timer5" Tag="5" Style="{StaticResource ChoiceButton}" Padding="9,0" Margin="0,0,4,0" Content="5&#x2032;" />
+        <Button x:Name="Timer15" Tag="15" Style="{StaticResource ChoiceButton}" Padding="9,0" Margin="0,0,4,0" Content="15&#x2032;" />
+        <Button x:Name="Timer25" Tag="25" Style="{StaticResource ChoiceButton}" Padding="9,0" Margin="0,0,4,0" Content="25&#x2032;" />
+        <Button x:Name="Timer45" Tag="45" Style="{StaticResource ChoiceButton}" Padding="9,0" Content="45&#x2032;" />
+      </StackPanel>
+    </StackPanel>
     <!-- The Control Panel (gear) and Quit (power), at the right, as on the Mac. -->
     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
       <Button x:Name="ControlPanelButton" Style="{StaticResource FooterButton}" Margin="0,0,6,0"

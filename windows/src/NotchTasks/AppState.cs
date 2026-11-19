@@ -7,6 +7,7 @@ using NotchTasks.Core.Modules;
 using NotchTasks.Core.Notch;
 using NotchTasks.Core.Settings;
 using NotchTasks.Services;
+using NotchTasks.Services.Modules;
 
 namespace NotchTasks;
 
@@ -31,6 +32,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         _store = store;
         _dispatcher = Dispatcher.CurrentDispatcher;
         Asks = new ObservableCollection<AgentAsk>();
+        Timer = new TimerModule(this);
         _host = new ModuleHost(CreateSources(), OnTurnedOff, (message, e) => ErrorLog.Write(new InvalidOperationException(message, e)));
         _host.Apply(ActiveModules(settings));
         Snapshot = BuildSnapshot();
@@ -44,6 +46,9 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
 
     /// The toasts the pill shows, in order. Asks queue here too.
     public ToastQueue Toasts { get; } = new();
+
+    /// The focus timer. Its controls call Start, Extend or Stop, then Publish.
+    public TimerModule Timer { get; }
 
     /// The state the closed pill's chips are built from. Rebuilt by Publish.
     public NotchSnapshot Snapshot { get; private set; }
@@ -163,9 +168,12 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         Module: "agents");
 
     /// The module sources by module id, built once before the first Apply. Modules register their sources here: a module
-    /// with no entry is active but runs nothing. No module has a source yet.
-    private static IReadOnlyDictionary<string, IModuleSource> CreateSources() =>
-        new Dictionary<string, IModuleSource>(StringComparer.Ordinal);
+    /// with no entry is active but runs nothing. Timer is made before this runs.
+    private IReadOnlyDictionary<string, IModuleSource> CreateSources() =>
+        new Dictionary<string, IModuleSource>(StringComparer.Ordinal)
+        {
+            ["timer"] = new TimerSource(Timer, Publish),
+        };
 
     /// The snapshot's ask count: the asks belong to the agents module, so none count while it is off.
     private NotchSnapshot BuildSnapshot()
@@ -174,7 +182,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         return new NotchSnapshot(
         modules,
         modules.Contains("agents") ? Asks.Count : 0,
-        null,
+        this.Timer.State,
         null,
         new SensorState(Array.Empty<string>(), false, false),
         null,

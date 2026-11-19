@@ -19,6 +19,7 @@ using NotchTasks.Core.Asks;
 using NotchTasks.Core.Motion;
 using NotchTasks.Core.Notch;
 using NotchTasks.Core.Settings;
+using NotchTasks.Pill.Sections;
 
 namespace NotchTasks.Pill;
 
@@ -72,6 +73,8 @@ public partial class PillWindow : Window
     private readonly DispatcherTimer _waitTimer = new() { Interval = TimeSpan.FromSeconds(1) };
     private readonly AskSection _asks = new();  // the agents' section: one card per waiting ask
     private readonly Func<AppState, FrameworkElement?> _agentsSection;  // the builder this pill registered for "agents"
+    private readonly TimerCard _timerCard = new();  // the timer's card: one element, refreshed by its builder
+    private readonly Func<AppState, FrameworkElement?> _timerSection;  // the builder this pill registered for "timer"
     private Toast? _shownToast;  // the toast the pill shows now; null when none
     private int _animation;  // counts the animations; only the last one's completion clears _closing
     private bool _animating;  // a shape animation runs: the poll evaluates click-through on every tick
@@ -108,6 +111,9 @@ public partial class PillWindow : Window
         // The agents' section is the ask cards. Other modules register their sections the same way.
         _agentsSection = _ => _state.Asks.Count > 0 ? _asks.Panel : null;
         SectionRegistry.Register("agents", _agentsSection);
+        // The timer's section is its card while a timer runs.
+        _timerSection = state => _timerCard.Update(state, _accent) ? _timerCard : null;
+        SectionRegistry.Register("timer", _timerSection);
 
         SourceInitialized += OnSourceInitialized;
         Closed += OnClosed;
@@ -585,6 +591,7 @@ public partial class PillWindow : Window
     {
         RebuildChips();
         SyncSections();
+        Bar.Update(_state, _accent);
         HeaderSummary.Text = PillSummary.For(_state.Snapshot);
         SyncWaitTimer();
         if (_open)
@@ -617,6 +624,7 @@ public partial class PillWindow : Window
             RebuildBadges(badges);
         }
         RebuildChips();  // the chips follow the accent and the module colours
+        Bar.Update(_state, _accent);  // the quick bar's timer glyph follows them too
         ApplyAppearance();
     }
 
@@ -698,6 +706,7 @@ public partial class PillWindow : Window
         L10n.Changed -= OnLanguageChanged;
         // Only this pill's own builder: a newer pill may have registered its own since.
         SectionRegistry.Unregister("agents", _agentsSection);
+        SectionRegistry.Unregister("timer", _timerSection);
     }
 
     /// Re-reads the pill's own texts after a language change. The ask cards and the toast keep the text they were made
