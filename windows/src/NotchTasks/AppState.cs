@@ -28,7 +28,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
     private bool _disposed;
 
     /// Creates the state on the UI thread. Call StartWatching next. The modules that are on start here.
-    public AppState(SettingsStore settings, AskStore store)
+    public AppState(SettingsStore settings, AskStore store, HealthReaders? readers = null)
     {
         Settings = settings;
         _store = store;
@@ -40,7 +40,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         Network = new NetworkModule(this);
         Downloads = new DownloadsModule(this, DownloadFolder.Locate() ?? string.Empty);
         Health = new HealthModule(this);
-        _healthSource = new HealthSource(Health, Publish, settings);
+        _healthSource = new HealthSource(Health, PublishLoad, settings, readers);
         _host = new ModuleHost(CreateSources(), OnTurnedOff, (message, e) => ErrorLog.Write(new InvalidOperationException(message, e)));
         _host.Apply(ActiveModules(settings));
         Snapshot = BuildSnapshot();
@@ -69,6 +69,9 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
 
     /// The health module: its disk warning is a toast, and its load is the snapshot's Load (null when not sampled).
     public HealthModule Health { get; }
+
+    /// Raised when only the load changed (a meter tick): the header follows it, and the rest of the notch is not rebuilt.
+    public event Action? LoadChanged;
 
     /// The state the closed pill's chips are built from. Rebuilt by Publish.
     public NotchSnapshot Snapshot { get; private set; }
@@ -100,6 +103,17 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
     {
         Snapshot = BuildSnapshot();
         NotchChanged?.Invoke();
+    }
+
+    /// Rebuilds only Snapshot (its Load) and raises LoadChanged. The chips, the sections and the toasts are left alone.
+    private void PublishLoad()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+        Snapshot = BuildSnapshot();
+        LoadChanged?.Invoke();
     }
 
     /// The power status changed (the AC line or the battery): the battery reads it now, while the battery module is on.

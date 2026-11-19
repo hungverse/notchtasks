@@ -70,13 +70,12 @@ public static class SystemActions
         }
     }
 
-    /// Starts a program without waiting for it, and disposes the Process handle at once.
     /// Opens Task Manager (taskmgr.exe), which the CPU and RAM meters of the open pill open.
     public static void OpenTaskManager()
     {
         try
         {
-            Launch(new ProcessStartInfo("taskmgr.exe") { UseShellExecute = true });
+            Launch(new ProcessStartInfo(Path.Combine(Environment.SystemDirectory, "taskmgr.exe")) { UseShellExecute = true });
         }
         catch (Win32Exception e)
         {
@@ -84,6 +83,7 @@ public static class SystemActions
         }
     }
 
+    /// Starts a program without waiting for it, and disposes the Process handle at once.
     private static void Launch(ProcessStartInfo start)
     {
         using var process = Process.Start(start);

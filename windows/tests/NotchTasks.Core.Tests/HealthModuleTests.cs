@@ -118,19 +118,47 @@ public class HealthModuleTests
     }
 
     [Fact]
-    public void ResetLoad_ClearsTheLoad_AndTheNextSampleIsABaseline()
+    public void ResetLoad_KeepsTheLoad_AndRestartsTheBaseline()
     {
         var module = new HealthModule(new RecordingAnnouncer());
         module.Sample(new CpuTimes(0, 0, 0), 0.25);
         module.Sample(new CpuTimes(50, 70, 30), 0.25);
-        Assert.NotNull(module.Load);
+        Assert.Equal(0.5, module.Load!.Cpu, 6);
 
-        Assert.True(module.ResetLoad());
+        // Closing the pill forgets only the baseline: the shown load stays for the next open.
+        module.ResetLoad();
+        Assert.Equal(0.5, module.Load!.Cpu, 6);
+
+        // The first sample after the reset is a new baseline: the shown load is kept, not cleared.
+        module.Sample(new CpuTimes(60, 90, 50), 0.25);
+        Assert.Equal(0.5, module.Load!.Cpu, 6);
+
+        // The next one gives a new reading: idle 10 of a total of 40 is 75 % busy.
+        module.Sample(new CpuTimes(70, 110, 70), 0.25);
+        Assert.Equal(0.75, module.Load!.Cpu, 6);
+    }
+
+    [Fact]
+    public void ClearLoad_ClearsTheLoad_AndSaysWhetherItWasSet()
+    {
+        var module = new HealthModule(new RecordingAnnouncer());
+        module.Sample(new CpuTimes(0, 0, 0), 0.25);
+        module.Sample(new CpuTimes(50, 70, 30), 0.25);
+
+        Assert.True(module.ClearLoad());
         Assert.Null(module.Load);
-        Assert.False(module.ResetLoad());
+        Assert.False(module.ClearLoad());
 
-        // The stored times are gone too: the next sample is a baseline again, with no load.
+        // The baseline is gone too: the next sample only stores the times.
         module.Sample(new CpuTimes(60, 90, 50), 0.25);
         Assert.Null(module.Load);
     }
+
+    [Theory]
+    [InlineData(0.695, 70)]
+    [InlineData(0.694, 69)]
+    [InlineData(0.0, 0)]
+    [InlineData(1.2, 100)]
+    public void LoadPercent_RoundsHalfUp_AndClamps(double fraction, int expected) =>
+        Assert.Equal(expected, HealthModule.LoadPercent(fraction));
 }

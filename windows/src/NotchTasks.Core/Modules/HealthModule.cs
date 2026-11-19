@@ -27,7 +27,7 @@ public sealed class HealthModule
         _announce = announce;
     }
 
-    /// The last load reading: CPU and memory, each a fraction 0..1. Null until two samples have been taken, and after ResetLoad.
+    /// The last load reading: CPU and memory, each a fraction 0..1. Null until two samples have been taken, and after ClearLoad.
     public SystemLoad? Load { get; private set; }
 
     /// Judges the free space of the disk, in bytes. Below 10 GB the warning goes out once; it is armed again only after the
@@ -58,16 +58,20 @@ public sealed class HealthModule
         }
     }
 
-    /// Takes a CPU reading with the memory in use (dwMemoryLoad / 100). The first sample only stores the times, so Load stays
-    /// null. A later sample gives the CPU as 1 - idle / total over the time since the previous sample, where the total is the
-    /// kernel plus the user time delta. Nothing elapsed (total 0) keeps the previous Load.
+    /// The rounded percent of a 0..1 fraction, as the meters show it (half up).
+    public static int LoadPercent(double fraction) =>
+        (int)Math.Round(Math.Clamp(fraction, 0, 1) * 100, MidpointRounding.AwayFromZero);
+
+    /// Takes a CPU reading with the memory in use (dwMemoryLoad / 100). The first sample after a reset (or the first ever) only
+    /// stores the times, so Load keeps the value it shows: a reopened pill shows its last meters at once. A later sample gives
+    /// the CPU as 1 - idle / total over the time since the previous sample, where the total is the kernel plus the user time
+    /// delta. Nothing elapsed (total 0) keeps the previous Load.
     public void Sample(CpuTimes now, double memoryLoad)
     {
         var last = _last;
         _last = now;
         if (last is not { } prev || now.Idle < prev.Idle || now.Kernel < prev.Kernel || now.User < prev.User)
         {
-            Load = null;
             return;
         }
 
@@ -81,9 +85,12 @@ public sealed class HealthModule
         Load = new SystemLoad(cpu, Math.Clamp(memoryLoad, 0, 1));
     }
 
-    /// Forgets the CPU times and the load, without a toast: the load is no longer sampled. The next sample is a baseline again.
-    /// Returns true when Load was set.
-    public bool ResetLoad()
+    /// Forgets the CPU baseline only, when the pill closes: Load stays, so the meters show at once on reopen. The next sample
+    /// is a baseline, and the one after it gives a new CPU reading.
+    public void ResetLoad() => _last = null;
+
+    /// Forgets the baseline and the load: the load is off (the module stopped, or SystemLoad is off). Returns true when Load was set.
+    public bool ClearLoad()
     {
         var changed = Load is not null;
         _last = null;

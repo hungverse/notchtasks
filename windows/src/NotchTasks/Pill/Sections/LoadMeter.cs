@@ -9,6 +9,13 @@ using NotchTasks.Core;
 
 namespace NotchTasks.Pill.Sections;
 
+/// Which load a meter shows: the whole-computer CPU, or the memory in use. It picks the tooltip's words.
+public enum LoadMeterKind
+{
+    Cpu,
+    Memory,
+}
+
 /// One meter of the open pill's header (Mac: LoadMeter in NotchView.swift): a 20 DIP ring with the percent inside, and the label
 /// 5 DIP to its right. The arc runs clockwise from the top to the value (at least 2 %). The tint is red from 90 %, orange from
 /// 70 % and green below. A change eases out over 0.4 s, unless animations are off or the motion is reduced. A click raises
@@ -45,13 +52,13 @@ public sealed class LoadMeter : StackPanel
         HorizontalAlignment = HorizontalAlignment.Center,
         VerticalAlignment = VerticalAlignment.Center,
     };
-    private readonly string _label;
+    private readonly LoadMeterKind _kind;
     private bool _shown;
 
-    /// A meter with its label ("CPU" or "RAM") and its first value, 0..1.
-    public LoadMeter(string label, double value)
+    /// A meter with its label ("CPU" or "RAM"), its kind and its first value, 0..1.
+    public LoadMeter(string label, LoadMeterKind kind, double value)
     {
-        _label = label;
+        _kind = kind;
         Orientation = Orientation.Horizontal;
         VerticalAlignment = VerticalAlignment.Center;
         Cursor = Cursors.Hand;
@@ -94,10 +101,10 @@ public sealed class LoadMeter : StackPanel
     public void Show(double value, bool animate)
     {
         var v = Math.Clamp(value, 0, 1);
-        var percent = (int)Math.Round(v * 100, MidpointRounding.AwayFromZero);
+        var percent = NotchTasks.Core.Modules.HealthModule.LoadPercent(v);
         _percent.Text = percent.ToString(CultureInfo.InvariantCulture);
         _arc.Stroke = v >= 0.9 ? Red : v >= 0.7 ? Orange : Green;
-        var help = _label == "CPU" ? L10n.L("Whole-computer CPU: ") : L10n.L("Memory in use: ");
+        var help = _kind == LoadMeterKind.Cpu ? L10n.L("Whole-computer CPU: ") : L10n.L("Memory in use: ");
         ToolTip = help + L10n.L("{0}% · click to open Task Manager", percent);
 
         var target = Math.Clamp(v, MinFraction, 1);

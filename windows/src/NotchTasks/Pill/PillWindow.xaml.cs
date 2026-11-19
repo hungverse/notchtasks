@@ -78,8 +78,8 @@ public partial class PillWindow : Window
     private readonly Func<AppState, FrameworkElement?> _agentsSection;  // the builder this pill registered for "agents"
     private readonly TimerCard _timerCard = new();  // the timer's card: one element, refreshed by its builder
     private readonly Func<AppState, FrameworkElement?> _timerSection;  // the builder this pill registered for "timer"
-    private readonly LoadMeter _cpuMeter = new("CPU", 0);  // the header's CPU meter, shown while SystemLoad is on
-    private readonly LoadMeter _ramMeter = new("RAM", 0) { Margin = new Thickness(10, 0, 0, 0) };  // 10 DIP after the CPU
+    private readonly LoadMeter _cpuMeter = new("CPU", LoadMeterKind.Cpu, 0);  // the header's CPU meter, shown while SystemLoad is on
+    private readonly LoadMeter _ramMeter = new("RAM", LoadMeterKind.Memory, 0) { Margin = new Thickness(10, 0, 0, 0) };  // 10 DIP after the CPU
     private Toast? _shownToast;  // the toast the pill shows now; null when none
     private int _animation;  // counts the animations; only the last one's completion clears _closing
     private bool _animating;  // a shape animation runs: the poll evaluates click-through on every tick
@@ -129,6 +129,7 @@ public partial class PillWindow : Window
         _state.PropertyChanged += OnStateChanged;
         _state.Asks.CollectionChanged += OnAsksChanged;
         _state.NotchChanged += OnNotchChanged;
+        _state.LoadChanged += SyncHeader;  // a load tick moves the meters only
         _state.Toasts.Changed += OnToastsChanged;
         SystemEvents.DisplaySettingsChanged += OnDisplaySettingsChanged;
         SpriteClock.WatchSystem();
@@ -785,6 +786,7 @@ public partial class PillWindow : Window
         _state.PropertyChanged -= OnStateChanged;
         _state.Asks.CollectionChanged -= OnAsksChanged;
         _state.NotchChanged -= OnNotchChanged;
+        _state.LoadChanged -= SyncHeader;
         _state.Toasts.Changed -= OnToastsChanged;
         L10n.Changed -= OnLanguageChanged;
         // Only this pill's own builder: a newer pill may have registered its own since.
