@@ -52,6 +52,7 @@ public sealed class SettingsStore : INotifyPropertyChanged, IDisposable
     private Timer? _debounce;
     private bool _disposed;
     private IReadOnlyList<WatchItem>? _defaultItems;  // made on first read when the file has no valid list; guarded by _gate
+    private IReadOnlyList<WatchItem>? _items;         // the parsed watch list, kept until _root changes; null = parse again; guarded by _gate
 
     private SettingsStore(string file)
     {
@@ -98,6 +99,7 @@ public sealed class SettingsStore : INotifyPropertyChanged, IDisposable
             _root = next;
             _lastSeenText = text;
             _corrupt = false;
+            SanitizeItems();
         }
         Raise(reloaded.Append(key).Distinct(StringComparer.Ordinal).ToList());
     }
@@ -129,7 +131,41 @@ public sealed class SettingsStore : INotifyPropertyChanged, IDisposable
         var changed = DiffKeys(_root, parsed);
         _root = parsed;
         _corrupt = false;
+        SanitizeItems();
         return changed;
+    }
+
+    /// Adopts the items of _root. When an item had no valid id and one was made for it, the list is saved once, so the id
+    /// is kept from then on. The saved text becomes the last seen text, so the watcher does not read the save back as an
+    /// outside edit (and an unchanged list is never saved again). If the file is locked, the ids stay in memory and the
+    /// next save keeps them. Takes _gate itself (reentrant), so it may run inside Set or a load.
+    private void SanitizeItems()
+    {
+        lock (_gate)
+        {
+            _items = null;
+            if (_root["items"] is not JsonArray)
+            {
+                return;
+            }
+            var list = WatchItemsJson.Read(_root["items"], out var invented);
+            _items = list;
+            if (!invented)
+            {
+                return;
+            }
+            _root["items"] = WatchItemsJson.Write(list);
+            var text = _root.ToJsonString(WriteOptions);
+            try
+            {
+                AtomicFile.WriteAllText(_file, text);
+                _lastSeenText = text;
+            }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+            {
+                // Locked for now: the ids stay in memory and are saved with the next write.
+            }
+        }
     }
 
     public string ExpandMode => Choice("expandMode", "hover", ExpandModes);
@@ -162,19 +198,21 @@ public sealed class SettingsStore : INotifyPropertyChanged, IDisposable
 
     public IReadOnlyList<string> Modules => StringList("modules", DefaultModules);
 
-    /// The watch list (settings "items", at most 64). A missing or invalid list gives the defaults. Those are made once per
-    /// store, so their ids stay the same between reads.
+    /// The watch list (settings "items", at most 64). A missing or invalid list gives the defaults, made once per store.
+    /// The list is parsed once and kept until the settings change, so item ids stay the same between reads.
     public IReadOnlyList<WatchItem> Items
     {
         get
         {
             lock (_gate)
             {
-                if (_root["items"] is JsonArray)
+                if (_items is null)
                 {
-                    return WatchItemsJson.Read(_root["items"]);
+                    _items = _root["items"] is JsonArray
+                        ? WatchItemsJson.Read(_root["items"])
+                        : (_defaultItems ??= WatchItemsJson.Read(null));
                 }
-                return _defaultItems ??= WatchItemsJson.Read(null);
+                return _items;
             }
         }
     }
@@ -361,6 +399,7 @@ public sealed class SettingsStore : INotifyPropertyChanged, IDisposable
         if (TryParseObject(text, out var parsed))
         {
             _root = parsed;
+            SanitizeItems();
         }
         else
         {

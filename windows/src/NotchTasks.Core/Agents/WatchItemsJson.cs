@@ -20,8 +20,13 @@ public static class WatchItemsJson
 
     /// The list from a stored node. A missing node or one that is not a list gives the defaults. The first 64 entries are
     /// read; an entry that is not an object, or has a field that fails validation, is dropped.
-    public static IReadOnlyList<WatchItem> Read(JsonNode? node)
+    public static IReadOnlyList<WatchItem> Read(JsonNode? node) => Read(node, out _);
+
+    /// As Read, and idsInvented is true when a kept item had no valid id, so a new one was made for it. The caller saves
+    /// the list once so the ids stay.
+    public static IReadOnlyList<WatchItem> Read(JsonNode? node, out bool idsInvented)
     {
+        idsInvented = false;
         if (node is not JsonArray array)
         {
             return WatchItems.Defaults();
@@ -29,10 +34,11 @@ public static class WatchItemsJson
         var items = new List<WatchItem>();
         foreach (var entry in array.Take(MaxItems))
         {
-            var item = ParseItem(entry);
+            var item = ParseItem(entry, out var invented);
             if (item is not null)
             {
                 items.Add(item);
+                idsInvented |= invented;
             }
         }
         return items;
@@ -46,14 +52,17 @@ public static class WatchItemsJson
     }
 
     /// One item from a stored node, or null when it is not an object or a field fails validation.
-    public static WatchItem? ParseItem(JsonNode? node)
+    /// idInvented is true when the id was missing or invalid and a new one was made.
+    private static WatchItem? ParseItem(JsonNode? node, out bool idInvented)
     {
+        idInvented = false;
         if (node is not JsonObject o)
         {
             return null;
         }
         try
         {
+            var id = IdOf(o, out idInvented);
             var kind = KindOf(o);
             var extra = new Dictionary<string, JsonNode?>(StringComparer.Ordinal);
             foreach (var (key, value) in o)
@@ -65,7 +74,7 @@ public static class WatchItemsJson
             }
 
             return new WatchItem(
-                Id: IdOf(o),
+                Id: id,
                 Name: TextOr(o, "name", 80, string.Empty),
                 Kind: kind,
                 Process: TextOr(o, "process", 200, string.Empty),
@@ -85,6 +94,7 @@ public static class WatchItemsJson
         }
         catch (FieldException)
         {
+            idInvented = false;
             return null;
         }
     }
@@ -118,10 +128,17 @@ public static class WatchItemsJson
         return o;
     }
 
-    private static string IdOf(JsonObject o) =>
-        o["id"] is JsonValue v && v.TryGetValue(out string? id) && id is not null && IdPattern.IsMatch(id)
-            ? id
-            : Guid.NewGuid().ToString();
+    /// The stored id when it is valid; otherwise a new one, with invented set.
+    private static string IdOf(JsonObject o, out bool invented)
+    {
+        if (o["id"] is JsonValue v && v.TryGetValue(out string? id) && id is not null && IdPattern.IsMatch(id))
+        {
+            invented = false;
+            return id;
+        }
+        invented = true;
+        return Guid.NewGuid().ToString();
+    }
 
     private static WatchKind KindOf(JsonObject o)
     {

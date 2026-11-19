@@ -109,4 +109,53 @@ public sealed class WatchItemsJsonTests : IDisposable
         var text = File.ReadAllText(file);
         Assert.Contains("unknownKey", text);
     }
+
+    [Fact]
+    public void Settings_ItemWithoutId_KeepsOneIdAcrossReadsAndReload()
+    {
+        var file = Path.Combine(_dir, "settings.json");
+        File.WriteAllText(file, """{"items":[{"name":"Goose","kind":"process","process":"goose"}]}""");
+
+        string id;
+        using (var store = SettingsStore.Load(file))
+        {
+            id = store.Items[0].Id;
+            Assert.Equal(id, store.Items[0].Id);
+        }
+
+        // A reload from the file gives the same id: the invented one was saved.
+        using (var reopened = SettingsStore.Load(file))
+        {
+            Assert.Equal(id, reopened.Items[0].Id);
+        }
+
+        var saved = JsonNode.Parse(File.ReadAllText(file))!;
+        Assert.Equal(id, (string?)saved["items"]![0]!["id"]);
+    }
+
+    [Fact]
+    public void Json_IconObject_RoundTripsAsObject()
+    {
+        var json = JsonNode.Parse("""[{"id":"g1","name":"Goose","kind":"process","process":"goose","icon":{"symbol":"star"}}]""");
+        var item = Assert.Single(WatchItemsJson.Read(json));
+        Assert.NotNull(item.Icon);
+
+        var written = WatchItemsJson.Write(new[] { item });
+        var icon = written[0]!["icon"];
+        Assert.IsType<JsonObject>(icon);
+        Assert.Equal("star", (string?)icon!["symbol"]);
+    }
+
+    [Fact]
+    public void Settings_SetItems_RaisesChangedWithItems()
+    {
+        using var store = SettingsStore.Load(Path.Combine(_dir, "settings.json"));
+        IReadOnlyCollection<string>? keys = null;
+        store.Changed += changed => keys = changed;
+
+        store.SetItems(new[] { new WatchItem("g", "Goose", WatchKind.Process, Process: "goose") });
+
+        Assert.NotNull(keys);
+        Assert.Contains("items", keys!);
+    }
 }
