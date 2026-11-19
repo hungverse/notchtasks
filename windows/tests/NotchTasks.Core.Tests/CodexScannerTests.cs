@@ -305,50 +305,161 @@ public sealed class CodexScannerTests : IDisposable
         Assert.False(second.Working);
     }
 
+    private static string StartedLine(DateTimeOffset at) => new JsonObject
+    {
+        ["timestamp"] = Ts(at),
+        ["type"] = "event_msg",
+        ["payload"] = new JsonObject { ["type"] = "task_started", ["turn_id"] = "t" },
+    }.ToJsonString();
+
+    private static string DoneLine(DateTimeOffset at) => new JsonObject
+    {
+        ["timestamp"] = Ts(at),
+        ["type"] = "event_msg",
+        ["payload"] = new JsonObject { ["type"] = "task_complete", ["turn_id"] = "t" },
+    }.ToJsonString();
+
+    /// A line of about 1 KB that no parser matches (an assistant message).
+    private static string FillerLine(DateTimeOffset at) =>
+        $"{{\"timestamp\":\"{Ts(at)}\",\"type\":\"response_item\",\"payload\":{{\"type\":\"message\",\"role\":\"assistant\",\"content\":\"{new string('x', 900)}\"}}}}";
+
+    private static string QuestionLine(DateTimeOffset at, string callId, string title) => new JsonObject
+    {
+        ["timestamp"] = Ts(at),
+        ["type"] = "response_item",
+        ["payload"] = new JsonObject
+        {
+            ["type"] = "function_call",
+            ["name"] = "request_user_input",
+            ["arguments"] = new JsonObject { ["questions"] = new JsonArray(new JsonObject { ["title"] = title, ["options"] = new JsonArray(JsonValue.Create("Yes")) }) }.ToJsonString(),
+            ["call_id"] = callId,
+        },
+    }.ToJsonString();
+
     [Fact]
-    public void Rollout_50MB_ReadsTailOnly()
+    public void Rollout_FirstMB_OfFiveMB_StatusRight_ReadsBounded()
     {
         AsksFixtures.InitEnglish();
         var root = Path.Combine(Temp(), "sessions");
         var now = DateTimeOffset.UtcNow;
-        var file = Path.Combine(root, "rollout-big.jsonl");
-        Directory.CreateDirectory(root);
-        var filler = new string('x', 900);
-        var fillerLine = $"{{\"timestamp\":\"{Ts(now.AddSeconds(-20))}\",\"type\":\"response_item\",\"payload\":{{\"type\":\"message\",\"role\":\"assistant\",\"content\":\"{filler}\"}}}}";
-        var done = new JsonObject
-        {
-            ["timestamp"] = Ts(now.AddSeconds(-5)),
-            ["type"] = "event_msg",
-            ["payload"] = new JsonObject { ["type"] = "task_complete", ["turn_id"] = "t" },
-        }.ToJsonString();
-        var head = new JsonObject
-        {
-            ["timestamp"] = Ts(now),
-            ["type"] = "session_meta",
-            ["payload"] = new JsonObject { ["id"] = "big", ["cwd"] = "/x/big", ["session_id"] = "big" },
-        }.ToJsonString();
-        using (var writer = new StreamWriter(file, false))
-        {
-            writer.Write(head);
-            writer.Write('\n');
-            for (var i = 0; i < 50_000; i++)
-            {
-                writer.Write(fillerLine);
-                writer.Write('\n');
-            }
-            writer.Write(done);
-            writer.Write('\n');
-        }
-        File.SetLastWriteTimeUtc(file, now.UtcDateTime);
-        Assert.True(new FileInfo(file).Length > 50_000_000);
+        var lines = new List<string> { StartedLine(now.AddSeconds(-30)) };
+        lines.AddRange(Enumerable.Range(0, 5200).Select(_ => FillerLine(now.AddSeconds(-20))));
+        var file = Rollout(root, "rollout-big.jsonl", "/x/big", "big", lines, now);
+        var size = new FileInfo(file).Length;
+        Assert.True(size > 5L * 1024 * 1024, $"the file is {size} bytes");
+
+        var reads = new List<int>();
+        var scanner = new CodexScanner(root, reads.Add);
+        var job = Assert.Single(scanner.Jobs(now));
+
+        Assert.True(job.Working, "the task_started in the first MB is still the last status");
+        Assert.Equal("Running · 30 sec", job.Detail);
+        Assert.All(reads, n => Assert.True(n <= CodexScanner.ChunkBytes, $"a read of {n} bytes"));
+        Assert.Equal(size, reads.Sum(n => (long)n));
+    }
+
+    [Fact]
+    public void Rollout_MoreThan1MBAppendedBetweenScans_TaskCompleteInsideIsCaught()
+    {
+        AsksFixtures.InitEnglish();
+        var root = Path.Combine(Temp(), "sessions");
+        var now = DateTimeOffset.UtcNow;
+        var file = Rollout(root, "rollout-grow.jsonl", "/x/grow", "g", new[] { StartedLine(now.AddSeconds(-120)) }, now.AddSeconds(-100));
 
         var scanner = new CodexScanner(root);
-        var watch = Stopwatch.StartNew();
-        var jobs = scanner.Jobs(now);
-        watch.Stop();
+        Assert.True(Assert.Single(scanner.Jobs(now.AddSeconds(-100))).Working);
 
-        var job = Assert.Single(jobs);
+        // one turn writes 1.5 MB, and its task_complete comes last
+        var more = Enumerable.Range(0, 1500).Select(_ => FillerLine(now.AddSeconds(-10))).ToList();
+        more.Add(DoneLine(now.AddSeconds(-5)));
+        File.AppendAllText(file, string.Join("\n", more) + "\n");
+        File.SetLastWriteTimeUtc(file, now.UtcDateTime);
+
+        var done = Assert.Single(scanner.Jobs(now));
+        Assert.False(done.Working);
+        Assert.Equal("Done · 5 sec ago", done.Detail);
+    }
+
+    [Fact]
+    public void Rollout_Empty_NoJobsNoLimitsNoQuestions()
+    {
+        AsksFixtures.InitEnglish();
+        var root = Path.Combine(Temp(), "sessions");
+        var now = DateTimeOffset.UtcNow;
+        Directory.CreateDirectory(root);
+        var file = Path.Combine(root, "rollout-empty.jsonl");
+        File.WriteAllText(file, string.Empty);
+        File.SetLastWriteTimeUtc(file, now.UtcDateTime);
+
+        var scanner = new CodexScanner(root);
+
+        Assert.Empty(scanner.Jobs(now));
+        Assert.Null(scanner.Limits(now));
+        Assert.Empty(scanner.Questions(now));
+    }
+
+    [Fact]
+    public void Rollout_BadJsonLine_IsSkipped_ScanGoesOn()
+    {
+        AsksFixtures.InitEnglish();
+        var root = Path.Combine(Temp(), "sessions");
+        var now = DateTimeOffset.UtcNow;
+        Rollout(root, "rollout-bad.jsonl", "/x/bad", "b",
+            new[] { StartedLine(now.AddSeconds(-30)), "this is not json {", "{\"payload\":{\"rate_limits\":{", DoneLine(now.AddSeconds(-5)) },
+            now);
+
+        var scanner = new CodexScanner(root);
+
+        var job = Assert.Single(scanner.Jobs(now));
         Assert.False(job.Working);
-        Assert.True(watch.ElapsedMilliseconds < 200, $"scan took {watch.ElapsedMilliseconds} ms");
+        Assert.Null(CodexRollout.ParseLimits("{\"payload\":{\"rate_limits\":{\n", now));
+        Assert.Null(scanner.Limits(now));
+    }
+
+    [Fact]
+    public void Rollout_ReplacedAndShorter_OffsetResetsToStart()
+    {
+        AsksFixtures.InitEnglish();
+        var root = Path.Combine(Temp(), "sessions");
+        var now = DateTimeOffset.UtcNow;
+        var file = Rollout(root, "rollout-r.jsonl", "/x/r", "r",
+            new[] { StartedLine(now.AddSeconds(-30)), DoneLine(now.AddSeconds(-5)) }, now.AddSeconds(-1));
+        var oldSize = new FileInfo(file).Length;
+
+        var scanner = new CodexScanner(root);
+        Assert.False(Assert.Single(scanner.Jobs(now)).Working);
+
+        // the file is replaced by a shorter one: its saved offset is past the end, so it is read from the start
+        Rollout(root, "rollout-r.jsonl", "/x/r", "r", new[] { StartedLine(now.AddSeconds(-2)) }, now.AddSeconds(1));
+        Assert.True(new FileInfo(file).Length < oldSize);
+
+        var job = Assert.Single(scanner.Jobs(now.AddSeconds(1)));
+        Assert.True(job.Working);
+    }
+
+    [Fact]
+    public void CodexAsk_IdToolAndTitle_AsTheMacMakesThem()
+    {
+        AsksFixtures.InitEnglish();
+        var root = Path.Combine(Temp(), "sessions");
+        var now = DateTimeOffset.UtcNow;
+        Rollout(root, "q.jsonl", "/q/thread", "qq", new[] { QuestionLine(now, "q", "Go?") }, now);
+        Rollout(root, "g.jsonl", @"C:\Users\hung\g-p-8f3a21", "gg", new[] { QuestionLine(now, "q2", new string('w', 700)) }, now);
+
+        var scanner = new CodexScanner(root);
+        scanner.Jobs(now);
+        var asks = scanner.Questions(now);
+
+        Assert.Equal(2, asks.Count);
+        var plain = Assert.Single(asks, a => a.Id == "codex|qq|q");
+        Assert.Equal("thread", plain.Session);
+        Assert.Equal("request_user_input", plain.Tool);
+        Assert.Equal("Go?", plain.Summary);
+        Assert.Equal("codex", plain.Agent);
+        Assert.Equal(0, plain.Pid);
+        // a g-p- project folder is the desktop app's own: shown as "Codex", and the full question is kept
+        var desktop = Assert.Single(asks, a => a.Id == "codex|gg|q2");
+        Assert.Equal("Codex", desktop.Session);
+        Assert.Equal(700, desktop.Summary.Length);
     }
 }

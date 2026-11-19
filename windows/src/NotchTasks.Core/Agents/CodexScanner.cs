@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using NotchTasks.Core.Asks;
@@ -20,7 +21,6 @@ public static partial class CodexRollout
 {
     private const string TimestampMark = "\"timestamp\":\"";
     private const int IsoLength = 24;
-    private const int SummaryLimit = 600;
 
     [GeneratedRegex("\"cwd\":\"((?:[^\"\\\\]|\\\\.)*)\"")]
     private static partial Regex CwdPattern();
@@ -180,10 +180,6 @@ public static partial class CodexRollout
         return (title, sid.Success ? sid.Groups[1].Value : string.Empty);
     }
 
-    /// The question shown for an ask: its first question text, as many runes as the ask keeps (providers.js and asks.js).
-    public static string Summary(CodexQuestion question) =>
-        string.Concat(question.Questions[0].Question.EnumerateRunes().Take(SummaryLimit).Select(r => r.ToString()));
-
     /// The questions of a request_user_input call. Only when every entry is an object; otherwise none.
     private static List<AskQuestion> ReadQuestions(JsonElement list)
     {
@@ -254,7 +250,7 @@ public static partial class CodexRollout
 }
 
 /// Scans a Codex sessions folder (Electron: providers.js CodexScanner; Mac: Providers.swift CodexScanner). Only the rollouts
-/// written lately are read, and each is read from where the last scan stopped, from the last 1 MB at most.
+/// written lately are read, and each is read from where the last scan stopped, to its end, in chunks of ChunkBytes.
 public sealed class CodexScanner
 {
     private static readonly TimeSpan JobWindow = TimeSpan.FromHours(3);
@@ -277,10 +273,17 @@ public sealed class CodexScanner
         public CodexQuestion? Question { get; set; }
     }
 
+    /// How much of a rollout is read at a time: 1 MB. A rollout is never read in one buffer, however large it is.
+    public const int ChunkBytes = 1_048_576;
+
+    private readonly Action<int>? _onRead;
+
     /// The folder to scan (for the app, <home>\.codex\sessions). Nothing is read until a method is called.
-    public CodexScanner(string root)
+    /// onRead, when given, is told the size of every chunk read (the tests use it to check the reads stay bounded).
+    public CodexScanner(string root, Action<int>? onRead = null)
     {
         _root = root;
+        _onRead = onRead;
     }
 
     /// Tasks running now, or finished in the last 10 min. A rollout with no writes for 20 min is dead. Child threads are not tasks.
@@ -353,12 +356,13 @@ public sealed class CodexScanner
                 continue;
             }
             var q = e.Question;
+            // the id, tool and title as the Mac and main.js make them: a g-p- folder is the desktop app's own, shown as "Codex"
             asks.Add(new AgentAsk(
-                q.CallId,
+                $"codex|{q.Thread}|{q.CallId}",
                 0,
-                e.Title,
-                q.Tool,
-                CodexRollout.Summary(q),
+                e.Title.StartsWith("g-p-", StringComparison.Ordinal) ? "Codex" : e.Title,
+                "request_user_input",
+                q.Questions[0].Question,
                 q.Questions,
                 q.At,
                 AgentKind.Codex.Id()));
@@ -366,8 +370,8 @@ public sealed class CodexScanner
         return asks;
     }
 
-    /// Reads a rollout from where the last scan stopped. A new rollout, or one that grew by more than 1 MB, is read from its
-    /// last 1 MB. A file that was replaced is read from its start.
+    /// Reads a rollout from where the last scan stopped, to its end, in chunks of ChunkBytes. A new rollout is read from its
+    /// head. A file that was replaced (or cut short) is read from its start. A line that spans two chunks is carried over.
     private void Update(string file, DateTimeOffset mtime)
     {
         if (!_cache.TryGetValue(file, out var entry))
@@ -395,19 +399,35 @@ public sealed class CodexScanner
             {
                 using var fs = File.OpenRead(file);
                 var size = fs.Length;
-                var from = entry.Offset <= size ? entry.Offset : 0;
-                var forcedCut = false;
-                if (size - from > Providers.TailBytes)
+                // the file was replaced or cut short: the saved offset is past its end, so start over
+                var pos = entry.Offset <= size ? entry.Offset : 0;
+                byte[] carry = Array.Empty<byte>();
+                while (pos < size)
                 {
-                    from = size - Providers.TailBytes;
-                    forcedCut = true;
+                    var len = (int)Math.Min(ChunkBytes, size - pos);
+                    _onRead?.Invoke(len);
+                    var chunk = Providers.ReadRange(fs, pos, len);
+                    if (chunk.Length == 0)
+                    {
+                        break;
+                    }
+                    pos += chunk.Length;
+                    var data = new byte[carry.Length + chunk.Length];
+                    carry.CopyTo(data, 0);
+                    chunk.CopyTo(data, carry.Length);
+
+                    // only complete lines are fed to the parsers; the rest waits for the next chunk (or the next scan)
+                    var end = Array.LastIndexOf(data, (byte)'\n') + 1;
+                    if (end > 0)
+                    {
+                        var text = Encoding.UTF8.GetString(data, 0, end);
+                        entry.Status = CodexRollout.ParseStatus(text) ?? entry.Status;
+                        entry.Question = CodexRollout.ParseQuestion(text, entry.Thread, entry.Question, DateTimeOffset.UtcNow);
+                    }
+                    // the offset is the byte after the last full line read, so a line still being written is read next time
+                    entry.Offset = pos - (data.Length - end);
+                    carry = data[end..];
                 }
-                var buf = Providers.ReadRange(fs, from, (int)(size - from));
-                var (text, used) = Providers.CompleteLines(buf, forcedCut);
-                entry.Status = CodexRollout.ParseStatus(text) ?? entry.Status;
-                entry.Question = CodexRollout.ParseQuestion(text, entry.Thread, entry.Question, DateTimeOffset.UtcNow);
-                // resume at the last full line, so a line still being written is read next time
-                entry.Offset = from + used;
             }
             catch (Exception e) when (e is IOException or UnauthorizedAccessException)
             {
