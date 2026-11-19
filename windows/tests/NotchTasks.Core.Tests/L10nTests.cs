@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text.Json;
 using NotchTasks.Core;
 using Xunit;
 
@@ -198,5 +199,74 @@ public sealed class L10nTests
         {
             Directory.Delete(folder, recursive: true);
         }
+    }
+
+    // Every key the Windows build passes to L10n.L since 6eb2a5a (Tasks 1-12), plus the module titles the pill and the
+    // Modules pane show. Each one needs a text in every language: in the Mac table, or in electron/l10n/windows.json.
+    private static readonly string[] Phase3aKeys =
+    [
+        " · Mic muted", "%.1f GB free", "Allow", "Back online", "Camera on", "Charging",
+        "Check Wi‑Fi or the network cable", "Couldn't mute", "Deny", "Disk almost full", "Download finished", "Ended",
+        "Free up space", "Hide alert", "Lets the notch show when an app uses the mic, and calls.", "Low battery",
+        "Memory in use: ", "Micro: ", "Microphone on", "Microphone", "Mute", "Network disconnected",
+        "Not turned on: administrator was not allowed", "Nothing running", "On a call · {0}", "On a call", "On", "Open",
+        "Optional. Reading temperatures on Windows needs administrator, so a small helper runs with administrator rights only if you turn this on.",
+        "Reply", "Show in folder", "Start with Windows without asking again", "Temperature", "Temperatures",
+        "This PC does not report temperatures", "Time's up", "Try again", "Turn off",
+        "Turn on again to read temperatures this session", "Turn on", "Unmute", "Unplugged", "Use the button in {0}",
+        "Video call · {0}", "Waiting for you", "Whole-computer CPU: ", "{0} min", "{0} running", "{0} waiting", "{0}% left",
+        "{0}% · click to open Task Manager", "{0}-minute timer",
+        // The ternaries and titles: the Wi‑Fi and VPN chips, the connection toasts, and the module names.
+        "Wi‑Fi connected", "Connected", "VPN on", "VPN off",
+        "Battery", "Timer", "Network", "Downloads", "Computer health", "Mic & camera", "Calls",
+    ];
+
+    [Fact]
+    public void Phase3aKeys_ExistInEveryLanguage()
+    {
+        var overlayFile = Path.Combine(RepoRoot(), "electron", "l10n", "windows.json");
+        var missing = new List<string>();
+        var placeholders = new List<string>();
+        foreach (var (code, _) in L10n.Languages.Where(language => language.Code != "en"))
+        {
+            var mac = ReadStrings(Path.Combine(MacSources(), $"l10n-{code}.json"));
+            var windows = ReadOverlay(overlayFile, code);
+            foreach (var key in Phase3aKeys)
+            {
+                if (!mac.ContainsKey(key) && !windows.ContainsKey(key))
+                {
+                    missing.Add($"{code}: {key}");
+                }
+                // A Windows text keeps the placeholders of its key, so the arguments still fill in.
+                if (windows.TryGetValue(key, out var text) && Placeholders(key).Any(p => !text.Contains(p, StringComparison.Ordinal)))
+                {
+                    placeholders.Add($"{code}: {key}");
+                }
+            }
+        }
+        Assert.Empty(missing);
+        Assert.Empty(placeholders);
+    }
+
+    private static IEnumerable<string> Placeholders(string key) =>
+        System.Text.RegularExpressions.Regex.Matches(key, @"\{\d+\}").Select(m => m.Value).Distinct();
+
+    private static Dictionary<string, string> ReadStrings(string path)
+    {
+        using var doc = JsonDocument.Parse(File.ReadAllText(path));
+        return doc.RootElement.EnumerateObject()
+            .Where(p => p.Value.ValueKind == JsonValueKind.String)
+            .ToDictionary(p => p.Name, p => p.Value.GetString() ?? string.Empty);
+    }
+
+    /// The Windows-only texts of one language in windows.json: { "<code>": { key: text } }.
+    private static Dictionary<string, string> ReadOverlay(string path, string code)
+    {
+        using var doc = JsonDocument.Parse(File.ReadAllText(path));
+        return doc.RootElement.TryGetProperty(code, out var language) && language.ValueKind == JsonValueKind.Object
+            ? language.EnumerateObject()
+                .Where(p => p.Value.ValueKind == JsonValueKind.String)
+                .ToDictionary(p => p.Name, p => p.Value.GetString() ?? string.Empty)
+            : new Dictionary<string, string>();
     }
 }

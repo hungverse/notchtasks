@@ -1,7 +1,10 @@
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
+using NotchTasks.Core;
 using NotchTasks.Core.Asks;
 using NotchTasks.Core.Modules;
 using NotchTasks.Core.Notch;
@@ -246,6 +249,80 @@ public sealed class PillWindowTests
         Assert.Equal(new[] { "calls", "timer", "agents" }, SectionRegistry.Order(new[] { "timer", "calls", "agents" }));
         Assert.Equal(new[] { "calls", "agents" }, SectionRegistry.Order(new[] { "agents", "calls" }));
         Assert.Equal(new[] { "agents", "timer" }, SectionRegistry.Order(new[] { "agents", "timer" }));
+    }
+
+    [Fact]
+    public void LanguageSwitch_KeepsTimerAndRedraws()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            state.Settings.Set("modules", JsonNode.Parse("[\"timer\"]"));
+            state.Settings.Set("disabled", JsonNode.Parse("[]"));
+            var folder = MacTables();
+            var pill = new PillWindow(state);
+            try
+            {
+                L10n.Init(folder, "en");
+                state.Timer.Start(5, DateTimeOffset.Now);
+                state.Publish();
+                var left = Fixture.Named<StackPanel>(pill, "LeftWing");
+                var right = Fixture.Named<StackPanel>(pill, "RightWing");
+                var chipsBefore = Chips(left, right);
+                var clockBefore = Clocks(left, right);
+                Assert.NotEmpty(chipsBefore);
+                Assert.NotEmpty(clockBefore);
+
+                L10n.Init(folder, "vi");
+
+                // The timer keeps running through the switch, its chips are drawn again, and the clock text stays a clock.
+                Assert.NotNull(state.Timer.State);
+                var chipsAfter = Chips(left, right);
+                Assert.NotEmpty(chipsAfter);
+                Assert.All(chipsAfter, chip => Assert.DoesNotContain(chip, chipsBefore));
+                Assert.NotEmpty(Clocks(left, right));
+                Assert.All(Clocks(left, right), text => Assert.Matches(@"^\d+:\d\d$", text));
+            }
+            finally
+            {
+                pill.Close();
+                L10n.Init(folder, "en");
+            }
+        });
+    }
+
+    /// The Mac's translation tables, which the pill's texts come from in these tests.
+    private static string MacTables()
+    {
+        var dir = AppContext.BaseDirectory;
+        while (dir is not null && !Directory.Exists(Path.Combine(dir, "mac", "Sources")))
+        {
+            dir = Path.GetDirectoryName(dir);
+        }
+        return Path.Combine(dir ?? throw new DirectoryNotFoundException("mac/Sources"), "mac", "Sources");
+    }
+
+    /// The chips in the pill's two wings.
+    private static List<UIElement> Chips(StackPanel left, StackPanel right) =>
+        left.Children.OfType<UIElement>().Concat(right.Children.OfType<UIElement>()).ToList();
+
+    /// The clock texts (m:ss) shown under the wings.
+    private static List<string> Clocks(params DependencyObject[] roots) =>
+        roots.SelectMany(ClocksUnder).ToList();
+
+    private static List<string> ClocksUnder(DependencyObject node)
+    {
+        var found = new List<string>();
+        if (node is TextBlock block && Regex.IsMatch(block.Text, @"^\d+:\d\d$"))
+        {
+            found.Add(block.Text);
+        }
+        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(node); i++)
+        {
+            found.AddRange(ClocksUnder(VisualTreeHelper.GetChild(node, i)));
+        }
+        return found;
     }
 
     /// True when a text block under `node` shows `text`.
