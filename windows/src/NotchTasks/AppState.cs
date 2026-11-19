@@ -2,7 +2,10 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.ComponentModel;
 using System.Windows.Threading;
+using NotchTasks.Core;
+using NotchTasks.Core.Agents;
 using NotchTasks.Core.Asks;
+using NotchTasks.Core.Limits;
 using NotchTasks.Core.Modules;
 using NotchTasks.Core.Notch;
 using NotchTasks.Core.Settings;
@@ -27,7 +30,12 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
     private readonly HealthSource _healthSource;
     private readonly SensorsSource _sensorsSource;
     private readonly ThermalSource _thermalSource;
+    private readonly AgentsSource _agentsSource;
+    private readonly LimitsSource _limitsSource;
     private AskWatcher? _watcher;
+    /// The last list the watcher gave (SyncAsks), and Codex's questions from the agents source (SetCodexAsks).
+    private IReadOnlyList<AgentAsk> _watched = Array.Empty<AgentAsk>();
+    private IReadOnlyList<AgentAsk> _codexAsks = Array.Empty<AgentAsk>();
     private bool _disposed;
 
     /// Creates the state on the UI thread. Call StartWatching next. The modules that are on start here. options holds the OS
@@ -49,6 +57,11 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         _healthSource = new HealthSource(Health, PublishLoad, settings, o.Health);
         Helper = o.Helper ?? SensorHelper.Create(settings);
         _thermalSource = new ThermalSource(settings, Helper, PublishThermal);
+        Agents = new AgentsModule(this);
+        LimitsModule = new LimitsModule(this);
+        var (agentReaders, limitReaders) = ResolveReaders(o);
+        _agentsSource = new AgentsSource(Agents, settings, agentReaders, Publish, SetCodexAsks);
+        _limitsSource = new LimitsSource(LimitsModule, settings, limitReaders, _agentsSource, Publish);
         Sensors = new SensorsModule(this,
             () => ActiveModules(settings).Contains("privacy"),
             () => ActiveModules(settings).Contains("calls"));
@@ -67,6 +80,12 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
 
     /// The toasts the pill shows, in order. Asks queue here too.
     public ToastQueue Toasts { get; } = new();
+
+    /// The agents module: its states, and the agents that are working (the snapshot's Running). Its source runs while agents is on.
+    public AgentsModule Agents { get; }
+
+    /// The AI limits (the snapshot's Limits). Its source runs while Claude, Codex or Antigravity is enabled and limits is on.
+    public LimitsModule LimitsModule { get; }
 
     /// The focus timer. Its controls call Start, Extend or Stop, then Publish.
     public TimerModule Timer { get; }
@@ -172,14 +191,17 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
     /// be written, the ask stays in the list so the user can try again, and the failure is logged.
     public void Answer(string askId, AskReply reply)
     {
-        try
+        if (!IsCodexAsk(askId))
         {
-            _store.Reply(askId, reply);
-        }
-        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
-        {
-            ErrorLog.Write(new IOException($"NotchTasks: could not write the reply for ask {askId}", e));
-            return;
+            try
+            {
+                _store.Reply(askId, reply);
+            }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+            {
+                ErrorLog.Write(new IOException($"NotchTasks: could not write the reply for ask {askId}", e));
+                return;
+            }
         }
         _tracker.MarkAnswered(askId);
         for (var i = Asks.Count - 1; i >= 0; i--)
@@ -193,6 +215,25 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         Publish();
     }
 
+    /// Codex's questions (the agents source's list). They are merged into Asks by SyncAsks, keyed by their ids, so an answered
+    /// one leaves. A list with the same ids and times changes nothing.
+    private void SetCodexAsks(IReadOnlyList<AgentAsk> list)
+    {
+        if (_disposed || SameAsks(_codexAsks, list))
+        {
+            return;
+        }
+        _codexAsks = list;
+        SyncAsks(_watched);
+    }
+
+    private static bool SameAsks(IReadOnlyList<AgentAsk> a, IReadOnlyList<AgentAsk> b) =>
+        a.Count == b.Count && a.Zip(b).All(p => p.First.Id == p.Second.Id && p.First.At == p.Second.At);
+
+    /// A Codex question is answered in the Codex app, not here: it has no reply file. Answering it (its link, or any
+    /// reply) only takes it off the pill.
+    private static bool IsCodexAsk(string askId) => askId.StartsWith("codex|", StringComparison.Ordinal);
+
     /// Brings Asks in line with the watcher's list: drops the asks that are gone (and their toasts), and inserts the new
     /// ones at their place in the list, so Asks stays oldest first. Each new ask is announced: its agentAsk sound plays
     /// and its toast queues.
@@ -202,7 +243,8 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         {
             return;
         }
-        var visible = _tracker.Filter(list);
+        _watched = list;
+        var visible = _tracker.Filter(list.Concat(_codexAsks).OrderBy(a => a.At).ToList());
         var agentsOn = ActiveModules(Settings).Contains("agents");
         var wanted = new HashSet<string>(visible.Select(a => a.Id), StringComparer.Ordinal);
         var left = new HashSet<string>(StringComparer.Ordinal);
@@ -247,6 +289,24 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         AskId: ask.Id,
         Module: "agents");
 
+    /// The agents and limits readers: the options' fakes, else this PC's (the process table, sqlite3, the loopback HTTP, the
+    /// LM Studio runner and the claude CLI). The agent folders are under Home; the Claude folder is CLAUDE_CONFIG_DIR when it is
+    /// set (production only; a test's Home is used as it is).
+    private static (AgentReaders Agents, LimitReaders Limits) ResolveReaders(AppStateOptions o)
+    {
+        var home = o.Home ?? Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        var claudeDir = ClaudeSessions.Dir(home, o.Home is null ? Environment.GetEnvironmentVariable("CLAUDE_CONFIG_DIR") : null);
+        IProcessReader processes = o.Processes ?? new ProcessReader();
+        ISqliteReader sqlite = o.Sqlite ?? new SqliteCli(home);
+        IHttpPost http = o.Http ?? HttpLoopback.Shared;
+        IHttpGet httpGet = o.HttpGet ?? HttpLoopback.Shared;
+        IClaudeCli cli = o.ClaudeCli ?? new ClaudeCli(home);
+        Func<string, string?> lms = o.LmsPsJson ?? (exe => LmsRunner.PsJson(exe));
+        return (
+            new AgentReaders(processes, sqlite, httpGet, lms, home, claudeDir),
+            new LimitReaders(http, cli, home, claudeDir));
+    }
+
     /// The module sources by module id, built once before the first Apply. Modules register their sources here: a module
     /// with no entry is active but runs nothing. Timer is made before this runs.
     private IReadOnlyDictionary<string, IModuleSource> CreateSources(NetworkReaders? network) =>
@@ -261,6 +321,8 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
             // one source for both: it counts its starts, so it runs while either module is on
             ["privacy"] = _sensorsSource,
             ["calls"] = _sensorsSource,
+            ["agents"] = _agentsSource,
+            ["limits"] = _limitsSource,
         };
 
     /// The snapshot's ask count: the asks belong to the agents module, so none count while it is off.
@@ -274,7 +336,12 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         Sensors.Call,
         Sensors.Sensors,
         Battery.State,
-        Health.Load);
+        Health.Load)
+        {
+            Running = modules.Contains("agents") ? Agents.Running : Array.Empty<ItemState>(),
+            Limits = modules.Contains("limits") ? LimitsModule.Limits : Array.Empty<ProviderLimits>(),
+            LimitWarn = Settings.LimitWarn,
+        };
     }
 
     /// The call card's mute button: sets the default mic's mute, and publishes the new reading.
@@ -308,6 +375,11 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
             if (!_disposed && keys.Any(k => k == "systemLoad"))
             {
                 _healthSource.SystemLoadChanged();
+            }
+            if (!_disposed && keys.Any(k => k == "items"))
+            {
+                _agentsSource.ItemsChanged();
+                _limitsSource.ItemsChanged();
             }
             if (!_disposed && keys.Any(k => k is "systemLoad" or "sensorHelper" or "sensorHelperAtSignIn"))
             {

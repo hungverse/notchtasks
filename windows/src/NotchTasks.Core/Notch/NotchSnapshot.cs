@@ -1,3 +1,4 @@
+using NotchTasks.Core.Agents;
 using NotchTasks.Core.Limits;
 
 namespace NotchTasks.Core.Notch;
@@ -14,6 +15,9 @@ public sealed record NotchSnapshot(
     BatteryState? Battery,
     SystemLoad? Load)
 {
+    /// The agents that are working now, in the watch list's order (none unless the agents module is on).
+    public IReadOnlyList<ItemState> Running { get; init; } = Array.Empty<ItemState>();
+
     public IReadOnlyList<ProviderLimits> Limits { get; init; } = Array.Empty<ProviderLimits>();
 
     public double LimitWarn { get; init; } = 80;

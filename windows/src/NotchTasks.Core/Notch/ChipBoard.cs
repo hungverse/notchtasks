@@ -1,3 +1,4 @@
+using NotchTasks.Core.Agents;
 using NotchTasks.Core.Limits;
 
 namespace NotchTasks.Core.Notch;
@@ -5,6 +6,9 @@ namespace NotchTasks.Core.Notch;
 /// Builds the closed pill's chips and splits them into the left and right wings, as the Mac's NotchView does.
 public static class ChipBoard
 {
+    /// The most agent chips the closed pill shows at once.
+    public const int MaxAgentChips = 4;
+
     /// The chips for a snapshot. A live call is always first; an agent waiting on you comes right after the calls.
     public static IReadOnlyList<Chip> Chips(NotchSnapshot s)
     {
@@ -24,6 +28,11 @@ public static class ChipBoard
                     // the sensor chip only shows when no call is on: the call chip already says the mic is in use
                     if (s.Call is null && (s.Sensors.Mic || s.Sensors.Camera))
                         list.Add(new Chip(ChipKind.Sensor, "privacy", "sensor") { Sensors = s.Sensors });
+                    break;
+                case "agents":
+                    // one chip per working agent, in the watch list's order, at most four
+                    foreach (var state in s.Running.Take(MaxAgentChips))
+                        list.Add(new Chip(ChipKind.Agent, "agents", "agent-" + state.Item.Id) { Agent = state });
                     break;
                 case "limits":
                     // per provider, the window fullest among those at or above the warning level (NotchView .limits)

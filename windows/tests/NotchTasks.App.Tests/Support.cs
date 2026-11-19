@@ -5,7 +5,9 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Threading;
 using NotchTasks.Core;
+using NotchTasks.Core.Agents;
 using NotchTasks.Core.Asks;
+using NotchTasks.Core.Limits;
 using NotchTasks.Core.Modules;
 using NotchTasks.Core.Notch;
 using NotchTasks.Core.Settings;
@@ -137,7 +139,59 @@ internal static class Fixture
         Health: new HealthReaders(() => new CpuTimes(0, 0, 0), () => 0.4, _ => 100L * 1_000_000_000L),
         Sensors: new SensorReaders(() => QuietSensors, _ => new NoopWatch(), _ => false, () => false),
         Helper: new SensorHelper(settings, new InertLauncher(), new InertPipe(), new InertStop(), "NotchTasksSensors.exe",
-            "S-1-5-21-0-0-0-1001", 1, _ => false));
+            "S-1-5-21-0-0-0-1001", 1, _ => false),
+        Processes: new NoProcesses(),
+        Sqlite: new NoSqlite(),
+        Http: new NoHttp(),
+        HttpGet: new NoHttp(),
+        ClaudeCli: new NoClaudeCli(),
+        Home: Path.Combine(AppPaths.Root, "Home"),
+        LmsPsJson: _ => null);
+
+    /// A process table with no processes: nothing is matched and no command line is read.
+    public sealed class NoProcesses : IProcessReader
+    {
+        public ProcSnapshot Snapshot() => new(Array.Empty<ProcInfo>());
+
+        public string? CommandLine(ProcInfo p) => null;
+
+        public string? ImagePath(ProcInfo p) => null;
+    }
+
+    /// A sqlite that answers nothing: no Antigravity conversations.
+    public sealed class NoSqlite : ISqliteReader
+    {
+        public string? Query(string dbFile, string sql) => null;
+    }
+
+    /// A local server that never answers: no Ollama, no Antigravity server.
+    public sealed class NoHttp : IHttpPost, IHttpGet
+    {
+        public Task<string?> PostAsync(string url, IReadOnlyDictionary<string, string> headers, string body, TimeSpan timeout) =>
+            Task.FromResult<string?>(null);
+
+        public Task<string?> GetAsync(string url, TimeSpan timeout) => Task.FromResult<string?>(null);
+    }
+
+    /// A Claude CLI that is not there: no usage is read.
+    public sealed class NoClaudeCli : IClaudeCli
+    {
+        public Task<string?> UsageAsync(CancellationToken ct) => Task.FromResult<string?>(null);
+    }
+
+    /// Runs the UI thread's dispatcher until done() is true or the timeout passes. The background work of the sources posts its
+    /// results to the dispatcher, so a test that waits for one waits here (it never blocks the thread).
+    public static void PumpUntil(Func<bool> done, int timeoutMs = 5000)
+    {
+        var end = DateTime.UtcNow.AddMilliseconds(timeoutMs);
+        while (!done() && DateTime.UtcNow < end)
+        {
+            var frame = new DispatcherFrame();
+            Dispatcher.CurrentDispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() => frame.Continue = false));
+            Dispatcher.PushFrame(frame);
+            Thread.Sleep(5);
+        }
+    }
 
     /// The sensors of a quiet PC: no mic app, no camera, not muted.
     public static readonly SensorState QuietSensors = new(Array.Empty<string>(), false, false);
