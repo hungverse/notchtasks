@@ -58,6 +58,27 @@ public sealed class WatchingPaneTests
 
     private static void Click(ButtonBase button) => button.RaiseEvent(new RoutedEventArgs(ButtonBase.ClickEvent));
 
+    /// The text of a menu entry or header (they are TextBlocks, so an "_" in a name is not an access key).
+    private static string HeaderText(MenuItem item) => ((TextBlock)item.Header).Text;
+
+    /// The menu the Add button builds now.
+    private static ContextMenu AddMenu(WatchingPane pane)
+    {
+        Fixture.Call(pane, "RebuildAddMenu");
+        return Fixture.Named<Button>(pane, "AddButton").ContextMenu;
+    }
+
+    /// Explorer and its children: n programs started from the desktop, named app000.exe, app001.exe, ...
+    private static FakeProcesses DesktopWith(int children)
+    {
+        var procs = new List<ProcInfo> { new(10, 1, "explorer.exe", 1, 0) };
+        for (var i = 0; i < children; i++)
+        {
+            procs.Add(new ProcInfo(100 + i, 10, $"app{i:000}.exe", 1, 0));
+        }
+        return new FakeProcesses(procs.ToArray());
+    }
+
     [Fact]
     public void List_ShowsItems_ToggleWritesSettings()
     {
@@ -110,11 +131,8 @@ public sealed class WatchingPaneTests
                 Assert.Equal("Claude", store.Items[0].Name);
 
                 // The menu marks the added preset and does not offer it again.
-                Fixture.Call(pane, "RebuildAddMenu");
-                var menu = Fixture.Named<Button>(pane, "AddButton").ContextMenu;
-                var entry = menu.Items.OfType<MenuItem>().Single(m => m.Header is string h && h.Contains("Claude"));
-                var header = (string)entry.Header;
-                Assert.EndsWith(L10n.L(" (added)"), header);
+                var entry = AddMenu(pane).Items.OfType<MenuItem>().Single(m => m.Header is TextBlock && HeaderText(m).Contains("Claude"));
+                Assert.EndsWith(L10n.L(" (added)"), HeaderText(entry));
                 Assert.False(entry.IsEnabled);
             }
             finally
@@ -188,15 +206,120 @@ public sealed class WatchingPaneTests
             var window = Show(pane);
             try
             {
-                Fixture.Call(pane, "RebuildAddMenu");
-                var menu = Fixture.Named<Button>(pane, "AddButton").ContextMenu;
-                var apps = menu.Items.OfType<MenuItem>().Where(m => m.Tag as string == "running").Select(m => (string)m.Header).ToList();
+                var apps = AddMenu(pane).Items.OfType<MenuItem>().Where(m => m.Tag as string == "running").Select(HeaderText).ToList();
                 Assert.Equal(new[] { "Chrome", "Code" }, apps);
             }
             finally
             {
                 window.Close();
             }
+        });
+    }
+
+    [Fact]
+    public void OpenApps_AreCappedAt80()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            var pane = NewPane(StoreWith("[]"), DesktopWith(100), root);
+            var window = Show(pane);
+            try
+            {
+                var apps = AddMenu(pane).Items.OfType<MenuItem>().Where(m => m.Tag as string == "running").ToList();
+                Assert.Equal(80, apps.Count);
+                Assert.Equal("App000", HeaderText(apps[0]));
+                Assert.Equal("App079", HeaderText(apps[79]));
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    [Fact]
+    public void InstalledPresets_AreSortedFirst()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            // A gemini CLI in the user's bin folder makes Gemini CLI installed; Codex is not.
+            var bin = Path.Combine(root.Folder, "home", ".local", "bin");
+            Directory.CreateDirectory(bin);
+            File.WriteAllText(Path.Combine(bin, "gemini.exe"), string.Empty);
+            var pane = NewPane(StoreWith("[]"), new FakeProcesses(), root);
+            var window = Show(pane);
+            try
+            {
+                // The first group is the terminal agents: Claude (always installed), then Codex (not) and Gemini CLI (installed).
+                // The entries after the group's title, up to its separator.
+                var first = AddMenu(pane).Items.Cast<object>().Skip(1).TakeWhile(x => x is MenuItem)
+                    .Cast<MenuItem>().Select(HeaderText).ToList();
+                var installed = first.Select(h => h.StartsWith("✓ ", StringComparison.Ordinal)).ToList();
+                var firstNotInstalled = installed.IndexOf(false);
+                Assert.True(firstNotInstalled > 0);
+                Assert.DoesNotContain(true, installed.Skip(firstNotInstalled));
+                Assert.Contains(first, h => h.StartsWith("✓ Gemini CLI", StringComparison.Ordinal));
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    [Fact]
+    public void Toggle_KeepsUnknownFields()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            var store = StoreWith("[{\"id\":\"a1\",\"name\":\"Alpha\",\"kind\":\"process\",\"process\":\"alpha\",\"future\":\"keep\"}]");
+            var pane = NewPane(store, new FakeProcesses(), root);
+            var window = Show(pane);
+            try
+            {
+                var on = Rows(pane)[0].Children.OfType<CheckBox>().Single();
+                on.IsChecked = false;
+                Click(on);
+
+                Assert.False(store.Items[0].Enabled);
+                Assert.Equal("keep", store.Items[0].Extra["future"]!.GetValue<string>());
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    [Fact]
+    public void Editor_EmptyName_NotSaved()
+    {
+        Sta.Run(() =>
+        {
+            var editor = new WatchItemEditor(new WatchItem("a1", "Alpha", WatchKind.Process, Process: "alpha"), isNew: false);
+            Fixture.Named<TextBox>(editor, "NameBox").Text = "   ";
+            Fixture.Call(editor, "Save");
+            Assert.Null(editor.Result);
+        });
+    }
+
+    [Fact]
+    public void Editor_AppKind_SavesExe()
+    {
+        Sta.Run(() =>
+        {
+            var editor = new WatchItemEditor(new WatchItem("b1", "Foo", WatchKind.App), isNew: false);
+            Fixture.Named<ComboBox>(editor, "KindBox").SelectedIndex = 1;
+            const string exe = @"C:\Apps\foo\foo.exe";
+            Fixture.Named<TextBox>(editor, "ProgramBox").Text = exe;
+            Fixture.Call(editor, "Save");
+
+            Assert.NotNull(editor.Result);
+            Assert.Equal(WatchKind.App, editor.Result!.Kind);
+            Assert.Equal(exe, editor.Result.Exe);
         });
     }
 }

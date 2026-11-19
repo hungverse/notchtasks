@@ -18,7 +18,7 @@
       <TextBox x:Name="NameBox" Grid.Column="1" MaxLength="80" />
     </Grid>
 
-    <Grid Margin="0,0,0,10">
+    <Grid x:Name="KindRow" Margin="0,0,0,10">
       <Grid.ColumnDefinitions>
         <ColumnDefinition Width="150" />
         <ColumnDefinition Width="*" />
@@ -30,13 +30,13 @@
       </ComboBox>
     </Grid>
 
-    <Grid Margin="0,0,0,4">
+    <Grid x:Name="ProgramRow" Margin="0,0,0,4">
       <Grid.ColumnDefinitions>
         <ColumnDefinition Width="150" />
         <ColumnDefinition Width="*" />
       </Grid.ColumnDefinitions>
-      <TextBlock x:Name="ProgramLabel" Text="{l:L Process name}" VerticalAlignment="Center" />
-      <TextBox x:Name="ProgramBox" Grid.Column="1" MaxLength="200" />
+      <TextBlock x:Name="ProgramLabel" VerticalAlignment="Center" />
+      <TextBox x:Name="ProgramBox" Grid.Column="1" MaxLength="500" />
     </Grid>
     <TextBlock x:Name="ProgramHint" Style="{StaticResource CardNote}" Margin="150,0,0,10" />
 
@@ -49,7 +49,7 @@
       <TextBox x:Name="ArgsBox" Grid.Column="1" MaxLength="200" />
     </Grid>
 
-    <Grid Margin="0,0,0,4">
+    <Grid x:Name="ThresholdRow" Margin="0,0,0,4">
       <Grid.ColumnDefinitions>
         <ColumnDefinition Width="150" />
         <ColumnDefinition Width="*" />
@@ -60,13 +60,15 @@
     <TextBlock x:Name="ThresholdHint" Style="{StaticResource CardNote}" Margin="150,0,0,10" />
 
     <CheckBox x:Name="ChildTasksBox" Margin="0,0,0,8" />
-    <CheckBox x:Name="BuildBox" Margin="0,0,0,8" Content="{l:L Build &amp; CI}" />
+    <CheckBox x:Name="BuildBox" Margin="0,0,0,8" />
+
+    <TextBlock x:Name="LimitedNote" Style="{StaticResource CardNote}" Margin="0,0,0,8" />
 
     <TextBlock x:Name="ErrorText" Style="{StaticResource CardNote}" Margin="0,4,0,0"
                Foreground="{DynamicResource SystemFillColorCriticalBrush}" Visibility="Collapsed" />
 
     <DockPanel Margin="0,16,0,0" LastChildFill="False">
-      <Button x:Name="SaveButton" DockPanel.Dock="Right" MinWidth="80" Margin="8,0,0,0" IsDefault="True" Content="{l:L Save}" />
+      <Button x:Name="SaveButton" DockPanel.Dock="Right" MinWidth="80" Margin="8,0,0,0" IsDefault="True" />
       <Button x:Name="CancelButton" DockPanel.Dock="Right" MinWidth="80" IsCancel="True" Content="{l:L Cancel}" />
     </DockPanel>
   </StackPanel>

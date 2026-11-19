@@ -92,9 +92,9 @@ public partial class BehaviorPane : SettingsPane
     private void ShowDelay(double seconds) =>
         DelayLabel.Text = L10n.L("Delay {0} ms", (int)Math.Round(seconds * 1000));
 
-    /// "Announce a task as done after 30 sec": the seconds a task must run before its completion is announced.
+    /// "Say done when it ran N sec or more" (Preferences.swift): the seconds a task must run before its completion is announced.
     private void ShowDone(double seconds) =>
-        DoneLabel.Text = L10n.L("Announce a task as done after") + " " + L10n.L("{0} sec", (int)Math.Round(seconds));
+        DoneLabel.Text = L10n.L("Say done when it ran {0} sec or more", (int)Math.Round(seconds));
 
     /// "Warn about limits at N%".
     private void ShowLimit(double percent) =>

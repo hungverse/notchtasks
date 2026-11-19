@@ -118,8 +118,6 @@ public partial class WatchingPane : SettingsPane
             Margin = new Thickness(12, 0, 0, 0),
             VerticalAlignment = VerticalAlignment.Center,
         };
-        // Claude and Codex are tracked per session: nothing to set, so no editor (the Mac's footer note).
-        edit.Visibility = item.Kind is WatchKind.Process or WatchKind.App ? Visibility.Visible : Visibility.Collapsed;
         edit.Click += (_, _) => EditItem(item);
         Place(edit, grid, 2);
 
@@ -155,47 +153,52 @@ public partial class WatchingPane : SettingsPane
         var menu = new ContextMenu();
         foreach (var group in WatchItems.PresetGroups.Append(new WatchPresetGroup("Build & CI", WatchItems.BuildPresets)))
         {
-            menu.Items.Add(new MenuItem { Header = group.Title, IsEnabled = false });
-            foreach (var preset in group.Items.OrderByDescending(p => IsInstalled(p, running)))
+            menu.Items.Add(new MenuItem { Header = MenuLabel(group.Title), IsEnabled = false });
+            foreach (var preset in group.Items.OrderByDescending(IsInstalled))
             {
-                menu.Items.Add(PresetEntry(preset, IsInstalled(preset, running)));
+                menu.Items.Add(PresetEntry(preset, IsInstalled(preset)));
             }
             menu.Items.Add(new Separator());
         }
 
         if (running.Count > 0)
         {
-            menu.Items.Add(new MenuItem { Header = L10n.L("Running apps"), IsEnabled = false });
+            menu.Items.Add(new MenuItem { Header = MenuLabel(L10n.L("Open apps")), IsEnabled = false });
             foreach (var name in running.Take(RunningAppLimit))
             {
                 var app = new WatchItem(Guid.NewGuid().ToString(), Display(name), WatchKind.App, BundleID: name + ".exe");
-                var entry = new MenuItem { Header = app.Name, Tag = "running", IsEnabled = !Added(app) };
+                var entry = new MenuItem { Header = MenuLabel(app.Name), Tag = "running", IsEnabled = !Added(app) };
                 entry.Click += (_, _) => AddItem(app);
                 menu.Items.Add(entry);
             }
             menu.Items.Add(new Separator());
         }
 
-        var typed = new MenuItem { Header = L10n.L("Enter a process…") };
+        var typed = new MenuItem { Header = MenuLabel(L10n.L("Enter a process…")) };
         typed.Click += (_, _) => AddNewProcess();
         menu.Items.Add(typed);
         AddButton.ContextMenu = menu;
     }
+
+    /// A menu header as text. A TextBlock, not a string: a string header reads an "_" in a name as an access key.
+    private static TextBlock MenuLabel(string text) => new() { Text = text };
 
     private MenuItem PresetEntry(WatchItem preset, bool installed)
     {
         var added = Added(preset);
         var entry = new MenuItem
         {
-            Header = (installed ? "✓ " : string.Empty) + preset.Name + (added ? L10n.L(" (added)") : string.Empty),
+            Header = MenuLabel((installed ? "✓ " : string.Empty) + preset.Name + (added ? L10n.L(" (added)") : string.Empty)),
             IsEnabled = !added,
         };
         entry.Click += (_, _) => AddPreset(preset);
         return entry;
     }
 
-    /// Whether a preset is here: Claude always is; a CLI is found on this PC; an app is running (or its exe is known).
-    private bool IsInstalled(WatchItem preset, IReadOnlyCollection<string> running)
+    /// Whether a preset is here, as Electron decides it: Claude always is; a CLI is found on this PC; an app is installed when its
+    /// exe is a name the Windows map knows, or a file that exists. The Mac checks the app on disk; Windows has no path for an app, so
+    /// the known exe is the floor. Running is not required.
+    private bool IsInstalled(WatchItem preset)
     {
         if (preset.Kind == WatchKind.Claude)
         {
@@ -203,10 +206,21 @@ public partial class WatchingPane : SettingsPane
         }
         if (preset.Kind == WatchKind.App)
         {
-            return WatchItems.AppExe(preset) is { } exe && running.Contains(ProcTable.NormName(exe));
+            return AppInstalled(preset);
         }
         var cli = preset.Cli ?? (preset.Kind == WatchKind.Codex ? AgentKinds.Spec(AgentKind.Codex).Cli : null);
         return cli is not null && AgentSetup.FindCli(cli, _home, _path, _appData) is not null;
+    }
+
+    private static bool AppInstalled(WatchItem app)
+    {
+        var exe = WatchItems.AppExe(app);
+        if (exe is null)
+        {
+            return false;
+        }
+        return WatchItems.WinAppExe.Values.Contains(exe, StringComparer.OrdinalIgnoreCase)
+            || (Path.IsPathRooted(exe) && File.Exists(exe));
     }
 
     /// Whether the list already holds this item: the same kind, process, command line and bundle (the Mac's `added`).
@@ -297,6 +311,8 @@ public partial class WatchingPane : SettingsPane
         {
             _actionError = L10n.L("Couldn't save the watch list: {0}", e.Message);
         }
+        // Read the rows again either way: after a failed save a switch must show the state the store still holds.
+        RenderWatchList();
         ShowErrorLine();
     }
 
