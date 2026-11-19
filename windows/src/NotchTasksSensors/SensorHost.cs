@@ -78,12 +78,13 @@ internal static class SensorHost
     public static EventWaitHandle? CreateStopEvent(string sid)
     {
         var security = new EventWaitHandleSecurity();
+        // Modify and Synchronize for SYSTEM, Administrators and the user: each can set the event and wait on it, by its Global name.
+        const EventWaitHandleRights Needed = EventWaitHandleRights.Modify | EventWaitHandleRights.Synchronize;
+        security.AddAccessRule(new EventWaitHandleAccessRule(new SecurityIdentifier(sid), Needed, AccessControlType.Allow));
         security.AddAccessRule(new EventWaitHandleAccessRule(
-            new SecurityIdentifier(sid), EventWaitHandleRights.Modify | EventWaitHandleRights.Synchronize, AccessControlType.Allow));
+            new SecurityIdentifier(WellKnownSidType.LocalSystemSid, null), Needed, AccessControlType.Allow));
         security.AddAccessRule(new EventWaitHandleAccessRule(
-            new SecurityIdentifier(WellKnownSidType.LocalSystemSid, null), EventWaitHandleRights.FullControl, AccessControlType.Allow));
-        security.AddAccessRule(new EventWaitHandleAccessRule(
-            new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null), EventWaitHandleRights.FullControl, AccessControlType.Allow));
+            new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null), Needed, AccessControlType.Allow));
 
         var stop = EventWaitHandleAcl.Create(false, EventResetMode.ManualReset, SensorNames.StopEventName(sid), out var created, security);
         if (created)
@@ -168,30 +169,5 @@ internal static class SensorHost
         };
         thread.Start();
         return true;
-    }
-}
-
-/// The helper's own error log: the first failure of a run is written, the rest are not (the helper has no window).
-internal static class HelperLog
-{
-    private static bool _written;
-
-    public static void Once(Exception error)
-    {
-        if (_written)
-        {
-            return;
-        }
-        _written = true;
-        try
-        {
-            File.AppendAllText(
-                Path.Combine(AppContext.BaseDirectory, "NotchTasksSensors.log"),
-                $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {error}{Environment.NewLine}");
-        }
-        catch (Exception)
-        {
-            // Logging never throws.
-        }
     }
 }

@@ -125,8 +125,11 @@ public static class SensorNames
     /// The pipe the app reads from: NotchTasks.Sensors.<user SID>.
     public static string PipeName(string sid) => "NotchTasks.Sensors." + sid;
 
-    /// The manual-reset event the app sets to stop the helper (no UAC needed to set it, and it needs none to stop a helper).
-    public static string StopEventName(string sid) => "NotchTasks.Sensors.Stop." + sid;
+    /// The manual-reset event the app sets to stop the helper. It is a Global\ name, so the app (user session), the elevated installer
+    /// and the helper (session 0, as SYSTEM) all reach the same event. Its ACL grants Modify and Synchronize to SYSTEM, Administrators
+    /// and the user. Accepted Minor: a non-elevated program may create this name first, and then this user's helper exits quietly
+    /// (a display denial of the temperatures only; no privilege is gained).
+    public static string StopEventName(string sid) => @"Global\NotchTasks.Sensors.Stop." + sid;
 
     /// True for a Windows SID in its text form (S-1-5-21-...). Anything else is not a SID.
     public static bool IsSid(string? text)

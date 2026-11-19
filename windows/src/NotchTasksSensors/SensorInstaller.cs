@@ -35,7 +35,12 @@ internal static class SensorInstaller
         try
         {
             EnsureInheritedFolder(target);
-            SignalStopAndWait(sid);  // this user's helper, if any, releases its files
+            // A reinstall for the same user: end this user's running copy (session 0, as SYSTEM) before its files are replaced.
+            if (TaskExists(SensorNames.TaskName(sid)))
+            {
+                RunSchtasksCode("/End", "/TN", SensorNames.TaskName(sid));  // "not running" is fine
+            }
+            SignalStopAndWait(sid);  // this user's helper releases its files; the Global stop event reaches it from session 0
             if (!OtherHelpersRunning(target, sid))
             {
                 CopyWhenFree(AppContext.BaseDirectory, target);
@@ -68,49 +73,16 @@ internal static class SensorInstaller
         }
     }
 
-    /// Removes this user's sign-in helper: the task first (so no logon starts it), then the helper of this user, then the marker.
-    /// The files and the folder go only when no marker remains, so another user's helper keeps working. Exit code 0 when done.
-    public static async Task<int> UninstallLogonAsync(string? sid)
+    /// Removes this user's sign-in helper through the tested sequence (SensorUninstall.Run). Exit code 0 when the task and the
+    /// marker are removed; 1 otherwise, with the marker kept so Turn off can be tried again.
+    public static Task<int> UninstallLogonAsync(string? sid)
     {
         if (sid is null)
         {
-            return 2;
+            return Task.FromResult(2);
         }
-
-        var taskName = SensorNames.TaskName(sid);
-        if (TaskExists(taskName))
-        {
-            RunSchtasks("/Delete", "/TN", taskName, "/F");
-        }
-        if (TaskExists(taskName))
-        {
-            return 1;  // still registered: nothing else is removed, so the task still has its copy
-        }
-
-        SignalStopAndWait(sid);
-        File.Delete(SensorNames.MarkerPath(sid));
-
-        var target = TargetFolder;
-        if (AnyMarker(target) || !Directory.Exists(target))
-        {
-            return 0;
-        }
-        for (var attempt = 0; attempt < 20 && Directory.Exists(target); attempt++)
-        {
-            try
-            {
-                Directory.Delete(target, recursive: true);
-            }
-            catch (IOException)
-            {
-                await Task.Delay(250);
-            }
-            catch (UnauthorizedAccessException)
-            {
-                await Task.Delay(250);
-            }
-        }
-        return Directory.Exists(target) ? 1 : 0;
+        var outcome = SensorUninstall.Run(sid, TargetFolder, new RealSensorSystem());
+        return Task.FromResult(outcome == UninstallOutcome.Removed ? 0 : 1);
     }
 
     /// The folder exists and keeps the permissions it inherits from Program Files. A new folder inherits them. An existing folder
@@ -238,7 +210,7 @@ internal static class SensorInstaller
         }
     }
 
-    private static int RunSchtasksCode(params string[] args)
+    internal static int RunSchtasksCode(params string[] args)
     {
         var start = new ProcessStartInfo(Path.Combine(Environment.SystemDirectory, "schtasks.exe"))
         {
@@ -252,5 +224,64 @@ internal static class SensorInstaller
         using var process = Process.Start(start) ?? throw new InvalidOperationException("schtasks did not start.");
         process.WaitForExit();
         return process.ExitCode;
+    }
+}
+
+/// The real side effects of an uninstall: schtasks from System32, the Global stop event, and the file system (with retries while a
+/// file is still in use).
+internal sealed class RealSensorSystem : ISensorSystem
+{
+    public int Schtasks(params string[] args) => SensorInstaller.RunSchtasksCode(args);
+
+    public bool TaskExists(string taskName) => SensorInstaller.RunSchtasksCode("/Query", "/TN", taskName) == 0;
+
+    public void SignalStop(string sid)
+    {
+        if (EventWaitHandleAcl.TryOpenExisting(SensorNames.StopEventName(sid), EventWaitHandleRights.Modify, out var stop))
+        {
+            stop.Set();
+            stop.Dispose();
+        }
+    }
+
+    public IReadOnlyList<string> FilesIn(string folder) =>
+        Directory.Exists(folder) ? Directory.EnumerateFiles(folder).ToList() : Array.Empty<string>();
+
+    public bool TryDeleteFile(string path)
+    {
+        for (var attempt = 0; attempt < 20 && File.Exists(path); attempt++)
+        {
+            try
+            {
+                File.Delete(path);
+            }
+            catch (IOException)
+            {
+                Thread.Sleep(250);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                Thread.Sleep(250);
+            }
+        }
+        return !File.Exists(path);
+    }
+
+    public bool TryDeleteFolder(string folder)
+    {
+        try
+        {
+            if (Directory.Exists(folder))
+            {
+                Directory.Delete(folder, recursive: false);
+            }
+        }
+        catch (IOException)
+        {
+        }
+        catch (UnauthorizedAccessException)
+        {
+        }
+        return !Directory.Exists(folder);
     }
 }
