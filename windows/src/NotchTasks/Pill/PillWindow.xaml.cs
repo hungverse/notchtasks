@@ -16,6 +16,7 @@ using Microsoft.Win32;
 using NotchTasks.ControlPanel;
 using NotchTasks.Core;
 using NotchTasks.Core.Asks;
+using NotchTasks.Core.Modules;
 using NotchTasks.Core.Motion;
 using NotchTasks.Core.Notch;
 using NotchTasks.Core.Settings;
@@ -141,6 +142,7 @@ public partial class PillWindow : Window
         _state.Asks.CollectionChanged += OnAsksChanged;
         _state.NotchChanged += OnNotchChanged;
         _state.LoadChanged += SyncHeader;  // a load tick moves the meters only
+        _state.ThermalChanged += SyncHeader;  // a temperature reading moves the header's temperature only
         _state.Toasts.Changed += OnToastsChanged;
         SystemEvents.DisplaySettingsChanged += OnDisplaySettingsChanged;
         SpriteClock.WatchSystem();
@@ -401,6 +403,27 @@ public partial class PillWindow : Window
             _cpuMeter.Show(load.Cpu, animate);
             _ramMeter.Show(load.Memory, animate);
         }
+        SyncTemperature();
+    }
+
+    /// The header's temperature, at the right: the thermometer and the whole degrees in the reading's tint. The tooltip names the
+    /// zone with one decimal. Nothing is shown without a reading, or while SystemLoad is off.
+    private void SyncTemperature()
+    {
+        if (!_state.Settings.SystemLoad || _state.Thermal is not { } reading)
+        {
+            TempReading.Visibility = Visibility.Collapsed;
+            return;
+        }
+        var brush = (Brush)new BrushConverter().ConvertFromString(Thermals.Tint(reading.Celsius))!;
+        brush.Freeze();
+        TempGlyph.Text = ModuleGlyphs.Get("thermometer");
+        TempGlyph.Foreground = brush;
+        TempText.Text = Math.Round(reading.Celsius, MidpointRounding.AwayFromZero).ToString("0", CultureInfo.InvariantCulture) + "°";
+        TempText.Foreground = brush;
+        TempReading.ToolTip = L10n.L("Temperature") + ": " + reading.Name + " "
+            + reading.Celsius.ToString("0.0", CultureInfo.InvariantCulture) + "°C";
+        TempReading.Visibility = Visibility.Visible;
     }
 
     /// Brings the pill's toast in line with the queue: the pill springs into the toast's shape while one is up and the pill is
@@ -798,6 +821,7 @@ public partial class PillWindow : Window
         _state.Asks.CollectionChanged -= OnAsksChanged;
         _state.NotchChanged -= OnNotchChanged;
         _state.LoadChanged -= SyncHeader;
+        _state.ThermalChanged -= SyncHeader;
         _state.Toasts.Changed -= OnToastsChanged;
         L10n.Changed -= OnLanguageChanged;
         // Only this pill's own builder: a newer pill may have registered its own since.

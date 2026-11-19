@@ -30,6 +30,7 @@
   <ItemGroup>
     <ProjectReference Include="..\NotchTasks.Core\NotchTasks.Core.csproj" />
     <ProjectReference Include="..\NotchTasksHook\NotchTasksHook.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\NotchTasksSensors\NotchTasksSensors.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
   <ItemGroup>
@@ -54,6 +55,25 @@
       <HookFiles Include="$(HookOutDir)NotchTasksHook.exe;$(HookOutDir)NotchTasksHook.dll;$(HookOutDir)NotchTasksHook.deps.json;$(HookOutDir)NotchTasksHook.runtimeconfig.json" />
     </ItemGroup>
     <Copy SourceFiles="@(HookFiles)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+  <!-- The temperature helper (elevated only after the user's click) is copied next to NotchTasks.exe the same way, with what it
+       needs to run from a copy: its files, System.Management and its dependency, and the runtime-specific assemblies folder that
+       the deps file names. The optional files are copied only when the build produced them. NotchTasks.Core.dll is the app's own. -->
+  <Target Name="CopySensorsExe" AfterTargets="Build">
+    <MSBuild Projects="..\NotchTasksSensors\NotchTasksSensors.csproj" Targets="GetTargetPath">
+      <Output TaskParameter="TargetOutputs" ItemName="SensorsTargetPath" />
+    </MSBuild>
+    <PropertyGroup>
+      <SensorsOutDir>%(SensorsTargetPath.RootDir)%(SensorsTargetPath.Directory)</SensorsOutDir>
+    </PropertyGroup>
+    <ItemGroup>
+      <SensorsFiles Include="$(SensorsOutDir)NotchTasksSensors.exe;$(SensorsOutDir)NotchTasksSensors.dll;$(SensorsOutDir)NotchTasksSensors.deps.json;$(SensorsOutDir)NotchTasksSensors.runtimeconfig.json" />
+      <SensorsFiles Include="$(SensorsOutDir)System.Management.dll;$(SensorsOutDir)System.CodeDom.dll" Condition="Exists('$(SensorsOutDir)System.Management.dll')" />
+      <SensorsRuntimeFiles Include="$(SensorsOutDir)runtimes\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(SensorsFiles)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(SensorsRuntimeFiles)" DestinationFiles="@(SensorsRuntimeFiles->'$(OutDir)runtimes\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
   </Target>
 
 </Project>

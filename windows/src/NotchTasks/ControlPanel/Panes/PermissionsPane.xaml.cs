@@ -26,16 +26,28 @@ public partial class PermissionsPane : SettingsPane
     private static readonly TimeSpan FirewallMaxAge = TimeSpan.FromSeconds(10);
 
     private readonly IRegistry _registry = new RegistryAccess();
+    private readonly SensorHelper _helper;
     private PermissionFacts? _facts;
     private int _probe;
     private DateTime _firewallProbedAt = DateTime.MinValue;
 
-    public PermissionsPane(SettingsStore store) : base(store)
+    /// The pane for the settings store and the temperature helper (its state fills the Temperatures row).
+    public PermissionsPane(SettingsStore store, SensorHelper helper) : base(store)
     {
+        _helper = helper;
         InitializeComponent();
-        Loaded += (_, _) => Refresh(firewall: DateTime.UtcNow - _firewallProbedAt > FirewallMaxAge);
+        Loaded += (_, _) =>
+        {
+            _helper.StateChanged -= OnHelperChanged;
+            _helper.StateChanged += OnHelperChanged;
+            Refresh(firewall: DateTime.UtcNow - _firewallProbedAt > FirewallMaxAge);
+        };
+        Unloaded += (_, _) => _helper.StateChanged -= OnHelperChanged;
         RefreshButton.Click += (_, _) => Refresh(firewall: true);
     }
+
+    /// The helper turned on, off or declined: the row follows it while the pane shows.
+    private void OnHelperChanged() => Refresh(firewall: false);
 
     protected override void Apply() => Render();
 
@@ -47,7 +59,8 @@ public partial class PermissionsPane : SettingsPane
     private void Refresh(bool firewall)
     {
         var previousRule = _facts?.FirewallRule;
-        _facts = PermissionProbe.Facts(_registry, AppFiles.Home, AppFiles.HookExe, AppFiles.AppExe) with { FirewallRule = previousRule };
+        _facts = PermissionProbe.Facts(_registry, AppFiles.Home, AppFiles.HookExe, AppFiles.AppExe)
+            with { FirewallRule = previousRule, Temperatures = TemperatureState() };
         ApplyStored();
         if (firewall && PermissionItems.FirewallRowShown)
         {
@@ -98,14 +111,110 @@ public partial class PermissionsPane : SettingsPane
                 {
                     rowsPanel.Children.Add(new Separator { Margin = new Thickness(16, 0, 16, 0) });
                 }
-                rowsPanel.Children.Add(BuildRow(rows[i]));
+                rowsPanel.Children.Add(rows[i].Id == PermissionItems.TemperaturesId ? BuildTemperatureRow(rows[i]) : BuildRow(rows[i]));
             }
             Groups.Children.Add(new Border { Style = (Style)FindResource("Card"), Child = rowsPanel });
         }
     }
 
+    /// The Temperatures row's state, as the row's tile and label show it: on is granted, starting is checking, the rest are not granted.
+    private PermState TemperatureState() => _helper.State switch
+    {
+        HelperState.On => PermState.Granted,
+        HelperState.Starting => PermState.Checking,
+        _ => PermState.NotAsked,
+    };
+
+    /// The Temperatures row: the standard row, then its own line. The line says why (declined, paused, unavailable) and holds the
+    /// buttons: Turn on (with the sign-in check box), Try again, or Turn off. Nothing starts without one of these clicks.
+    private UIElement BuildTemperatureRow(PermItem item)
+    {
+        var stack = new StackPanel();
+        stack.Children.Add(BuildRow(item, _helper.State switch
+        {
+            HelperState.On => L10n.L("On"),
+            _ => null,
+        }));
+
+        var line = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(40, 0, 16, 12) };
+        string? message = _helper.State switch
+        {
+            HelperState.Declined => L10n.L("Not turned on: administrator was not allowed"),
+            HelperState.Paused => L10n.L("Turn on again to read temperatures this session"),
+            HelperState.Unavailable => L10n.L("This PC does not report temperatures"),
+            _ => null,
+        };
+        var text = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+        if (message is not null)
+        {
+            text.Children.Add(new TextBlock { Style = (Style)FindResource("CardNote"), Text = message });
+        }
+
+        var signIn = new CheckBox
+        {
+            Content = L10n.L("Start with Windows without asking again"),
+            IsChecked = Store.SensorHelperAtSignIn,
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(0, 0, 12, 0),
+        };
+        switch (_helper.State)
+        {
+            case HelperState.Off:
+                line.Children.Add(signIn);
+                line.Children.Add(ActionButton(L10n.L("Turn on"), () => TurnOnFromClick(signIn.IsChecked == true)));
+                break;
+            case HelperState.Declined:
+            case HelperState.Paused:
+                line.Children.Add(signIn);
+                line.Children.Add(ActionButton(L10n.L("Try again"), () => TurnOnFromClick(signIn.IsChecked == true)));
+                break;
+            case HelperState.On:
+                line.Children.Add(ActionButton(L10n.L("Turn off"), TurnOffFromClick));
+                break;
+        }
+
+        if (text.Children.Count > 0)
+        {
+            stack.Children.Add(text);
+        }
+        if (line.Children.Count > 0)
+        {
+            stack.Children.Add(line);
+        }
+        return stack;
+    }
+
+    /// The user clicked Turn on or Try again. The helper asks UAC once; a cancelled prompt is Declined and nothing else happens.
+    private async void TurnOnFromClick(bool atSignIn)
+    {
+        try
+        {
+            await _helper.TurnOnAsync(atSignIn);
+        }
+        catch (Exception e) when (e is IOException or InvalidOperationException)
+        {
+            ErrorLog.Write(e);
+        }
+        Refresh(firewall: false);
+    }
+
+    /// The user clicked Turn off: one UAC prompt when the logon task exists, else the helper is only asked to stop.
+    private async void TurnOffFromClick()
+    {
+        try
+        {
+            await _helper.TurnOffAsync();
+        }
+        catch (Exception e) when (e is IOException or InvalidOperationException)
+        {
+            ErrorLog.Write(e);
+        }
+        Refresh(firewall: false);
+    }
+
     /// One row: the glyph in its state's colour, the title and detail, the state, and the button or switch that acts on it.
-    private UIElement BuildRow(PermItem item)
+    /// stateText replaces the state's label (the Temperatures row shows On).
+    private UIElement BuildRow(PermItem item, string? stateText = null)
     {
         var tile = new Border
         {
@@ -142,7 +251,7 @@ public partial class PermissionsPane : SettingsPane
 
         var state = new TextBlock
         {
-            Text = PermissionItems.Label(item.State),
+            Text = stateText ?? PermissionItems.Label(item.State),
             FontSize = 12,
             FontWeight = FontWeights.SemiBold,
             Margin = new Thickness(12, 0, 12, 0),

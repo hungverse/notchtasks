@@ -9,7 +9,7 @@ public sealed class ModuleGlyphsTests
     private static readonly string[] Names =
     {
         "hand", "question", "timer", "download", "drive", "phone", "phonedown", "video", "mic", "micoff", "camera",
-        "wifi", "wifioff", "network", "vpn", "vpnoff", "battery", "batterylow", "bolt", "plug", "warning",
+        "wifi", "wifioff", "network", "vpn", "vpnoff", "battery", "batterylow", "bolt", "plug", "warning", "thermometer",
     };
 
     /// Pairs of names that share a code point on purpose. Empty: every name has its own glyph.
@@ -56,6 +56,13 @@ public sealed class ModuleGlyphsTests
     {
         // E6BA is not in Segoe Fluent Icons (it drew as a box); F271 is the pointing hand.
         Assert.Equal("", ModuleGlyphs.Get("hand"));
+    }
+
+    [Fact]
+    public void Thermometer_IsTheThermometerGlyph()
+    {
+        // Segoe Fluent Icons: the thermometer is E9CA (checked against the font's glyph shapes; E9CE is a question mark).
+        Assert.Equal("", ModuleGlyphs.Get("thermometer"));
     }
 
     [Fact]

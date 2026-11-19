@@ -101,6 +101,14 @@
             <!-- The CPU and RAM meters take the summary's place while SystemLoad is on and a load is known (NotchView.swift). -->
             <StackPanel x:Name="LoadMeters" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top"
                         Margin="16,4,0,0" Visibility="Collapsed" />
+            <!-- The temperature, at the right of the header (NotchView.swift): a thermometer and the whole degrees, in the tint of
+                 Thermals.Tint. Shown only while a reading exists and SystemLoad is on. -->
+            <StackPanel x:Name="TempReading" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top"
+                        Margin="0,4,16,0" Visibility="Collapsed">
+              <TextBlock x:Name="TempGlyph" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12" Width="14"
+                         TextAlignment="Center" VerticalAlignment="Center" />
+              <TextBlock x:Name="TempText" FontSize="11" FontWeight="SemiBold" Margin="4,0,0,0" VerticalAlignment="Center" />
+            </StackPanel>
             <!-- The bottom 32 DIP are kept for the quick bar, so the sections never sit under its buttons; the top 26 for the header. -->
             <ScrollViewer x:Name="SectionScroll" Width="520" HorizontalAlignment="Center" VerticalAlignment="Stretch"
                           Margin="0,26,0,32" Padding="10" Background="Transparent" BorderThickness="0"

@@ -165,6 +165,12 @@ public sealed class SettingsStore : INotifyPropertyChanged, IDisposable
     /// CPU and RAM on the open notch (Mac systemLoad).
     public bool SystemLoad => Flag("systemLoad", true);
 
+    /// Windows only: the temperature helper is on (it runs elevated, so it is off until the user turns it on). Off by default.
+    public bool SensorHelper => Flag("sensorHelper", false);
+
+    /// Windows only: the helper also starts at logon, through a scheduled task the user agreed to. Off by default.
+    public bool SensorHelperAtSignIn => Flag("sensorHelperAtSignIn", false);
+
     /// System notifications for the alerts (Mac systemNotifications).
     public bool SystemNotifications => Flag("systemNotifications", true);
 

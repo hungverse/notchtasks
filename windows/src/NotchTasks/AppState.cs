@@ -25,11 +25,13 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
     private readonly BatterySource _batterySource;
     private readonly HealthSource _healthSource;
     private readonly SensorsSource _sensorsSource;
+    private readonly ThermalSource _thermalSource;
     private AskWatcher? _watcher;
     private bool _disposed;
 
-    /// Creates the state on the UI thread. Call StartWatching next. The modules that are on start here.
-    public AppState(SettingsStore settings, AskStore store, HealthReaders? readers = null)
+    /// Creates the state on the UI thread. Call StartWatching next. The modules that are on start here. helper is the temperature
+    /// helper (the real one when null); tests pass a fake.
+    public AppState(SettingsStore settings, AskStore store, HealthReaders? readers = null, SensorHelper? helper = null)
     {
         Settings = settings;
         _store = store;
@@ -42,11 +44,14 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         Downloads = new DownloadsModule(this, DownloadFolder.Locate() ?? string.Empty);
         Health = new HealthModule(this);
         _healthSource = new HealthSource(Health, PublishLoad, settings, readers);
+        Helper = helper ?? SensorHelper.Create(settings);
+        _thermalSource = new ThermalSource(settings, Helper, PublishThermal);
         Sensors = new SensorsModule(this,
             () => ActiveModules(settings).Contains("privacy"),
             () => ActiveModules(settings).Contains("calls"));
         _sensorsSource = new SensorsSource(Sensors, Publish);
         _host = new ModuleHost(CreateSources(), OnTurnedOff, (message, e) => ErrorLog.Write(new InvalidOperationException(message, e)));
+        Helper.Start();  // no UAC here: the helper is only started by the user's click (SensorHelper)
         _host.Apply(ActiveModules(settings));
         Snapshot = BuildSnapshot();
         settings.Changed += OnSettingsChanged;
@@ -78,6 +83,15 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
     /// The calls and privacy sensors: the snapshot's Call and Sensors, and the call card's state. Its source runs while either
     /// module is on.
     public SensorsModule Sensors { get; }
+
+    /// The temperature helper (Windows only, off by default). Its state drives the Permissions row and the header's reading.
+    public SensorHelper Helper { get; }
+
+    /// The hottest temperature the header shows, or null when none is shown (the helper is off, the pill closed, or no reading).
+    public ThermalReading? Thermal { get; private set; }
+
+    /// Raised when Thermal changes: the header follows it.
+    public event Action? ThermalChanged;
 
     /// Raised when only the load changed (a meter tick): the header follows it, and the rest of the notch is not rebuilt.
     public event Action? LoadChanged;
@@ -123,6 +137,17 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         }
         Snapshot = BuildSnapshot();
         LoadChanged?.Invoke();
+    }
+
+    /// The thermal feed's reading changed (null when none is shown). Only the header reads it.
+    private void PublishThermal(ThermalReading? reading)
+    {
+        if (_disposed)
+        {
+            return;
+        }
+        Thermal = reading;
+        ThermalChanged?.Invoke();
     }
 
     /// The power status changed (the AC line or the battery): the battery reads it now, while the battery module is on.
@@ -228,7 +253,8 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
             ["battery"] = _batterySource,
             ["network"] = new NetworkSource(Network),
             ["downloads"] = new DownloadsSource(Downloads),
-            ["health"] = _healthSource,
+            // one source for both: the temperature feed runs only while the health module runs and the pill is open
+            ["health"] = new CompositeSource(_healthSource, _thermalSource),
             // one source for both: it counts its starts, so it runs while either module is on
             ["privacy"] = _sensorsSource,
             ["calls"] = _sensorsSource,
@@ -263,6 +289,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         if (!_disposed)
         {
             _healthSource.PillOpened(open);
+            _thermalSource.PillOpened(open);
         }
     }
 
@@ -278,6 +305,10 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
             if (!_disposed && keys.Any(k => k == "systemLoad"))
             {
                 _healthSource.SystemLoadChanged();
+            }
+            if (!_disposed && keys.Any(k => k is "systemLoad" or "sensorHelper" or "sensorHelperAtSignIn"))
+            {
+                _thermalSource.SettingsChanged();
             }
         }));
 

@@ -40,12 +40,16 @@ public sealed record PermissionFacts(
     bool? CameraAllowed,
     bool? FirewallRule,
     IReadOnlyDictionary<AgentKind, bool?> Hooks,
-    IReadOnlyDictionary<AgentKind, bool> Present);
+    IReadOnlyDictionary<AgentKind, bool> Present,
+    PermState Temperatures = PermState.NotAsked);
 
 public static class PermissionItems
 {
     /// The row id of start at login. It is not tied to a module, and it is always in use, as the Mac's login item is.
     public const string LoginId = "login";
+
+    /// The row id of the optional temperatures helper. It is never needed: it is in use only once it is on (see GroupOf).
+    public const string TemperaturesId = "temperatures";
 
     private static readonly IReadOnlyList<string> NoModules = Array.Empty<string>();
     private static readonly IReadOnlyList<string> CameraModules = ["mirror"];
@@ -70,6 +74,9 @@ public static class PermissionItems
             new("camera", L("Camera mirror"), L("Check the camera before joining a meeting"), "", CameraModules,
                 Consent(facts.CameraAllowed)),
         };
+        items.Add(new PermItem(TemperaturesId, L("Temperatures"),
+            L("Optional. Reading temperatures on Windows needs administrator, so a small helper runs with administrator rights only if you turn this on."),
+            "\uE9CA", NoModules, facts.Temperatures));
         if (FirewallRowShown)
         {
             items.Add(new PermItem("firewall", L("Firewall rule"), L("Lets your phone reach the notch on this network."), "", NoModules,
@@ -103,6 +110,10 @@ public static class PermissionItems
             return false;
         }
         bool On(string module) => modules.Contains(module) && ModuleCatalog.Built(module);
+        if (item.Id == TemperaturesId)
+        {
+            return false;  // optional: never counted as needed, whatever the modules
+        }
         if (item.Id == "notifications")
         {
             return notifications && (On("agents") || On("ci"));
@@ -114,6 +125,11 @@ public static class PermissionItems
     /// in use. The firewall rule has no module until pairing (Phase 4), so it stays Not in use.
     public static PermGroup GroupOf(PermItem item, IReadOnlySet<string> modules, bool notifications)
     {
+        if (item.Id == TemperaturesId)
+        {
+            // Optional: in Granted while the helper is on, else in Not in use. Never Needed.
+            return item.State == PermState.Granted ? PermGroup.Granted : PermGroup.NotInUse;
+        }
         var inUse = item.Id == LoginId || Needed(item, modules, notifications);
         if (!inUse)
         {

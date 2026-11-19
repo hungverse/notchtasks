@@ -30,6 +30,7 @@ public static class ModuleGlyphs
         ["plug"] = "",        // power symbol, the stand-in for the plug: unplugged
         ["batterylow"] = "",  // an almost empty battery: low battery
         ["warning"] = "",
+        ["thermometer"] = "\uE9CA",  // thermometer: the header temperature (Segoe Fluent Icons E9CA)
     };
 
     /// The glyph for a name, or the fallback when the name is not in the map.

@@ -98,7 +98,7 @@ public partial class OnboardingWindow : Window
         0 => Welcome(),
         1 => Pane(page, () => new ModulesPane(Settings)),
         2 => Pane(page, () => new WatchingPane(Settings)),
-        3 => Pane(page, () => new PermissionsPane(Settings)),
+        3 => Pane(page, () => new PermissionsPane(Settings, _state.Helper)),
         _ => Ready(),
     };
 
