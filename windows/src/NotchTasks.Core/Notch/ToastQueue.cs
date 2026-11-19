@@ -60,13 +60,13 @@ public sealed class ToastQueue
         {
             return false;
         }
+        if (now - _shownAt < ShowTime(Current))
+        {
+            return false;
+        }
         if (hovered)
         {
             _calm = now;
-            return false;
-        }
-        if (now - _shownAt < ShowTime(Current))
-        {
             return false;
         }
         if (_calm is { } calm && now - calm < CalmTime)

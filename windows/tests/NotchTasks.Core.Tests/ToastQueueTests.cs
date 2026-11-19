@@ -80,6 +80,48 @@ public class ToastQueueTests
     }
 
     [Fact]
+    public void Hover_before_show_time_does_not_extend()
+    {
+        var q = new ToastQueue();
+        var a = T("a");
+        q.Enqueue(a, T0);
+
+        q.Tick(T0.AddSeconds(4.0), hovered: true);
+        q.Tick(T0.AddSeconds(4.2), hovered: false);
+        Assert.Same(a, q.Current);
+
+        q.Tick(T0.AddSeconds(4.5), hovered: false);
+        Assert.Null(q.Current);
+    }
+
+    [Fact]
+    public void DropModule_raises_Changed_when_it_removes_the_shown_toast()
+    {
+        var q = new ToastQueue();
+        q.Enqueue(T("net", module: "network"), T0);
+        var count = 0;
+        q.Changed += () => count++;
+
+        q.DropModule("network", T0.AddSeconds(1));
+
+        Assert.Equal(1, count);
+        Assert.Null(q.Current);
+    }
+
+    [Fact]
+    public void Clear_raises_Changed_when_a_toast_was_showing()
+    {
+        var q = new ToastQueue();
+        q.Enqueue(T("a"), T0);
+        var count = 0;
+        q.Changed += () => count++;
+
+        q.Clear();
+
+        Assert.Equal(1, count);
+    }
+
+    [Fact]
     public void Dismiss_shows_next()
     {
         var q = new ToastQueue();
