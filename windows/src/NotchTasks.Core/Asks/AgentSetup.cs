@@ -18,12 +18,13 @@ public static class AgentSetup
         kind == AgentKind.Claude || FindCli(AgentKinds.Spec(kind).Cli, home, path) is not null;
 
     /// The full path of a CLI found on PATH or in one of the usual folders, or null. The folders are the npm global ones and
-    /// ~/.local/bin, ~/.npm-global/bin and ~/.opencode/bin.
-    public static string? FindCli(string name, string home, string? path = null)
+    /// ~/.local/bin, ~/.npm-global/bin and ~/.opencode/bin. `appData` is the %APPDATA% folder to search (null: the real one);
+    /// tests pass a temp folder so they never see the machine's npm folder.
+    public static string? FindCli(string name, string home, string? path = null, string? appData = null)
     {
         var dirs = (path ?? Environment.GetEnvironmentVariable("PATH") ?? "")
             .Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries).ToList();
-        var appData = Environment.GetEnvironmentVariable("APPDATA");
+        appData ??= Environment.GetEnvironmentVariable("APPDATA");
         if (!string.IsNullOrEmpty(appData))
         {
             dirs.Add(Path.Combine(appData, "npm"));

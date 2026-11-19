@@ -1,28 +1,26 @@
-using System.ComponentModel;
-using System.Diagnostics;
 using System.Text.Json;
 using NotchTasks.Core.Asks;
 
 namespace NotchTasks.Core.Agents;
 
 /// Which models LM Studio and Ollama have loaded (Electron: providers.js lmStudioLoaded, parseLMStudio, ollamaLoaded,
-/// parseOllama; Mac: Providers.swift LocalModels).
+/// parseOllama; Mac: Providers.swift LocalModels). Core only parses and decides; the app starts `lms` (Services/LmsRunner).
 public static class LocalModels
 {
     private const string OllamaPsUrl = "http://127.0.0.1:11434/api/ps";
-    private static readonly TimeSpan OllamaTimeout = TimeSpan.FromSeconds(2);
-    private static readonly TimeSpan LmsTimeout = TimeSpan.FromSeconds(5);
+    private static readonly TimeSpan OllamaTimeout = TimeSpan.FromSeconds(1.5);
 
-    /// The models in `lms ps --json`. The lms CLI is found by AgentSetup.FindCli, else at ~/.lmstudio/bin/lms.exe. Empty when
-    /// there is no lms or it fails. Call it only while LM Studio runs. `path` is the PATH to search (null: this process's PATH).
-    public static IReadOnlyList<string> LmStudioLoaded(string home, string? path = null)
+    /// The models in `lms ps --json`. The lms CLI is found by AgentSetup.FindCli, else at ~/.lmstudio/bin/lms.exe; when there
+    /// is none, runLmsPsJson is not called and the list is empty. runLmsPsJson takes the lms path and returns the command's
+    /// stdout, or null when it fails. `path` is the PATH to search (null: this process's PATH); `appData` as in FindCli.
+    public static IReadOnlyList<string> LmStudioLoaded(string home, Func<string, string?> runLmsPsJson, string? path = null, string? appData = null)
     {
-        var lms = AgentSetup.FindCli("lms", home, path) ?? Path.Combine(home, ".lmstudio", "bin", "lms.exe");
+        var lms = AgentSetup.FindCli("lms", home, path, appData) ?? Path.Combine(home, ".lmstudio", "bin", "lms.exe");
         if (!File.Exists(lms))
         {
             return Array.Empty<string>();
         }
-        var output = RunLms(lms);
+        var output = runLmsPsJson(lms);
         return output is null ? Array.Empty<string>() : ParseLMStudio(output);
     }
 
@@ -78,38 +76,4 @@ public static class LocalModels
             .ToList();
     }
 
-    /// Runs `lms ps --json` and returns its output, or null when it fails or does not finish in time. Output and errors are
-    /// read while it runs, so a chatty process cannot stall on a full pipe.
-    private static string? RunLms(string exe)
-    {
-        try
-        {
-            var info = new ProcessStartInfo(exe)
-            {
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-            };
-            info.ArgumentList.Add("ps");
-            info.ArgumentList.Add("--json");
-            using var process = Process.Start(info);
-            if (process is null)
-            {
-                return null;
-            }
-            var output = process.StandardOutput.ReadToEndAsync();
-            _ = process.StandardError.ReadToEndAsync();
-            if (!process.WaitForExit(LmsTimeout))
-            {
-                process.Kill(entireProcessTree: true);
-                return null;
-            }
-            return output.Wait(TimeSpan.FromSeconds(1)) ? output.Result : null;
-        }
-        catch (Exception e) when (e is IOException or Win32Exception or InvalidOperationException)
-        {
-            return null;
-        }
-    }
 }

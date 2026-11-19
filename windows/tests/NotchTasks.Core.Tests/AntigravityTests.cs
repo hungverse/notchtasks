@@ -74,6 +74,7 @@ public sealed class AntigravityTests : IDisposable
         public int Status { get; set; } = 8;
         public string Project { get; set; } = "NotchTasks";
         public bool Failing { get; set; }
+        public bool MetadataFailing { get; set; }
         public string? Empty { get; set; }
 
         public string? Query(string dbFile, string sql)
@@ -86,7 +87,7 @@ public sealed class AntigravityTests : IDisposable
             {
                 return Empty ?? $"[{{\"step_type\":{Type},\"status\":{Status}}}]";
             }
-            if (sql.Contains("trajectory_metadata_blob", StringComparison.Ordinal))
+            if (sql.Contains("trajectory_metadata_blob", StringComparison.Ordinal) && !MetadataFailing)
             {
                 return $"[{{\"h\":\"{Convert.ToHexString(Blob(Project))}\"}}]";
             }
@@ -238,6 +239,36 @@ public sealed class AntigravityTests : IDisposable
         var sql = new FakeSqlite { Type = 15, Status = 3 };
 
         Assert.Empty(new AntigravityScanner(root, sql).Jobs(t0));
+    }
+
+    [Fact]
+    public void AntigravityScanner_FailedReRead_KeepsTheOldEntry()
+    {
+        var root = Temp();
+        var db = Path.Combine(root, "conv-2.db");
+        File.WriteAllText(db, "x");
+        var t0 = new DateTimeOffset(2026, 11, 11, 6, 53, 0, TimeSpan.Zero);
+        File.SetLastWriteTimeUtc(db, t0.UtcDateTime);
+        var sql = new FakeSqlite { Type = 15, Status = 8, Project = "NotchTasks" };
+        var scanner = new AntigravityScanner(root, sql);
+        Assert.Single(scanner.Jobs(t0));
+
+        // the file changes, but the query now fails: the cached entry (active) stays, so the job stays
+        sql.Failing = true;
+        sql.Status = 3;
+        File.SetLastWriteTimeUtc(db, t0.AddSeconds(1).UtcDateTime);
+        var later = scanner.Jobs(t0.AddSeconds(60));
+        Assert.Single(later);
+        Assert.Equal("NotchTasks", later[0].Title);
+    }
+
+    [Fact]
+    public void ReadAntigravityConversation_MetadataQueryFails_WhileStepsSucceed_IsNull()
+    {
+        var file = Path.Combine(Temp(), "conv-3.db");
+        File.WriteAllText(file, "x");
+
+        Assert.Null(AntigravityConversation.Read(file, new FakeSqlite { MetadataFailing = true }));
     }
 
     [Fact]
