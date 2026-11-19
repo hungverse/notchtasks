@@ -79,7 +79,8 @@ public partial class PillWindow : Window
     }
 
     private readonly DispatcherTimer _waitTimer = new() { Interval = TimeSpan.FromSeconds(1) };
-    private readonly AskSection _asks = new();  // the agents' section: one card per waiting ask
+    private readonly AskSection _asks = new();  // the agents' section's asks: one card per waiting ask
+    private readonly AgentCards _agentCards = new();  // the agents' section's item cards, kept per item
     private readonly Func<AppState, FrameworkElement?> _agentsSection;  // the builder this pill registered for "agents"
     private readonly TimerCard _timerCard = new();  // the timer's card: one element, refreshed by its builder
     private readonly Func<AppState, FrameworkElement?> _timerSection;  // the builder this pill registered for "timer"
@@ -126,8 +127,9 @@ public partial class PillWindow : Window
         ToastBox.Opened += OnToastOpened;
         ToastBox.Dismissed += () => _state.Toasts.Dismiss(DateTimeOffset.Now);
 
-        // The agents' section is the ask cards. Other modules register their sections the same way.
-        _agentsSection = _ => _state.Asks.Count > 0 ? _asks.Panel : null;
+        // The agents' section: the ask cards first, then one card per running agent (not a build). Other modules register the same way.
+        _agentsSection = state => _agentCards.Sync(state.Asks.Count > 0 ? _asks.Panel : null, state.Snapshot.Running,
+            state.Snapshot.Limits, state.Settings.ModuleColors, _chosenAccent, state.Processes, DateTimeOffset.Now);
         SectionRegistry.Register("agents", _agentsSection);
         // The timer's section is its card while a timer runs.
         _timerSection = state => _timerCard.Update(state, _chosenAccent) ? _timerCard : null;

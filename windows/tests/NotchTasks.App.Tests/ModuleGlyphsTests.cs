@@ -10,6 +10,7 @@ public sealed class ModuleGlyphsTests
     {
         "hand", "question", "timer", "download", "drive", "phone", "phonedown", "video", "mic", "micoff", "camera",
         "wifi", "wifioff", "network", "vpn", "vpnoff", "battery", "batterylow", "bolt", "plug", "warning", "thermometer",
+        "check", "sparkles", "log",
     };
 
     /// Pairs of names that share a code point on purpose. Empty: every name has its own glyph.
@@ -70,5 +71,23 @@ public sealed class ModuleGlyphsTests
     {
         // Segoe Fluent Icons: Network is E968.
         Assert.Equal("", ModuleGlyphs.Get("network"));
+    }
+
+    [Fact]
+    public void Check_Sparkles_Log_AreTheFontGlyphs()
+    {
+        // Segoe Fluent Icons: CheckMark is E73E, Sparkle is E794, the text-lines glyph for a log is E8E2.
+        Assert.Equal("", ModuleGlyphs.Get("check"));
+        Assert.Equal("", ModuleGlyphs.Get("sparkles"));
+        Assert.Equal("", ModuleGlyphs.Get("log"));
+    }
+
+    [Fact]
+    public void Gauge_And_Hourglass_HaveVectorGeometry()
+    {
+        // The font has no gauge or hourglass glyph that was found in SegoeIcons.ttf (E916 is a stopwatch), so both are drawn.
+        Assert.NotNull(ModuleGlyphs.Vector("gauge"));
+        Assert.NotNull(ModuleGlyphs.Vector("hourglass"));
+        Assert.Null(ModuleGlyphs.Vector("check"));
     }
 }

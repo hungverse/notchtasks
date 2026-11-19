@@ -1,0 +1,33 @@
+<UserControl x:Class="NotchTasks.Pill.Sections.ItemCard"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             FontFamily="Segoe UI Variable Text, Segoe UI" Foreground="White" Focusable="False">
+  <!-- Mac ItemCard (Views.swift): the item's icon, name, limit badges and job count; then up to four job rows and "+n more tasks".
+       The rows are built in code (ItemCard.cs) and kept for the card's life. -->
+  <Border CornerRadius="14" Padding="10" Background="#0FFFFFFF" Focusable="False">
+    <StackPanel Focusable="False">
+      <Grid x:Name="Header" Background="Transparent" Cursor="Hand" Focusable="False">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <ContentControl x:Name="IconHost" Grid.Column="0" Width="20" Height="20" VerticalAlignment="Center" Focusable="False" />
+        <TextBlock x:Name="NameText" Grid.Column="1" Margin="8,0,0,0" FontSize="13" FontWeight="SemiBold"
+                   VerticalAlignment="Center" Focusable="False" />
+        <StackPanel x:Name="Badges" Grid.Column="3" Orientation="Horizontal" Margin="6,0,0,0" VerticalAlignment="Center"
+                    Focusable="False" />
+        <Border x:Name="CountPill" Grid.Column="4" CornerRadius="8" Height="16" Padding="6,0" Margin="8,0,0,0"
+                VerticalAlignment="Center" Focusable="False">
+          <TextBlock x:Name="CountText" FontSize="11" FontWeight="Bold" Foreground="Black" VerticalAlignment="Center"
+                     Focusable="False" />
+        </Border>
+      </Grid>
+      <StackPanel x:Name="Rows" Margin="0,7,0,0" Focusable="False" />
+      <TextBlock x:Name="MoreText" Margin="28,7,0,0" FontSize="11" Foreground="#8E8E93" Visibility="Collapsed"
+                 Focusable="False" />
+    </StackPanel>
+  </Border>
+</UserControl>

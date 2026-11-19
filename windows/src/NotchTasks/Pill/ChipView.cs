@@ -2,14 +2,18 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Shapes;
 using NotchTasks.ControlPanel;
 using NotchTasks.Core;
+using NotchTasks.Core.Agents;
+using NotchTasks.Core.Limits;
 using NotchTasks.Core.Notch;
 
 namespace NotchTasks.Pill;
 
 /// The closed pill's chips as they sit in the wings (Mac ChipView). A chip's lead is its glyph; its trail is its text: the
-/// ask's words, the timer's time left, and the call's time so far (green, red while muted). A sensor chip has its glyphs only.
+/// ask's words, the timer's time left, the call's time so far (green, red while muted), an agent's working count and a limit's
+/// percentage (or its wait). A sensor chip has its glyphs only.
 public static class ChipView
 {
     private const string SegoeFont = "Segoe Fluent Icons, Segoe MDL2 Assets";
@@ -21,10 +25,10 @@ public static class ChipView
 
     /// One chip as a panel for a wing: its lead, then its trail. Null when the chip has neither to show.
     public static FrameworkElement? Panel(Chip chip, Color? accent, IReadOnlyDictionary<string, string> moduleColors,
-        DateTimeOffset now, bool lead, bool trail)
+        DateTimeOffset now, bool lead, bool trail, IProcessReader? processes = null)
     {
         var panel = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(3, 0, 3, 0) };
-        if (lead && Lead(chip, 18, accent, moduleColors) is { } leadElement)
+        if (lead && Lead(chip, 18, accent, moduleColors, processes) is { } leadElement)
         {
             panel.Children.Add(leadElement);
         }
@@ -36,9 +40,19 @@ public static class ChipView
     }
 
     /// The chip's glyph in its tint: the timer's, the call's (phone, video or muted mic) and the sensor's (mic and/or camera).
-    /// An ask has no glyph here: its trail is its text.
-    public static FrameworkElement? Lead(Chip chip, double size, Color? accent, IReadOnlyDictionary<string, string> moduleColors)
+    /// An agent's lead is its item icon. A limit's is a gauge, or an hourglass at 100 %, in its own colour. An ask has no glyph
+    /// here: its trail is its text.
+    public static FrameworkElement? Lead(Chip chip, double size, Color? accent, IReadOnlyDictionary<string, string> moduleColors,
+        IProcessReader? processes = null)
     {
+        if (chip.Kind == ChipKind.Agent && chip.Agent is { } agent)
+        {
+            return ItemIcon.Element(agent, size, TintOf(chip, accent, moduleColors), processes);
+        }
+        if (chip.Kind == ChipKind.Limit && chip.Limit is { } limit)
+        {
+            return Vector(limit.W.Used >= 100 ? "hourglass" : "gauge", size, new SolidColorBrush(LimitColor(limit.W.Used)));
+        }
         var brush = HexColor.Brush(ToHex(TintOf(chip, accent, moduleColors)));
         if (chip.Kind == ChipKind.Sensor)
         {
@@ -73,8 +87,24 @@ public static class ChipView
         VerticalAlignment = VerticalAlignment.Center,
     };
 
-    /// The chip's text: "Waiting for you" (one ask) or "{0} waiting" (more) in orange, a running timer's time left, and a call's
-    /// time so far in green (red while the mic is muted). Null for a chip with no text (the sensor).
+    /// A drawn glyph (the gauge and the hourglass, which the font does not have) in a brush, in a size by size box.
+    private static Path Vector(string name, double size, Brush brush) => new()
+    {
+        Data = Geometry.Parse(ModuleGlyphs.Vector(name) ?? string.Empty),
+        Stroke = brush,
+        StrokeThickness = 1.5,
+        Stretch = Stretch.Uniform,
+        Width = size,
+        Height = size,
+        VerticalAlignment = VerticalAlignment.Center,
+    };
+
+    /// A limit's colour: red from 95 % used, else orange (the Mac's `w.used >= 95 ? .red : .orange`).
+    public static Color LimitColor(double used) => used >= 95 ? CallRed : AskOrange;
+
+    /// The chip's text: "Waiting for you" (one ask) or "{0} waiting" (more) in orange, a running timer's time left, a call's time
+    /// so far in green (red while the mic is muted), an agent's working count in its tint, and a limit's percentage, or "Waiting"
+    /// and its reset time at 100 %. Null for a chip with no text (the sensor).
     public static FrameworkElement? Trail(Chip chip, double size, Color? accent, IReadOnlyDictionary<string, string> moduleColors, DateTimeOffset now)
     {
         switch (chip.Kind)
@@ -111,34 +141,67 @@ public static class ChipView
                     Margin = new Thickness(6, 0, 6, 0),
                     VerticalAlignment = VerticalAlignment.Center,
                 };
+            case ChipKind.Agent when chip.Agent is { } agent:
+                return new TextBlock
+                {
+                    Text = agent.Jobs.Count(j => j.Working).ToString(CultureInfo.InvariantCulture),
+                    Foreground = HexColor.Brush(ToHex(TintOf(chip, accent, moduleColors))),
+                    FontSize = size,
+                    FontWeight = FontWeights.Bold,
+                    Margin = new Thickness(6, 0, 6, 0),
+                    VerticalAlignment = VerticalAlignment.Center,
+                };
+            case ChipKind.Limit when chip.Limit is { } limit:
+                return LimitTrail(limit, size, now);
             default:
                 return null;
         }
     }
 
+    /// A limit's trail (Mac NotchView .limit): when you can go again at 100 %, else the percentage used; the tooltip names the limit.
+    private static TextBlock LimitTrail(LimitChip limit, double size, DateTimeOffset now)
+    {
+        var used = limit.W.Used;
+        return new TextBlock
+        {
+            Text = used >= 100
+                ? L10n.L("Waiting ") + Limit.ResetText(limit.W, now, CultureInfo.CurrentCulture, TimeZoneInfo.Local)
+                : $"{(int)used}%",
+            Foreground = new SolidColorBrush(LimitColor(used)),
+            FontSize = size,
+            FontWeight = FontWeights.Bold,
+            Margin = new Thickness(6, 0, 6, 0),
+            VerticalAlignment = VerticalAlignment.Center,
+            ToolTip = L10n.L("{0} used {1}% of its {2} limit", limit.Name, (int)used, limit.W.Label),
+        };
+    }
+
     /// Fills the wings with the closed pill's chips, inside the badges already in them: a badge is always the outermost item of
     /// its wing. The left wing reads badges then chips; the right wing reads chips then badges. A lone chip shows its lead on the
     /// left and its trail on the right; the others sit whole in the wing ChipBoard.Sides puts them in. Returns how many chips there are.
-    public static int FillWings(StackPanel left, StackPanel right, AppState state, Color? accent)
+    public static int FillWings(StackPanel left, StackPanel right, AppState state, Color? accent) =>
+        Fill(left, right, ChipBoard.Chips(state.Snapshot), state.Settings.Placements, state.Settings.ModuleColors, accent,
+            DateTimeOffset.Now, state.Processes);
+
+    /// FillWings with its inputs given: the same placement, order and badge rule. Returns how many chips there are.
+    public static int Fill(StackPanel left, StackPanel right, IReadOnlyList<Chip> chips, IReadOnlyDictionary<string, string> placements,
+        IReadOnlyDictionary<string, string> colors, Color? accent, DateTimeOffset now, IProcessReader? processes)
     {
         RemoveChips(left);
         RemoveChips(right);
-        var chips = ChipBoard.Chips(state.Snapshot);
-        var (leftChips, rightChips, single) = ChipBoard.Sides(chips, state.Settings.Placements);
-        var colors = state.Settings.ModuleColors;
-        var now = DateTimeOffset.Now;
+        var (leftChips, rightChips, single) = ChipBoard.Sides(chips, placements);
         if (single is { } lone)
         {
-            AddTo(left, lone, accent, colors, now, lead: true, trail: false, rightWing: false);
-            AddTo(right, lone, accent, colors, now, lead: false, trail: true, rightWing: true);
+            AddTo(left, lone, accent, colors, now, lead: true, trail: false, rightWing: false, processes);
+            AddTo(right, lone, accent, colors, now, lead: false, trail: true, rightWing: true, processes);
         }
         foreach (var chip in leftChips)
         {
-            AddTo(left, chip, accent, colors, now, lead: true, trail: true, rightWing: false);
+            AddTo(left, chip, accent, colors, now, lead: true, trail: true, rightWing: false, processes);
         }
         foreach (var chip in rightChips)
         {
-            AddTo(right, chip, accent, colors, now, lead: true, trail: true, rightWing: true);
+            AddTo(right, chip, accent, colors, now, lead: true, trail: true, rightWing: true, processes);
         }
         return chips.Count;
     }
@@ -146,9 +209,9 @@ public static class ChipView
     /// Adds a chip's panel to a wing. A left wing's chips go after its badges; a right wing's chips go before its badges, after
     /// the chips already there, so their order holds.
     private static void AddTo(StackPanel wing, Chip chip, Color? accent, IReadOnlyDictionary<string, string> colors,
-        DateTimeOffset now, bool lead, bool trail, bool rightWing)
+        DateTimeOffset now, bool lead, bool trail, bool rightWing, IProcessReader? processes)
     {
-        if (Panel(chip, accent, colors, now, lead, trail) is { } panel)
+        if (Panel(chip, accent, colors, now, lead, trail, processes) is { } panel)
         {
             panel.Tag = ChipTag;
             if (rightWing)
