@@ -1,7 +1,9 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Text.Json.Nodes;
 using NotchTasks.Core.Asks;
+using NotchTasks.Core.Modules;
 using NotchTasks.Core.Notch;
 using NotchTasks.Pill;
 using Xunit;
@@ -26,6 +28,45 @@ public sealed class PillWindowTests
                 content.Measure(new Size(1200, 600));
                 content.Arrange(new Rect(0, 0, 1200, 600));
                 Assert.True(content.IsArrangeValid);
+            }
+            finally
+            {
+                pill.Close();
+            }
+        });
+    }
+
+    [Fact]
+    public void Header_ShowsTheLoadMeters_OnlyWithALoadAndSystemLoadOn()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            var pill = new PillWindow(state);
+            try
+            {
+                var summary = Fixture.Named<UIElement>(pill, "HeaderSummary");
+                var meters = Fixture.Named<UIElement>(pill, "LoadMeters");
+
+                // No load yet: the summary text stays.
+                state.Publish();
+                Assert.Equal(Visibility.Visible, summary.Visibility);
+                Assert.Equal(Visibility.Collapsed, meters.Visibility);
+
+                // A load and SystemLoad on: the CPU and RAM meters take the summary's place.
+                state.Health.Sample(new CpuTimes(0, 0, 0), 0.4);
+                state.Health.Sample(new CpuTimes(50, 70, 30), 0.4);
+                state.Publish();
+                Assert.NotNull(state.Snapshot.Load);
+                Assert.Equal(Visibility.Collapsed, summary.Visibility);
+                Assert.Equal(Visibility.Visible, meters.Visibility);
+
+                // SystemLoad off: the summary text is back, even with a load.
+                state.Settings.Set("systemLoad", JsonValue.Create(false));
+                state.Publish();
+                Assert.Equal(Visibility.Visible, summary.Visibility);
+                Assert.Equal(Visibility.Collapsed, meters.Visibility);
             }
             finally
             {

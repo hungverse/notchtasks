@@ -36,6 +36,21 @@ internal static partial class NativeMethods
     /// Frees a string the shell or COM allocated (the path from SHGetKnownFolderPath).
     [LibraryImport("ole32.dll")]
     public static partial void CoTaskMemFree(nint memory);
+
+    /// The idle, kernel and user CPU times since boot, each a FILETIME (100 ns ticks) read as one 64-bit value. Kernel includes idle.
+    [LibraryImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool GetSystemTimes(out ulong idle, out ulong kernel, out ulong user);
+
+    /// The memory status. status.Length must be set to the struct's size before the call.
+    [LibraryImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool GlobalMemoryStatusEx(ref MemoryStatusEx status);
+
+    /// The free bytes available to the caller on the volume of directoryName (the W entry point; the A one is never used).
+    [LibraryImport("kernel32.dll", EntryPoint = "GetDiskFreeSpaceExW", StringMarshalling = StringMarshalling.Utf16, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool GetDiskFreeSpaceEx(string directoryName, out ulong freeBytesAvailable, out ulong totalNumberOfBytes, out ulong totalNumberOfFreeBytes);
 }
 
 /// PROCESS_BASIC_INFORMATION: only InheritedFromUniqueProcessId (the parent pid) is read.
@@ -60,4 +75,19 @@ internal struct SystemPowerStatus
     public byte SystemStatusFlag;
     public uint BatteryLifeTime;
     public uint BatteryFullLifeTime;
+}
+
+/// MEMORYSTATUSEX: only MemoryLoad (dwMemoryLoad, the percent in use) is read; the rest keeps the Windows layout.
+[StructLayout(LayoutKind.Sequential)]
+internal struct MemoryStatusEx
+{
+    public uint Length;
+    public uint MemoryLoad;
+    public ulong TotalPhys;
+    public ulong AvailPhys;
+    public ulong TotalPageFile;
+    public ulong AvailPageFile;
+    public ulong TotalVirtual;
+    public ulong AvailVirtual;
+    public ulong AvailExtendedVirtual;
 }

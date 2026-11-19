@@ -23,6 +23,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
     private readonly AskTracker _tracker = new();
     private readonly ModuleHost _host;
     private readonly BatterySource _batterySource;
+    private readonly HealthSource _healthSource;
     private AskWatcher? _watcher;
     private bool _disposed;
 
@@ -38,6 +39,8 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         _batterySource = new BatterySource(Battery, Publish);
         Network = new NetworkModule(this);
         Downloads = new DownloadsModule(this, DownloadFolder.Locate() ?? string.Empty);
+        Health = new HealthModule(this);
+        _healthSource = new HealthSource(Health, Publish, settings);
         _host = new ModuleHost(CreateSources(), OnTurnedOff, (message, e) => ErrorLog.Write(new InvalidOperationException(message, e)));
         _host.Apply(ActiveModules(settings));
         Snapshot = BuildSnapshot();
@@ -63,6 +66,9 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
 
     /// The downloads: it only makes toasts (no snapshot field), so Publish is not needed.
     public DownloadsModule Downloads { get; }
+
+    /// The health module: its disk warning is a toast, and its load is the snapshot's Load (null when not sampled).
+    public HealthModule Health { get; }
 
     /// The state the closed pill's chips are built from. Rebuilt by Publish.
     public NotchSnapshot Snapshot { get; private set; }
@@ -199,6 +205,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
             ["battery"] = _batterySource,
             ["network"] = new NetworkSource(Network),
             ["downloads"] = new DownloadsSource(Downloads),
+            ["health"] = _healthSource,
         };
 
     /// The snapshot's ask count: the asks belong to the agents module, so none count while it is off.
@@ -212,7 +219,16 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         null,
         new SensorState(Array.Empty<string>(), false, false),
         Battery.State,
-        null);
+        Health.Load);
+    }
+
+    /// The open pill starts or stops the load sampling: the CPU and RAM are read only while the pill is open (and SystemLoad is on).
+    public void PillOpened(bool open)
+    {
+        if (!_disposed)
+        {
+            _healthSource.PillOpened(open);
+        }
     }
 
     /// Starts and stops the module sources when the modules or the disabled list change.
@@ -223,6 +239,10 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
             if (keys.Any(k => k is "modules" or "disabled"))
             {
                 ApplyModules();
+            }
+            if (!_disposed && keys.Any(k => k == "systemLoad"))
+            {
+                _healthSource.SystemLoadChanged();
             }
         }));
 

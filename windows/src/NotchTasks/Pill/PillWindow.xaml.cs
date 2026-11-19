@@ -20,6 +20,7 @@ using NotchTasks.Core.Motion;
 using NotchTasks.Core.Notch;
 using NotchTasks.Core.Settings;
 using NotchTasks.Pill.Sections;
+using NotchTasks.Services;
 
 namespace NotchTasks.Pill;
 
@@ -77,6 +78,8 @@ public partial class PillWindow : Window
     private readonly Func<AppState, FrameworkElement?> _agentsSection;  // the builder this pill registered for "agents"
     private readonly TimerCard _timerCard = new();  // the timer's card: one element, refreshed by its builder
     private readonly Func<AppState, FrameworkElement?> _timerSection;  // the builder this pill registered for "timer"
+    private readonly LoadMeter _cpuMeter = new("CPU", 0);  // the header's CPU meter, shown while SystemLoad is on
+    private readonly LoadMeter _ramMeter = new("RAM", 0) { Margin = new Thickness(10, 0, 0, 0) };  // 10 DIP after the CPU
     private Toast? _shownToast;  // the toast the pill shows now; null when none
     private int _animation;  // counts the animations; only the last one's completion clears _closing
     private bool _animating;  // a shape animation runs: the poll evaluates click-through on every tick
@@ -89,7 +92,11 @@ public partial class PillWindow : Window
         _state = state;
         InitializeComponent();
 
-        HeaderSummary.Text = PillSummary.For(_state.Snapshot);
+        LoadMeters.Children.Add(_cpuMeter);
+        LoadMeters.Children.Add(_ramMeter);
+        _cpuMeter.Clicked += OpenTaskManager;
+        _ramMeter.Clicked += OpenTaskManager;
+        SyncHeader();
         CardLayer.Effect = _cardBlur;
         // The gear opens the Control Panel and closes the pill; the power button quits (as the tray's Quit does).
         Bar.ControlPanelRequested += () =>
@@ -324,6 +331,7 @@ public partial class PillWindow : Window
         ApplyAppearance();
         _closeTimer.Start();
         SyncWaitTimer();
+        _state.PillOpened(true);  // the load is sampled while the pill is open
     }
 
     /// The cards' "Waiting m:ss" ticks once a second, while the open pill shows a waiting ask.
@@ -356,6 +364,31 @@ public partial class PillWindow : Window
         Animate(Mode.Closed);  // sets _closing: the pill stays visible until the close spring has finished
         ApplyAppearance();
         SyncToast();  // a toast that came in while the pill was open shows now
+        _state.PillOpened(false);  // no load is sampled while the pill is closed; the meters are forgotten
+    }
+
+    /// A meter was clicked: the pill closes and Task Manager opens.
+    private void OpenTaskManager()
+    {
+        ClosePill();
+        SystemActions.OpenTaskManager();
+    }
+
+    /// The header: the summary text, or the CPU and RAM meters while SystemLoad is on and a load is known. The meters ease to
+    /// each new value unless animations are off or the motion is reduced.
+    private void SyncHeader()
+    {
+        HeaderSummary.Text = PillSummary.For(_state.Snapshot);
+        var load = _state.Snapshot.Load;
+        var meters = _state.Settings.SystemLoad && load is not null;
+        HeaderSummary.Visibility = meters ? Visibility.Collapsed : Visibility.Visible;
+        LoadMeters.Visibility = meters ? Visibility.Visible : Visibility.Collapsed;
+        if (load is not null)
+        {
+            var animate = SystemParameters.ClientAreaAnimation && _state.Settings.Motion != "reduced";
+            _cpuMeter.Show(load.Cpu, animate);
+            _ramMeter.Show(load.Memory, animate);
+        }
     }
 
     /// Brings the pill's toast in line with the queue: the pill springs into the toast's shape while one is up and the pill is
@@ -625,7 +658,7 @@ public partial class PillWindow : Window
         RebuildChips();
         SyncSections();
         Bar.Update(_state);
-        HeaderSummary.Text = PillSummary.For(_state.Snapshot);
+        SyncHeader();
         SyncWaitTimer();
         if (_open)
         {
@@ -659,6 +692,7 @@ public partial class PillWindow : Window
         }
         RebuildChips();  // the chips follow the accent and the module colours
         Bar.Update(_state);
+        SyncHeader();
         ApplyAppearance();
     }
 
@@ -739,6 +773,10 @@ public partial class PillWindow : Window
 
     private void OnClosed(object? sender, EventArgs e)
     {
+        if (_open)
+        {
+            _state.PillOpened(false);
+        }
         _pollTimer.Stop();
         _closeTimer.Stop();
         _waitTimer.Stop();
@@ -758,7 +796,7 @@ public partial class PillWindow : Window
     /// with until they are made again: rebuilding a card would lose what was picked in it.
     private void OnLanguageChanged()
     {
-        HeaderSummary.Text = PillSummary.For(_state.Snapshot);
+        SyncHeader();
         RebuildChips();
         ApplyAppearance();
     }
