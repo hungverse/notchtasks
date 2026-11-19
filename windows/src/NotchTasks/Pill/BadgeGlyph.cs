@@ -29,7 +29,7 @@ public static class BadgeGlyph
     }
 
     /// Puts the settings' badges in their wings, replacing the badges already there: a badge with "right" set goes to the
-    /// right wing. Returns how many badges there are.
+    /// right wing. Badges are the outer edge of their wing; ChipView puts the chips inside them. Returns how many badges there are.
     public static int FillWings(StackPanel left, StackPanel right, JsonArray badges, Color accent)
     {
         left.Children.Clear();

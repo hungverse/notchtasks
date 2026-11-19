@@ -116,8 +116,9 @@ public static class ChipView
         }
     }
 
-    /// Fills the wings with the closed pill's chips, after the badges already in them. A lone chip shows its lead on the left
-    /// and its trail on the right; the others sit whole in the wing ChipBoard.Sides puts them in. Returns how many chips there are.
+    /// Fills the wings with the closed pill's chips, inside the badges already in them: a badge is always the outermost item of
+    /// its wing. The left wing reads badges then chips; the right wing reads chips then badges. A lone chip shows its lead on the
+    /// left and its trail on the right; the others sit whole in the wing ChipBoard.Sides puts them in. Returns how many chips there are.
     public static int FillWings(StackPanel left, StackPanel right, AppState state, Color? accent)
     {
         RemoveChips(left);
@@ -128,29 +129,41 @@ public static class ChipView
         var now = DateTimeOffset.Now;
         if (single is { } lone)
         {
-            AddTo(left, lone, accent, colors, now, lead: true, trail: false);
-            AddTo(right, lone, accent, colors, now, lead: false, trail: true);
+            AddTo(left, lone, accent, colors, now, lead: true, trail: false, rightWing: false);
+            AddTo(right, lone, accent, colors, now, lead: false, trail: true, rightWing: true);
         }
         foreach (var chip in leftChips)
         {
-            AddTo(left, chip, accent, colors, now, lead: true, trail: true);
+            AddTo(left, chip, accent, colors, now, lead: true, trail: true, rightWing: false);
         }
         foreach (var chip in rightChips)
         {
-            AddTo(right, chip, accent, colors, now, lead: true, trail: true);
+            AddTo(right, chip, accent, colors, now, lead: true, trail: true, rightWing: true);
         }
         return chips.Count;
     }
 
+    /// Adds a chip's panel to a wing. A left wing's chips go after its badges; a right wing's chips go before its badges, after
+    /// the chips already there, so their order holds.
     private static void AddTo(StackPanel wing, Chip chip, Color? accent, IReadOnlyDictionary<string, string> colors,
-        DateTimeOffset now, bool lead, bool trail)
+        DateTimeOffset now, bool lead, bool trail, bool rightWing)
     {
         if (Panel(chip, accent, colors, now, lead, trail) is { } panel)
         {
             panel.Tag = ChipTag;
-            wing.Children.Add(panel);
+            if (rightWing)
+            {
+                wing.Children.Insert(ChipCount(wing), panel);
+            }
+            else
+            {
+                wing.Children.Add(panel);
+            }
         }
     }
+
+    /// How many chip panels a wing holds. In a right wing they are its first children, so this is where the next one goes.
+    private static int ChipCount(StackPanel wing) => wing.Children.OfType<FrameworkElement>().Count(e => e.Tag is ChipTag);
 
     private static void RemoveChips(StackPanel wing)
     {

@@ -7,7 +7,6 @@ public static class PillGeometry
     public const double ClosedHeight = 32;
     public const double ClosedRadius = 16;
     public const double OpenWidth = 520;
-    public const double OpenHeight = 220;
     public const double OpenRadius = 28;
 
     /// The open pill grows with its ask cards up to this height (the window is 420 high).

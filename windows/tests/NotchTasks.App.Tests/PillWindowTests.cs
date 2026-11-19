@@ -7,8 +7,10 @@ using System.Text.RegularExpressions;
 using NotchTasks.Core;
 using NotchTasks.Core.Asks;
 using NotchTasks.Core.Modules;
+using NotchTasks.Core.Motion;
 using NotchTasks.Core.Notch;
 using NotchTasks.Pill;
+using NotchTasks.Pill.Sections;
 using Xunit;
 
 namespace NotchTasks.AppTests;
@@ -186,6 +188,163 @@ public sealed class PillWindowTests
             }
         });
     }
+
+    [Fact]
+    public void Pill_EmptyOpen_BodySaysNothingRunning_AndFitsIt()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            state.Settings.Set("badges", JsonNode.Parse("[]"));
+            var pill = new PillWindow(state);
+            try
+            {
+                state.Publish();
+                Fixture.Call(pill, "OpenPill");
+                SettleOpen(pill);
+
+                var body = Fixture.Named<TextBlock>(pill, "EmptyText");
+                Assert.Equal(Visibility.Visible, body.Visibility);
+                Assert.Equal("Nothing running", body.Text);
+                // The fixed 220 DIP placeholder is gone: the top row, the header strip, the text and the quick bar fit the content.
+                Assert.True(Fixture.Field<double>(pill, "_targetHeight") < 220);
+            }
+            finally
+            {
+                pill.Close();
+            }
+        });
+    }
+
+    [Fact]
+    public void Pill_EmptyOpen_WithABadge_HasNoBodyText()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            // A badge is a chip-like "collapsed" item (the Mac's hasCollapsed): no section, so no body text.
+            state.Settings.Set("badges", JsonNode.Parse("[{\"symbol\":\"seg:E700\",\"right\":false}]"));
+            var pill = new PillWindow(state);
+            try
+            {
+                state.Publish();
+                Fixture.Call(pill, "OpenPill");
+                SettleOpen(pill);
+
+                Assert.Equal(Visibility.Collapsed, Fixture.Named<TextBlock>(pill, "EmptyText").Visibility);
+                // Only the top row (32), the header strip (26) and the quick bar's margin (32) remain.
+                Assert.Equal(PillGeometry.ClosedHeight + 26 + 32, Fixture.Field<double>(pill, "_targetHeight"));
+            }
+            finally
+            {
+                pill.Close();
+            }
+        });
+    }
+
+    [Fact]
+    public void Pill_StartingATimerFromTheQuickBar_KeepsThePointerInsideThePill()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            state.Settings.Set("modules", JsonNode.Parse("[\"timer\"]"));
+            state.Settings.Set("disabled", JsonNode.Parse("[]"));
+            state.Settings.Set("badges", JsonNode.Parse("[]"));
+            var pill = new PillWindow(state);
+            try
+            {
+                state.Publish();
+                Fixture.Call(pill, "OpenPill");
+                SettleOpen(pill);
+
+                // The pointer rests on the 5′ pill, as it does when the user clicks it.
+                var button = Fixture.Named<Button>(Fixture.Named<QuickBar>(pill, "Bar"), "Timer5");
+                var pointer = CentreInPill(pill, button);
+                Assert.True(InsideOpenPill(pill, pointer));
+
+                button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+
+                Assert.True(Fixture.Field<bool>(pill, "_open"));
+                Assert.NotNull(state.Timer.State);
+                Assert.Single(Fixture.Named<StackPanel>(pill, "SectionList").Children.OfType<TimerCard>());
+
+                // The pill settles on its new height: the pointer must still be over it, or the close check would close the pill.
+                SettleOpen(pill);
+                Assert.True(InsideOpenPill(pill, pointer));
+                Assert.True(Fixture.Field<bool>(pill, "_open"));
+            }
+            finally
+            {
+                pill.Close();
+            }
+        });
+    }
+
+    [Fact]
+    public void Badges_SitOutermost_ChipsInside()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            state.Settings.Set("modules", JsonNode.Parse("[\"timer\"]"));
+            state.Settings.Set("disabled", JsonNode.Parse("[]"));
+            state.Settings.Set("placements", JsonNode.Parse("{}"));  // a lone chip: its lead goes left, its trail right
+            state.Settings.Set("badges", JsonNode.Parse(
+                "[{\"symbol\":\"seg:E700\",\"right\":false},{\"symbol\":\"seg:E701\",\"right\":true}]"));
+            var pill = new PillWindow(state);
+            try
+            {
+                state.Timer.Start(5, DateTimeOffset.Now);
+                state.Publish();
+                var left = Fixture.Named<StackPanel>(pill, "LeftWing");
+                var right = Fixture.Named<StackPanel>(pill, "RightWing");
+
+                // Left: the badge is the outermost (first) child, the chip's lead follows it.
+                Assert.Contains(left.Children.OfType<UIElement>(), IsChip);
+                Assert.False(IsChip(left.Children[0]));
+                // Right: the badge is the outermost (last) child, the chip's trail comes before it.
+                Assert.Contains(right.Children.OfType<UIElement>(), IsChip);
+                Assert.False(IsChip(right.Children[right.Children.Count - 1]));
+            }
+            finally
+            {
+                pill.Close();
+            }
+        });
+    }
+
+    /// Lays the open pill out as it settles: the shape at its target size, and the content measured and arranged.
+    private static void SettleOpen(PillWindow pill)
+    {
+        var shape = Fixture.Named<FrameworkElement>(pill, "PillShape");
+        shape.BeginAnimation(FrameworkElement.WidthProperty, null);
+        shape.BeginAnimation(FrameworkElement.HeightProperty, null);
+        shape.Width = PillGeometry.OpenWidth;
+        shape.Height = Fixture.Field<double>(pill, "_targetHeight");
+        var content = Assert.IsAssignableFrom<UIElement>(pill.Content);
+        content.Measure(new Size(1200, 600));
+        content.Arrange(new Rect(0, 0, 1200, 600));
+        content.UpdateLayout();
+    }
+
+    /// The centre of an element, in the open pill's own DIP space (the origin is the pill's top-left corner).
+    private static Point CentreInPill(PillWindow pill, FrameworkElement element)
+    {
+        var shape = Fixture.Named<UIElement>(pill, "PillShape");
+        return element.TransformToAncestor(shape).Transform(new Point(element.ActualWidth / 2, element.ActualHeight / 2));
+    }
+
+    /// True when the point lies within the open pill's current height and width.
+    private static bool InsideOpenPill(PillWindow pill, Point p) =>
+        p.X >= 0 && p.X <= PillGeometry.OpenWidth && p.Y >= 0 && p.Y <= Fixture.Field<double>(pill, "_targetHeight");
+
+    /// A chip's panel in a wing carries the Tag "chip"; a badge does not.
+    private static bool IsChip(UIElement element) => element is FrameworkElement { Tag: "chip" };
 
     [Fact]
     public void Pill_WaitingAsk_ShowsInSummary()

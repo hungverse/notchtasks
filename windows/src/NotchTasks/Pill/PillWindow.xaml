@@ -116,6 +116,11 @@
                           HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
               <StackPanel x:Name="SectionList" />
             </ScrollViewer>
+            <!-- The body when no section has anything: "Nothing running", grey and centred, as the Mac's expandedView. It keeps the
+                 sections' margins, so the open height counts them the same way. Its text shows only with no badge or chip. -->
+            <Border x:Name="EmptyNote" Margin="0,26,0,32" VerticalAlignment="Top" HorizontalAlignment="Stretch">
+              <TextBlock x:Name="EmptyText" Foreground="Gray" FontSize="12" TextAlignment="Center" TextWrapping="Wrap" />
+            </Border>
             <!-- The quick bar of the open pill, bottom: the timers, then the Control Panel (gear) and Quit (power). -->
             <pill:QuickBar x:Name="Bar" VerticalAlignment="Bottom" Margin="12,0,12,6" />
           </Grid>

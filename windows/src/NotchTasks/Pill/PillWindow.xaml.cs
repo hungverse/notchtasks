@@ -548,16 +548,14 @@ public partial class PillWindow : Window
         _ => (PillGeometry.ClosedWidth, PillGeometry.ClosedHeight, PillGeometry.ClosedRadius),
     };
 
-    /// The open pill's height: the placeholder when no section has anything; otherwise the top row and the sections, up to MaxOpenHeight.
+    /// The open pill's height: the top row, then the body (the sections, or the "Nothing running" note when none has anything),
+    /// up to MaxOpenHeight. The body's DesiredSize holds its own margins (the 26 DIP header above, the 32 DIP quick bar below)
+    /// and its padding, so they are counted once, here.
     private double OpenHeight()
     {
-        if (SectionList.Children.Count == 0)
-        {
-            return PillGeometry.OpenHeight;
-        }
-        SectionScroll.Measure(new Size(PillGeometry.OpenWidth, double.PositiveInfinity));
-        // DesiredSize includes the scroll's own margin (the 26 DIP header above, the 32 DIP quick bar below) and its padding: added once, here.
-        return Math.Min(PillGeometry.MaxOpenHeight, PillGeometry.ClosedHeight + SectionScroll.DesiredSize.Height);
+        FrameworkElement body = SectionList.Children.Count > 0 ? SectionScroll : EmptyNote;
+        body.Measure(new Size(PillGeometry.OpenWidth, double.PositiveInfinity));
+        return Math.Min(PillGeometry.MaxOpenHeight, PillGeometry.ClosedHeight + body.DesiredSize.Height);
     }
 
     /// The toast's measured height for its current text.
@@ -666,6 +664,18 @@ public partial class PillWindow : Window
             sections[i].Margin = new Thickness(0, i == 0 ? 0 : 8, 0, 0);
         }
         SectionScroll.Visibility = sections.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        SyncEmptyNote(sections.Count == 0);
+    }
+
+    /// The body when no section has anything: "Nothing running", as the Mac's expandedView shows it, but only with no badge or
+    /// chip (the Mac's hasCollapsed). The note keeps its margins even without text, so the open height still counts them.
+    private void SyncEmptyNote(bool noSections)
+    {
+        var showText = noSections && !_hasCollapsed;
+        EmptyNote.Visibility = noSections ? Visibility.Visible : Visibility.Collapsed;
+        EmptyText.Text = L10n.L("Nothing running");
+        EmptyText.Visibility = showText ? Visibility.Visible : Visibility.Collapsed;
+        EmptyNote.Padding = showText ? new Thickness(0, 6, 0, 6) : new Thickness(0);
     }
 
     /// True when the panel holds exactly these elements, in this order.
@@ -730,6 +740,11 @@ public partial class PillWindow : Window
             RebuildBadges(badges);
         }
         RebuildChips();  // the chips follow the accent and the module colours
+        SyncSections();  // the "Nothing running" note follows the badges and chips it is hidden by
+        if (_open)
+        {
+            Animate(Mode.Open);  // the open pill's height follows the note
+        }
         Bar.Update(_state);
         SyncHeader();
         ApplyAppearance();
@@ -843,6 +858,7 @@ public partial class PillWindow : Window
     {
         SyncHeader();
         RebuildChips();
+        SyncEmptyNote(SectionList.Children.Count == 0);
         ApplyAppearance();
     }
 }
