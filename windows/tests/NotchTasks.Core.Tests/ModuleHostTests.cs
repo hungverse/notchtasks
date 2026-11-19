@@ -95,4 +95,98 @@ public class ModuleHostTests
         Assert.Equal(1, b.Stops);
         Assert.Empty(host.Running);
     }
+
+    /// A source whose Start or Stop throws.
+    private sealed class ThrowingSource : IModuleSource
+    {
+        private readonly bool _startThrows;
+        private readonly bool _stopThrows;
+
+        public ThrowingSource(bool startThrows, bool stopThrows)
+        {
+            _startThrows = startThrows;
+            _stopThrows = stopThrows;
+        }
+
+        public int Starts { get; private set; }
+        public int Stops { get; private set; }
+
+        public void Start()
+        {
+            Starts++;
+            if (_startThrows)
+            {
+                throw new InvalidOperationException("start failed");
+            }
+        }
+
+        public void Stop()
+        {
+            Stops++;
+            if (_stopThrows)
+            {
+                throw new InvalidOperationException("stop failed");
+            }
+        }
+    }
+
+    [Fact]
+    public void Apply_StartThrows_NotRunning_OthersStillStart()
+    {
+        var bad = new ThrowingSource(startThrows: true, stopThrows: false);
+        var good = new FakeSource();
+        var errors = new List<string>();
+        var host = new ModuleHost(
+            new Dictionary<string, IModuleSource> { ["bad"] = bad, ["good"] = good },
+            _ => { },
+            (message, _) => errors.Add(message));
+
+        host.Apply(["bad", "good"]);
+
+        Assert.Equal(1, bad.Starts);
+        Assert.DoesNotContain("bad", host.Running);
+        Assert.Equal(1, good.Starts);
+        Assert.Equal(new[] { "good" }, host.Running.ToArray());
+        Assert.Single(errors);
+    }
+
+    [Fact]
+    public void StopAll_StopThrows_OthersStillStopped()
+    {
+        var bad = new ThrowingSource(startThrows: false, stopThrows: true);
+        var good = new FakeSource();
+        var errors = new List<string>();
+        var host = new ModuleHost(
+            new Dictionary<string, IModuleSource> { ["bad"] = bad, ["good"] = good },
+            _ => { },
+            (message, _) => errors.Add(message));
+        host.Apply(["bad", "good"]);
+
+        host.StopAll();
+
+        Assert.Equal(1, bad.Stops);
+        Assert.Equal(1, good.Stops);
+        Assert.Empty(host.Running);
+        Assert.Single(errors);
+    }
+
+    [Fact]
+    public void Apply_StopThrows_StillCountsAsStopped_AndTurnedOff()
+    {
+        var bad = new ThrowingSource(startThrows: false, stopThrows: true);
+        var good = new FakeSource();
+        var turnedOff = new List<string>();
+        var host = new ModuleHost(
+            new Dictionary<string, IModuleSource> { ["bad"] = bad, ["good"] = good },
+            turnedOff.Add,
+            (_, _) => { });
+        host.Apply(["bad", "good"]);
+
+        host.Apply([]);
+
+        Assert.Equal(1, bad.Stops);
+        Assert.Equal(1, good.Stops);
+        Assert.Empty(host.Running);
+        Assert.Equal(new[] { "bad", "good" }.OrderBy(x => x).ToArray(), turnedOff.OrderBy(x => x).ToArray());
+    }
 }

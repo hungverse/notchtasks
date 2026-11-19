@@ -20,7 +20,6 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
     private readonly Dispatcher _dispatcher;
     private readonly AskStore _store;
     private readonly AskTracker _tracker = new();
-    private readonly Dictionary<string, IModuleSource> _sources = new(StringComparer.Ordinal);
     private readonly ModuleHost _host;
     private AskWatcher? _watcher;
     private bool _disposed;
@@ -32,7 +31,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         _store = store;
         _dispatcher = Dispatcher.CurrentDispatcher;
         Asks = new ObservableCollection<AgentAsk>();
-        _host = new ModuleHost(_sources, OnTurnedOff);
+        _host = new ModuleHost(CreateSources(), OnTurnedOff, (message, e) => ErrorLog.Write(new InvalidOperationException(message, e)));
         _host.Apply(ActiveModules(settings));
         Snapshot = BuildSnapshot();
         settings.Changed += OnSettingsChanged;
@@ -157,6 +156,11 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         Sticky: true,
         AskId: ask.Id,
         Module: "agents");
+
+    /// The module sources by module id, built once before the first Apply. Modules register their sources here: a module
+    /// with no entry is active but runs nothing. No module has a source yet.
+    private static IReadOnlyDictionary<string, IModuleSource> CreateSources() =>
+        new Dictionary<string, IModuleSource>(StringComparer.Ordinal);
 
     private NotchSnapshot BuildSnapshot() => new(
         ActiveModules(Settings),

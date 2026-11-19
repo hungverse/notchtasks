@@ -46,4 +46,24 @@ public sealed class AppStateTests
             Assert.Equal(0, state.Snapshot.AskCount);
         });
     }
+
+    [Fact]
+    public void AppState_RepeatedSyncAsks_SameAsk_EnqueuesOnlyOneToast()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            var ask = new AgentAsk("ask2", 1, "work", "Bash", "ls", Array.Empty<AskQuestion>(), DateTimeOffset.Now, "claude");
+
+            Fixture.Call(state, "SyncAsks", new List<AgentAsk> { ask });
+            Fixture.Call(state, "SyncAsks", new List<AgentAsk> { ask });
+
+            Assert.Equal("ask2", state.Toasts.Current?.AskId);
+            Assert.Single(state.Asks);
+            // Only one toast was queued: dismissing the shown one leaves the queue empty.
+            state.Toasts.Dismiss(DateTimeOffset.Now);
+            Assert.Null(state.Toasts.Current);
+        });
+    }
 }
