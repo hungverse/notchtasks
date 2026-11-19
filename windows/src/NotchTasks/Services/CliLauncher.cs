@@ -97,17 +97,26 @@ public static partial class CliLauncher
         {
             text = File.ReadAllText(shim);
         }
-        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
         {
-            return null;
+            return null;  // a path Windows cannot open, or one with characters it refuses: there is no entry
         }
         var match = ShimScriptRe().Match(text);
         if (!match.Success)
         {
             return null;
         }
-        var dir = Path.GetDirectoryName(Path.GetFullPath(shim)) ?? string.Empty;
-        var script = Path.GetFullPath(Path.Combine(dir, match.Groups[1].Value));
+        string dir;
+        string script;
+        try
+        {
+            dir = Path.GetDirectoryName(Path.GetFullPath(shim)) ?? string.Empty;
+            script = Path.GetFullPath(Path.Combine(dir, match.Groups[1].Value));
+        }
+        catch (Exception e) when (e is ArgumentException or NotSupportedException or IOException)
+        {
+            return null;  // the script name the shim gives is not a path Windows accepts
+        }
         if (!script.StartsWith(dir + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) || !File.Exists(script))
         {
             return null;
@@ -137,7 +146,8 @@ public static partial class CliLauncher
     /// Runs the command and returns its standard output, or null when it cannot start, fails to finish within limit, or ct is
     /// cancelled. The process tree is killed on timeout or cancel, and partial output is never returned. Standard input is
     /// closed at once; there is no window; the working folder is the temp folder. A shim takes only constant arguments.
-    public static string? Run(CliCommand command, IReadOnlyList<string> args, TimeSpan limit, CancellationToken ct)
+    /// With requireZeroExit, a run that exits with any other code is null too, so a failed call reads as not done.
+    public static string? Run(CliCommand command, IReadOnlyList<string> args, TimeSpan limit, CancellationToken ct, bool requireZeroExit = false)
     {
         if (ct.IsCancellationRequested)
         {
@@ -187,7 +197,7 @@ public static partial class CliLauncher
                 KillTree(process);
                 return null;
             }
-            if (ct.IsCancellationRequested)
+            if (ct.IsCancellationRequested || (requireZeroExit && process.ExitCode != 0))
             {
                 return null;
             }

@@ -248,6 +248,53 @@ public sealed class L10nTests
         Assert.Empty(placeholders);
     }
 
+    // Every key the Windows build passes to L10n.L since 7663b8c (Phase 3b: agents, limits, the watch list editor),
+    // plus the two Icon Library hints that had no Windows text. Each one needs a text in every language.
+    private static readonly string[] Phase3bKeys =
+    [
+        " (added)", " · command contains “{0}”", "+{0} more tasks", "AI apps", "Add item to watch", "App", "App · {0}",
+        "Build & CI", "Cancel", "Choose an agent, an open app, or type a process name.",
+        "Click an animation to add it to the notch.", "Click an animation to use it for the selected icon.",
+        "Command contains “{0}”", "Command line contains", "Couldn't save the watch list: {0}", "Display name",
+        "Done · {0} ago", "Each subprocess (runner, worker)", "Edit",
+        "Enter a number from 0.5 to 100, or leave it empty.", "Enter a process…", "Kind", "Loaded ",
+        "Model running locally", "No model loaded", "Open apps", "Open log", "Process", "Process name",
+        "Process name, as in Task Manager.", "Process “{0}”", "Program name", "Program name, as in Task Manager.",
+        "Raise if it shows while idle, lower if it misses work.", "Remove", "Resets at {0}", "Running", "Running · {0}",
+        "Say done when it ran {0} sec or more", "Shows while running", "The watch list holds at most {0} items.",
+        "Tracks each session", "Wait until {0} ({1} left)", "Waiting", "Watch list", "Watched item",
+        "What the notch watches. Only what's working shows on the notch.", "Working when CPU is above", "Working · {0}",
+        "one line per subprocess", "{0} done", "{0} hours", "{0} is tracked per work session, nothing else to set.",
+        "{0} reached its {1} limit", "{0} sec", "{0} tasks running", "{0} used {1}% of its {2} limit", "{0}h {1}m",
+    ];
+
+    [Fact]
+    public void Phase3bKeys_ExistInEveryLanguage()
+    {
+        var overlayFile = Path.Combine(RepoRoot(), "electron", "l10n", "windows.json");
+        var missing = new List<string>();
+        var placeholders = new List<string>();
+        foreach (var (code, _) in L10n.Languages.Where(language => language.Code != "en"))
+        {
+            var mac = ReadStrings(Path.Combine(MacSources(), $"l10n-{code}.json"));
+            var windows = ReadOverlay(overlayFile, code);
+            foreach (var key in Phase3bKeys)
+            {
+                if (!mac.ContainsKey(key) && !windows.ContainsKey(key))
+                {
+                    missing.Add($"{code}: {key}");
+                }
+                // A Windows text keeps the placeholders of its key, so the arguments still fill in.
+                if (windows.TryGetValue(key, out var text) && Placeholders(key).Any(p => !text.Contains(p, StringComparison.Ordinal)))
+                {
+                    placeholders.Add($"{code}: {key}");
+                }
+            }
+        }
+        Assert.Empty(missing);
+        Assert.Empty(placeholders);
+    }
+
     private static IEnumerable<string> Placeholders(string key) =>
         System.Text.RegularExpressions.Regex.Matches(key, @"\{\d+\}").Select(m => m.Value).Distinct();
 

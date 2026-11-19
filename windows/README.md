@@ -2,6 +2,14 @@
 
 Native Windows app (C#, WPF, .NET 10) that shows AI agents' questions in a floating pill at the top of the screen. It replaces the Electron app on Windows. The Mac app in `mac/` is the reference for behaviour and look; `electron/` is kept for Linux and is read only for Windows-specific details.
 
+What Phase 3b adds:
+
+- **Running agents**: Claude and Codex sessions, and any app or process you watch, show as cards in the Control Panel and in the pill. A card reads **Working** while the process uses CPU, and a **done** toast appears when it has finished (after the time set in Behavior, 30 s by default).
+- **Agents**: Claude, Codex, Antigravity and local models (LM Studio) are found on this PC. Claude and Codex are read from their own session files.
+- **Codex questions**: when Codex asks something, the question appears in the pill and you answer it there, without opening Codex.
+- **AI limits**: each agent that reports its usage shows a badge with the share used, and a chip in the pill once usage passes the warning level (80% by default, set in Behavior). A toast warns at each step from that level up to 100%, with the time the limit resets.
+- **Watch list**: the Watching pane lists what the notch watches. Add an app, a program name or a process, and edit, turn off or remove each item. The list holds at most 64 items.
+
 What Phase 3a adds:
 
 - **Timer**: the Mac's timer in the pill, with its chip and card. It finishes with a sound and a toast.

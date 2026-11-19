@@ -132,13 +132,15 @@ public partial class ItemCard : UserControl
         }
     }
 
-    /// What the badges depend on: the windows (label, used, reset), the tint, the name and the header's width. A publish that changes
-    /// none of them keeps the badges and their tooltips.
+    /// What the badges depend on: the windows (label, used, reset), the tint, the name, the header's width, and the badge texts at
+    /// the full width. The texts matter because a reset text drops its date as the clock moves, so a publish with the same limits
+    /// can still change them. A publish that changes none of these keeps the badges and their tooltips.
     private string BadgeKey()
     {
         var windows = string.Join(";", _limits.Select(w =>
             string.Create(CultureInfo.InvariantCulture, $"{w.Label}|{w.Used}|{w.Resets.UtcTicks}")));
-        return string.Create(CultureInfo.InvariantCulture, $"{windows}#{Tint}#{Header.ActualWidth}#{NameText.Text}");
+        var texts = string.Join(";", Limit.Badges(_limits, 0, _now).Shown.Select(b => $"{b.Label}|{b.Detail}"));
+        return string.Create(CultureInfo.InvariantCulture, $"{windows}#{texts}#{Tint}#{Header.ActualWidth}#{NameText.Text}");
     }
 
     /// The widest set of badges that fits beside the name (Mac ViewThatFits): the full labels first, then the narrow ones, then

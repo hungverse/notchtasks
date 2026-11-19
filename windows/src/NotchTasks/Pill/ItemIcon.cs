@@ -20,12 +20,21 @@ public static class ItemIcon
 {
     /// How long a pid with no path is kept before it is looked up again.
     private static readonly TimeSpan NoPathAgain = TimeSpan.FromSeconds(30);
+    /// How long a found path is kept before its pid is looked up again: a pid is reused once its program has exited.
+    private static readonly TimeSpan FoundPathAgain = TimeSpan.FromMinutes(10);
     private const string SegoeFont = "Segoe Fluent Icons, Segoe MDL2 Assets";
     private static readonly FontFamily SegoeFamily = new(SegoeFont);
     private static readonly object Gate = new();
     private static readonly Dictionary<string, ImageSource?> IconsByPath = new(StringComparer.OrdinalIgnoreCase);
-    private static readonly Dictionary<int, (string? Path, DateTimeOffset At)> PathsByPid = new();
+    /// The path a pid's program had, keyed by the pid and the program's start time (ProcInfo.StartTicks), so a reused pid never
+    /// takes the path of the program that had it before.
+    private static readonly Dictionary<(int Pid, long Start), (string? Path, DateTimeOffset At)> PathsByPid = new();
+    /// The start time of the program a pid was last looked up as.
+    private static readonly Dictionary<int, long> StartByPid = new();
     private static readonly HashSet<int> Resolving = new();
+
+    /// The clock the path cache reads. Tests set it to run the expiry without waiting.
+    public static Func<DateTimeOffset> Clock { get; set; } = () => DateTimeOffset.UtcNow;
     private static readonly Dictionary<string, bool> FileExists = new(StringComparer.OrdinalIgnoreCase);
 
     /// The icon as an element of size by size: the program's icon as an Image, else the sparkles glyph in the tint.
@@ -124,15 +133,17 @@ public static class ItemIcon
         return exists ? exe : null;
     }
 
-    /// The image path of a pid from the cache. A path is kept for good; a missing one is kept for a while, and the lookup for an
-    /// unknown pid runs in the background, so the calling (UI) thread never reads the process table.
+    /// The image path of a pid from the cache. A found path is kept for ten minutes and a missing one for a while; after that the
+    /// lookup runs again. The lookup for an unknown pid runs in the background, so the calling (UI) thread never reads the process
+    /// table. A pid reused by another program keeps its old path only until that path expires and the pid is looked up again.
     private static string? PidPath(int pid, IProcessReader processes)
     {
         lock (Gate)
         {
-            if (PathsByPid.TryGetValue(pid, out var known))
+            if (StartByPid.TryGetValue(pid, out var start) && PathsByPid.TryGetValue((pid, start), out var known))
             {
-                if (known.Path is not null || DateTimeOffset.UtcNow - known.At < NoPathAgain)
+                var age = Clock() - known.At;
+                if (known.Path is not null ? age < FoundPathAgain : age < NoPathAgain)
                 {
                     return known.Path;
                 }
@@ -146,14 +157,17 @@ public static class ItemIcon
         return null;
     }
 
-    /// Looks a pid up in the process table and its image path, off the UI thread, and caches the result.
+    /// Looks a pid up in the process table, off the UI thread, and caches its image path under the pid and the program's start
+    /// time. A pid that is gone is cached with no path and no start time.
     private static void Resolve(int pid, IProcessReader processes)
     {
         string? path = null;
+        long start = 0;
         try
         {
             if (processes.Snapshot().ById.TryGetValue(pid, out var info))
             {
+                start = info.StartTicks;
                 path = processes.ImagePath(info);
             }
         }
@@ -166,7 +180,13 @@ public static class ItemIcon
             lock (Gate)
             {
                 Resolving.Remove(pid);
-                PathsByPid[pid] = (path, DateTimeOffset.UtcNow);
+                // a pid now belongs to this start time: the entries of an earlier program with this pid go
+                foreach (var key in PathsByPid.Keys.Where(k => k.Pid == pid && k.Start != start).ToList())
+                {
+                    PathsByPid.Remove(key);
+                }
+                PathsByPid[(pid, start)] = (path, Clock());
+                StartByPid[pid] = start;
             }
         }
     }

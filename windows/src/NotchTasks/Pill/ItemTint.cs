@@ -8,13 +8,17 @@ namespace NotchTasks.Pill;
 /// The colour of an agent item, shared by its card and its chip (Mac Icons.tint). The order: the agents module's colour, then the
 /// item's icon colour (the "color" of its icon JSON), then the chosen accent, then Codex's blue, else a palette pick that is stable
 /// per item (the sum of the key's code points, as the Mac does).
+/// The Mac's icon-average step is not ported: the Mac averages an app's icon colour, and Windows has no app icon colour to average,
+/// so an item's colour comes from the steps above and then the palette.
 public static class ItemTint
 {
     private static readonly Color CodexBlue = Color.FromRgb(0x6E, 0x8B, 0xFF);  // the Mac's #6E8BFF: Codex's icon reads as red
+    /// The palette is the Mac's system colours in their dark appearance: the pill is always dark, so teal is #40C8E0 (the light
+    /// appearance's #30B0C7 would be too dim on it).
     private static readonly Color[] Palette =
     {
         Color.FromRgb(0x0A, 0x84, 0xFF),  // blue
-        Color.FromRgb(0x30, 0xB0, 0xC7),  // teal
+        Color.FromRgb(0x40, 0xC8, 0xE0),  // teal
         Color.FromRgb(0x30, 0xD1, 0x58),  // green
         Color.FromRgb(0xFF, 0x37, 0x5F),  // pink
         Color.FromRgb(0xBF, 0x5A, 0xF2),  // purple

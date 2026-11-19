@@ -78,6 +78,26 @@ public sealed class ItemCardUpdateTests
     }
 
     [Fact]
+    public void ReadingTextThatChangesWithTheClock_RefitsTheBadges()
+    {
+        Sta.Run(() =>
+        {
+            // The reset text drops its date once it is within six days, so the badge's text changes with the clock while the
+            // limit itself stays the same. The badges must be refitted then, not kept.
+            var cards = new AgentCards();
+            var running = new[] { Agent("claude", WatchKind.Claude) };
+            var resets = Now.AddDays(6).AddSeconds(30);
+            var providers = new[] { new ProviderLimits("claude", "claude", null, new[] { new LimitWindow("7d", 95, resets) }, Now) };
+            cards.Sync(null, running, providers, NoColours, null, null, Now);
+            var card = Assert.Single(cards.Panel.Children.OfType<ItemCard>());
+            var before = card.BadgeChildren.ToList();
+
+            cards.Sync(null, running, providers, NoColours, null, null, Now.AddMinutes(1));
+            Assert.NotSame(before[0], card.BadgeChildren[0]);
+        });
+    }
+
+    [Fact]
     public void CardAndChip_UseOneTint()
     {
         Sta.Run(() =>

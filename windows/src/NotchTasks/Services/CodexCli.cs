@@ -39,7 +39,10 @@ public sealed partial class CodexCli : ICodexCli
             return null;
         }
         var command = CliLauncher.ResolveDirect("codex", _home);
-        return command is null ? null : CliLauncher.Run(command, QueueArgs(thread, message), QueueLimit, CancellationToken.None);
+        // A queue that exits non-zero did not send the message: null, so the caller brings Codex forward to answer there.
+        return command is null
+            ? null
+            : CliLauncher.Run(command, QueueArgs(thread, message), QueueLimit, CancellationToken.None, requireZeroExit: true);
     });
 
     public bool BringToFront()

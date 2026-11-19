@@ -16,7 +16,7 @@ public static class ModuleCatalog
     /// (PermissionItems.Needed, NextSteps).
     private static readonly HashSet<string> BuiltIds = new(StringComparer.Ordinal)
     {
-        "agents", "timer", "battery", "network", "downloads", "health", "privacy", "calls",
+        "agents", "timer", "battery", "network", "downloads", "health", "privacy", "calls", "limits",
     };
 
     /// Every module id, in the Mac's order.

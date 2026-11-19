@@ -149,4 +149,38 @@ public sealed class CliLauncherTests
     {
         Assert.Equal(new[] { "queue", "--thread", "t1", "--message", "Yes" }, CodexCli.QueueArgs("t1", "Yes"));
     }
+
+    [Theory]
+    [InlineData("bad|name.cmd")]  // a character Windows refuses in a path: ReadAllText throws ArgumentException
+    [InlineData("half:colon.cmd")]  // a colon in the middle: NotSupportedException
+    public void NodeEntry_APathWindowsRefuses_IsNullNotAnException(string name)
+    {
+        using var root = new TempRoot();
+        var dir = Folder(root, "bin");
+
+        Assert.Null(CliLauncher.NodeEntry(Path.Combine(dir, name), dir));
+    }
+
+    [Fact]
+    public void NodeEntry_AScriptNameWindowsRefuses_IsNullNotAnException()
+    {
+        using var root = new TempRoot();
+        var dir = Folder(root, "bin");
+        // the shim is readable, but the script it names has a colon in the middle, which GetFullPath refuses
+        var shim = Write(dir, "codex.cmd", @"node ""%dp0%\a:b.js"" %*");
+
+        Assert.Null(CliLauncher.NodeEntry(shim, dir));
+    }
+
+    [Fact]
+    public void Run_NonZeroExit_IsNullWhenTheExitMustBeZero()
+    {
+        // cmd.exe stands in for a program that prints and then fails; no real CLI runs.
+        var failing = new CliCommand(CliKind.Direct, Path.Combine(Environment.SystemDirectory, "cmd.exe"),
+            new[] { "/d", "/c", "echo partial & exit 3" });
+        var limit = TimeSpan.FromSeconds(20);
+
+        Assert.Null(CliLauncher.Run(failing, Array.Empty<string>(), limit, CancellationToken.None, requireZeroExit: true));
+        Assert.Equal("partial", CliLauncher.Run(failing, Array.Empty<string>(), limit, CancellationToken.None)?.Trim());
+    }
 }
