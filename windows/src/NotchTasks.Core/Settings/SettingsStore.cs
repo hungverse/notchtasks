@@ -5,6 +5,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
+using NotchTasks.Core.Agents;
 
 namespace NotchTasks.Core.Settings;
 
@@ -50,6 +51,7 @@ public sealed class SettingsStore : INotifyPropertyChanged, IDisposable
     private FileSystemWatcher? _watcher;
     private Timer? _debounce;
     private bool _disposed;
+    private IReadOnlyList<WatchItem>? _defaultItems;  // made on first read when the file has no valid list; guarded by _gate
 
     private SettingsStore(string file)
     {
@@ -159,6 +161,30 @@ public sealed class SettingsStore : INotifyPropertyChanged, IDisposable
     public string Language => TryGet("language", out string? value) && value is not null && LanguagePattern.IsMatch(value) ? value : "";
 
     public IReadOnlyList<string> Modules => StringList("modules", DefaultModules);
+
+    /// The watch list (settings "items", at most 64). A missing or invalid list gives the defaults. Those are made once per
+    /// store, so their ids stay the same between reads.
+    public IReadOnlyList<WatchItem> Items
+    {
+        get
+        {
+            lock (_gate)
+            {
+                if (_root["items"] is JsonArray)
+                {
+                    return WatchItemsJson.Read(_root["items"]);
+                }
+                return _defaultItems ??= WatchItemsJson.Read(null);
+            }
+        }
+    }
+
+    /// Saves the watch list (at most 64 items; more are dropped). Raises Changed and PropertyChanged for "items".
+    public void SetItems(IReadOnlyList<WatchItem> items) =>
+        Set("items", WatchItemsJson.Write(items.Take(WatchItemsJson.MaxItems)));
+
+    /// Seconds a task must run before its completion is announced, 5 to 600 (Mac doneAfter).
+    public double DoneAfter => Ranged("doneAfter", 30, 5, 600);
 
     public IReadOnlyList<string> Disabled => StringList("disabled", DefaultDisabled);
 
