@@ -13,16 +13,16 @@ using NotchTasks.Services;
 
 namespace NotchTasks.Pill.Sections;
 
-/// One agent's card in the open pill (Mac ItemCard). The card is kept per item across publishes, and Update refreshes its header
-/// and its rows in place. Clicking the header opens an app item (its window, or its exe when it is not running); clicking a job
-/// with a link, or its log glyph, opens the link in its program.
+/// One agent's card in the open pill (Mac ItemCard). The card is kept per item across publishes, and Update changes only what
+/// differs: the icon when its image or tint changes, the badges when the windows, tint or width change, and each row's text and
+/// lead when they change. Clicking the header opens an app item; clicking a job with a web link, or its log glyph, opens the link.
 public partial class ItemCard : UserControl
 {
     /// The most job rows a card shows; the rest are counted in "+n more tasks".
     public const int MaxRows = 4;
 
-    private static readonly Color GreyColour = Color.FromRgb(0x8E, 0x8E, 0x93);  // the Mac's .gray
-    private static readonly Brush GreyBrush = Frozen(new SolidColorBrush(GreyColour));
+    private const double IconSize = 20;
+    private static readonly Brush GreyBrush = Frozen(new SolidColorBrush(Color.FromRgb(0x8E, 0x8E, 0x93)));  // the Mac's .gray
     private static readonly Brush TitleBrush = Frozen(new SolidColorBrush(Color.FromArgb(0xE6, 0xFF, 0xFF, 0xFF)));  // white at 90 %
     private static readonly FontFamily SegoeFamily = new("Segoe Fluent Icons, Segoe MDL2 Assets");
 
@@ -30,6 +30,10 @@ public partial class ItemCard : UserControl
     private ItemState? _state;
     private IReadOnlyList<LimitWindow> _limits = Array.Empty<LimitWindow>();
     private DateTimeOffset _now;
+    private string? _badgeKey;
+    private bool _iconSet;
+    private string? _iconPath;
+    private Color _iconTint;
 
     public ItemCard()
     {
@@ -43,11 +47,23 @@ public partial class ItemCard : UserControl
         Header.SizeChanged += OnHeaderSized;
     }
 
+    /// The colour the card was last updated with (the same one its chip uses: ItemTint.Of).
+    public Color Tint { get; private set; }
+
     /// The job rows showing now (at most MaxRows).
     public int ShownRows => _rows.Count(r => r.Root.Visibility == Visibility.Visible);
 
     /// The limit badges in the header now.
     public int LimitBadgeCount => Badges.Children.OfType<FrameworkElement>().Count(e => e.Tag is string tag && tag == LimitBadge.Tag);
+
+    /// The header's badge elements, in order (for tests: an unchanged publish keeps them).
+    public IReadOnlyList<object> BadgeChildren => Badges.Children.Cast<object>().ToList();
+
+    /// The icon element in the header (for tests: an unchanged publish keeps it).
+    public object? IconContent => IconHost.Content;
+
+    /// Each shown row's lead element, in order (for tests: an unchanged publish keeps them).
+    public IReadOnlyList<object?> RowLeads => _rows.Select(r => r.Lead).ToList();
 
     /// The windows an item's card shows (Mac: limits(st)): the provider of its kind (Claude or Codex), or for a process or app item
     /// the process provider of its bundle (Antigravity). Empty when there is none.
@@ -67,18 +83,36 @@ public partial class ItemCard : UserControl
         return provider?.Windows ?? Array.Empty<LimitWindow>();
     }
 
+    /// The program an app item opens: its exe name or path (WatchItems.AppExe), or null when none is known.
+    public static string? LaunchTarget(WatchItem item) => WatchItems.AppExe(item);
+
     /// Refreshes the card from the item. processes reads an app item's icon (null: the sparkles glyph).
     public void Update(ItemState state, IReadOnlyList<LimitWindow> limits, Color tint, IProcessReader? processes, DateTimeOffset now)
     {
         _state = state;
         _limits = limits;
         _now = now;
-        NameText.Text = state.Item.Name;
-        IconHost.Content = ItemIcon.Element(state, 20, tint, processes);
-        CountPill.Background = new SolidColorBrush(tint);
-        CountText.Text = state.Jobs.Count.ToString(CultureInfo.InvariantCulture);
-        CountPill.ToolTip = L10n.L("{0} tasks running", state.Jobs.Count);
-        FitBadges();
+        Tint = tint;
+        SetText(NameText, state.Item.Name);
+
+        var path = ItemIcon.PathOf(state, processes);
+        if (!_iconSet || path != _iconPath || tint != _iconTint)
+        {
+            IconHost.Content = ItemIcon.Element(state, IconSize, tint, processes);
+            _iconSet = true;
+            _iconPath = path;
+            _iconTint = tint;
+        }
+
+        var count = state.Jobs.Count.ToString(CultureInfo.InvariantCulture);
+        CountPill.Background = TintBrushes.Of(tint);
+        SetText(CountText, count);
+        SetToolTip(CountPill, L10n.L("{0} tasks running", state.Jobs.Count));
+        if (BadgeKey() != _badgeKey)
+        {
+            FitBadges();
+        }
+
         for (var i = 0; i < MaxRows; i++)
         {
             if (i < state.Jobs.Count)
@@ -94,14 +128,24 @@ public partial class ItemCard : UserControl
         MoreText.Visibility = more > 0 ? Visibility.Visible : Visibility.Collapsed;
         if (more > 0)
         {
-            MoreText.Text = L10n.L("+{0} more tasks", more);
+            SetText(MoreText, L10n.L("+{0} more tasks", more));
         }
+    }
+
+    /// What the badges depend on: the windows (label, used, reset), the tint, the name and the header's width. A publish that changes
+    /// none of them keeps the badges and their tooltips.
+    private string BadgeKey()
+    {
+        var windows = string.Join(";", _limits.Select(w =>
+            string.Create(CultureInfo.InvariantCulture, $"{w.Label}|{w.Used}|{w.Resets.UtcTicks}")));
+        return string.Create(CultureInfo.InvariantCulture, $"{windows}#{Tint}#{Header.ActualWidth}#{NameText.Text}");
     }
 
     /// The widest set of badges that fits beside the name (Mac ViewThatFits): the full labels first, then the narrow ones, then
     /// none. Before the card is laid out, the full set is used.
     private void FitBadges()
     {
+        _badgeKey = BadgeKey();
         Badges.Children.Clear();
         Badges.Visibility = Visibility.Visible;
         if (_limits.Count == 0)
@@ -164,6 +208,7 @@ public partial class ItemCard : UserControl
                 Margin = new Thickness(6, 0, 0, 0),
                 VerticalAlignment = VerticalAlignment.Center,
                 ToolTip = string.Join("\n", hidden.Select(w => LimitBadge.Tooltip(w, _now))),
+                Focusable = false,
             };
         }
     }
@@ -182,8 +227,8 @@ public partial class ItemCard : UserControl
         OpenItem();
     }
 
-    /// Opens an app item (Mac: the item's app). A running one (its first job's pid) has its main window brought forward, restored
-    /// when minimised; one that is not running has its exe started. Other items do nothing.
+    /// Opens an app item. A running one (its first job's pid) has its main window brought forward, restored when minimised. One
+    /// that is not running is started by its program name (Windows resolves it through App Paths). Other items do nothing.
     private void OpenItem()
     {
         if (_state is not { } state || state.Item.Kind != WatchKind.App)
@@ -202,9 +247,9 @@ public partial class ItemCard : UserControl
             }
             return;
         }
-        if (state.Item.Exe is { Length: > 0 } exe && System.IO.File.Exists(exe))
+        if (LaunchTarget(state.Item) is { } target)
         {
-            Launch(new ProcessStartInfo(exe) { UseShellExecute = true });
+            Launch(new ProcessStartInfo(target) { UseShellExecute = true });
         }
     }
 
@@ -245,6 +290,24 @@ public partial class ItemCard : UserControl
         }
     }
 
+    /// Sets a text only when it differs, so an unchanged publish touches nothing.
+    private static void SetText(TextBlock text, string value)
+    {
+        if (text.Text != value)
+        {
+            text.Text = value;
+        }
+    }
+
+    /// Sets a tooltip only when it differs, so an unchanged publish keeps the tooltip element.
+    private static void SetToolTip(FrameworkElement element, string tip)
+    {
+        if (element.ToolTip as string != tip)
+        {
+            element.ToolTip = tip;
+        }
+    }
+
     private static T Frozen<T>(T freezable) where T : Freezable
     {
         freezable.Freeze();
@@ -273,7 +336,8 @@ public partial class ItemCard : UserControl
         return symbol.Equals("hourglass", StringComparison.OrdinalIgnoreCase) ? "hourglass" : null;
     }
 
-    /// One job row: its lead (a status dot, or the job's symbol), its title, its detail and, with a link, the log glyph.
+    /// One job row: its lead (a status dot, or the job's symbol), its title, its detail and, with a link, the log glyph. The lead
+    /// element is kept while its kind stays the same; only its colour is set again.
     private sealed class JobRow
     {
         private readonly Action<string> _open;
@@ -301,6 +365,7 @@ public partial class ItemCard : UserControl
             Focusable = false,
         };
         private string? _url;
+        private string? _leadKind;
 
         public JobRow(int index, Action<string> open)
         {
@@ -327,21 +392,42 @@ public partial class ItemCard : UserControl
 
         public Grid Root { get; }
 
+        /// The lead element now (null before the row is first set).
+        public object? Lead => _lead.Content;
+
         /// Shows a job in this row, in the tint while it works and grey when it has stopped.
         public void Set(Job job, Color tint)
         {
-            var brush = job.Working ? new SolidColorBrush(tint) : GreyBrush;
+            var brush = job.Working ? TintBrushes.Of(tint) : GreyBrush;
             Root.Visibility = Visibility.Visible;
-            Root.ToolTip = job.Title + " — " + job.Detail;
-            _title.Text = job.Title;
-            _detail.Text = job.Detail;
+            var tip = job.Title + " — " + job.Detail;
+            if (Root.ToolTip as string != tip)
+            {
+                Root.ToolTip = tip;
+            }
+            SetText(_title, job.Title);
+            SetText(_detail, job.Detail);
             _detail.Foreground = brush;
-            _lead.Content = Lead(job.Symbol, brush);
+            var kind = LeadKind(job.Symbol);
+            if (kind != _leadKind || _lead.Content is null)
+            {
+                _lead.Content = BuildLead(job.Symbol, brush);
+                _leadKind = kind;
+            }
+            else
+            {
+                Recolour(_lead.Content, brush);
+            }
             _url = job.Url;
             _log.Visibility = job.Url is null ? Visibility.Collapsed : Visibility.Visible;
         }
 
-        private static FrameworkElement Lead(string? symbol, Brush brush)
+        /// The kind of lead a symbol gives: a dot, a font glyph, or a vector.
+        private static string LeadKind(string? symbol) => MarkOf(symbol) is { } mark
+            ? (ModuleGlyphs.Vector(mark) is not null ? "vector:" : "glyph:") + mark
+            : "dot";
+
+        private static FrameworkElement BuildLead(string? symbol, Brush brush)
         {
             var mark = MarkOf(symbol);
             if (mark is not null && ModuleGlyphs.Vector(mark) is { } path)
@@ -356,6 +442,7 @@ public partial class ItemCard : UserControl
                     Height = 12,
                     HorizontalAlignment = HorizontalAlignment.Center,
                     VerticalAlignment = VerticalAlignment.Center,
+                    Focusable = false,
                 };
             }
             if (mark is not null)
@@ -368,6 +455,7 @@ public partial class ItemCard : UserControl
                     Foreground = brush,
                     HorizontalAlignment = HorizontalAlignment.Center,
                     VerticalAlignment = VerticalAlignment.Center,
+                    Focusable = false,
                 };
             }
             return new Ellipse
@@ -377,7 +465,33 @@ public partial class ItemCard : UserControl
                 Fill = brush,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,
+                Focusable = false,
             };
+        }
+
+        /// Sets the colour of a lead element of the same kind.
+        private static void Recolour(object content, Brush brush)
+        {
+            switch (content)
+            {
+                case Ellipse dot:
+                    dot.Fill = brush;
+                    break;
+                case TextBlock glyph:
+                    glyph.Foreground = brush;
+                    break;
+                case Path vector:
+                    vector.Stroke = brush;
+                    break;
+            }
+        }
+
+        private static void SetText(TextBlock text, string value)
+        {
+            if (text.Text != value)
+            {
+                text.Text = value;
+            }
         }
 
         private void OnRowClick(object sender, MouseButtonEventArgs e)

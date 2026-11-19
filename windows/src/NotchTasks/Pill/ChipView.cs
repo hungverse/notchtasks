@@ -247,6 +247,10 @@ public static class ChipView
         {
             return AskOrange;
         }
+        if (chip.Kind == ChipKind.Agent && chip.Agent is { } agent)
+        {
+            return ItemTint.Of(agent.Item, moduleColors, accent);  // the same colour as the agent's card
+        }
         if (moduleColors.TryGetValue(chip.Module, out var hex) && HexColor.TryNormalize(hex, out var normalized))
         {
             return HexColor.ToColor(normalized);

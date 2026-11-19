@@ -79,6 +79,22 @@ public partial class ToastView : UserControl
         _ => ask is null ? IslandWidth : PillGeometry.OpenWidth,
     };
 
+    /// A toast's glyph in its tint and size: the drawn path for a name the font does not have (gauge, hourglass), else the font glyph.
+    public static FrameworkElement GlyphOf(string name, Brush tint, double size) =>
+        ModuleGlyphs.Vector(name) is { } data
+            ? new System.Windows.Shapes.Path
+            {
+                Data = Geometry.Parse(data),
+                Stroke = tint,
+                StrokeThickness = 1.6,
+                Stretch = Stretch.Uniform,
+                Width = size,
+                Height = size,
+                HorizontalAlignment = HorizontalAlignment.Left,
+                VerticalAlignment = VerticalAlignment.Center,
+            }
+            : new TextBlock { Text = ModuleGlyphs.Get(name), Foreground = tint };
+
     /// Shows the toast in a style: its glyph, title, subtitle and the buttons it needs. `ask` is the agent's ask the toast
     /// stands for, or null. `motion` is the Motion setting, which a battery toast's art springs by.
     public void Show(Toast t, string style, AgentAsk? ask, string motion)
@@ -90,7 +106,6 @@ public partial class ToastView : UserControl
         var banner = look == ToastLook.Banner;
         var color = HexColor.TryNormalize(t.Tint, out var hex) ? HexColor.ToColor(hex) : Colors.White;
         var tint = Frozen(new SolidColorBrush(color));
-        var glyph = ModuleGlyphs.Get(t.Glyph);
 
         Width = WidthOf(t, style, ask);
         ShapeRadius = look switch
@@ -110,8 +125,7 @@ public partial class ToastView : UserControl
             var side = SideOf(t);
             CompactLeft.Width = new GridLength(side);
             CompactRight.Width = new GridLength(side);
-            CompactGlyph.Text = glyph;
-            CompactGlyph.Foreground = tint;
+            CompactGlyph.Content = GlyphOf(t.Glyph, tint, CompactGlyph.FontSize);
             var art = t.Art as ChargeArt;
             CompactArt.Content = art is null ? null : new ChargeArtView(art, motion);
             CompactArt.Visibility = VisibleIf(art is not null);
@@ -121,13 +135,11 @@ public partial class ToastView : UserControl
         }
 
         TopRow.Visibility = VisibleIf(look is ToastLook.Island or ToastLook.Banner);
-        TopGlyph.Text = glyph;
-        TopGlyph.Foreground = tint;
+        TopGlyph.Content = GlyphOf(t.Glyph, tint, TopGlyph.FontSize);
         BannerBar.Visibility = VisibleIf(banner);
         BannerBar.Background = tint;
         CardGlyph.Visibility = VisibleIf(look == ToastLook.Card);
-        CardGlyph.Text = glyph;
-        CardGlyph.Foreground = tint;
+        CardGlyph.Content = GlyphOf(t.Glyph, tint, CardGlyph.FontSize);
         TextRow.Margin = look == ToastLook.Card ? new Thickness(12) : new Thickness(18, 2, 18, banner ? 12 : 10);
         TitleText.Text = t.Title;
         TitleText.FontSize = banner ? 15 : 13;

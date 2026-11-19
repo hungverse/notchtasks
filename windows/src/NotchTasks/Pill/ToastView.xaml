@@ -23,8 +23,10 @@
         <ColumnDefinition Width="200" />
         <ColumnDefinition x:Name="CompactRight" Width="52" />
       </Grid.ColumnDefinitions>
-      <TextBlock x:Name="CompactGlyph" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center"
-                 FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" />
+      <!-- The glyph holder: a font glyph (its TextBlock inherits the font) or a drawn path for a glyph the font lacks. -->
+      <ContentControl x:Name="CompactGlyph" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center"
+                      HorizontalContentAlignment="Left" VerticalContentAlignment="Center" Focusable="False"
+                      FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" />
       <!-- A battery toast's art (ChargeArt) takes the glyph's place in the left column. -->
       <ContentControl x:Name="CompactArt" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center"
                       Visibility="Collapsed" />
@@ -34,8 +36,9 @@
     <!-- Island, banner and card: the notch row carries the glyph (island and banner); the text and the buttons sit under it. -->
     <StackPanel x:Name="WideBody" Visibility="Collapsed">
       <Grid x:Name="TopRow" Height="32">
-        <TextBlock x:Name="TopGlyph" Margin="12,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center"
-                   FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14" />
+        <ContentControl x:Name="TopGlyph" Margin="12,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center"
+                        HorizontalContentAlignment="Left" VerticalContentAlignment="Center" Focusable="False"
+                        FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14" />
       </Grid>
       <Grid x:Name="TextRow" Margin="18,2,18,10">
         <Grid.ColumnDefinitions>
@@ -48,8 +51,9 @@
         <Border x:Name="BannerBar" Grid.Column="0" Width="4" Height="34" CornerRadius="2" Margin="0,0,10,0"
                 VerticalAlignment="Center" Visibility="Collapsed" />
         <!-- The card's glyph, at the left of its text. -->
-        <TextBlock x:Name="CardGlyph" Grid.Column="1" Margin="0,0,12,0" VerticalAlignment="Center" Visibility="Collapsed"
-                   FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="26" />
+        <ContentControl x:Name="CardGlyph" Grid.Column="1" Margin="0,0,12,0" VerticalAlignment="Center" Visibility="Collapsed"
+                        HorizontalContentAlignment="Left" VerticalContentAlignment="Center" Focusable="False"
+                        FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="26" />
         <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="0,0,8,0">
           <TextBlock x:Name="TitleText" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
           <TextBlock x:Name="SubtitleText" Foreground="#99FFFFFF" TextTrimming="CharacterEllipsis" />
