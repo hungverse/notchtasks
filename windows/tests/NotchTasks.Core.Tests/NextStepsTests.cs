@@ -12,10 +12,9 @@ public sealed class NextStepsTests
     private static PermItem Item(string id, PermState state, params string[] modules) =>
         new(id, id, "", "", modules, state);
 
-    // Phase 2 builds only the agents: the agent hook row is the one permission row whose module is on and built.
+    // The agent hook row is one permission row whose module is on and built.
     private static PermItem Hook(PermState state = PermState.NotAsked) => Item("hook.claude", state, "agents");
 
-    // Mic and camera rows need privacy, calls and mirror, which are not built yet: they are never a step in Phase 2.
     // The real mic row has no modules (ruling P3-R4): privacy and calls never make it a step.
     private static PermItem Mic(PermState state = PermState.NotAsked) => Item("mic", state);
 

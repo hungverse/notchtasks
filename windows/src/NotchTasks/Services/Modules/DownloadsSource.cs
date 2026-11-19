@@ -48,9 +48,10 @@ public sealed class DownloadsSource : IModuleSource
         }
 
         _started = true;
+        FileSystemWatcher? watcher = null;
         try
         {
-            var watcher = new FileSystemWatcher(folder)
+            watcher = new FileSystemWatcher(folder)
             {
                 IncludeSubdirectories = false,
                 NotifyFilter = NotifyFilters.FileName,
@@ -66,7 +67,9 @@ public sealed class DownloadsSource : IModuleSource
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or ArgumentException)
         {
-            ErrorLog.Write(e);
+            // Without the watcher the folder is still scanned at Start, but new files are not seen until the next Start.
+            watcher?.Dispose();
+            ErrorLog.Write(new IOException("NotchTasks: watching the Downloads folder is off: " + folder, e));
         }
         // Armed before the baseline: a file that lands in between is seen by the next scan, not lost. Events are marshalled to
         // the dispatcher, so they run after this baseline.
@@ -119,6 +122,7 @@ public sealed class DownloadsSource : IModuleSource
                     Created: new DateTimeOffset(File.GetCreationTimeUtc(path), TimeSpan.Zero)))
                 .ToList();
             _module.Scan(entries, DateTimeOffset.Now);
+            _scanFailureLogged = false;
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {

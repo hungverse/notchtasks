@@ -1,7 +1,7 @@
 namespace NotchTasks.Pill;
 
 /// The Segoe Fluent Icons glyph of each glyph name a toast or a chip carries (Toast.Glyph, the chip's lead). A name the map
-/// does not know draws the fallback, never nothing. The map is completed and tested in Task 11.
+/// does not know draws the fallback, never nothing. The map covers every glyph name the modules and toasts use.
 public static class ModuleGlyphs
 {
     /// What an unknown name draws (the Control Panel's "more" glyph).

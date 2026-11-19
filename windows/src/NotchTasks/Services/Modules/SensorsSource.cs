@@ -55,6 +55,7 @@ public sealed class SensorsSource : IModuleSource
             return;
         }
         _generation++;
+        _readFailureLogged = false;
         var generation = _generation;
         try
         {

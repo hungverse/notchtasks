@@ -12,8 +12,8 @@ public static class ModuleCatalog
 
     private static readonly HashSet<string> NotOnWindows = new(StringComparer.Ordinal) { "levels", "calendar", "fans" };
 
-    /// The modules this build actually does. Phase 2 builds only the agents; the others show "Coming soon" and ask for no
-    /// permission (PermissionItems.Needed, NextSteps).
+    /// The modules this build actually does. Any id not listed here shows "Coming soon" and asks for no permission
+    /// (PermissionItems.Needed, NextSteps).
     private static readonly HashSet<string> BuiltIds = new(StringComparer.Ordinal)
     {
         "agents", "timer", "battery", "network", "downloads", "health", "privacy", "calls",

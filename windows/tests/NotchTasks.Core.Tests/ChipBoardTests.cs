@@ -114,7 +114,7 @@ public class ChipBoardTests
     [Fact]
     public void Sides_PinnedGoTheirSide_AutoBalances_KeepsOrder()
     {
-        // order: call, ask, timer, sensor. ask pinned left, timer pinned right; call and sensor balance.
+        // order: call, ask, timer (the call hides the sensor chip). ask pinned left, timer pinned right; the call balances the sides.
         var chips = ChipBoard.Chips(Snap(new[] { "calls", "agents", "timer", "privacy" },
             asks: 1, timer: Timer, call: Call, sensors: Mic));
         Assert.Equal(new[] { ChipKind.Call, ChipKind.Ask, ChipKind.Timer }, chips.Select(c => c.Kind).Take(3));
