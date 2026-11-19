@@ -22,6 +22,8 @@ public static class ModuleGlyphs
         ["wifi"] = "",
         ["network"] = "",
         ["vpn"] = "",
+        ["wifioff"] = "",  // wifi arcs with a cross: network disconnected (Segoe Fluent Icons)
+        ["vpnoff"] = "",   // open padlock: VPN off
         ["battery"] = "",
         ["bolt"] = "",        // lightning bolt: charging
         ["plug"] = "",        // power symbol, the stand-in for the plug: unplugged

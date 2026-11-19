@@ -36,6 +36,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         Timer = new TimerModule(this);
         Battery = new BatteryModule(this);
         _batterySource = new BatterySource(Battery, Publish);
+        Network = new NetworkModule(this);
         _host = new ModuleHost(CreateSources(), OnTurnedOff, (message, e) => ErrorLog.Write(new InvalidOperationException(message, e)));
         _host.Apply(ActiveModules(settings));
         Snapshot = BuildSnapshot();
@@ -55,6 +56,9 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
 
     /// The battery: its reading is the snapshot's Battery (null with no battery or with the module off).
     public BatteryModule Battery { get; }
+
+    /// The network: it only makes toasts (no snapshot field), so Publish is not needed.
+    public NetworkModule Network { get; }
 
     /// The state the closed pill's chips are built from. Rebuilt by Publish.
     public NotchSnapshot Snapshot { get; private set; }
@@ -189,6 +193,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         {
             ["timer"] = new TimerSource(Timer, Publish),
             ["battery"] = _batterySource,
+            ["network"] = new NetworkSource(Network),
         };
 
     /// The snapshot's ask count: the asks belong to the agents module, so none count while it is off.
