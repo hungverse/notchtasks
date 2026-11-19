@@ -1,3 +1,5 @@
+using NotchTasks.Core.Limits;
+
 namespace NotchTasks.Core.Notch;
 
 /// Builds the closed pill's chips and splits them into the left and right wings, as the Mac's NotchView does.
@@ -22,6 +24,15 @@ public static class ChipBoard
                     // the sensor chip only shows when no call is on: the call chip already says the mic is in use
                     if (s.Call is null && (s.Sensors.Mic || s.Sensors.Camera))
                         list.Add(new Chip(ChipKind.Sensor, "privacy", "sensor") { Sensors = s.Sensors });
+                    break;
+                case "limits":
+                    // per provider, the window fullest among those at or above the warning level (NotchView .limits)
+                    foreach (var p in s.Limits)
+                    {
+                        var top = p.Windows.Where(w => Limit.Step(w.Used) >= s.LimitWarn).MaxBy(w => w.Used);
+                        if (top is not null)
+                            list.Add(new Chip(ChipKind.Limit, "limits", "limit-" + p.Name) { Limit = new LimitChip(p.Name, top) });
+                    }
                     break;
             }
         }
