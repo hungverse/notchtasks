@@ -6,6 +6,7 @@ using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Media;
 using NotchTasks.Core;
+using NotchTasks.Core.Modules;
 using NotchTasks.Core.Settings;
 
 namespace NotchTasks.ControlPanel.Panes;
@@ -17,10 +18,14 @@ public partial class ModulesPane : SettingsPane
     private const string DefaultColor = "#808080";
 
     private readonly Dictionary<string, ModuleRow> _rows = new();
+    private readonly bool _hasBattery;
 
-    public ModulesPane(SettingsStore store) : base(store)
+    /// The pane. `hasBattery` says whether this PC has a battery: without one the battery row is hidden. The default asks
+    /// Windows (PowerFacts.HasSystemBattery); tests pass their own answer.
+    public ModulesPane(SettingsStore store, Func<bool>? hasBattery = null) : base(store)
     {
         InitializeComponent();
+        _hasBattery = (hasBattery ?? PowerFacts.HasSystemBattery)();
         foreach (var id in ModuleCatalog.All.Where(ModuleCatalog.OnWindows))
         {
             _rows[id] = BuildRow(id);
@@ -29,7 +34,7 @@ public partial class ModulesPane : SettingsPane
 
     protected override void Apply()
     {
-        var order = ModuleCatalog.Order(Store.Modules);
+        var order = ModuleCatalog.Order(Store.Modules).Where(Shown).ToList();
         var disabled = Store.Disabled.ToHashSet();
         var placements = Store.Placements;
         var colors = Store.ModuleColors;
@@ -63,6 +68,9 @@ public partial class ModulesPane : SettingsPane
             Rows.Children.Add(row.Element);
         }
     }
+
+    /// Whether a module's row is shown: the battery row only on a PC with a battery.
+    private bool Shown(string id) => id != "battery" || _hasBattery;
 
     /// One module's controls: the arrows, the icon, the name and the note, the position and the switch on the first line,
     /// and the colour on a second line under the name.
@@ -194,9 +202,11 @@ public partial class ModulesPane : SettingsPane
     /// Swaps the module with its neighbour and saves the whole order once. The moved row keeps the keyboard focus.
     private void Move(string id, int delta)
     {
-        // Hidden and unknown ids stay where they are in the stored list (ModuleCatalog.Reorder).
-        var order = ModuleCatalog.Reorder(Store.Modules, id, delta);
-        if (order.SequenceEqual(Store.Modules))
+        // Hidden and unknown ids stay where they are in the stored list (ModuleCatalog.Reorder). A hidden row is left out
+        // of the list, so an arrow never swaps with it.
+        var stored = Store.Modules.Where(Shown).ToList();
+        var order = ModuleCatalog.Reorder(stored, id, delta);
+        if (order.SequenceEqual(stored))
         {
             return;
         }

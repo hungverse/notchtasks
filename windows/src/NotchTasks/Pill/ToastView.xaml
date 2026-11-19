@@ -25,6 +25,9 @@
       </Grid.ColumnDefinitions>
       <TextBlock x:Name="CompactGlyph" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center"
                  FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" />
+      <!-- A battery toast's art (ChargeArt) takes the glyph's place in the left column. -->
+      <ContentControl x:Name="CompactArt" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center"
+                      Visibility="Collapsed" />
       <TextBlock x:Name="CompactText" Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Center"
                  FontSize="12" FontWeight="Bold" TextTrimming="CharacterEllipsis" />
     </Grid>

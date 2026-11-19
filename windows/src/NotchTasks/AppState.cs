@@ -22,6 +22,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
     private readonly AskStore _store;
     private readonly AskTracker _tracker = new();
     private readonly ModuleHost _host;
+    private readonly BatterySource _batterySource;
     private AskWatcher? _watcher;
     private bool _disposed;
 
@@ -33,6 +34,8 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         _dispatcher = Dispatcher.CurrentDispatcher;
         Asks = new ObservableCollection<AgentAsk>();
         Timer = new TimerModule(this);
+        Battery = new BatteryModule(this);
+        _batterySource = new BatterySource(Battery, Publish);
         _host = new ModuleHost(CreateSources(), OnTurnedOff, (message, e) => ErrorLog.Write(new InvalidOperationException(message, e)));
         _host.Apply(ActiveModules(settings));
         Snapshot = BuildSnapshot();
@@ -49,6 +52,9 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
 
     /// The focus timer. Its controls call Start, Extend or Stop, then Publish.
     public TimerModule Timer { get; }
+
+    /// The battery: its reading is the snapshot's Battery (null with no battery or with the module off).
+    public BatteryModule Battery { get; }
 
     /// The state the closed pill's chips are built from. Rebuilt by Publish.
     public NotchSnapshot Snapshot { get; private set; }
@@ -80,6 +86,15 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
     {
         Snapshot = BuildSnapshot();
         NotchChanged?.Invoke();
+    }
+
+    /// The power status changed (the AC line or the battery): the battery reads it now, while the battery module is on.
+    public void PowerStatusChanged()
+    {
+        if (!_disposed)
+        {
+            _batterySource.Refresh();
+        }
     }
 
     /// Starts watching the Asks folder. The current list is reported at once (through the dispatcher).
@@ -173,6 +188,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         new Dictionary<string, IModuleSource>(StringComparer.Ordinal)
         {
             ["timer"] = new TimerSource(Timer, Publish),
+            ["battery"] = _batterySource,
         };
 
     /// The snapshot's ask count: the asks belong to the agents module, so none count while it is off.
@@ -185,7 +201,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         this.Timer.State,
         null,
         new SensorState(Array.Empty<string>(), false, false),
-        null,
+        Battery.State,
         null);
     }
 

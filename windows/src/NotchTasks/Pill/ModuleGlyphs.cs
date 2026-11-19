@@ -23,6 +23,9 @@ public static class ModuleGlyphs
         ["network"] = "",
         ["vpn"] = "",
         ["battery"] = "",
+        ["bolt"] = "",        // lightning bolt: charging
+        ["plug"] = "",        // power symbol, the stand-in for the plug: unplugged
+        ["batterylow"] = "",  // an almost empty battery: low battery
         ["warning"] = "",
     };
 

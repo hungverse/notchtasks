@@ -21,6 +21,11 @@ internal static partial class NativeMethods
     [return: MarshalAs(UnmanagedType.Bool)]
     public static partial bool QueryFullProcessImageNameW(nint process, uint flags, byte[] name, ref uint size);
 
+    /// The system power status: AC line, battery flag and life percent (see PowerFacts.FromStatus).
+    [LibraryImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool GetSystemPowerStatus(out SystemPowerStatus status);
+
     [LibraryImport("ntdll.dll")]
     public static partial int NtQueryInformationProcess(nint process, int informationClass, ref ProcessBasicInformation information, int length, out int returnLength);
 }
@@ -35,4 +40,16 @@ internal struct ProcessBasicInformation
     public nint Reserved3;
     public nuint UniqueProcessId;
     public nuint InheritedFromUniqueProcessId;
+}
+
+/// SYSTEM_POWER_STATUS: the fields PowerFacts reads, in the Windows layout.
+[StructLayout(LayoutKind.Sequential)]
+internal struct SystemPowerStatus
+{
+    public byte ACLineStatus;
+    public byte BatteryFlag;
+    public byte BatteryLifePercent;
+    public byte SystemStatusFlag;
+    public uint BatteryLifeTime;
+    public uint BatteryFullLifeTime;
 }

@@ -8,6 +8,7 @@ using NotchTasks.Core;
 using NotchTasks.Core.Asks;
 using NotchTasks.Core.Motion;
 using NotchTasks.Core.Notch;
+using NotchTasks.Pill.Sections;
 
 namespace NotchTasks.Pill;
 
@@ -79,8 +80,8 @@ public partial class ToastView : UserControl
     };
 
     /// Shows the toast in a style: its glyph, title, subtitle and the buttons it needs. `ask` is the agent's ask the toast
-    /// stands for, or null.
-    public void Show(Toast t, string style, AgentAsk? ask)
+    /// stands for, or null. `motion` is the Motion setting, which a battery toast's art springs by.
+    public void Show(Toast t, string style, AgentAsk? ask, string motion = "bouncy")
     {
         _toast = t;
         _ask = ask;
@@ -111,6 +112,10 @@ public partial class ToastView : UserControl
             CompactRight.Width = new GridLength(side);
             CompactGlyph.Text = glyph;
             CompactGlyph.Foreground = tint;
+            var art = t.Art as ChargeArt;
+            CompactArt.Content = art is null ? null : new ChargeArtView(art, motion);
+            CompactArt.Visibility = VisibleIf(art is not null);
+            CompactGlyph.Visibility = VisibleIf(art is null);
             CompactText.Text = t.Compact ? t.Subtitle : t.Title;
             CompactText.Foreground = t.Compact ? tint : Brushes.White;
         }

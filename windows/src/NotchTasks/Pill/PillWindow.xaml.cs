@@ -179,6 +179,11 @@ public partial class PillWindow : Window
                 {
                     SpriteClock.SetPause(ClockPause.DisplayOff, Marshal.ReadInt32(lParam, Win32.PowerSettingDataOffset) == 0);
                 }
+                else if (wParam == Win32.PBT_APMPOWERSTATUSCHANGE)
+                {
+                    // The AC line or the battery changed: the battery module reads it now.
+                    _state.PowerStatusChanged();
+                }
                 break;
             case Win32.WM_SETTINGCHANGE:
                 {
@@ -369,7 +374,7 @@ public partial class PillWindow : Window
         if (target is not null)
         {
             var ask = target.AskId is { } askId ? _state.Asks.FirstOrDefault(a => a.Id == askId) : null;
-            ToastBox.Show(target, _state.Settings.ToastStyle, ask);
+            ToastBox.Show(target, _state.Settings.ToastStyle, ask, _state.Settings.Motion);
             // Topmost is asserted again when a toast shows, as OpenPill does; the window itself never activates.
             Win32.SetWindowPos(_hwnd, Win32.HwndTopmost, 0, 0, 0, 0, Win32.SWP_NOMOVE | Win32.SWP_NOSIZE | Win32.SWP_NOACTIVATE);
             Animate(Mode.Toast);

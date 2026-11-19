@@ -13,6 +13,7 @@ internal static partial class Win32
     public const int WM_DPICHANGED = 0x02E0;
     public const int WM_POWERBROADCAST = 0x0218;
     public const int PBT_POWERSETTINGCHANGE = 0x8013;
+    public const int PBT_APMPOWERSTATUSCHANGE = 0x000A;  // the AC line or the battery changed
 
     /// GUID_CONSOLE_DISPLAY_STATE: the console display turns off, on, or dims (the DWORD data: 0, 1, 2).
     public static readonly Guid GuidConsoleDisplayState = new("6FE69556-704A-47A0-8F24-C28D936FDA47");
