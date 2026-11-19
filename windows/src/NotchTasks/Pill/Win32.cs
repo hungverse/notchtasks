@@ -41,6 +41,17 @@ internal static partial class Win32
     /// HWND_TOPMOST: the window stays above the others.
     public static readonly nint HwndTopmost = new(-1);
 
+    /// ShowWindow's command that restores a minimised or hidden window to its size and position.
+    public const int SW_RESTORE = 9;
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool ShowWindow(nint hwnd, int command);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool SetForegroundWindow(nint hwnd);
+
     [LibraryImport("user32.dll", EntryPoint = "GetWindowLongPtrW")]
     public static partial nint GetWindowLongPtr(nint hwnd, int index);
 

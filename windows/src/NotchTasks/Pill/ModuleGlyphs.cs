@@ -17,7 +17,8 @@ public static class ModuleGlyphs
         ["phone"] = "",
         ["video"] = "",
         ["mic"] = "",
-        ["micoff"] = "",
+        ["micoff"] = "",  // microphone with a slash: the mic is muted
+        ["phonedown"] = "",  // handset with a down arrow: the call ended
         ["camera"] = "",
         ["wifi"] = "",
         ["network"] = "",

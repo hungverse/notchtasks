@@ -1,0 +1,46 @@
+<UserControl x:Class="NotchTasks.Pill.Sections.CallCard"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:l="clr-namespace:NotchTasks.ControlPanel"
+             FontFamily="Segoe UI Variable Text, Segoe UI" Foreground="White">
+  <!-- Mac CallCard (Views.swift): the call's app, its name and its time, and round Mute and Open buttons with words under them. -->
+  <Border CornerRadius="14" Padding="10" Background="#1F30D158">
+    <Grid>
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="Auto" />
+      </Grid.ColumnDefinitions>
+      <Ellipse Width="34" Height="34" Fill="#30D158" VerticalAlignment="Center" />
+      <TextBlock x:Name="CallGlyph" Width="34" Height="34" TextAlignment="Center" VerticalAlignment="Center"
+                 FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="16" Foreground="White" />
+      <StackPanel Grid.Column="1" Margin="10,0,6,0" VerticalAlignment="Center">
+        <TextBlock x:Name="TitleText" FontSize="12" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+        <TextBlock x:Name="TimeText" FontSize="11" FontWeight="Medium" />
+      </StackPanel>
+      <Button x:Name="MuteButton" Grid.Column="2" Margin="0,0,8,0" Padding="0" Cursor="Hand"
+              FocusVisualStyle="{x:Null}" Background="Transparent" BorderThickness="0" Click="OnMute"
+              ToolTip="{l:L Mute}">
+        <StackPanel>
+          <Border x:Name="MuteCircle" Width="32" Height="32" CornerRadius="16" Background="#2EFFFFFF">
+            <TextBlock x:Name="MuteGlyph" HorizontalAlignment="Center" VerticalAlignment="Center"
+                       FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="13" Foreground="White" />
+          </Border>
+          <TextBlock x:Name="MuteCaption" HorizontalAlignment="Center" FontSize="9" FontWeight="Medium" Foreground="#8E8E93" />
+        </StackPanel>
+      </Button>
+      <Button x:Name="OpenButton" Grid.Column="3" Padding="0" Cursor="Hand"
+              FocusVisualStyle="{x:Null}" Background="Transparent" BorderThickness="0" Click="OnOpen"
+              ToolTip="{l:L Open}">
+        <StackPanel>
+          <Border Width="32" Height="32" CornerRadius="16" Background="#2EFFFFFF">
+            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
+                       FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="13" Foreground="White" Text="&#xE8A7;" />
+          </Border>
+          <TextBlock HorizontalAlignment="Center" FontSize="9" FontWeight="Medium" Foreground="#8E8E93" Text="{l:L Open}" />
+        </StackPanel>
+      </Button>
+    </Grid>
+  </Border>
+</UserControl>

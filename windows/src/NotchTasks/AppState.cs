@@ -24,6 +24,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
     private readonly ModuleHost _host;
     private readonly BatterySource _batterySource;
     private readonly HealthSource _healthSource;
+    private readonly SensorsSource _sensorsSource;
     private AskWatcher? _watcher;
     private bool _disposed;
 
@@ -41,6 +42,10 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         Downloads = new DownloadsModule(this, DownloadFolder.Locate() ?? string.Empty);
         Health = new HealthModule(this);
         _healthSource = new HealthSource(Health, PublishLoad, settings, readers);
+        Sensors = new SensorsModule(this,
+            () => ActiveModules(settings).Contains("privacy"),
+            () => ActiveModules(settings).Contains("calls"));
+        _sensorsSource = new SensorsSource(Sensors, Publish);
         _host = new ModuleHost(CreateSources(), OnTurnedOff, (message, e) => ErrorLog.Write(new InvalidOperationException(message, e)));
         _host.Apply(ActiveModules(settings));
         Snapshot = BuildSnapshot();
@@ -69,6 +74,10 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
 
     /// The health module: its disk warning is a toast, and its load is the snapshot's Load (null when not sampled).
     public HealthModule Health { get; }
+
+    /// The calls and privacy sensors: the snapshot's Call and Sensors, and the call card's state. Its source runs while either
+    /// module is on.
+    public SensorsModule Sensors { get; }
 
     /// Raised when only the load changed (a meter tick): the header follows it, and the rest of the notch is not rebuilt.
     public event Action? LoadChanged;
@@ -220,6 +229,9 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
             ["network"] = new NetworkSource(Network),
             ["downloads"] = new DownloadsSource(Downloads),
             ["health"] = _healthSource,
+            // one source for both: it counts its starts, so it runs while either module is on
+            ["privacy"] = _sensorsSource,
+            ["calls"] = _sensorsSource,
         };
 
     /// The snapshot's ask count: the asks belong to the agents module, so none count while it is off.
@@ -230,10 +242,19 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         modules,
         modules.Contains("agents") ? Asks.Count : 0,
         this.Timer.State,
-        null,
-        new SensorState(Array.Empty<string>(), false, false),
+        Sensors.Call,
+        Sensors.Sensors,
         Battery.State,
         Health.Load);
+    }
+
+    /// The call card's mute button: sets the default mic's mute, and publishes the new reading.
+    public void ToggleCallMute()
+    {
+        if (!_disposed)
+        {
+            _sensorsSource.ToggleMute();
+        }
     }
 
     /// The open pill starts or stops the load sampling: the CPU and RAM are read only while the pill is open (and SystemLoad is on).

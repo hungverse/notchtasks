@@ -8,13 +8,15 @@ using NotchTasks.Core.Notch;
 
 namespace NotchTasks.Pill;
 
-/// The closed pill's chips as they sit in the wings (Mac ChipView). A chip's lead is its glyph; its trail is its text.
-/// Only the ask chip and the timer chip have a trail yet; the call and sensor chips show their glyph alone (Task 10 refines them).
+/// The closed pill's chips as they sit in the wings (Mac ChipView). A chip's lead is its glyph; its trail is its text: the
+/// ask's words, the timer's time left, and the call's time so far (green, red while muted). A sensor chip has its glyphs only.
 public static class ChipView
 {
     private const string SegoeFont = "Segoe Fluent Icons, Segoe MDL2 Assets";
     private const string ChipTag = "chip";  // the Tag of a chip's panel in a wing: what a rebuild removes
     private static readonly Color AskOrange = Color.FromRgb(0xFF, 0x9F, 0x0A);
+    private static readonly Color CallGreen = Color.FromRgb(0x30, 0xD1, 0x58);  // the Mac's green: a call's time
+    private static readonly Color CallRed = Color.FromRgb(0xFF, 0x45, 0x3A);    // the Mac's red: a call's time while muted
 
     /// One chip as a panel for a wing: its lead, then its trail. Null when the chip has neither to show.
     public static FrameworkElement? Panel(Chip chip, Color? accent, IReadOnlyDictionary<string, string> moduleColors,
@@ -32,33 +34,46 @@ public static class ChipView
         return panel.Children.Count == 0 ? null : panel;
     }
 
-    /// The chip's glyph in its tint: the timer's, the call's (phone, video or muted mic) and the sensor's (mic or camera).
+    /// The chip's glyph in its tint: the timer's, the call's (phone, video or muted mic) and the sensor's (mic and/or camera).
     /// An ask has no glyph here: its trail is its text.
     public static FrameworkElement? Lead(Chip chip, double size, Color? accent, IReadOnlyDictionary<string, string> moduleColors)
     {
+        var brush = HexColor.Brush(ToHex(TintOf(chip, accent, moduleColors)));
+        if (chip.Kind == ChipKind.Sensor)
+        {
+            var sensors = chip.Sensors ?? new SensorState(Array.Empty<string>(), false, false);
+            var row = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+            if (sensors.Mic)
+            {
+                row.Children.Add(Glyph("mic", size, brush));
+            }
+            if (sensors.Camera)
+            {
+                row.Children.Add(Glyph("camera", size, brush));
+            }
+            return row.Children.Count == 0 ? null : row;
+        }
         var name = chip.Kind switch
         {
             ChipKind.Timer => "timer",
             ChipKind.Call => chip.Call is { Muted: true } ? "micoff" : chip.Call is { Video: true } ? "video" : "phone",
-            ChipKind.Sensor => chip.Sensors is { Mic: true } ? "mic" : "camera",
             _ => null,
         };
-        if (name is null)
-        {
-            return null;
-        }
-        return new TextBlock
-        {
-            Text = ModuleGlyphs.Get(name),
-            FontFamily = new FontFamily(SegoeFont),
-            FontSize = size,
-            Foreground = HexColor.Brush(ToHex(TintOf(chip, accent, moduleColors))),
-            VerticalAlignment = VerticalAlignment.Center,
-        };
+        return name is null ? null : Glyph(name, size, brush);
     }
 
-    /// The chip's text: "Waiting for you" (one ask) or "{0} waiting" (more) in orange, and a running timer's time left.
-    /// Null for a chip with no text (the call and the sensor).
+    /// A glyph in a brush, from the Segoe Fluent Icons font.
+    private static TextBlock Glyph(string name, double size, Brush brush) => new()
+    {
+        Text = ModuleGlyphs.Get(name),
+        FontFamily = new FontFamily(SegoeFont),
+        FontSize = size,
+        Foreground = brush,
+        VerticalAlignment = VerticalAlignment.Center,
+    };
+
+    /// The chip's text: "Waiting for you" (one ask) or "{0} waiting" (more) in orange, a running timer's time left, and a call's
+    /// time so far in green (red while the mic is muted). Null for a chip with no text (the sensor).
     public static FrameworkElement? Trail(Chip chip, double size, Color? accent, IReadOnlyDictionary<string, string> moduleColors, DateTimeOffset now)
     {
         switch (chip.Kind)
@@ -81,6 +96,16 @@ public static class ChipView
                     Text = TimerState.Mmss(timer.End - now),
                     Foreground = HexColor.Brush(ToHex(TintOf(chip, accent, moduleColors))),
                     FontSize = size + 1,
+                    FontWeight = FontWeights.Bold,
+                    Margin = new Thickness(6, 0, 6, 0),
+                    VerticalAlignment = VerticalAlignment.Center,
+                };
+            case ChipKind.Call when chip.Call is { } call:
+                return new TextBlock
+                {
+                    Text = TimerState.Mmss(now - call.Since),
+                    Foreground = new SolidColorBrush(call.Muted ? CallRed : CallGreen),
+                    FontSize = size,
                     FontWeight = FontWeights.Bold,
                     Margin = new Thickness(6, 0, 6, 0),
                     VerticalAlignment = VerticalAlignment.Center,
