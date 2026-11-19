@@ -17,9 +17,6 @@ public partial class WatchItemEditor : Window
     private const double MinThreshold = 0.5;
     private const double MaxThreshold = 100;
 
-    /// The longest exe path settings.js watchItem accepts.
-    private const int MaxExePath = 500;
-
     private readonly WatchItem _item;
     private readonly bool _limited;
 
@@ -68,6 +65,7 @@ public partial class WatchItemEditor : Window
     /// The fields follow the kind and the threshold; Save is enabled only for a complete, valid item.
     private void UpdateState()
     {
+        ProgramBox.MaxLength = WatchItemsJson.ProgramLimit(IsApp, ProgramBox.Text.Trim());
         var detailed = !_limited;
         KindRow.Visibility = Show(detailed);
         ProgramRow.Visibility = Show(detailed);
@@ -84,9 +82,14 @@ public partial class WatchItemEditor : Window
             : ProcessHint();
 
         var thresholdOk = _limited || TryThreshold(out _);
-        ErrorText.Text = thresholdOk ? string.Empty : L10n.L("Enter a number from 0.5 to 100, or leave it empty.");
-        ErrorText.Visibility = thresholdOk ? Visibility.Collapsed : Visibility.Visible;
-        SaveButton.IsEnabled = thresholdOk && Complete();
+        // a field past its limit (a name the list would drop) is not saved: the error says so
+        var fits = !TryBuild(out var built) || WatchItemsJson.Keeps(built);
+        var error = !thresholdOk ? L10n.L("Enter a number from 0.5 to 100, or leave it empty.")
+            : !fits ? L10n.L("A field is too long for the watch list.")
+            : string.Empty;
+        ErrorText.Text = error;
+        ErrorText.Visibility = error.Length == 0 ? Visibility.Collapsed : Visibility.Visible;
+        SaveButton.IsEnabled = thresholdOk && fits && Complete();
     }
 
     /// "Process name, as in Task Manager." is a Windows key on purpose: Activity Monitor (the Mac's hint) does not exist on Windows.
@@ -135,7 +138,7 @@ public partial class WatchItemEditor : Window
     /// Saves the item when it is valid: Result is set and the window closes (when it is shown).
     private void Save()
     {
-        if (!TryBuild(out var item))
+        if (!TryBuild(out var item) || !WatchItemsJson.Keeps(item))
         {
             UpdateState();
             return;
@@ -201,7 +204,7 @@ public partial class WatchItemEditor : Window
         {
             return item;
         }
-        if (Path.IsPathRooted(program) && program.Length <= MaxExePath)
+        if (Path.IsPathRooted(program) && program.Length <= WatchItemsJson.MaxExePath)
         {
             return item with { Exe = program };
         }

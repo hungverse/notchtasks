@@ -322,4 +322,55 @@ public sealed class WatchingPaneTests
             Assert.Equal(exe, editor.Result.Exe);
         });
     }
+
+    [Fact]
+    public void Editor_ProgramBox_FollowsTheKindAndTheText()
+    {
+        Sta.Run(() =>
+        {
+            var editor = new WatchItemEditor(new WatchItem("a1", "Alpha", WatchKind.Process, Process: "alpha"), isNew: false);
+            var program = Fixture.Named<TextBox>(editor, "ProgramBox");
+            Assert.Equal(200, program.MaxLength);
+
+            Fixture.Named<ComboBox>(editor, "KindBox").SelectedIndex = 1;
+            Assert.Equal(200, program.MaxLength);  // an app's name is kept as a bundle id: 200
+            program.Text = @"C:\Appsoooo.exe";
+            Assert.Equal(500, program.MaxLength);  // a rooted exe path: 500
+        });
+    }
+
+    [Fact]
+    public void Editor_ProcessNameOver200_NotSaved()
+    {
+        Sta.Run(() =>
+        {
+            var editor = new WatchItemEditor(new WatchItem("a1", "Alpha", WatchKind.Process, Process: "alpha"), isNew: false);
+            Fixture.Named<TextBox>(editor, "ProgramBox").Text = new string('p', 201);
+            Fixture.Call(editor, "Save");
+
+            Assert.Null(editor.Result);
+            Assert.False(Fixture.Named<Button>(editor, "SaveButton").IsEnabled);
+        });
+    }
+
+    [Fact]
+    public void Editor_AppNameOver200_NotSaved_AndARootedPathUpTo500_Saves()
+    {
+        Sta.Run(() =>
+        {
+            var editor = new WatchItemEditor(new WatchItem("b1", "Foo", WatchKind.App), isNew: false);
+            Fixture.Named<ComboBox>(editor, "KindBox").SelectedIndex = 1;
+            var program = Fixture.Named<TextBox>(editor, "ProgramBox");
+
+            program.Text = new string('n', 201);
+            Fixture.Call(editor, "Save");
+            Assert.Null(editor.Result);
+
+            var exe = @"C:\" + new string('e', 497);
+            program.Text = exe;
+            Fixture.Call(editor, "Save");
+            Assert.NotNull(editor.Result);
+            Assert.Equal(exe, editor.Result!.Exe);
+        });
+    }
 }

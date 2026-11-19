@@ -76,12 +76,49 @@ public sealed class ItemIconTests
                 Fixture.PumpUntil(() => ItemIcon.PathOf(state, processes) is not null);
                 Assert.Equal(@"C:\first\a.exe", ItemIcon.PathOf(state, processes));
 
-                // eleven minutes later the same pid is another program: the old path is not kept, and the new one is found
+                // eleven minutes later the expired path is still shown while its lookup runs: no flicker
                 now = now.AddMinutes(11);
                 processes.Info = new ProcInfo(555001, 1, "b.exe", 2, 0);
                 processes.Path = @"C:\second\b.exe";
+                Assert.Equal(@"C:\first\a.exe", ItemIcon.PathOf(state, processes));
+
+                // and then the same pid is another program: the old path is not kept, and the new one is found
                 Fixture.PumpUntil(() => ItemIcon.PathOf(state, processes) == @"C:\second\b.exe");
                 Assert.Equal(@"C:\second\b.exe", ItemIcon.PathOf(state, processes));
+            }
+            finally
+            {
+                ItemIcon.Clock = saved;
+            }
+        });
+    }
+
+    [Fact]
+    public void PathOf_AGonePid_LeavesNoCacheEntry()
+    {
+        Sta.Run(() =>
+        {
+            var now = new DateTimeOffset(2026, 11, 20, 11, 0, 0, TimeSpan.Zero);
+            var saved = ItemIcon.Clock;
+            try
+            {
+                ItemIcon.Clock = () => now;
+                // a pid no other test uses
+                var processes = new OneProcess { Info = new ProcInfo(555002, 1, "c.exe", 3, 0), Path = @"C:\third\c.exe" };
+                var state = new ItemState(new WatchItem("pid-gone", "App", WatchKind.App),
+                    new[] { new Job("555002", "App", "3%", true) });
+                Fixture.PumpUntil(() => ItemIcon.PathOf(state, processes) is not null);
+                Assert.True(ItemIcon.CachedEntryCount(555002) > 0);
+
+                // the program exits and the cached path expires: the next snapshot shows the pid gone and drops its entries
+                processes.Info = null;
+                now = now.AddMinutes(11);
+                Fixture.PumpUntil(() =>
+                {
+                    ItemIcon.PathOf(state, processes);
+                    return ItemIcon.CachedEntryCount(555002) == 0;
+                });
+                Assert.Equal(0, ItemIcon.CachedEntryCount(555002));
             }
             finally
             {

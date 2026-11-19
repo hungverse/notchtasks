@@ -138,6 +138,8 @@ public static class ItemIcon
     /// table. A pid reused by another program keeps its old path only until that path expires and the pid is looked up again.
     private static string? PidPath(int pid, IProcessReader processes)
     {
+        // an expired path is shown until its lookup lands, so the icon does not flicker while it refreshes
+        string? last = null;
         lock (Gate)
         {
             if (StartByPid.TryGetValue(pid, out var start) && PathsByPid.TryGetValue((pid, start), out var known))
@@ -147,28 +149,44 @@ public static class ItemIcon
                 {
                     return known.Path;
                 }
+                last = known.Path;
             }
             if (!Resolving.Add(pid))
             {
-                return null;
+                return last;
             }
         }
         _ = Task.Run(() => Resolve(pid, processes));
-        return null;
+        return last;
     }
 
     /// Looks a pid up in the process table, off the UI thread, and caches its image path under the pid and the program's start
-    /// time. A pid that is gone is cached with no path and no start time.
+    /// time. The snapshot also prunes every entry of a pid it no longer shows, so the cache does not grow with every pid ever
+    /// seen. A pid that is gone leaves no entry.
     private static void Resolve(int pid, IProcessReader processes)
     {
         string? path = null;
         long start = 0;
+        var running = false;
         try
         {
-            if (processes.Snapshot().ById.TryGetValue(pid, out var info))
+            var snapshot = processes.Snapshot();
+            if (snapshot.ById.TryGetValue(pid, out var info))
             {
+                running = true;
                 start = info.StartTicks;
                 path = processes.ImagePath(info);
+            }
+            lock (Gate)
+            {
+                foreach (var key in PathsByPid.Keys.Where(k => !snapshot.ById.ContainsKey(k.Pid)).ToList())
+                {
+                    PathsByPid.Remove(key);
+                }
+                foreach (var gone in StartByPid.Keys.Where(p => !snapshot.ById.ContainsKey(p)).ToList())
+                {
+                    StartByPid.Remove(gone);
+                }
             }
         }
         catch (Exception e) when (e is Win32Exception or InvalidOperationException or ArgumentException)
@@ -181,13 +199,29 @@ public static class ItemIcon
             {
                 Resolving.Remove(pid);
                 // a pid now belongs to this start time: the entries of an earlier program with this pid go
-                foreach (var key in PathsByPid.Keys.Where(k => k.Pid == pid && k.Start != start).ToList())
+                foreach (var key in PathsByPid.Keys.Where(k => k.Pid == pid && (!running || k.Start != start)).ToList())
                 {
                     PathsByPid.Remove(key);
                 }
-                PathsByPid[(pid, start)] = (path, Clock());
-                StartByPid[pid] = start;
+                if (running)
+                {
+                    PathsByPid[(pid, start)] = (path, Clock());
+                    StartByPid[pid] = start;
+                }
+                else
+                {
+                    StartByPid.Remove(pid);
+                }
             }
+        }
+    }
+
+    /// The number of cached entries for a pid (tests: a gone pid leaves none).
+    public static int CachedEntryCount(int pid)
+    {
+        lock (Gate)
+        {
+            return PathsByPid.Keys.Count(k => k.Pid == pid) + (StartByPid.ContainsKey(pid) ? 1 : 0);
         }
     }
 

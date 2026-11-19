@@ -36,7 +36,8 @@
         <ColumnDefinition Width="*" />
       </Grid.ColumnDefinitions>
       <TextBlock x:Name="ProgramLabel" VerticalAlignment="Center" />
-      <TextBox x:Name="ProgramBox" Grid.Column="1" MaxLength="500" />
+      <!-- the longest the field takes follows the kind and the text (WatchItemsJson.ProgramLimit), set in code -->
+      <TextBox x:Name="ProgramBox" Grid.Column="1" MaxLength="200" />
     </Grid>
     <TextBlock x:Name="ProgramHint" Style="{StaticResource CardNote}" Margin="150,0,0,10" />
 

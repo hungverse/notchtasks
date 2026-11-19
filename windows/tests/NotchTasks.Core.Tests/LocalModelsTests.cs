@@ -104,6 +104,33 @@ public sealed class LocalModelsTests : IDisposable
     }
 
     [Fact]
+    public void LmStudioLoaded_LmsCmdEarlierOnPath_LmsExeLaterIsRun()
+    {
+        var cmdBin = Temp();
+        var exeBin = Temp();
+        File.WriteAllText(Path.Combine(cmdBin, "lms.cmd"), "@echo off\r\n");
+        var lms = Path.Combine(exeBin, "lms.exe");
+        File.WriteAllText(lms, string.Empty);
+        var runner = new FakeLmsRunner { Output = "[{\"displayName\":\"Gemma\"}]" };
+
+        var models = LocalModels.LmStudioLoaded(Temp(), runner.Run, path: cmdBin + Path.PathSeparator + exeBin, appData: Temp());
+
+        Assert.Equal(new[] { "Gemma" }, models);
+        Assert.Equal(new[] { lms }, runner.Runs);
+    }
+
+    [Fact]
+    public void LmStudioLoaded_OnlyAnLmsCmd_IsNeverRun()
+    {
+        var bin = Temp();
+        File.WriteAllText(Path.Combine(bin, "lms.cmd"), "@echo off\r\n");
+        var runner = new FakeLmsRunner { Output = "[{\"displayName\":\"Gemma\"}]" };
+
+        Assert.Empty(LocalModels.LmStudioLoaded(Temp(), runner.Run, path: bin, appData: Temp()));
+        Assert.Empty(runner.Runs);
+    }
+
+    [Fact]
     public void LmStudioLoaded_RunnerFails_IsEmpty()
     {
         var bin = Temp();

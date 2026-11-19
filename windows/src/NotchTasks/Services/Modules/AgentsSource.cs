@@ -177,6 +177,8 @@ public sealed class AgentsSource : IModuleSource
         bool CodexOn,
         bool AgyOn,
         bool ArgvNeeded,
+        bool ArgvAll,
+        IReadOnlySet<string> ArgvNames,
         bool ReadLocal,
         bool ReadCodexLimits,
         ProviderLimits? PreviousCodexLimits);
@@ -186,6 +188,8 @@ public sealed class AgentsSource : IModuleSource
         var items = _settings.Items;
         var on = items.Where(i => i.Enabled && !WatchItems.InBuild(i)).ToList();
         var localOn = on.Any(i => LocalKey(i) is not null);
+        // only a Process item matches by command line (an App item has no roots, and an agy item reads its own jobs)
+        var processes = on.Where(i => i.Kind == WatchKind.Process && i.Cli != "agy").ToList();
         return new Request(
             items,
             _settings.DoneAfter,
@@ -193,7 +197,10 @@ public sealed class AgentsSource : IModuleSource
             ClaudeOn: on.Any(i => i.Kind == WatchKind.Claude),
             CodexOn: on.Any(i => i.Kind == WatchKind.Codex),
             AgyOn: on.Any(i => i.Kind == WatchKind.Process && i.Cli == "agy"),
-            ArgvNeeded: on.Any(i => i.Kind is WatchKind.Process or WatchKind.App),
+            ArgvNeeded: processes.Count > 0,
+            // every process only when an item has no process name and an argument to find: otherwise the named ones
+            ArgvAll: processes.Any(i => ProcTable.NormName(i.Process).Length == 0 && !string.IsNullOrEmpty(i.Args)),
+            ArgvNames: processes.Select(i => ProcTable.NormName(i.Process)).Where(n => n.Length > 0).ToHashSet(StringComparer.Ordinal),
             ReadLocal: localOn && now >= _nextLocal,
             ReadCodexLimits: on.Any(i => i.Kind == WatchKind.Codex) && now >= _nextCodexLimits,
             PreviousCodexLimits: _codexLimits);
@@ -237,7 +244,7 @@ public sealed class AgentsSource : IModuleSource
 
         return new Reading(
             snapshot,
-            r.ArgvNeeded ? PrefetchArgv(snapshot) : (_ => Array.Empty<string>()),
+            r.ArgvNeeded ? PrefetchArgv(snapshot, r) : (_ => Array.Empty<string>()),
             claude,
             codexJobs,
             questions,
@@ -246,11 +253,19 @@ public sealed class AgentsSource : IModuleSource
             local);
     }
 
-    /// The command-line words of every process, read now (the reader caches them), so the module's lookups need no OS calls.
-    private Func<ProcInfo, IReadOnlyList<string>> PrefetchArgv(ProcSnapshot snapshot)
+    /// The command-line words of the processes the module can look up, read now, so its lookups need no OS calls. Those are the
+    /// processes named by a Process item and their direct children (a child task's title reads its words), or every process
+    /// when an item matches by arguments alone. Any other process is not read, and its words are empty.
+    private Func<ProcInfo, IReadOnlyList<string>> PrefetchArgv(ProcSnapshot snapshot, Request r)
     {
+        var wanted = r.ArgvAll
+            ? snapshot.All
+            : snapshot.All
+                .Where(p => r.ArgvNames.Contains(ProcTable.NormName(p.Name)))
+                .SelectMany(p => snapshot.Kids(p.Pid).Prepend(p))
+                .ToList();
         var words = new Dictionary<int, IReadOnlyList<string>>();
-        foreach (var p in snapshot.All)
+        foreach (var p in wanted)
         {
             words[p.Pid] = ProcTable.SplitArgs(_reads.Processes.CommandLine(p));
         }

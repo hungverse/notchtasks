@@ -158,4 +158,43 @@ public sealed class WatchItemsJsonTests : IDisposable
         Assert.NotNull(keys);
         Assert.Contains("items", keys!);
     }
+
+    [Fact]
+    public void ProgramLimit_ProcessAndAppName_200_AppRootedPath_500()
+    {
+        Assert.Equal(200, WatchItemsJson.ProgramLimit(app: false, new string('p', 300)));
+        Assert.Equal(200, WatchItemsJson.ProgramLimit(app: true, "foo"));
+        Assert.Equal(500, WatchItemsJson.ProgramLimit(app: true, @"C:\Appsoo.exe"));
+    }
+
+    [Fact]
+    public void Keeps_ItemsTheReaderKeeps_AndItemsItDrops()
+    {
+        // a process name of 200 characters is kept; 201 is dropped by the reader
+        Assert.True(WatchItemsJson.Keeps(new WatchItem("a", "Alpha", WatchKind.Process, Process: new string('p', 200))));
+        Assert.False(WatchItemsJson.Keeps(new WatchItem("b", "Alpha", WatchKind.Process, Process: new string('p', 201))));
+        // an app's name is stored as its bundle id: 200 kept, 201 dropped
+        Assert.True(WatchItemsJson.Keeps(new WatchItem("c", "Foo", WatchKind.App, BundleID: new string('n', 200))));
+        Assert.False(WatchItemsJson.Keeps(new WatchItem("d", "Foo", WatchKind.App, BundleID: new string('n', 201))));
+        // an exe path: rooted and up to 500 is kept; a longer one is not an exe, so it falls back to the bundle id limit
+        var exe = @"C:\" + new string('e', 497);
+        Assert.Equal(500, exe.Length);
+        Assert.True(WatchItemsJson.Keeps(new WatchItem("e", "Foo", WatchKind.App, Exe: exe)));
+        Assert.False(WatchItemsJson.Keeps(new WatchItem("f", "Foo", WatchKind.App, Exe: @"C:\" + new string('e', 498))));
+    }
+
+    [Fact]
+    public void SetItems_ItemTheReaderWouldDrop_IsRefused_AndNothingIsSaved()
+    {
+        var file = Path.Combine(_dir, "settings.json");
+        using var store = SettingsStore.Load(file);
+        var before = store.Items.Count;
+
+        var refused = store.SetItems(new[] { new WatchItem("a", "Alpha", WatchKind.Process, Process: new string('p', 201)) });
+
+        Assert.NotNull(refused);
+        Assert.Equal(before, store.Items.Count);
+        Assert.Null(store.SetItems(new[] { new WatchItem("a", "Alpha", WatchKind.Process, Process: new string('p', 200)) }));
+        Assert.Single(store.Items);
+    }
 }

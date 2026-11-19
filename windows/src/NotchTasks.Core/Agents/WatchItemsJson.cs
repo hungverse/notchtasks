@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 
@@ -9,6 +10,10 @@ public static class WatchItemsJson
 {
     /// The most items the list holds.
     public const int MaxItems = 64;
+
+    /// The longest text field (a process name, an app name, a bundle id, an argument line) and the longest exe path.
+    public const int MaxText = 200;
+    public const int MaxExePath = 500;
 
     private static readonly Regex IdPattern = new(@"^[A-Za-z0-9_-]{1,64}\z");
 
@@ -42,6 +47,24 @@ public static class WatchItemsJson
             }
         }
         return items;
+    }
+
+    /// The longest program text an item of this kind keeps: 500 for an app's rooted exe path, else 200 (a process name, or an
+    /// app's name that is stored as a bundle id). The editor's program box follows this, so what is typed is what is kept.
+    public static int ProgramLimit(bool app, string program) => app && Path.IsPathRooted(program) ? MaxExePath : MaxText;
+
+    /// True when the reader keeps this item as it is: every field is within its limit, so the next read does not drop it.
+    /// A save of an item that fails this is refused, instead of being written and then deleted by the reader.
+    public static bool Keeps(WatchItem item)
+    {
+        try
+        {
+            return ParseItem(ToNode(item), out _) is not null;
+        }
+        catch (JsonException)
+        {
+            return false;  // an icon that is not JSON
+        }
     }
 
     /// The list as a JSON array. Unknown fields kept on each item are written back.

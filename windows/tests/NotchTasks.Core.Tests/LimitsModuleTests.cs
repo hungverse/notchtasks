@@ -27,6 +27,25 @@ public class LimitsModuleTests
         LimitWarn: warn);
 
     [Fact]
+    public void Unchanged_Reading_WithANewUpdatedTime_IsNotAChange()
+    {
+        var module = new LimitsModule(new RecordingAnnouncer());
+        Assert.True(module.Update(All(), T0));
+
+        // the same quota read again a minute later: the windows are the same, so nothing is published
+        var later = All() with
+        {
+            Antigravity = new ProviderLimits("antigravity", "Antigravity", null,
+                new[] { new LimitWindow("5h", 10, T0.AddHours(1)) }, T0.AddMinutes(1)),
+        };
+        Assert.False(module.Update(later, T0.AddMinutes(1)));
+
+        // a window that moved is a change
+        var moved = All() with { Antigravity = Provider("antigravity", "Antigravity", 11, T0.AddHours(1)) };
+        Assert.True(module.Update(moved, T0.AddMinutes(2)));
+    }
+
+    [Fact]
     public void ProvidersOn_ComeOutInOrder_ClaudeCodexAntigravity()
     {
         var module = new LimitsModule(new RecordingAnnouncer());

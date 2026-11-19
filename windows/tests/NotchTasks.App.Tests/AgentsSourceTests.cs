@@ -148,4 +148,71 @@ public sealed class AgentsSourceTests
             Assert.Empty(seen[^1]);
         });
     }
+
+    /// A fixed process table that records the pids whose command line is read.
+    private sealed class ArgvRecording : IProcessReader
+    {
+        private readonly ProcInfo[] _procs;
+
+        public ArgvRecording(params ProcInfo[] procs) => _procs = procs;
+
+        public List<int> Read { get; } = new();
+
+        public ProcSnapshot Snapshot() => new(_procs);
+
+        public string? CommandLine(ProcInfo p)
+        {
+            Read.Add(p.Pid);
+            return "\"" + p.Name + "\" --flag";
+        }
+
+        public string? ImagePath(ProcInfo p) => null;
+    }
+
+    [Fact]
+    public void AgentsSource_AnAppItemAlone_ReadsNoCommandLine()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            var settings = SettingsStore.Load(AppPaths.SettingsFile);
+            settings.SetItems(new[] { new WatchItem("app1", "Foo", WatchKind.App, BundleID: "foo.exe") });
+            var processes = new ArgvRecording(new ProcInfo(10, 1, "foo.exe", 1, 0));
+            var module = new AgentsModule(new QuietAnnouncer());
+            var source = Source(settings, Readers(root, processes), module, () => { });
+
+            source.Start();
+            Fixture.Call(source, "Tick");
+            Fixture.PumpUntil(() => module.States.Count > 0);
+            source.Stop();
+
+            Assert.Empty(processes.Read);
+        });
+    }
+
+    [Fact]
+    public void AgentsSource_AProcessItem_ReadsOnlyItsProcessesAndTheirChildren()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            var settings = SettingsStore.Load(AppPaths.SettingsFile);
+            settings.SetItems(new[] { new WatchItem("p1", "Agent", WatchKind.Process, Process: "fakeagent.exe", ChildTasks: true) });
+            var processes = new ArgvRecording(
+                new ProcInfo(10, 1, "fakeagent.exe", 1, 0),
+                new ProcInfo(11, 10, "helper.exe", 1, 0),
+                new ProcInfo(12, 1, "unrelated.exe", 1, 0));
+            var module = new AgentsModule(new QuietAnnouncer());
+            var source = Source(settings, Readers(root, processes), module, () => { });
+
+            source.Start();
+            Fixture.Call(source, "Tick");
+            Fixture.PumpUntil(() => module.States.Count > 0);
+            source.Stop();
+
+            Assert.Contains(10, processes.Read);
+            Assert.Contains(11, processes.Read);  // a child task's title reads its words
+            Assert.DoesNotContain(12, processes.Read);
+        });
+    }
 }

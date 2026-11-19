@@ -217,9 +217,18 @@ public sealed class SettingsStore : INotifyPropertyChanged, IDisposable
         }
     }
 
-    /// Saves the watch list (at most 64 items; more are dropped). Raises Changed and PropertyChanged for "items".
-    public void SetItems(IReadOnlyList<WatchItem> items) =>
-        Set("items", WatchItemsJson.Write(items.Take(WatchItemsJson.MaxItems)));
+    /// Saves the watch list (at most 64 items; more are dropped). Raises Changed and PropertyChanged for "items". Returns null when
+    /// it is saved. An item the reader would drop (a field past its limit) is refused: nothing is saved and the reason is returned.
+    public string? SetItems(IReadOnlyList<WatchItem> items)
+    {
+        var kept = items.Take(WatchItemsJson.MaxItems).ToList();
+        if (kept.Any(item => !WatchItemsJson.Keeps(item)))
+        {
+            return L10n.L("A field is too long for the watch list.");
+        }
+        Set("items", WatchItemsJson.Write(kept));
+        return null;
+    }
 
     /// Seconds a task must run before its completion is announced, 5 to 600 (Mac doneAfter).
     public double DoneAfter => Ranged("doneAfter", 30, 5, 600);

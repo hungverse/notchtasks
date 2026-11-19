@@ -4,8 +4,12 @@ using Xunit;
 namespace NotchTasks.Core.Tests;
 
 // Ported from electron/test/devscan.test.js (DevRules.project, folderFromArgv) and electron/test/providers.test.js (ago).
+[Collection("L10n")]
 public class FoldersAndAgoTests
 {
+    // Ago.Text is compared as English copy: the strings are loaded in English for every test of the class
+    public FoldersAndAgoTests() => AsksFixtures.InitEnglish();
+
     [Fact]
     public void Project_HandlesBothSeparators_AndSkipsPlatformFolders()
     {

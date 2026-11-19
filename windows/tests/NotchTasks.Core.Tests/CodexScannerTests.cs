@@ -187,8 +187,9 @@ public sealed class CodexScannerTests : IDisposable
             ["type"] = "event_msg",
             ["payload"] = new JsonObject { ["type"] = "task_started", ["turn_id"] = "t" },
         }.ToJsonString();
-        Rollout(root, Path.Combine("2026", "11", "14", "rollout-a.jsonl"), @"C:\Users\hung\Projects\notchtasks", "sa", new[] { started }, now);
-        Rollout(root, Path.Combine("2026", "11", "14", "rollout-child.jsonl"), @"C:\Users\hung\Projects\other", "sc",
+        // today's date folder: the scan does not enter a day folder that is older than the job window
+        Rollout(root, Path.Combine(Day(now), "rollout-a.jsonl"), @"C:\Users\hung\Projects\notchtasks", "sa", new[] { started }, now);
+        Rollout(root, Path.Combine(Day(now), "rollout-child.jsonl"), @"C:\Users\hung\Projects\other", "sc",
             new[] { """{"parent_thread_id":"sa"}""", started }, now);
 
         var scanner = new CodexScanner(root);
@@ -461,5 +462,106 @@ public sealed class CodexScannerTests : IDisposable
         var desktop = Assert.Single(asks, a => a.Id == "codex|gg|q2");
         Assert.Equal("Codex", desktop.Session);
         Assert.Equal(700, desktop.Summary.Length);
+    }
+
+    private static string Day(DateTimeOffset t) =>
+        Path.Combine(t.UtcDateTime.ToString("yyyy", CultureInfo.InvariantCulture), t.UtcDateTime.ToString("MM", CultureInfo.InvariantCulture),
+            t.UtcDateTime.ToString("dd", CultureInfo.InvariantCulture));
+
+    [Fact]
+    public void CodexScanner_Jobs_DoesNotEnterDateFoldersBeforeTheWindow()
+    {
+        AsksFixtures.InitEnglish();
+        var root = Path.Combine(Temp(), "sessions");
+        var now = DateTimeOffset.UtcNow;
+        var old = now.AddDays(-3);
+        var started = new JsonObject
+        {
+            ["timestamp"] = Ts(now.AddSeconds(-30)),
+            ["type"] = "event_msg",
+            ["payload"] = new JsonObject { ["type"] = "task_started", ["turn_id"] = "t" },
+        }.ToJsonString();
+        Rollout(root, Path.Combine(Day(now), "rollout-now.jsonl"), @"C:\a\now", "s1", new[] { started }, now);
+        Rollout(root, Path.Combine(Day(old), "rollout-old.jsonl"), @"C:\a\old", "s2", new[] { started }, old);
+
+        var entered = new List<string>();
+        var scanner = new CodexScanner(root, onFolder: entered.Add);
+        var job = Assert.Single(scanner.Jobs(now));
+
+        Assert.Equal("rollout-now.jsonl", job.Id);
+        Assert.Contains(entered, d => d.EndsWith(Day(now), StringComparison.Ordinal));
+        Assert.DoesNotContain(entered, d => d.EndsWith(Day(old), StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void CodexScanner_Limits_DoesNotEnterDateFoldersBeforeSevenDays_AndReadsNothingOnAnUnchangedTree()
+    {
+        AsksFixtures.InitEnglish();
+        var root = Path.Combine(Temp(), "sessions");
+        var now = DateTimeOffset.UtcNow;
+        var sec = now.ToUnixTimeSeconds();
+        string Limits(double pct, DateTimeOffset at) => new JsonObject
+        {
+            ["timestamp"] = Ts(at),
+            ["type"] = "event_msg",
+            ["payload"] = new JsonObject
+            {
+                ["rate_limits"] = new JsonObject
+                {
+                    ["primary"] = new JsonObject { ["used_percent"] = pct, ["window_minutes"] = 300, ["resets_at"] = sec + 3600 },
+                },
+            },
+        }.ToJsonString();
+        var ancient = now.AddDays(-10);
+        Rollout(root, Path.Combine(Day(now), "new.jsonl"), "/b", "n", new[] { Limits(55, now.AddSeconds(-60)) }, now);
+        Rollout(root, Path.Combine(Day(ancient), "ancient.jsonl"), "/c", "c", new[] { Limits(90, ancient) }, ancient);
+
+        var entered = new List<string>();
+        var reads = new List<int>();
+        var scanner = new CodexScanner(root, reads.Add, entered.Add);
+        Assert.Equal(55, scanner.Limits(now)!.Windows[0].Used);
+        Assert.DoesNotContain(entered, d => d.EndsWith(Day(ancient), StringComparison.Ordinal));
+
+        // an unchanged tree is not read again
+        Assert.True(reads.Sum() > 0);
+        reads.Clear();
+        Assert.Equal(55, scanner.Limits(now)!.Windows[0].Used);
+        Assert.Empty(reads);
+
+        // a changed file is read again
+        Rollout(root, Path.Combine(Day(now), "new.jsonl"), "/b", "n", new[] { Limits(70, now.AddSeconds(-10)) }, now.AddSeconds(1));
+        Assert.Equal(70, scanner.Limits(now.AddSeconds(2))!.Windows[0].Used);
+        Assert.NotEmpty(reads);
+    }
+
+    [Fact]
+    public void CodexScanner_Limits_CachedReading_ResetStillAppliesAtTheTimeAsked()
+    {
+        AsksFixtures.InitEnglish();
+        var root = Path.Combine(Temp(), "sessions");
+        var now = DateTimeOffset.UtcNow;
+        var line = new JsonObject
+        {
+            ["timestamp"] = Ts(now.AddSeconds(-5)),
+            ["type"] = "event_msg",
+            ["payload"] = new JsonObject
+            {
+                ["rate_limits"] = new JsonObject
+                {
+                    ["primary"] = new JsonObject
+                    {
+                        ["used_percent"] = 60.0,
+                        ["window_minutes"] = 300,
+                        ["resets_at"] = now.ToUnixTimeSeconds() + 3600,
+                    },
+                },
+            },
+        }.ToJsonString();
+        Rollout(root, Path.Combine(Day(now), "r.jsonl"), "/r", "r", new[] { line }, now);
+
+        var scanner = new CodexScanner(root);
+        Assert.Equal(60, scanner.Limits(now)!.Windows[0].Used);
+        // the reset has passed by then: nothing is used, although the file is cached
+        Assert.Equal(0, scanner.Limits(now.AddHours(2))!.Windows[0].Used);
     }
 }

@@ -29,7 +29,8 @@ public static partial class CliLauncher
     public static CliCommand? Resolve(string name, string home, string? path = null, string? appData = null)
     {
         var found = Candidates(name, home, path, appData);
-        var exe = found.FirstOrDefault(p => p.EndsWith(".exe", StringComparison.OrdinalIgnoreCase));
+        // a relative PATH entry gives a relative .exe: it is not a winner (the app must start the file it names, whatever the folder)
+        var exe = found.FirstOrDefault(p => p.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) && Path.IsPathFullyQualified(p));
         if (exe is not null)
         {
             return new CliCommand(CliKind.Direct, exe, Array.Empty<string>());

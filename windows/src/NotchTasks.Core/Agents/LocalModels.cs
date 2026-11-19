@@ -1,5 +1,6 @@
 using System.Text.Json;
 using NotchTasks.Core.Asks;
+using NotchTasks.Services;
 
 namespace NotchTasks.Core.Agents;
 
@@ -15,7 +16,9 @@ public static class LocalModels
     /// stdout, or null when it fails. `path` is the PATH to search (null: this process's PATH); `appData` as in FindCli.
     public static IReadOnlyList<string> LmStudioLoaded(string home, Func<string, string?> runLmsPsJson, string? path = null, string? appData = null)
     {
-        var lms = AgentSetup.FindCli("lms", home, path, appData) ?? Path.Combine(home, ".lmstudio", "bin", "lms.exe");
+        // a real lms.exe only (CliLauncher.ResolveDirect): a lms.cmd or .ps1 is never started, however early it is on PATH
+        var found = CliLauncher.ResolveDirect("lms", home, path, appData);
+        var lms = found is { Prefix.Count: 0 } ? found.FileName : Path.Combine(home, ".lmstudio", "bin", "lms.exe");
         if (!File.Exists(lms))
         {
             return Array.Empty<string>();

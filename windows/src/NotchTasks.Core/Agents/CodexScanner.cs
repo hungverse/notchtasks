@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -14,6 +15,12 @@ public sealed record CodexQuestion(string Thread, string CallId, string Tool, IR
 
 /// The newest rate_limits event of a rollout.
 public sealed record CodexLimitsFound(DateTimeOffset At, IReadOnlyList<LimitWindow> Windows);
+
+/// One window as a rollout writes it: Used is the percent used and ResetSeconds the reset in Unix seconds, before any reset applies.
+public sealed record RawLimitWindow(string Label, double Used, double ResetSeconds);
+
+/// The newest rate_limits event of a rollout as written (see CodexRollout.ParseRawLimits).
+public sealed record CodexLimitsRaw(DateTimeOffset At, IReadOnlyList<RawLimitWindow> Windows);
 
 /// The pure parsers of a Codex rollout (Electron: providers.js parseCodexStatus, parseCodexLimits, parseCodexQuestion,
 /// codexTitleAndThread; Mac: Providers.swift CodexStatus, CodexQuestion). Each works on text of complete lines.
@@ -61,8 +68,15 @@ public static partial class CodexRollout
     /// A line without a timestamp is dated MinValue. Null when there is no rate_limits event.
     public static CodexLimitsFound? ParseLimits(string text, DateTimeOffset now)
     {
+        var raw = ParseRawLimits(text);
+        return raw is null ? null : ApplyLimits(raw, now);
+    }
+
+    /// The newest rate_limits event as written, before any reset is applied. It does not depend on the time it is read at,
+    /// so the scanner can keep it for as long as the file does not change.
+    public static CodexLimitsRaw? ParseRawLimits(string text)
+    {
         var lines = text.Split('\n');
-        var nowSeconds = now.ToUnixTimeMilliseconds() / 1000.0;
         for (var i = lines.Length - 1; i >= 0; i--)
         {
             var line = lines[i];
@@ -81,7 +95,7 @@ public static partial class CodexRollout
                 continue;
             }
             var at = Providers.ParseIso(Str(Get(doc.RootElement, "timestamp"))) ?? DateTimeOffset.MinValue;
-            var windows = new List<LimitWindow>();
+            var windows = new List<RawLimitWindow>();
             foreach (var key in new[] { "primary", "secondary" })
             {
                 var w = Get(rl, key);
@@ -92,14 +106,23 @@ public static partial class CodexRollout
                 {
                     continue;
                 }
-                windows.Add(new LimitWindow(
-                    WindowLabel(mins),
-                    resets.Value > nowSeconds ? used.Value : 0,
-                    DateTimeOffset.FromUnixTimeMilliseconds((long)(resets.Value * 1000))));
+                windows.Add(new RawLimitWindow(WindowLabel(mins), used.Value, resets.Value));
             }
-            return new CodexLimitsFound(at, windows);
+            return new CodexLimitsRaw(at, windows);
         }
         return null;
+    }
+
+    /// The windows of a raw reading, at the time now: a window whose reset (epoch seconds) has passed has nothing used yet.
+    public static CodexLimitsFound ApplyLimits(CodexLimitsRaw raw, DateTimeOffset now)
+    {
+        var nowSeconds = now.ToUnixTimeMilliseconds() / 1000.0;
+        return new CodexLimitsFound(raw.At, raw.Windows
+            .Select(w => new LimitWindow(
+                w.Label,
+                w.ResetSeconds > nowSeconds ? w.Used : 0,
+                DateTimeOffset.FromUnixTimeMilliseconds((long)(w.ResetSeconds * 1000))))
+            .ToList());
     }
 
     /// "5h" under a day of minutes, else "7d" (providers.js windowLabel).
@@ -261,6 +284,8 @@ public sealed class CodexScanner
 
     private readonly string _root;
     private readonly Dictionary<string, Entry> _cache = new(StringComparer.Ordinal);
+    /// The raw limits of each rollout, keyed by path, for the mtime it had when it was read. An unchanged file is not read again.
+    private readonly Dictionary<string, (DateTimeOffset Mtime, CodexLimitsRaw? Raw)> _limitsCache = new(StringComparer.Ordinal);
 
     private sealed class Entry
     {
@@ -277,20 +302,23 @@ public sealed class CodexScanner
     public const int ChunkBytes = 1_048_576;
 
     private readonly Action<int>? _onRead;
+    private readonly Action<string>? _onFolder;
 
     /// The folder to scan (for the app, <home>\.codex\sessions). Nothing is read until a method is called.
     /// onRead, when given, is told the size of every chunk read (the tests use it to check the reads stay bounded).
-    public CodexScanner(string root, Action<int>? onRead = null)
+    /// onFolder, when given, is told the path of every folder the scan lists (the tests use it to check old date folders are skipped).
+    public CodexScanner(string root, Action<int>? onRead = null, Action<string>? onFolder = null)
     {
         _root = root;
         _onRead = onRead;
+        _onFolder = onFolder;
     }
 
     /// Tasks running now, or finished in the last 10 min. A rollout with no writes for 20 min is dead. Child threads are not tasks.
     public IReadOnlyList<Job> Jobs(DateTimeOffset now)
     {
         var jobs = new List<Job>();
-        foreach (var (path, mtime) in WalkJsonl(_root))
+        foreach (var (path, mtime, _) in WalkJsonl(now, JobWindow))
         {
             if (now - mtime >= JobWindow)
             {
@@ -322,22 +350,36 @@ public sealed class CodexScanner
     public ProviderLimits? Limits(DateTimeOffset now)
     {
         CodexLimitsFound? best = null;
-        foreach (var (path, mtime) in WalkJsonl(_root))
+        var listed = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var (path, mtime, size) in WalkJsonl(now, LimitsWindow))
         {
             if (now - mtime >= LimitsWindow)
             {
                 continue;
             }
-            if (best is not null && !(mtime > best.At))
+            listed.Add(path);
+            if (!_limitsCache.TryGetValue(path, out var cached) || cached.Mtime != mtime)
             {
-                continue;
+                // a rollout older than the newest reading found so far cannot change the answer: it is not read
+                if (best is not null && !(mtime > best.At))
+                {
+                    continue;
+                }
+                var text = Providers.ReadTail(path);
+                _onRead?.Invoke((int)Math.Min(size, Providers.TailBytes));
+                cached = (mtime, CodexRollout.ParseRawLimits(text));
+                _limitsCache[path] = cached;
             }
-            var found = CodexRollout.ParseLimits(Providers.ReadTail(path), now);
+            var found = cached.Raw is null ? null : CodexRollout.ApplyLimits(cached.Raw, now);
             if (found is null || (best is not null && !(found.At > best.At)))
             {
                 continue;
             }
             best = found;
+        }
+        foreach (var gone in _limitsCache.Keys.Where(k => !listed.Contains(k)).ToList())
+        {
+            _limitsCache.Remove(gone);
         }
         return best is null
             ? null
@@ -439,35 +481,41 @@ public sealed class CodexScanner
         _cache[file] = entry;
     }
 
-    /// Every .jsonl file under root, with its last write time. Folders that cannot be read are skipped.
-    private static List<(string Path, DateTimeOffset Mtime)> WalkJsonl(string root)
+    /// Every .jsonl file under the root with its last write time and size, from the listing itself (no second stat per file).
+    /// A YYYY/MM/DD folder whose day is more than a day before the window's start is not entered: a rollout is written in the
+    /// folder of the day it started, and the day's margin keeps a session that runs past midnight. Folders that cannot be
+    /// read are skipped.
+    private List<(string Path, DateTimeOffset Mtime, long Size)> WalkJsonl(DateTimeOffset now, TimeSpan window)
     {
-        var found = new List<(string Path, DateTimeOffset Mtime)>();
+        var cutoff = (now - window).UtcDateTime.Date;
+        var found = new List<(string Path, DateTimeOffset Mtime, long Size)>();
         var pending = new Stack<string>();
-        pending.Push(root);
+        pending.Push(_root);
         while (pending.Count > 0)
         {
             var dir = pending.Pop();
+            _onFolder?.Invoke(dir);
             try
             {
-                foreach (var sub in Directory.EnumerateDirectories(dir))
+                foreach (var info in new DirectoryInfo(dir).EnumerateFileSystemInfos())
                 {
-                    pending.Push(sub);
-                }
-                foreach (var file in Directory.EnumerateFiles(dir))
-                {
-                    if (!file.EndsWith(".jsonl", StringComparison.Ordinal))
+                    if (info is DirectoryInfo sub)
                     {
-                        continue;
+                        if (!IsBefore(sub.FullName, cutoff))
+                        {
+                            pending.Push(sub.FullName);
+                        }
                     }
-                    try
+                    else if (info is FileInfo file && file.Name.EndsWith(".jsonl", StringComparison.Ordinal))
                     {
-                        var info = new FileInfo(file);
-                        found.Add((file, new DateTimeOffset(info.LastWriteTimeUtc)));
-                    }
-                    catch (IOException)
-                    {
-                        // vanished since it was listed
+                        try
+                        {
+                            found.Add((file.FullName, new DateTimeOffset(file.LastWriteTimeUtc), file.Length));
+                        }
+                        catch (IOException)
+                        {
+                            // vanished since it was listed
+                        }
                     }
                 }
             }
@@ -477,5 +525,24 @@ public sealed class CodexScanner
             }
         }
         return found;
+    }
+
+    /// True for a YYYY/MM/DD folder whose day, plus one day of margin, is before cutoff. Any other folder is never skipped.
+    private bool IsBefore(string dir, DateTime cutoff)
+    {
+        var parts = Path.GetRelativePath(_root, dir).Split(Path.DirectorySeparatorChar);
+        if (parts.Length != 3 || parts.Any(p => p.Length == 0 || !p.All(char.IsAsciiDigit)))
+        {
+            return false;
+        }
+        try
+        {
+            var day = new DateTime(int.Parse(parts[0], CultureInfo.InvariantCulture), int.Parse(parts[1], CultureInfo.InvariantCulture), int.Parse(parts[2], CultureInfo.InvariantCulture));
+            return day.AddDays(1) < cutoff;
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            return false;
+        }
     }
 }

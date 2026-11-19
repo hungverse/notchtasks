@@ -304,8 +304,9 @@ public partial class WatchingPane : SettingsPane
     {
         try
         {
-            Store.SetItems(items);
-            _actionError = null;
+            // a refused list (an item the reader would drop) is not saved: its reason is shown
+            var refused = Store.SetItems(items);
+            _actionError = refused is null ? null : L10n.L("Couldn't save the watch list: {0}", refused);
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {

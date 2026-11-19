@@ -190,23 +190,6 @@ public static class WatchItems
         return found.Where(p => !pids.Contains(p.Ppid)).ToList();
     }
 
-    /// Whether the item's command is installed: its cli on PATH or in the usual per-user tool folders. Items without a
-    /// cli are always installed (apps are shown; there is no bundle lookup on Windows).
-    public static bool IsInstalled(WatchItem it)
-    {
-        if (it.Cli is null)
-        {
-            return true;
-        }
-        return FindCli(
-            it.Cli,
-            Environment.GetEnvironmentVariable("PATH"),
-            Environment.GetEnvironmentVariable("PATHEXT"),
-            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-            Environment.GetEnvironmentVariable("NVM_SYMLINK"),
-            Environment.GetEnvironmentVariable("APPDATA"));
-    }
-
     /// Finds cli in the PATH folders, the usual per-user tool folders under home, the nvm symlink folder and %APPDATA%\npm.
     /// pathExt is PATHEXT (default .EXE;.CMD;.BAT). The file must exist; a folder of the same name does not count.
     public static bool FindCli(string cli, string? pathVar, string? pathExt, string home, string? nvmSymlink, string? appData)

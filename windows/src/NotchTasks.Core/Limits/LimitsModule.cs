@@ -95,8 +95,8 @@ public sealed class LimitsModule
         }
         for (var i = 0; i < a.Count; i++)
         {
-            if (a[i].Kind != b[i].Kind || a[i].Name != b[i].Name || a[i].Updated != b[i].Updated
-                || !a[i].Windows.SequenceEqual(b[i].Windows))
+            // Updated is left out: a reading that is the same as the last one is not a change, so it is not published again
+            if (a[i].Kind != b[i].Kind || a[i].Name != b[i].Name || !a[i].Windows.SequenceEqual(b[i].Windows))
             {
                 return false;
             }

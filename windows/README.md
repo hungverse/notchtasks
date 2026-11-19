@@ -4,8 +4,8 @@ Native Windows app (C#, WPF, .NET 10) that shows AI agents' questions in a float
 
 What Phase 3b adds:
 
-- **Running agents**: Claude and Codex sessions, and any app or process you watch, show as cards in the Control Panel and in the pill. A card reads **Working** while the process uses CPU, and a **done** toast appears when it has finished (after the time set in Behavior, 30 s by default).
-- **Agents**: Claude, Codex, Antigravity and local models (LM Studio) are found on this PC. Claude and Codex are read from their own session files.
+- **Running agents**: Claude and Codex sessions, and any app or process you watch, show as cards on the pill. A card reads **Working** while the process uses CPU, and a **done** toast appears when it has finished (after the time set in Behavior, 30 s by default).
+- **Agents**: Claude, Codex, Antigravity and local models (LM Studio and Ollama) are found on this PC. Claude and Codex are read from their own session files.
 - **Codex questions**: when Codex asks something, the question appears in the pill and you answer it there, without opening Codex.
 - **AI limits**: each agent that reports its usage shows a badge with the share used, and a chip in the pill once usage passes the warning level (80% by default, set in Behavior). A toast warns at each step from that level up to 100%, with the time the limit resets.
 - **Watch list**: the Watching pane lists what the notch watches. Add an app, a program name or a process, and edit, turn off or remove each item. The list holds at most 64 items.

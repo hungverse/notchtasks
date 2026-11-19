@@ -7,8 +7,12 @@ namespace NotchTasks.Core.Tests;
 
 // Ported from electron/src/main/main.js (treeCpu, procJob, itemStates, announceFinished) and the Mac's announceFinished.
 // Pure: hand-built snapshots, a manual clock, and a CpuMeter fed by the module itself. No OS calls.
+[Collection("L10n")]
 public class AgentsModuleTests
 {
+    // the assertions compare English copy: the strings are loaded in English for every test of the class
+    public AgentsModuleTests() => AsksFixtures.InitEnglish();
+
     /// An announcer that keeps every toast.
     private sealed class RecordingAnnouncer : IAnnouncer
     {
