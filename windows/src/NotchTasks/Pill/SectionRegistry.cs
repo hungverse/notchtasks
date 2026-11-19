@@ -12,8 +12,14 @@ public static class SectionRegistry
     /// Sets how a module's section is built. A later registration for the same module replaces the earlier one.
     public static void Register(string module, Func<AppState, FrameworkElement?> build) => Builders[module] = build;
 
-    /// Removes a module's builder: its section no longer shows. Called when the pill that registered it closes.
-    public static void Unregister(string module) => Builders.Remove(module);
+    /// Removes a module's builder, but only when it is still `build`: a later registration for the module stays.
+    public static void Unregister(string module, Func<AppState, FrameworkElement?> build)
+    {
+        if (Builders.TryGetValue(module, out var current) && ReferenceEquals(current, build))
+        {
+            Builders.Remove(module);
+        }
+    }
 
     /// The section of one module, or null when the module has none registered or nothing to show.
     public static FrameworkElement? Section(string module, AppState state) =>

@@ -126,6 +126,14 @@ internal static class Fixture
     public static T Create<T>(params object?[] args) where T : class =>
         (T)Activator.CreateInstance(typeof(T), BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, args, null)!;
 
+    /// Reads a private field of an object.
+    public static T Field<T>(object target, string name)
+    {
+        var field = target.GetType().GetField(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+            ?? throw new MissingFieldException(target.GetType().Name, name);
+        return (T)field.GetValue(target)!;
+    }
+
     /// Calls a private method. A throw inside it reaches the test as the original exception.
     public static void Call(object target, string name, params object?[] args)
     {

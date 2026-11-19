@@ -35,8 +35,6 @@ public partial class PillWindow : Window
     private static readonly TimeSpan SlowPollInterval = TimeSpan.FromMilliseconds(100);  // 10 Hz, otherwise
     private static readonly TimeSpan ToastTick = TimeSpan.FromMilliseconds(300);  // the toast queue, while a toast is up
     private const double NearMargin = 40;  // DIP from the pill's shape
-    private const double HeaderHeight = 26;  // the open pill's summary strip, under its top row (XAML SectionScroll margin)
-    private const double QuickBarHeight = 32;  // the open pill's quick bar, under the sections (XAML SectionScroll margin)
     private static readonly TimeSpan MaxFadeDuration = TimeSpan.FromMilliseconds(350);
 
     /// The corner radius of the pill; animated by the spring, bound to every shape through RadiusConverter.
@@ -73,6 +71,7 @@ public partial class PillWindow : Window
 
     private readonly DispatcherTimer _waitTimer = new() { Interval = TimeSpan.FromSeconds(1) };
     private readonly AskSection _asks = new();  // the agents' section: one card per waiting ask
+    private readonly Func<AppState, FrameworkElement?> _agentsSection;  // the builder this pill registered for "agents"
     private Toast? _shownToast;  // the toast the pill shows now; null when none
     private int _animation;  // counts the animations; only the last one's completion clears _closing
     private bool _animating;  // a shape animation runs: the poll evaluates click-through on every tick
@@ -107,7 +106,8 @@ public partial class PillWindow : Window
         ToastBox.Dismissed += () => _state.Toasts.Dismiss(DateTimeOffset.Now);
 
         // The agents' section is the ask cards. Other modules register their sections the same way.
-        SectionRegistry.Register("agents", _ => _state.Asks.Count > 0 ? _asks.Panel : null);
+        _agentsSection = _ => _state.Asks.Count > 0 ? _asks.Panel : null;
+        SectionRegistry.Register("agents", _agentsSection);
 
         SourceInitialized += OnSourceInitialized;
         Closed += OnClosed;
@@ -471,7 +471,8 @@ public partial class PillWindow : Window
             return PillGeometry.OpenHeight;
         }
         SectionScroll.Measure(new Size(PillGeometry.OpenWidth, double.PositiveInfinity));
-        return Math.Min(PillGeometry.MaxOpenHeight, PillGeometry.ClosedHeight + HeaderHeight + SectionScroll.DesiredSize.Height + QuickBarHeight);
+        // DesiredSize includes the scroll's own margin (the 26 DIP header above, the 32 DIP quick bar below) and its padding: added once, here.
+        return Math.Min(PillGeometry.MaxOpenHeight, PillGeometry.ClosedHeight + SectionScroll.DesiredSize.Height);
     }
 
     /// The toast's measured height for its current text.
@@ -695,7 +696,8 @@ public partial class PillWindow : Window
         _state.NotchChanged -= OnNotchChanged;
         _state.Toasts.Changed -= OnToastsChanged;
         L10n.Changed -= OnLanguageChanged;
-        SectionRegistry.Unregister("agents");
+        // Only this pill's own builder: a newer pill may have registered its own since.
+        SectionRegistry.Unregister("agents", _agentsSection);
     }
 
     /// Re-reads the pill's own texts after a language change. The ask cards and the toast keep the text they were made

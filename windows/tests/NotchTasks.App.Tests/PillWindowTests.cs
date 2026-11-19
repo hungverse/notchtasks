@@ -132,6 +132,7 @@ public sealed class PillWindowTests
             try
             {
                 Fixture.Call(pill, "OpenPill");
+                Assert.True(Fixture.Field<bool>(pill, "_open"));
                 Assert.Equal("Nothing running", Fixture.Named<TextBlock>(pill, "HeaderSummary").Text);
                 Assert.Equal(Visibility.Collapsed, Fixture.Named<UIElement>(pill, "SectionScroll").Visibility);
             }
@@ -158,6 +159,33 @@ public sealed class PillWindowTests
             }
             finally
             {
+                pill.Close();
+            }
+        });
+    }
+
+    [Fact]
+    public void Pill_OpenHeight_CountsHeaderAndQuickBarOnce()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            var pill = new PillWindow(state);
+            // A fixed 50 DIP section in the "ci" module (on by default): its content, not the pill's own layout, sets the height.
+            Func<AppState, FrameworkElement?> section = _ => new Border { Height = 50 };
+            try
+            {
+                SectionRegistry.Register("ci", section);
+                state.Publish();
+                Fixture.Call(pill, "OpenPill");
+
+                // The top row (32) + the scroll's 26 DIP header margin + the 50 content + its 10 DIP padding on each side + the 32 DIP quick bar margin.
+                Assert.Equal(32.0 + 26 + 50 + 20 + 32, Fixture.Field<double>(pill, "_targetHeight"));
+            }
+            finally
+            {
+                SectionRegistry.Unregister("ci", section);
                 pill.Close();
             }
         });
