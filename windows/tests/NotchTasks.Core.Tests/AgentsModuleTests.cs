@@ -48,13 +48,13 @@ public class AgentsModuleTests
     [Fact]
     public void ProcessItem_WorkingAboveThreshold_ShowsTopChild()
     {
-        // root uses 10 %, child "git" 30 %: the tree is 40 %, and git is the busiest child
+        // root uses 10 %, child "git.exe" 30 %: the tree is 40 %, and git is the busiest child
         var module = new AgentsModule(new RecordingAnnouncer());
         var cpu = new CpuMeter();
         var item = ProcessItem("node");
 
-        module.Update(Inputs(new[] { item }, Snap(P(100, 1, "node"), P(101, 100, "git")), cpu), 0);
-        module.Update(Inputs(new[] { item }, Snap(P(100, 1, "node", Ticks(10, 1000)), P(101, 100, "git", Ticks(30, 1000))), cpu), 1000);
+        module.Update(Inputs(new[] { item }, Snap(P(100, 1, "node"), P(101, 100, "git.exe")), cpu), 0);
+        module.Update(Inputs(new[] { item }, Snap(P(100, 1, "node", Ticks(10, 1000)), P(101, 100, "git.exe", Ticks(30, 1000))), cpu), 1000);
 
         var job = Assert.Single(Assert.Single(module.States).Jobs);
         Assert.True(job.Working);
@@ -67,10 +67,10 @@ public class AgentsModuleTests
         var module = new AgentsModule(new RecordingAnnouncer());
         var cpu = new CpuMeter();
         var item = ProcessItem("node");
-        var busy = Snap(P(100, 1, "node", Ticks(10, 1000)), P(101, 100, "git", Ticks(30, 1000)));
-        var quiet = Snap(P(100, 1, "node", Ticks(10, 1000)), P(101, 100, "git", Ticks(30, 1000)));
+        var busy = Snap(P(100, 1, "node", Ticks(10, 1000)), P(101, 100, "git.exe", Ticks(30, 1000)));
+        var quiet = Snap(P(100, 1, "node", Ticks(10, 1000)), P(101, 100, "git.exe", Ticks(30, 1000)));
 
-        module.Update(Inputs(new[] { item }, Snap(P(100, 1, "node"), P(101, 100, "git")), cpu), 0);
+        module.Update(Inputs(new[] { item }, Snap(P(100, 1, "node"), P(101, 100, "git.exe")), cpu), 0);
         module.Update(Inputs(new[] { item }, busy, cpu), 1000);
 
         // no CPU after the busy sample at 1000 ms: still working until 6 s have passed
@@ -150,6 +150,84 @@ public class AgentsModuleTests
         Assert.Equal("#30D158", toast.Tint);
         Assert.Equal("taskDone", toast.Event);
         Assert.Equal("agents", toast.Module);
+    }
+
+    [Fact]
+    public void Gone_19999ms_NoToast_20000ms_Toast()
+    {
+        var announcer = new RecordingAnnouncer();
+        var module = new AgentsModule(announcer);
+        var cpu = new CpuMeter();
+        var busy = new[] { new Job("s1", "proj", "Working", true) };
+
+        module.Update(Inputs(new[] { Claude }, Snap(), cpu, claude: busy, doneAfter: 30), 0);
+        module.Update(Inputs(new[] { Claude }, Snap(), cpu, claude: busy, doneAfter: 30), 30_000);  // ran 30 s
+        module.Update(Inputs(new[] { Claude }, Snap(), cpu, doneAfter: 30), 49_999);               // gone 19.999 s
+
+        Assert.Empty(announcer.Toasts);
+
+        module.Update(Inputs(new[] { Claude }, Snap(), cpu, doneAfter: 30), 50_000);               // gone 20 s
+
+        Assert.Single(announcer.Toasts);
+    }
+
+    [Fact]
+    public void Ran_ExactlyDoneAfter_Toasts()
+    {
+        var announcer = new RecordingAnnouncer();
+        var module = new AgentsModule(announcer);
+        var cpu = new CpuMeter();
+        var busy = new[] { new Job("s1", "proj", "Working", true) };
+
+        module.Update(Inputs(new[] { Claude }, Snap(), cpu, claude: busy, doneAfter: 30), 0);
+        module.Update(Inputs(new[] { Claude }, Snap(), cpu, claude: busy, doneAfter: 30), 30_000);  // ran exactly 30 s
+        module.Update(Inputs(new[] { Claude }, Snap(), cpu, doneAfter: 30), 50_000);
+
+        var toast = Assert.Single(announcer.Toasts);
+        Assert.Equal("Claude done", toast.Title);
+        Assert.Equal("proj · 30 sec", toast.Subtitle);
+    }
+
+    [Fact]
+    public void AgentsOffThenOn_BusyMemoryCleared_ReadsWaiting()
+    {
+        var module = new AgentsModule(new RecordingAnnouncer());
+        var cpu = new CpuMeter();
+        var item = ProcessItem("node");
+        var busy = Snap(P(100, 1, "node", Ticks(10, 1000)), P(101, 100, "git.exe", Ticks(30, 1000)));
+
+        module.Update(Inputs(new[] { item }, Snap(P(100, 1, "node"), P(101, 100, "git.exe")), cpu), 0);
+        module.Update(Inputs(new[] { item }, busy, cpu), 1000);
+        Assert.True(Assert.Single(Assert.Single(module.States).Jobs).Working);
+
+        // agents off at 2 s; the process keeps the same CPU, so the next sample reads 0 %
+        module.Update(Inputs(new[] { item }, busy, cpu, agentsOn: false), 2000);
+        module.Update(Inputs(new[] { item }, busy, cpu), 3000);
+
+        var job = Assert.Single(Assert.Single(module.States).Jobs);
+        Assert.False(job.Working);
+        Assert.Equal("Waiting", job.Detail);
+    }
+
+    [Fact]
+    public void ChildTaskTitle_DropsExeFromTheName()
+    {
+        var module = new AgentsModule(new RecordingAnnouncer());
+        var cpu = new CpuMeter();
+        var item = ProcessItem("msbuild", childTasks: true);
+
+        module.Update(Inputs(new[] { item }, Snap(P(100, 1, "msbuild"), P(101, 100, "MSBuild.EXE")), cpu), 0);
+
+        Assert.Equal("MSBuild", Assert.Single(Assert.Single(module.States).Jobs).Title);
+    }
+
+    [Fact]
+    public void DisplayName_DropsExeCaseInsensitively_KeepsCase()
+    {
+        Assert.Equal("git", ProcTable.DisplayName("git.exe"));
+        Assert.Equal("MSBuild", ProcTable.DisplayName("MSBuild.EXE"));
+        Assert.Equal("node", ProcTable.DisplayName("node"));
+        Assert.Equal("exe", ProcTable.DisplayName("exe"));
     }
 
     [Fact]

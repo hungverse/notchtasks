@@ -11,6 +11,8 @@ public sealed record AgentInputs(
     IReadOnlyList<WatchItem> Items,
     bool AgentsOn,
     ProcSnapshot Snapshot,
+    /// Sampled by AgentsModule.Update itself, at its nowMs, on every call (even when AgentsOn is false). The caller must
+    /// NOT call Cpu.Sample for the same tick: a second sample at the same time reads every process as 0 %.
     CpuMeter Cpu,
     Func<ProcInfo, IReadOnlyList<string>> Argv,
     IReadOnlyList<Job> ClaudeJobs,
@@ -41,6 +43,7 @@ public sealed class AgentsModule
     private readonly Dictionary<string, long> _busyAt = new(StringComparer.Ordinal);
     private readonly Dictionary<string, Tracked> _workingSince = new(StringComparer.Ordinal);
     private IReadOnlyList<ItemState> _states = Array.Empty<ItemState>();
+    private IReadOnlyList<ItemState> _running = Array.Empty<ItemState>();
 
     /// The toasts for finished jobs go to the announcer.
     public AgentsModule(IAnnouncer announce)
@@ -51,14 +54,11 @@ public sealed class AgentsModule
     /// The items with their jobs, in the order of the watch list. Empty while agents are off.
     public IReadOnlyList<ItemState> States => _states;
 
-    /// Only the working jobs, and only the items that have one (the pill's running row).
-    public IReadOnlyList<ItemState> Running =>
-        _states
-            .Select(s => new ItemState(s.Item, s.Jobs.Where(j => j.Working).ToList()))
-            .Where(s => s.Jobs.Count > 0)
-            .ToList();
+    /// Only the working jobs, and only the items that have one (the pill's running row). Built once per Update.
+    public IReadOnlyList<ItemState> Running => _running;
 
     /// Samples the CPU at nowMs, recomputes the states and announces the finished jobs. Returns whether States changed.
+    /// Update samples input.Cpu itself, on every call, even when AgentsOn is false; the caller must not sample it too.
     public bool Update(AgentInputs input, long nowMs)
     {
         input.Cpu.Sample(input.Snapshot, nowMs);
@@ -72,6 +72,10 @@ public sealed class AgentsModule
 
         var changed = !next.SequenceEqual(_states);
         _states = next;
+        _running = next
+            .Select(s => new ItemState(s.Item, s.Jobs.Where(j => j.Working).ToList()))
+            .Where(s => s.Jobs.Count > 0)
+            .ToList();
         return changed;
     }
 
@@ -104,7 +108,7 @@ public sealed class AgentsModule
                     {
                         foreach (var child in input.Snapshot.Kids(root.Pid))
                         {
-                            var title = Folders.FolderFromArgv(input.Argv(child)) ?? child.Name;
+                            var title = Folders.FolderFromArgv(input.Argv(child)) ?? ProcTable.DisplayName(child.Name);
                             jobs.Add(ProcJob(child, input.Snapshot, input.Cpu, title, threshold, "Waiting", null, now));
                         }
                     }
@@ -202,7 +206,7 @@ public sealed class AgentsModule
                 total += v;
                 if (v > topCpu)
                 {
-                    top = child.Name;
+                    top = ProcTable.DisplayName(child.Name);
                     topCpu = v;
                 }
                 stack.Push(child.Pid);

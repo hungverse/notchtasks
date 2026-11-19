@@ -94,6 +94,11 @@ public static class ProcTable
         return last.ToLowerInvariant();
     }
 
+    /// The name a row shows for a process: its exe name without a trailing ".exe" (any case), original case kept.
+    /// "git.exe" -> "git", "MSBuild.EXE" -> "MSBuild", "node" -> "node".
+    public static string DisplayName(string name) =>
+        name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) ? name[..^4] : name;
+
     /// Command line -> argv, honouring double quotes (a quote is dropped; spaces inside quotes are kept).
     public static IReadOnlyList<string> SplitArgs(string? cmd)
     {
