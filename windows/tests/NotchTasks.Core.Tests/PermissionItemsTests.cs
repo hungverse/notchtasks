@@ -39,12 +39,16 @@ public sealed class PermissionItemsTests
     }
 
     [Fact]
-    public void Needed_MicNotNeeded_WhenPrivacyNotBuilt()
+    public void Mic_RowHasNoModules_SoItIsNeverNeeded()
     {
-        // Privacy and calls are not built in Phase 2: a mic row is not needed for them, even when they are on.
-        var mic = Item("mic", "privacy", "calls");
+        // Ruling P3-R4: the mic row is not tied to the privacy or calls modules, so it is Not in use even when both are on.
+        var items = PermissionItems.Build(Facts(mic: false));
+        var mic = Find(items, "mic");
+        var modules = new HashSet<string> { "privacy", "calls" };
 
-        Assert.False(PermissionItems.Needed(mic, new HashSet<string> { "privacy", "calls" }, notifications: false));
+        Assert.Empty(mic.Modules);
+        Assert.False(PermissionItems.Needed(mic, modules, notifications: false));
+        Assert.Equal(PermGroup.NotInUse, PermissionItems.GroupOf(mic, modules, notifications: false));
         Assert.False(PermissionItems.Needed(Item("camera", "mirror"), new HashSet<string> { "mirror" }, notifications: false));
     }
 

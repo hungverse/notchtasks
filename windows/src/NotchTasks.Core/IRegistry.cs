@@ -7,6 +7,12 @@ public interface IRegistry
     /// The value as text (a number as its digits), or null when the key or the value is missing.
     string? GetString(string keyPath, string name);
 
+    /// The value as a 64-bit number (a QWORD or a DWORD), or null when the key or the value is missing or not a number.
+    long? GetLong(string keyPath, string name);
+
+    /// The names of the subkeys directly under the key, or none when the key is missing or cannot be read.
+    IReadOnlyList<string> SubKeyNames(string keyPath);
+
     /// Writes a string value, creating the key when it is missing.
     void SetString(string keyPath, string name, string value);
 

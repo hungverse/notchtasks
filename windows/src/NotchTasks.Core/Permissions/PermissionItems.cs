@@ -48,7 +48,6 @@ public static class PermissionItems
     public const string LoginId = "login";
 
     private static readonly IReadOnlyList<string> NoModules = Array.Empty<string>();
-    private static readonly IReadOnlyList<string> PrivacyOrCalls = ["privacy", "calls"];
     private static readonly IReadOnlyList<string> CameraModules = ["mirror"];
     private static readonly IReadOnlyList<string> AgentModules = ["agents"];
 
@@ -66,7 +65,7 @@ public static class PermissionItems
                 facts.ToastsOn switch { true => PermState.Granted, false => PermState.Denied, null => PermState.Checking }),
             new(LoginId, L("Open at login"), L("Starts when you log in."), "", NoModules,
                 facts.LoginOn ? PermState.Granted : PermState.NotAsked),
-            new("mic", L("Microphone"), L("Lets the notch show when an app uses the mic, and calls."), "", PrivacyOrCalls,
+            new("mic", L("Microphone"), L("Lets the notch show when an app uses the mic, and calls."), "", NoModules,
                 Consent(facts.MicAllowed)),
             new("camera", L("Camera mirror"), L("Check the camera before joining a meeting"), "", CameraModules,
                 Consent(facts.CameraAllowed)),
