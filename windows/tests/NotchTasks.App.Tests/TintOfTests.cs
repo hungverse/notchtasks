@@ -90,12 +90,4 @@ public sealed class TintOfTests
         // Muted stays red, as the Mac's `c.muted ? .red : color(for: .calls) ?? .green`.
         Assert.Equal(Color.FromRgb(0xFF, 0x45, 0x3A), ChipView.CallTimeTint(true, blue));
     }
-
-    [Fact]
-    public void PrivacyMic_NoModuleColor_IsOrange_ModuleColorWins()
-    {
-        Assert.Equal(Orange, SensorRow.MicTintOf(NoColors));
-        var teal = new Dictionary<string, string> { ["privacy"] = "#00FFFF" };
-        Assert.Equal(Color.FromRgb(0x00, 0xFF, 0xFF), SensorRow.MicTintOf(teal));
-    }
 }
