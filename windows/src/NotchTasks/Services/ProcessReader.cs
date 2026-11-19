@@ -22,13 +22,23 @@ public sealed class ProcessReader : IProcessReader
     private const int ImagePathChars = 1024;
 
     private readonly object gate = new();
+    private readonly object tableGate = new();
     private readonly Dictionary<(int Pid, long Start), string?> commandLines = new();
     private readonly Dictionary<(int Pid, long Start), string?> imagePaths = new();
+
+    // One buffer for every poll, kept between polls so the table does not allocate on the large object heap every 2 s.
+    // Only Snapshot uses it, under tableGate.
+    private byte[] tableBuffer = new byte[InitialBufferSize];
 
     /// One snapshot of every process. Returns an empty snapshot when the call keeps failing (never throws on a poll).
     public ProcSnapshot Snapshot()
     {
-        var snapshot = ReadProcessTable() ?? new ProcSnapshot(Array.Empty<ProcInfo>());
+        ProcSnapshot? table;
+        lock (tableGate)
+        {
+            table = ReadProcessTable();
+        }
+        var snapshot = table ?? new ProcSnapshot(Array.Empty<ProcInfo>());
         Evict(snapshot);
         return snapshot;
     }
@@ -37,28 +47,30 @@ public sealed class ProcessReader : IProcessReader
 
     public string? ImagePath(ProcInfo p) => Cached(imagePaths, p, ReadImagePath);
 
-    private static ProcSnapshot? ReadProcessTable()
+    /// Call with tableGate held.
+    private ProcSnapshot? ReadProcessTable()
     {
-        var buffer = new byte[InitialBufferSize];
         for (var attempt = 0; attempt < MaxSnapshotAttempts; attempt++)
         {
-            var pinned = GCHandle.Alloc(buffer, GCHandleType.Pinned);
+            var pinned = GCHandle.Alloc(tableBuffer, GCHandleType.Pinned);
             try
             {
-                var status = ProcessNative.NtQuerySystemInformation(SystemProcessInformation, pinned.AddrOfPinnedObject(),
-                    buffer.Length, out var needed);
+                var address = pinned.AddrOfPinnedObject();
+                var status = ProcessNative.NtQuerySystemInformation(SystemProcessInformation, address, tableBuffer.Length,
+                    out var needed);
                 if (status == StatusSuccess)
                 {
-                    // The name pointers are absolute: the buffer address of this call turns them into offsets.
-                    return ProcTable.Parse(buffer.AsSpan(), pinned.AddrOfPinnedObject());
+                    // needed is the number of bytes the table used. The name pointers are absolute: the buffer address
+                    // of this call turns them into offsets.
+                    var used = Math.Min(needed, tableBuffer.Length);
+                    return ProcTable.Parse(tableBuffer.AsSpan(0, used), address);
                 }
                 if (status != StatusInfoLengthMismatch)
                 {
                     return null;
                 }
-                // The table grew between the two calls: retry with room for the size Windows asked for, plus slack.
-                var size = Math.Max(buffer.Length * 2, needed + 64 * 1024);
-                buffer = new byte[size];
+                // The table grew: keep a buffer of the size Windows asked for plus 25% headroom, for this and later polls.
+                tableBuffer = new byte[needed + needed / 4];
             }
             finally
             {

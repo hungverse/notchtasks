@@ -76,6 +76,35 @@ public sealed class ProcTableTests
         Assert.Equal("Idle", snap.ById[0].Name);
     }
 
+    [Fact]
+    public void Kids_NeverListAProcessAsItsOwnChild_OrPidZeroAsAChild()
+    {
+        var snap = new ProcSnapshot(new[]
+        {
+            new ProcInfo(0, 0, "Idle", 0, 0),          // the Idle process is its own parent in the table
+            new ProcInfo(5, 0, "smss.exe", 0, 0),      // a root process: its parent is 0
+            new ProcInfo(7, 7, "self.exe", 0, 0),      // lists itself as parent
+            new ProcInfo(8, 7, "child.exe", 0, 0),
+        });
+        Assert.Equal(new[] { 5 }, snap.Kids(0).Select(p => p.Pid));
+        Assert.Equal(new[] { 8 }, snap.Kids(7).Select(p => p.Pid));
+        Assert.Empty(snap.Kids(5));
+    }
+
+    [Fact]
+    public void Parse_CorruptNextEntryOffset_ReturnsTheEntriesReadSoFar()
+    {
+        // The first entry's NextEntryOffset points far past the buffer: the walk stops after it, without throwing.
+        var buf = new byte[0x60 * 2];
+        WriteProcess(buf, 0x00, next: 0xFFFF_FFF0, pid: 1234, ppid: 4, create: 111, user: 1000, kernel: 500, nameLen: 0, nameAddr: 0);
+        WriteProcess(buf, 0x60, next: 0, pid: 5, ppid: 4, create: 0, user: 0, kernel: 0, nameLen: 0, nameAddr: 0);
+
+        var snap = ProcTable.Parse(buf, 0);
+
+        Assert.Single(snap.All);
+        Assert.Equal(1234, snap.All[0].Pid);
+    }
+
     private static void WriteProcess(byte[] b, int at, uint next, int pid, int ppid, long create, long user, long kernel,
         int nameLen, long nameAddr)
     {

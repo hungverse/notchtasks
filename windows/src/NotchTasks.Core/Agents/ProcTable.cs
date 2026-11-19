@@ -21,7 +21,11 @@ public sealed class ProcSnapshot
         foreach (var p in this.procs)
         {
             byId[p.Pid] = p;
-            Add(kids, p.Ppid, p);
+            // proc.js lists children by parent pid. A process is never its own child, and pid 0 (Idle) is never a child.
+            if (p.Pid > 0 && p.Pid != p.Ppid)
+            {
+                Add(kids, p.Ppid, p);
+            }
             Add(byName, ProcTable.NormName(p.Name), p);
         }
     }
@@ -156,8 +160,9 @@ public static class ProcTable
             var kernelTicks = (long)BinaryPrimitives.ReadUInt64LittleEndian(entry[KernelTimeOffset..]);
             list.Add(new ProcInfo(pid, ppid, name, startTicks, kernelTicks + userTicks));
 
+            // 0 marks the last entry. A corrupt value that runs past the buffer ends the walk too, with the entries read so far.
             var next = BinaryPrimitives.ReadUInt32LittleEndian(entry);
-            if (next == 0)
+            if (next == 0 || next > (uint)(buffer.Length - offset))
             {
                 break;
             }
