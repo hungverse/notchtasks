@@ -13,7 +13,7 @@ namespace NotchTasks;
 /// the claude CLI.
 /// DownloadsFolder is the folder the downloads module watches (null: the Downloads folder of this user).
 /// Home is the user's profile folder (null: this user's); the agents and limits sources read the agent folders under it.
-/// LmsPsJson runs `lms ps --json` for an exe path (null: LmsRunner.PsJson).
+/// LmsPsJson runs `lms ps --json` for an exe path (null: LmsRunner.PsJson). Codex answers pill questions (null: the codex CLI).
 public sealed record AppStateOptions(
     string? DownloadsFolder = null,
     NetworkReaders? Network = null,
@@ -27,7 +27,8 @@ public sealed record AppStateOptions(
     IHttpGet? HttpGet = null,
     IClaudeCli? ClaudeCli = null,
     string? Home = null,
-    Func<string, string?>? LmsPsJson = null)
+    Func<string, string?>? LmsPsJson = null,
+    ICodexCli? Codex = null)
 {
     /// This PC's readers: the options the app runs with (the same as passing none).
     public static AppStateOptions Production { get; } = new();

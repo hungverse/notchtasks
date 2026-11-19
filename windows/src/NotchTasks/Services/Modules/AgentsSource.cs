@@ -42,6 +42,7 @@ public sealed class AgentsSource : IModuleSource
     private readonly DispatcherTimer _timer = new() { Interval = TickEvery };
     private bool _started;
     private bool _busy;
+    private int _generation;  // every Start and Stop: a read that started under an older one is dropped when it lands
     private DateTimeOffset _nextLocal = DateTimeOffset.MinValue;
     private DateTimeOffset _nextCodexLimits = DateTimeOffset.MinValue;
     private IReadOnlyDictionary<string, IReadOnlyList<string>> _local = new Dictionary<string, IReadOnlyList<string>>();
@@ -73,6 +74,7 @@ public sealed class AgentsSource : IModuleSource
 
     public void Start()
     {
+        _generation++;
         _started = true;
         Sync();
     }
@@ -80,8 +82,12 @@ public sealed class AgentsSource : IModuleSource
     /// Stops the timer and clears the module and the Codex questions. A read still in flight is dropped when it lands.
     public void Stop()
     {
+        _generation++;
         _started = false;
         _timer.Stop();
+        _local = new Dictionary<string, IReadOnlyList<string>>();
+        _nextLocal = DateTimeOffset.MinValue;
+        _nextCodexLimits = DateTimeOffset.MinValue;
         Clear();
     }
 
@@ -145,8 +151,9 @@ public sealed class AgentsSource : IModuleSource
         try
         {
             var request = MakeRequest(DateTimeOffset.UtcNow);
+            var generation = _generation;
             var reading = await Task.Run(() => Gather(request)).ConfigureAwait(true);
-            if (_started)
+            if (_started && generation == _generation)
             {
                 Apply(request, reading);
             }

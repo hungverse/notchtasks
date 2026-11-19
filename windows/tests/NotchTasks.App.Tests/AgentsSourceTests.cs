@@ -23,25 +23,6 @@ public sealed class AgentsSourceTests
         }
     }
 
-    /// A process table with one process whose CPU time grows by 1000 s on every read: between two reads it is busy.
-    private sealed class FixedProcesses : IProcessReader
-    {
-        private readonly string _exe;
-        private long _reads;
-
-        public FixedProcesses(string exe) => _exe = exe;
-
-        public ProcSnapshot Snapshot()
-        {
-            _reads++;
-            return new ProcSnapshot(new[] { new ProcInfo(100, 1, _exe, 1, _reads * 10_000_000_000L) });
-        }
-
-        public string? CommandLine(ProcInfo p) => null;
-
-        public string? ImagePath(ProcInfo p) => null;
-    }
-
     private static AgentReaders Readers(TempRoot root, IProcessReader processes) => new(
         processes,
         new Fixture.NoSqlite(),
@@ -73,7 +54,7 @@ public sealed class AgentsSourceTests
             using var root = new TempRoot();
             var settings = SettingsStore.Load(AppPaths.SettingsFile);
             settings.SetItems(Array.Empty<WatchItem>());
-            var source = Source(settings, Readers(root, new FixedProcesses("fakeagent.exe")), new AgentsModule(new QuietAnnouncer()), () => { });
+            var source = Source(settings, Readers(root, new Fixture.BusyProcesses("fakeagent.exe")), new AgentsModule(new QuietAnnouncer()), () => { });
 
             source.Start();
 
@@ -90,7 +71,7 @@ public sealed class AgentsSourceTests
             using var root = new TempRoot();
             var settings = SettingsStore.Load(AppPaths.SettingsFile);
             settings.SetItems(new[] { new WatchItem("fake", "Fake", WatchKind.Process, Process: "fakeagent", Enabled: false) });
-            var source = Source(settings, Readers(root, new FixedProcesses("fakeagent.exe")), new AgentsModule(new QuietAnnouncer()), () => { });
+            var source = Source(settings, Readers(root, new Fixture.BusyProcesses("fakeagent.exe")), new AgentsModule(new QuietAnnouncer()), () => { });
 
             source.Start();
 
@@ -109,7 +90,7 @@ public sealed class AgentsSourceTests
             settings.SetItems(new[] { new WatchItem("fake", "Fake", WatchKind.Process, Process: "fakeagent") });
             var module = new AgentsModule(new QuietAnnouncer());
             var published = 0;
-            var source = Source(settings, Readers(root, new FixedProcesses("fakeagent.exe")), module, () => published++);
+            var source = Source(settings, Readers(root, new Fixture.BusyProcesses("fakeagent.exe")), module, () => published++);
 
             source.Start();
             Assert.True(Fixture.Field<DispatcherTimer>(source, "_timer").IsEnabled);
@@ -133,7 +114,7 @@ public sealed class AgentsSourceTests
             var settings = SettingsStore.Load(AppPaths.SettingsFile);
             settings.SetItems(new[] { new WatchItem("fake", "Fake", WatchKind.Process, Process: "fakeagent") });
             var module = new AgentsModule(new QuietAnnouncer());
-            var source = Source(settings, Readers(root, new FixedProcesses("fakeagent.exe")), module, () => { });
+            var source = Source(settings, Readers(root, new Fixture.BusyProcesses("fakeagent.exe")), module, () => { });
             source.Start();
             TickUntilRunning(source, module);
 
@@ -155,7 +136,7 @@ public sealed class AgentsSourceTests
             settings.SetItems(new[] { new WatchItem("codex", "Codex", WatchKind.Codex) });
             var seen = new List<IReadOnlyList<AgentAsk>>();
             var source = new AgentsSource(new AgentsModule(new QuietAnnouncer()), settings,
-                Readers(root, new FixedProcesses("codex.exe")), () => { }, list => seen.Add(list));
+                Readers(root, new Fixture.BusyProcesses("codex.exe")), () => { }, list => seen.Add(list));
 
             source.Start();
             Fixture.Call(source, "Tick");

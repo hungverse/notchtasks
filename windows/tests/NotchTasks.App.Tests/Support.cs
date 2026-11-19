@@ -146,7 +146,55 @@ internal static class Fixture
         HttpGet: new NoHttp(),
         ClaudeCli: new NoClaudeCli(),
         Home: Path.Combine(AppPaths.Root, "Home"),
-        LmsPsJson: _ => null);
+        LmsPsJson: _ => null,
+        Codex: new NoCodex());
+
+    /// The Codex seam with no codex: nothing is queued, and the window is never found.
+    public sealed class NoCodex : ICodexCli
+    {
+        public Task<string?> QueueAsync(string thread, string message) => Task.FromResult<string?>(null);
+
+        public bool BringToFront() => false;
+    }
+
+    /// The Codex seam that records what it was asked: each queued (thread, message), and the number of front-brings.
+    public sealed class RecordingCodex : ICodexCli
+    {
+        public List<(string Thread, string Message)> Queued { get; } = new();
+
+        public int Fronted { get; private set; }
+
+        public Task<string?> QueueAsync(string thread, string message)
+        {
+            Queued.Add((thread, message));
+            return Task.FromResult<string?>("queued");
+        }
+
+        public bool BringToFront()
+        {
+            Fronted++;
+            return true;
+        }
+    }
+
+    /// A process table with one process (named as given) whose CPU time grows on every read, so between two reads it is busy.
+    public sealed class BusyProcesses : IProcessReader
+    {
+        private readonly string _exe;
+        private long _reads;
+
+        public BusyProcesses(string exe) => _exe = exe;
+
+        public ProcSnapshot Snapshot()
+        {
+            _reads++;
+            return new ProcSnapshot(new[] { new ProcInfo(100, 1, _exe, 1, _reads * 10_000_000_000L) });
+        }
+
+        public string? CommandLine(ProcInfo p) => null;
+
+        public string? ImagePath(ProcInfo p) => null;
+    }
 
     /// A process table with no processes: nothing is matched and no command line is read.
     public sealed class NoProcesses : IProcessReader

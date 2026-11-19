@@ -40,13 +40,9 @@ public partial class AskCard : UserControl
         LinkButton.ToolTip = L10n.L("Skip here, {0} will ask as usual", agent);
         LinkButton.Click += (_, _) => Replied?.Invoke(new AskReply(ReplyKinds.Pass, null));
 
-        // A Codex question is answered in the Codex app: its card shows only the link (the options cannot reach Codex yet).
         if (ask.IsQuestion)
         {
-            if (!IsCodexQuestion(ask))
-            {
-                BuildQuestions();
-            }
+            BuildQuestions();
         }
         else
         {
@@ -63,9 +59,6 @@ public partial class AskCard : UserControl
 
     /// The glyph for an ask's header: a question mark for questions, a warning sign for approvals.
     public static string GlyphFor(AgentAsk ask) => ask.IsQuestion ? QuestionGlyph : ApprovalGlyph;
-
-    /// True for a question the Codex app left in its thread (its ids are codex|thread|call).
-    private static bool IsCodexQuestion(AgentAsk ask) => ask.Id.StartsWith("codex|", StringComparison.Ordinal);
 
     /// Shows "Waiting m:ss" for the time since the ask came in.
     public void UpdateWaiting(DateTimeOffset now) => WaitingText.Text = AskPresentation.Waiting(now - Ask.At);

@@ -40,6 +40,7 @@ public sealed class LimitsSource : IModuleSource
     private bool _reading;
     private bool _cliBusy;
     private bool _antigravityBusy;
+    private int _generation;  // every Start and Stop: a result of an older one is dropped when it lands
     private DateTimeOffset _nextCli = DateTimeOffset.MinValue;
     private DateTimeOffset _nextAntigravity = DateTimeOffset.MinValue;
     private ProviderLimits? _statusline;
@@ -71,6 +72,7 @@ public sealed class LimitsSource : IModuleSource
 
     public void Start()
     {
+        _generation++;
         _started = true;
         // the CLI runs once at start, and then again when its 30 min are up
         _nextCli = DateTimeOffset.MinValue;
@@ -82,6 +84,7 @@ public sealed class LimitsSource : IModuleSource
     /// Stops the timer and clears the limits. A read still in flight is dropped when it lands.
     public void Stop()
     {
+        _generation++;
         _started = false;
         _timer.Stop();
         _statusline = null;
@@ -116,7 +119,7 @@ public sealed class LimitsSource : IModuleSource
     }
 
     private static bool AnyProviderOn(IReadOnlyList<WatchItem> items) =>
-        items.Any(i => i.Enabled && (i.Kind is WatchKind.Claude or WatchKind.Codex || i.Cli == "agy"));
+        items.Any(i => i.Enabled && i.Kind is WatchKind.Claude or WatchKind.Codex) || AgyOn(items);
 
     /// One tick (UI thread): starts what is due, and recomposes the limits from what is known.
     private void Tick()
@@ -149,19 +152,22 @@ public sealed class LimitsSource : IModuleSource
         Compose(now);
     }
 
-    private static bool AgyOn(IReadOnlyList<WatchItem> items) =>
-        items.Any(i => i.Enabled && i.Kind == WatchKind.Process && i.Cli == "agy");
+    private static bool AgyOn(IReadOnlyList<WatchItem> items) => items.Any(IsAgy);
+
+    /// The Antigravity item: an enabled process item whose cli is agy.
+    private static bool IsAgy(WatchItem i) => i.Enabled && i.Kind == WatchKind.Process && i.Cli == "agy";
 
     /// The statusline (Claude) and this source's own Codex limits, read on a background thread.
     private async void ReadInBackground(bool claude, bool ownCodex, DateTimeOffset now)
     {
         _reading = true;
+        var generation = _generation;
         try
         {
             var reading = await Task.Run(() => new LimitsReading(
                 claude ? ClaudeUsage.FromStatusline(_reads.ClaudeDir, now) : null,
                 ownCodex ? _codex.Limits(now) : null)).ConfigureAwait(true);
-            if (_started)
+            if (_started && generation == _generation)
             {
                 _statusline = claude ? reading.Statusline : null;
                 _ownCodex = ownCodex ? reading.Codex : null;
@@ -185,17 +191,18 @@ public sealed class LimitsSource : IModuleSource
     private async void RunCli(DateTimeOffset now)
     {
         _cliBusy = true;
+        var generation = _generation;
         try
         {
             using var cts = new CancellationTokenSource();
             var call = AskCli(cts.Token);
-            if (await Task.WhenAny(call, Task.Delay(_cliGiveUp)).ConfigureAwait(true) != call)
+            if (await Task.WhenAny(call, Task.Delay(_cliGiveUp)).ConfigureAwait(true) != call && _started && generation == _generation)
             {
                 cts.Cancel();
                 Compose(DateTimeOffset.UtcNow);
             }
             var text = await call.ConfigureAwait(true);
-            if (text is not null)
+            if (text is not null && _started && generation == _generation)
             {
                 var windows = ClaudeUsage.Parse(text, DateTimeOffset.UtcNow);
                 if (windows.Count > 0)
@@ -204,7 +211,7 @@ public sealed class LimitsSource : IModuleSource
                     _liveAt = DateTimeOffset.UtcNow;
                 }
             }
-            if (_started)
+            if (_started && generation == _generation)
             {
                 Compose(DateTimeOffset.UtcNow);
             }
@@ -235,11 +242,12 @@ public sealed class LimitsSource : IModuleSource
     private async void FetchAntigravity(DateTimeOffset now)
     {
         _antigravityBusy = true;
+        var generation = _generation;
         try
         {
             var found = await Task.Run(() => _antigravity.FetchAsync(_reads.Home, _reads.Http, now, CancellationToken.None))
                 .ConfigureAwait(true);
-            if (_started)
+            if (_started && generation == _generation)
             {
                 _antigravityLimits = found;
                 Compose(DateTimeOffset.UtcNow);

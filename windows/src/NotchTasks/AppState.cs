@@ -36,6 +36,9 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
     /// The last list the watcher gave (SyncAsks), and Codex's questions from the agents source (SetCodexAsks).
     private IReadOnlyList<AgentAsk> _watched = Array.Empty<AgentAsk>();
     private IReadOnlyList<AgentAsk> _codexAsks = Array.Empty<AgentAsk>();
+    /// The Codex questions answered in this session (the Mac's answeredCodex): they stay gone while the agents module cycles.
+    private readonly HashSet<string> _answeredCodex = new(StringComparer.Ordinal);
+    private readonly ICodexCli _codex;
     private bool _disposed;
 
     /// Creates the state on the UI thread. Call StartWatching next. The modules that are on start here. options holds the OS
@@ -60,6 +63,8 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         Agents = new AgentsModule(this);
         LimitsModule = new LimitsModule(this);
         var (agentReaders, limitReaders) = ResolveReaders(o);
+        Processes = agentReaders.Processes;
+        _codex = o.Codex ?? new CodexCli(HomeOf(o));
         _agentsSource = new AgentsSource(Agents, settings, agentReaders, Publish, SetCodexAsks);
         _limitsSource = new LimitsSource(LimitsModule, settings, limitReaders, _agentsSource, Publish);
         Sensors = new SensorsModule(this,
@@ -86,6 +91,9 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
 
     /// The AI limits (the snapshot's Limits). Its source runs while Claude, Codex or Antigravity is enabled and limits is on.
     public LimitsModule LimitsModule { get; }
+
+    /// The process table reader the agent icons use (this PC's, or the options' fake in a test).
+    public IProcessReader Processes { get; }
 
     /// The focus timer. Its controls call Start, Extend or Stop, then Publish.
     public TimerModule Timer { get; }
@@ -203,7 +211,14 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
                 return;
             }
         }
-        _tracker.MarkAnswered(askId);
+        if (IsCodexAsk(askId))
+        {
+            AnswerCodex(askId, reply);
+        }
+        else
+        {
+            _tracker.MarkAnswered(askId);
+        }
         for (var i = Asks.Count - 1; i >= 0; i--)
         {
             if (Asks[i].Id == askId)
@@ -219,12 +234,56 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
     /// one leaves. A list with the same ids and times changes nothing.
     private void SetCodexAsks(IReadOnlyList<AgentAsk> list)
     {
-        if (_disposed || SameAsks(_codexAsks, list))
+        var kept = list.Where(a => !_answeredCodex.Contains(a.Id)).ToList();
+        if (_disposed || SameAsks(_codexAsks, kept))
         {
             return;
         }
-        _codexAsks = list;
+        _codexAsks = kept;
         SyncAsks(_watched);
+    }
+
+    /// Answers a Codex question: its option or reply text goes into the thread (`codex queue`); if that cannot run, or the answer
+    /// is "Answer in Codex", the Codex window comes to the front instead.
+    private void AnswerCodex(string askId, AskReply reply)
+    {
+        _answeredCodex.Add(askId);
+        var ask = Asks.FirstOrDefault(a => a.Id == askId) ?? _codexAsks.FirstOrDefault(a => a.Id == askId);
+        var thread = CodexReply.Thread(askId);
+        if (reply.Kind != ReplyKinds.Answers || ask is null || thread is null)
+        {
+            BringCodexToFront();
+            return;
+        }
+        var text = CodexReply.Message(ask, reply);
+        if (text.Length > 0)
+        {
+            SendCodexReply(thread, text);
+        }
+    }
+
+    private async void SendCodexReply(string thread, string text)
+    {
+        try
+        {
+            var output = await _codex.QueueAsync(thread, text).ConfigureAwait(true);
+            if (output is null)
+            {
+                BringCodexToFront();
+            }
+        }
+        catch (Exception e)
+        {
+            ErrorLog.Write(e);
+        }
+    }
+
+    private void BringCodexToFront()
+    {
+        if (!_disposed)
+        {
+            _codex.BringToFront();
+        }
     }
 
     private static bool SameAsks(IReadOnlyList<AgentAsk> a, IReadOnlyList<AgentAsk> b) =>
@@ -244,7 +303,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
             return;
         }
         _watched = list;
-        var visible = _tracker.Filter(list.Concat(_codexAsks).OrderBy(a => a.At).ToList());
+        var visible = _tracker.Filter(list.Concat(_codexAsks.Where(a => !_answeredCodex.Contains(a.Id))).OrderBy(a => a.At).ToList());
         var agentsOn = ActiveModules(Settings).Contains("agents");
         var wanted = new HashSet<string>(visible.Select(a => a.Id), StringComparer.Ordinal);
         var left = new HashSet<string>(StringComparer.Ordinal);
@@ -292,9 +351,11 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
     /// The agents and limits readers: the options' fakes, else this PC's (the process table, sqlite3, the loopback HTTP, the
     /// LM Studio runner and the claude CLI). The agent folders are under Home; the Claude folder is CLAUDE_CONFIG_DIR when it is
     /// set (production only; a test's Home is used as it is).
+    private static string HomeOf(AppStateOptions o) => o.Home ?? Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+
     private static (AgentReaders Agents, LimitReaders Limits) ResolveReaders(AppStateOptions o)
     {
-        var home = o.Home ?? Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        var home = HomeOf(o);
         var claudeDir = ClaudeSessions.Dir(home, o.Home is null ? Environment.GetEnvironmentVariable("CLAUDE_CONFIG_DIR") : null);
         IProcessReader processes = o.Processes ?? new ProcessReader();
         ISqliteReader sqlite = o.Sqlite ?? new SqliteCli(home);
