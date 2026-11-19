@@ -109,7 +109,7 @@ public partial class ControlPanelWindow : Window
                 PaneId.Overview => new OverviewPane(State.Settings, State),
                 PaneId.Modules => new ModulesPane(State.Settings),
                 PaneId.Permissions => new PermissionsPane(State.Settings, State.Helper),
-                PaneId.Watching => new WatchingPane(State.Settings),
+                PaneId.Watching => new WatchingPane(State.Settings, State.Processes, AppFiles.Home),
                 PaneId.Appearance => new AppearancePane(State.Settings),
                 PaneId.Badges => new BadgesPane(State.Settings, State),
                 PaneId.Store => new IconLibraryPane(State.Settings),

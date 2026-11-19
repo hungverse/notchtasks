@@ -33,6 +33,11 @@
           <TextBlock Style="{StaticResource RowLabel}" Text="{l:L System notifications}" />
         </DockPanel>
         <DockPanel Style="{StaticResource SettingRow}">
+          <Slider x:Name="DoneSlider" DockPanel.Dock="Right" Width="220" Minimum="5" Maximum="600"
+                  TickFrequency="5" IsSnapToTickEnabled="True" VerticalAlignment="Center" />
+          <TextBlock x:Name="DoneLabel" Style="{StaticResource RowLabel}" />
+        </DockPanel>
+        <DockPanel Style="{StaticResource SettingRow}">
           <Slider x:Name="LimitSlider" DockPanel.Dock="Right" Width="220" Minimum="50" Maximum="100"
                   TickFrequency="5" IsSnapToTickEnabled="True" VerticalAlignment="Center" />
           <TextBlock x:Name="LimitLabel" Style="{StaticResource RowLabel}" />

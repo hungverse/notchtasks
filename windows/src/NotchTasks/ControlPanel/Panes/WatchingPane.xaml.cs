@@ -4,37 +4,307 @@ using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Media;
 using NotchTasks.Core;
+using NotchTasks.Core.Agents;
 using NotchTasks.Core.Asks;
 using NotchTasks.Core.Settings;
+using NotchTasks.Pill;
 using NotchTasks.Services;
 
 namespace NotchTasks.ControlPanel.Panes;
 
-/// The Watching pane (SettingsView.swift WatchListView, the agents part): one row per coding agent, with whether its CLI is
-/// here, a switch for its hook, and the one step left before the notch can answer it (opened in a terminal). The rows are read
-/// when the pane shows and when the Control Panel is activated, so a step done in the terminal shows at once.
+/// The Watching pane (SettingsView.swift WatchListView): the watch list on top (what the notch watches, with Add, Edit, On and
+/// Remove), then one row per coding agent, with whether its CLI is here, a switch for its hook, and the one step left before the
+/// notch can answer it (opened in a terminal). The rows are read when the pane shows and when the Control Panel is activated,
+/// so a step done in the terminal shows at once.
 public partial class WatchingPane : SettingsPane
 {
+    private const string SegoeFont = "Segoe Fluent Icons, Segoe MDL2 Assets";
+    private const string DeleteGlyph = "";
+    private const int RunningAppLimit = 80;
+
+    private readonly IProcessReader _processes;
+    private readonly string _home;
+    private readonly string? _path;
+    private readonly string? _appData;
+
     /// The error of the last switch that could not be saved, until the next one. Shown with the configuration error.
     private string? _actionError;
 
     /// The error of an agent whose settings file cannot be read as settings, found when the rows are built.
     private string? _configError;
 
-    public WatchingPane(SettingsStore store) : base(store)
+    /// The pane for the settings store, the process table (for the running apps), the user's profile folder (where the agents'
+    /// settings and CLIs are), and for tests the PATH and %APPDATA% folder to search for CLIs (null: this PC's).
+    public WatchingPane(SettingsStore store, IProcessReader processes, string home, string? path = null, string? appData = null)
+        : base(store)
     {
+        _processes = processes;
+        _home = home;
+        _path = path;
+        _appData = appData;
         InitializeComponent();
+        AddButton.Click += (_, _) =>
+        {
+            RebuildAddMenu();
+            AddButton.ContextMenu.PlacementTarget = AddButton;
+            AddButton.ContextMenu.IsOpen = true;
+        };
     }
 
-    protected override void Apply() => Render();
+    protected override void Apply()
+    {
+        WatchCaption.Text = L10n.L("What the notch watches. Only what's working shows on the notch.");
+        AddHint.Text = L10n.L("Choose an agent, an open app, or type a process name.");
+        RenderWatchList();
+        Render();
+    }
 
     protected override void OnWindowActivated() => ApplyStored();
+
+    /// The watch list: one row per item, in the list's order, with a separator between rows.
+    private void RenderWatchList()
+    {
+        WatchRows.Children.Clear();
+        var items = Store.Items;
+        for (var i = 0; i < items.Count; i++)
+        {
+            if (i > 0)
+            {
+                WatchRows.Children.Add(new Separator { Margin = new Thickness(16, 0, 16, 0) });
+            }
+            WatchRows.Children.Add(BuildWatchRow(items[i]));
+        }
+    }
+
+    /// Icon, name and summary line (the Mac's "AI agent · " or "Build & CI · " then the summary), Edit, the On switch and Remove.
+    private UIElement BuildWatchRow(WatchItem item)
+    {
+        var grid = new Grid { Margin = new Thickness(16, 10, 16, 10) };
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+        // The item's symbol when the glyph map has it, else the sparkles an agent without an app icon shows on the pill.
+        var glyph = ModuleGlyphs.Get(WatchItems.Symbol(item));
+        var icon = new TextBlock
+        {
+            Text = glyph == ModuleGlyphs.Fallback ? ModuleGlyphs.Get("sparkles") : glyph,
+            FontFamily = new FontFamily(SegoeFont),
+            FontSize = 18,
+            Width = 26,
+            Height = 26,
+            TextAlignment = TextAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(0, 0, 12, 0),
+        };
+        Place(icon, grid, 0);
+
+        var text = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+        text.Children.Add(new TextBlock { Text = item.Name, FontWeight = FontWeights.Medium, TextTrimming = TextTrimming.CharacterEllipsis });
+        text.Children.Add(new TextBlock
+        {
+            Style = (Style)FindResource("CardNote"),
+            Margin = new Thickness(0, 2, 0, 0),
+            Text = (WatchItems.InBuild(item) ? "Build & CI · " : "AI agent · ") + WatchItems.Summary(item),
+            TextTrimming = TextTrimming.CharacterEllipsis,
+        });
+        Place(text, grid, 1);
+
+        var edit = new Button
+        {
+            Content = L10n.L("Edit"),
+            Margin = new Thickness(12, 0, 0, 0),
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        // Claude and Codex are tracked per session: nothing to set, so no editor (the Mac's footer note).
+        edit.Visibility = item.Kind is WatchKind.Process or WatchKind.App ? Visibility.Visible : Visibility.Collapsed;
+        edit.Click += (_, _) => EditItem(item);
+        Place(edit, grid, 2);
+
+        var on = new CheckBox
+        {
+            Content = L10n.L("On"),
+            IsChecked = item.Enabled,
+            Margin = new Thickness(12, 0, 0, 0),
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        AutomationProperties.SetName(on, item.Name);
+        on.Click += (_, _) => SetEnabled(item.Id, on.IsChecked == true);
+        Place(on, grid, 3);
+
+        var remove = new Button
+        {
+            Content = new TextBlock { Text = DeleteGlyph, FontFamily = new FontFamily(SegoeFont) },
+            ToolTip = L10n.L("Remove"),
+            Margin = new Thickness(12, 0, 0, 0),
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        remove.Click += (_, _) => RemoveItem(item.Id);
+        Place(remove, grid, 4);
+
+        return grid;
+    }
+
+    /// The Add menu, built each time it opens: the preset groups (installed presets first, marked "✓ "; added ones disabled),
+    /// the Build & CI presets, the running apps, and a process to type in.
+    private void RebuildAddMenu()
+    {
+        var running = RunningAppNames();
+        var menu = new ContextMenu();
+        foreach (var group in WatchItems.PresetGroups.Append(new WatchPresetGroup("Build & CI", WatchItems.BuildPresets)))
+        {
+            menu.Items.Add(new MenuItem { Header = group.Title, IsEnabled = false });
+            foreach (var preset in group.Items.OrderByDescending(p => IsInstalled(p, running)))
+            {
+                menu.Items.Add(PresetEntry(preset, IsInstalled(preset, running)));
+            }
+            menu.Items.Add(new Separator());
+        }
+
+        if (running.Count > 0)
+        {
+            menu.Items.Add(new MenuItem { Header = L10n.L("Running apps"), IsEnabled = false });
+            foreach (var name in running.Take(RunningAppLimit))
+            {
+                var app = new WatchItem(Guid.NewGuid().ToString(), Display(name), WatchKind.App, BundleID: name + ".exe");
+                var entry = new MenuItem { Header = app.Name, Tag = "running", IsEnabled = !Added(app) };
+                entry.Click += (_, _) => AddItem(app);
+                menu.Items.Add(entry);
+            }
+            menu.Items.Add(new Separator());
+        }
+
+        var typed = new MenuItem { Header = L10n.L("Enter a process…") };
+        typed.Click += (_, _) => AddNewProcess();
+        menu.Items.Add(typed);
+        AddButton.ContextMenu = menu;
+    }
+
+    private MenuItem PresetEntry(WatchItem preset, bool installed)
+    {
+        var added = Added(preset);
+        var entry = new MenuItem
+        {
+            Header = (installed ? "✓ " : string.Empty) + preset.Name + (added ? L10n.L(" (added)") : string.Empty),
+            IsEnabled = !added,
+        };
+        entry.Click += (_, _) => AddPreset(preset);
+        return entry;
+    }
+
+    /// Whether a preset is here: Claude always is; a CLI is found on this PC; an app is running (or its exe is known).
+    private bool IsInstalled(WatchItem preset, IReadOnlyCollection<string> running)
+    {
+        if (preset.Kind == WatchKind.Claude)
+        {
+            return true;
+        }
+        if (preset.Kind == WatchKind.App)
+        {
+            return WatchItems.AppExe(preset) is { } exe && running.Contains(ProcTable.NormName(exe));
+        }
+        var cli = preset.Cli ?? (preset.Kind == WatchKind.Codex ? AgentKinds.Spec(AgentKind.Codex).Cli : null);
+        return cli is not null && AgentSetup.FindCli(cli, _home, _path, _appData) is not null;
+    }
+
+    /// Whether the list already holds this item: the same kind, process, command line and bundle (the Mac's `added`).
+    private bool Added(WatchItem item) => Store.Items.Any(i =>
+        i.Kind == item.Kind && i.Process == item.Process && i.Args == item.Args && i.BundleID == item.BundleID);
+
+    /// The programs the desktop started: the children of explorer.exe, by normalised name, sorted, without this app.
+    /// Ported from main.js runningApps (the first 80 are offered in the menu).
+    private List<string> RunningAppNames()
+    {
+        var snapshot = _processes.Snapshot();
+        var shells = snapshot.ByNormName("explorer").Select(p => p.Pid).ToHashSet();
+        var names = new SortedSet<string>(StringComparer.Ordinal);
+        foreach (var p in snapshot.All)
+        {
+            var name = ProcTable.NormName(p.Name);
+            if (shells.Contains(p.Ppid) && name.Length > 0 && name is not ("notchtasks" or "electron"))
+            {
+                names.Add(name);
+            }
+        }
+        return names.ToList();
+    }
+
+    /// The name as the menu shows it: the normalised name with a capital first letter.
+    private static string Display(string name) => char.ToUpperInvariant(name[0]) + name[1..];
+
+    private void AddPreset(WatchItem preset)
+    {
+        if (!Added(preset))
+        {
+            AddItem(preset);
+        }
+    }
+
+    private void AddNewProcess()
+    {
+        var editor = new WatchItemEditor(new WatchItem(Guid.NewGuid().ToString(), string.Empty, WatchKind.Process), isNew: true)
+        {
+            Owner = Window.GetWindow(this),
+        };
+        editor.ShowDialog();
+        if (editor.Result is { } saved)
+        {
+            AddItem(saved);
+        }
+    }
+
+    private void EditItem(WatchItem item)
+    {
+        var editor = new WatchItemEditor(item, isNew: false) { Owner = Window.GetWindow(this) };
+        editor.ShowDialog();
+        if (editor.Result is { } saved)
+        {
+            SaveItems(Store.Items.Select(i => i.Id == saved.Id ? saved : i).ToList());
+        }
+    }
+
+    /// Appends an item under a new id, unless the list is full (the Mac and settings.js keep 64 items).
+    private void AddItem(WatchItem item)
+    {
+        var items = Store.Items.ToList();
+        if (items.Count >= WatchItemsJson.MaxItems)
+        {
+            _actionError = L10n.L("The watch list holds at most {0} items.", WatchItemsJson.MaxItems);
+            ShowErrorLine();
+            return;
+        }
+        items.Add(item with { Id = Guid.NewGuid().ToString() });
+        SaveItems(items);
+    }
+
+    private void SetEnabled(string id, bool enabled) =>
+        SaveItems(Store.Items.Select(i => i.Id == id ? i with { Enabled = enabled } : i).ToList());
+
+    private void RemoveItem(string id) => SaveItems(Store.Items.Where(i => i.Id != id).ToList());
+
+    /// Every change of the list goes through here, so sync and the agents source pick it up. A list that cannot be saved shows
+    /// its error and the rows are read again.
+    private void SaveItems(IReadOnlyList<WatchItem> items)
+    {
+        try
+        {
+            Store.SetItems(items);
+            _actionError = null;
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            _actionError = L10n.L("Couldn't save the watch list: {0}", e.Message);
+        }
+        ShowErrorLine();
+    }
 
     /// Builds one row per agent, in the AgentKind order, with a separator between rows. An agent whose settings file cannot
     /// be edited shows its error at once, not only after a switch fails.
     private void Render()
     {
-        var home = AppFiles.Home;
+        var home = _home;
         var geminiKeySet = Environment.GetEnvironmentVariable("GEMINI_API_KEY") is not null;
 
         Rows.Children.Clear();
@@ -133,7 +403,7 @@ public partial class WatchingPane : SettingsPane
     /// rows are read again, so the switch takes the real state back. Turning a hook on opens the step that is left, as the Mac does.
     private void ChangeHook(AgentKind kind, bool on, bool geminiKeySet)
     {
-        var home = AppFiles.Home;
+        var home = _home;
         var name = AgentKinds.Spec(kind).Name;
         try
         {

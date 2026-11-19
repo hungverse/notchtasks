@@ -1,0 +1,73 @@
+<Window x:Class="NotchTasks.ControlPanel.WatchItemEditor"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:l="clr-namespace:NotchTasks.ControlPanel"
+        Width="480" SizeToContent="Height" ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
+        Background="{DynamicResource ApplicationBackgroundBrush}"
+        Foreground="{DynamicResource TextFillColorPrimaryBrush}">
+  <StackPanel Margin="20">
+    <TextBlock x:Name="TitleText" Style="{StaticResource SectionHeader}" Margin="0,0,0,12" FontSize="18" />
+
+    <Grid Margin="0,0,0,10">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="150" />
+        <ColumnDefinition Width="*" />
+      </Grid.ColumnDefinitions>
+      <TextBlock Text="{l:L Display name}" VerticalAlignment="Center" />
+      <TextBox x:Name="NameBox" Grid.Column="1" MaxLength="80" />
+    </Grid>
+
+    <Grid Margin="0,0,0,10">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="150" />
+        <ColumnDefinition Width="*" />
+      </Grid.ColumnDefinitions>
+      <TextBlock Text="{l:L Kind}" VerticalAlignment="Center" />
+      <ComboBox x:Name="KindBox" Grid.Column="1" SelectedIndex="0">
+        <ComboBoxItem Content="{l:L Process}" />
+        <ComboBoxItem Content="{l:L App}" />
+      </ComboBox>
+    </Grid>
+
+    <Grid Margin="0,0,0,4">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="150" />
+        <ColumnDefinition Width="*" />
+      </Grid.ColumnDefinitions>
+      <TextBlock x:Name="ProgramLabel" Text="{l:L Process name}" VerticalAlignment="Center" />
+      <TextBox x:Name="ProgramBox" Grid.Column="1" MaxLength="200" />
+    </Grid>
+    <TextBlock x:Name="ProgramHint" Style="{StaticResource CardNote}" Margin="150,0,0,10" />
+
+    <Grid x:Name="ArgsRow" Margin="0,0,0,10">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="150" />
+        <ColumnDefinition Width="*" />
+      </Grid.ColumnDefinitions>
+      <TextBlock Text="{l:L Command line contains}" VerticalAlignment="Center" TextWrapping="Wrap" />
+      <TextBox x:Name="ArgsBox" Grid.Column="1" MaxLength="200" />
+    </Grid>
+
+    <Grid Margin="0,0,0,4">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="150" />
+        <ColumnDefinition Width="*" />
+      </Grid.ColumnDefinitions>
+      <TextBlock Text="{l:L Working when CPU is above}" VerticalAlignment="Center" TextWrapping="Wrap" />
+      <TextBox x:Name="ThresholdBox" Grid.Column="1" MaxLength="6" />
+    </Grid>
+    <TextBlock x:Name="ThresholdHint" Style="{StaticResource CardNote}" Margin="150,0,0,10" />
+
+    <CheckBox x:Name="ChildTasksBox" Margin="0,0,0,8" />
+    <CheckBox x:Name="BuildBox" Margin="0,0,0,8" Content="{l:L Build &amp; CI}" />
+
+    <TextBlock x:Name="ErrorText" Style="{StaticResource CardNote}" Margin="0,4,0,0"
+               Foreground="{DynamicResource SystemFillColorCriticalBrush}" Visibility="Collapsed" />
+
+    <DockPanel Margin="0,16,0,0" LastChildFill="False">
+      <Button x:Name="SaveButton" DockPanel.Dock="Right" MinWidth="80" Margin="8,0,0,0" IsDefault="True" Content="{l:L Save}" />
+      <Button x:Name="CancelButton" DockPanel.Dock="Right" MinWidth="80" IsCancel="True" Content="{l:L Cancel}" />
+    </DockPanel>
+  </StackPanel>
+</Window>

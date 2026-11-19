@@ -11,12 +11,14 @@ namespace NotchTasks.ControlPanel.Panes;
 public partial class BehaviorPane : SettingsPane
 {
     private readonly DelayedWrite _delay;
+    private readonly DelayedWrite _done;
     private readonly DelayedWrite _limit;
 
     public BehaviorPane(SettingsStore store) : base(store)
     {
         InitializeComponent();
         _delay = Delayed();
+        _done = Delayed();
         _limit = Delayed();
 
         ExpandBox.ItemsSource = ChoiceItems.ExpandModes;
@@ -37,6 +39,15 @@ public partial class BehaviorPane : SettingsPane
             }
             ShowDelay(DelaySlider.Value);
             _delay.Schedule(() => Write("hoverDelay", JsonValue.Create(Math.Round(DelaySlider.Value, 2))));
+        };
+        DoneSlider.ValueChanged += (_, _) =>
+        {
+            if (Applying)
+            {
+                return;
+            }
+            ShowDone(DoneSlider.Value);
+            _done.Schedule(() => Write("doneAfter", JsonValue.Create(Math.Round(DoneSlider.Value))));
         };
         LimitSlider.ValueChanged += (_, _) =>
         {
@@ -61,6 +72,11 @@ public partial class BehaviorPane : SettingsPane
 
         SystemLoadBox.IsChecked = Store.SystemLoad;
         NotificationsBox.IsChecked = Store.SystemNotifications;
+        if (!_done.Pending)
+        {
+            DoneSlider.Value = Store.DoneAfter;
+        }
+        ShowDone(DoneSlider.Value);
         if (!_limit.Pending)
         {
             LimitSlider.Value = Store.LimitWarn;
@@ -75,6 +91,10 @@ public partial class BehaviorPane : SettingsPane
     /// "Delay N ms": the hover delay in milliseconds, from the seconds of the slider.
     private void ShowDelay(double seconds) =>
         DelayLabel.Text = L10n.L("Delay {0} ms", (int)Math.Round(seconds * 1000));
+
+    /// "Announce a task as done after 30 sec": the seconds a task must run before its completion is announced.
+    private void ShowDone(double seconds) =>
+        DoneLabel.Text = L10n.L("Announce a task as done after") + " " + L10n.L("{0} sec", (int)Math.Round(seconds));
 
     /// "Warn about limits at N%".
     private void ShowLimit(double percent) =>
