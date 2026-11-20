@@ -9,10 +9,12 @@ using NotchTasks.Core.Agents;
 using NotchTasks.Core.Asks;
 using NotchTasks.Core.Ci;
 using NotchTasks.Core.Limits;
+using NotchTasks.Core.Media;
 using NotchTasks.Core.Modules;
 using NotchTasks.Core.Notch;
 using NotchTasks.Core.Settings;
 using NotchTasks.Services;
+using NotchTasks.Services.Media;
 using NotchTasks.Services.Modules;
 
 namespace NotchTasks.AppTests;
@@ -156,7 +158,37 @@ internal static class Fixture
             string.Empty,
             Path.Combine(AppPaths.Root, "NoGitLab"),
             Path.Combine(AppPaths.Root, "NoRunner"),
-            () => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()));
+            () => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()),
+        Media: new NoMedia());
+
+    /// The media seam with no SMTC: no session is listed, nothing is sent, and there is no artwork.
+    public sealed class NoMedia : IMediaReader
+    {
+        public event Action Changed
+        {
+            add
+            {
+            }
+            remove
+            {
+            }
+        }
+
+        public Task Start() => Task.CompletedTask;
+
+        public void Stop()
+        {
+        }
+
+        public Task<IReadOnlyList<MediaSessionFact>> Read() =>
+            Task.FromResult<IReadOnlyList<MediaSessionFact>>(Array.Empty<MediaSessionFact>());
+
+        public Task Send(string source, MediaCommand command) => Task.CompletedTask;
+
+        public Task Seek(string source, double seconds) => Task.CompletedTask;
+
+        public Task<byte[]?> Artwork(string source) => Task.FromResult<byte[]?>(null);
+    }
 
     /// The GitHub seam with no network: every request is unanswered and there is no gh token.
     public sealed class NoGitHub : IGitHubApi

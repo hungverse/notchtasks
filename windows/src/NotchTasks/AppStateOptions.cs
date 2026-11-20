@@ -3,6 +3,7 @@ using NotchTasks.Core.Agents;
 using NotchTasks.Core.Limits;
 using NotchTasks.Core.Modules;
 using NotchTasks.Services;
+using NotchTasks.Services.Media;
 using NotchTasks.Services.Modules;
 
 namespace NotchTasks;
@@ -16,6 +17,7 @@ namespace NotchTasks;
 /// LmsPsJson runs `lms ps --json` for an exe path (null: LmsRunner.PsJson). Codex answers pill questions (null: the codex CLI).
 /// Ci are the Build & CI feed's readers: the process table, GitHub, the ProgramData and runner folders and the clock (null: this PC's;
 /// a test passes inert ones, so no test reads a runner folder or the network).
+/// Media is the Windows media sessions reader (null: SmtcReader; a test passes a fake, so no test touches SMTC).
 public sealed record AppStateOptions(
     string? DownloadsFolder = null,
     NetworkReaders? Network = null,
@@ -31,7 +33,8 @@ public sealed record AppStateOptions(
     string? Home = null,
     Func<string, string?>? LmsPsJson = null,
     ICodexCli? Codex = null,
-    CiReaders? Ci = null)
+    CiReaders? Ci = null,
+    IMediaReader? Media = null)
 {
     /// This PC's readers: the options the app runs with (the same as passing none).
     public static AppStateOptions Production { get; } = new();

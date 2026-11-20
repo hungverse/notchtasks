@@ -34,6 +34,11 @@ public static class ModuleGlyphs
         ["check"] = "\uE73E",        // check mark: a finished job's status (Segoe Fluent Icons E73E)
         ["sparkles"] = "\uE794",     // sparkle: an agent's icon when it has no app icon (Segoe Fluent Icons E794)
         ["log"] = "\uE8E2",          // text lines: a job's log, opened on click (Segoe Fluent Icons E8E2)
+        ["media"] = "\uE8D6",        // music note: Now Playing's chip and art when there is no app icon (Segoe Fluent Icons E8D6)
+        ["previous"] = "\uE892",     // previous track (Segoe Fluent Icons E892)
+        ["next"] = "\uE893",         // next track (Segoe Fluent Icons E893)
+        ["play"] = "\uE768",         // play (Segoe Fluent Icons E768)
+        ["pause"] = "\uE769",        // pause (Segoe Fluent Icons E769)
     };
 
     /// Vector stand-ins for the names the font does not draw here: a gauge and an hourglass, the Mac's gauge and hourglass

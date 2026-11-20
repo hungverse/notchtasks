@@ -7,10 +7,12 @@ using NotchTasks.Core.Agents;
 using NotchTasks.Core.Asks;
 using NotchTasks.Core.Ci;
 using NotchTasks.Core.Limits;
+using NotchTasks.Core.Media;
 using NotchTasks.Core.Modules;
 using NotchTasks.Core.Notch;
 using NotchTasks.Core.Settings;
 using NotchTasks.Services;
+using NotchTasks.Services.Media;
 using NotchTasks.Services.Modules;
 
 namespace NotchTasks;
@@ -34,6 +36,8 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
     private readonly AgentsSource _agentsSource;
     private readonly LimitsSource _limitsSource;
     private readonly CiSource _ciSource;
+    private readonly MediaSource _mediaSource;
+    private readonly RecentCache<System.Windows.Media.ImageSource> _mediaArt = new(8);  // the artwork of the last eight keys
     private const int WorkerLogTail = 2_000_000;   // the bytes of a GitHub worker's log the module reads
     private AskWatcher? _watcher;
     /// The last list the watcher gave (SyncAsks), and Codex's questions from the agents source (SetCodexAsks).
@@ -64,6 +68,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         Helper = o.Helper ?? SensorHelper.Create(settings);
         _thermalSource = new ThermalSource(settings, Helper, PublishThermal);
         Agents = new AgentsModule(this);
+        Media = new MediaModule();
         LimitsModule = new LimitsModule(this);
         var (agentReaders, limitReaders) = ResolveReaders(o);
         Processes = agentReaders.Processes;
@@ -74,6 +79,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         Ci = new CiModule(this, CiState.Get, CiState.Set, settings.AddSeenTools,
             path => RunnerLogs.ReadTail(path, WorkerLogTail));
         _ciSource = new CiSource(Ci, BuildAgents, settings, o.Ci ?? CiReaders.Production(Processes, HomeOf(o)), Publish);
+        _mediaSource = new MediaSource(Media, o.Media ?? new SmtcReader(), Publish, _mediaArt);
         Sensors = new SensorsModule(this,
             () => ActiveModules(settings).Contains("privacy"),
             () => ActiveModules(settings).Contains("calls"));
@@ -95,6 +101,9 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
 
     /// The agents module: its states, and the agents that are working (the snapshot's Running). Its source runs while agents is on.
     public AgentsModule Agents { get; }
+
+    /// The Now Playing session the card shows (the snapshot's Media). Its source (MediaSource) runs while media is on.
+    public MediaModule Media { get; }
 
     /// The AI limits (the snapshot's Limits). Its source runs while Claude, Codex or Antigravity is enabled and limits is on.
     public LimitsModule LimitsModule { get; }
@@ -399,6 +408,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
             ["agents"] = _agentsSource,
             ["limits"] = _limitsSource,
             ["ci"] = _ciSource,
+            ["media"] = _mediaSource,
         };
 
     /// The snapshot's ask count: the asks belong to the agents module, so none count while it is off.
@@ -419,6 +429,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
             Alerts = modules.Contains("ci") ? Ci.Alerts : Array.Empty<JobAlert>(),
             Limits = modules.Contains("limits") ? LimitsModule.Limits : Array.Empty<ProviderLimits>(),
             LimitWarn = Settings.LimitWarn,
+            Media = modules.Contains("media") ? this.Media.Current : null,
         };
     }
 
@@ -436,6 +447,34 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         }
         rows.AddRange(BuildAgents.Running);
         return rows;
+    }
+
+    /// The artwork image of a media key, or null when it is not cached (the last eight keys are).
+    public System.Windows.Media.ImageSource? MediaArt(string key) => _mediaArt.Get(key);
+
+    /// A media key from the card or the chip. A toggle flips the card's play state at once (the Mac's optimistic toggle); the
+    /// command then goes to the session, and SMTC's next event reads the real state.
+    public void MediaControl(MediaCommand command)
+    {
+        if (_disposed)
+        {
+            return;
+        }
+        if (command == MediaCommand.Toggle && Media.Current is { } shown)
+        {
+            Media.SetPlaying(!shown.Playing, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
+            Publish();
+        }
+        _ = _mediaSource.Send(command);
+    }
+
+    /// The seek bar's release: the shown session moves to the position, in seconds.
+    public void MediaSeek(double seconds)
+    {
+        if (!_disposed)
+        {
+            _ = _mediaSource.Seek(seconds);
+        }
     }
 
     /// The call card's mute button: sets the default mic's mute, and publishes the new reading.

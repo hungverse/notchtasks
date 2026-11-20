@@ -1,6 +1,7 @@
 using NotchTasks.Core.Agents;
 using NotchTasks.Core.Ci;
 using NotchTasks.Core.Limits;
+using NotchTasks.Core.Media;
 
 namespace NotchTasks.Core.Notch;
 
@@ -28,4 +29,7 @@ public sealed record NotchSnapshot(
     public IReadOnlyList<ProviderLimits> Limits { get; init; } = Array.Empty<ProviderLimits>();
 
     public double LimitWarn { get; init; } = 80;
+
+    /// The session the Now Playing card shows (none unless the media module is on and a session is listed). Its chip shows only while it plays.
+    public NowPlaying? Media { get; init; }
 }

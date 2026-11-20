@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -36,6 +37,8 @@ public static class ItemIcon
     /// The clock the path cache reads. Tests set it to run the expiry without waiting.
     public static Func<DateTimeOffset> Clock { get; set; } = () => DateTimeOffset.UtcNow;
     private static readonly Dictionary<string, bool> FileExists = new(StringComparer.OrdinalIgnoreCase);
+    /// The icon of a program by its exe name, read by LoadExeIconAsync (a null is kept: no running process).
+    private static readonly Dictionary<string, ImageSource?> IconsByExe = new(StringComparer.OrdinalIgnoreCase);
 
     /// The icon as an element of size by size: the program's icon as an Image, else the sparkles glyph in the tint.
     public static FrameworkElement Element(ItemState state, double size, Color tint, IProcessReader? processes)
@@ -102,6 +105,72 @@ public static class ItemIcon
             IconsByPath[path] = icon;
         }
         return icon;
+    }
+
+    /// The icon of a program by its exe name (the Now Playing card and chip use the media app's), or null until LoadExeIconAsync has read
+    /// it. A lookup in a table: it never reads the process table.
+    public static ImageSource? ExeIcon(string exe)
+    {
+        lock (Gate)
+        {
+            return IconsByExe.TryGetValue(exe, out var icon) ? icon : null;
+        }
+    }
+
+    /// True once an exe's icon has been read (a null icon counts: a program with no running process has none).
+    public static bool HasExeIcon(string exe)
+    {
+        lock (Gate)
+        {
+            return IconsByExe.ContainsKey(exe);
+        }
+    }
+
+    /// Stores an exe's icon. LoadExeIconAsync calls it; a test seeds it.
+    public static void CacheExeIcon(string exe, ImageSource? icon)
+    {
+        lock (Gate)
+        {
+            IconsByExe[exe] = icon;
+        }
+    }
+
+    /// Reads an exe's icon from its running process (the first process of that name with a path), on the background, and caches it.
+    public static Task LoadExeIconAsync(string exe) => Task.Run(() =>
+    {
+        var path = RunningPath(exe);
+        CacheExeIcon(exe, path is null ? null : ShellIcon(path));
+    });
+
+    /// The image path of the first running process with the exe's name, or null when none can be read (no process, or access denied).
+    private static string? RunningPath(string exe)
+    {
+        var processes = Process.GetProcessesByName(Path.GetFileNameWithoutExtension(exe));
+        try
+        {
+            foreach (var process in processes)
+            {
+                try
+                {
+                    if (process.MainModule?.FileName is { } file)
+                    {
+                        return file;
+                    }
+                }
+                catch (Exception e) when (e is Win32Exception or InvalidOperationException or NotSupportedException)
+                {
+                    // the process exited, or its path is not ours to read: the next one
+                }
+            }
+            return null;
+        }
+        finally
+        {
+            foreach (var process in processes)
+            {
+                process.Dispose();
+            }
+        }
     }
 
     /// The pid of an app or process item: its first job's Id. Null when that is not a number.

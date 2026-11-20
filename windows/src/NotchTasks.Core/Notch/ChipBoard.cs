@@ -41,6 +41,11 @@ public static class ChipBoard
                     foreach (var state in s.BuildRunning)
                         list.Add(new Chip(ChipKind.Agent, "ci", "ci-" + state.Item.Id) { Agent = state });
                     break;
+                case "media":
+                    // the Now Playing chip, only while the shown session plays (the Mac's media chip)
+                    if (s.Media is { Playing: true } playing)
+                        list.Add(new Chip(ChipKind.Media, "media", "media") { Media = playing });
+                    break;
                 case "limits":
                     // per provider, the window fullest among those at or above the warning level (NotchView .limits)
                     foreach (var p in s.Limits)

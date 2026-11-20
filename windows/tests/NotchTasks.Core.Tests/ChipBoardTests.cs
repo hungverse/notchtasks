@@ -1,5 +1,6 @@
 using NotchTasks.Core.Agents;
 using NotchTasks.Core.Ci;
+using NotchTasks.Core.Media;
 using NotchTasks.Core.Notch;
 using Xunit;
 
@@ -185,5 +186,23 @@ public class ChipBoardTests
         };
 
         Assert.Empty(ChipBoard.Chips(snap));
+    }
+
+    [Fact]
+    public void ChipBoard_Media_OnlyWhilePlaying()
+    {
+        var playing = new NowPlaying("spotify.exe", "Spotify", "spotify.exe", "Song", "Artist", true, 10, 200, 0,
+            true, true, true, true, "key");
+        var paused = playing with { Playing = false };
+
+        var on = new NotchSnapshot(new[] { "media" }, 0, null, null, Quiet, null, null) { Media = playing };
+        var chips = ChipBoard.Chips(on);
+        Assert.Equal(new[] { ChipKind.Media }, chips.Select(c => c.Kind));
+        Assert.Equal("media", chips[0].Id);
+        Assert.Equal("media", chips[0].Module);
+        Assert.Same(playing, chips[0].Media);
+
+        Assert.Empty(ChipBoard.Chips(on with { Media = paused }));
+        Assert.Empty(ChipBoard.Chips(on with { Media = null }));
     }
 }

@@ -93,6 +93,8 @@ public partial class PillWindow : Window
     private readonly Func<AppState, FrameworkElement?> _privacySection;  // the builder this pill registered for "privacy"
     private readonly CiCards _ciCards;  // the Build & CI section's alert cards and build cards, kept per id
     private readonly Func<AppState, FrameworkElement?> _ciSection;  // the builder this pill registered for "ci"
+    private readonly NowPlayingCard _mediaCard = new();  // the Now Playing card: one element kept for the pill's life, refreshed by its builder
+    private readonly Func<AppState, FrameworkElement?> _mediaSection;  // the builder this pill registered for "media"
     private readonly LoadMeter _cpuMeter = new("CPU", LoadMeterKind.Cpu, 0);  // the header's CPU meter, shown while SystemLoad is on
     private readonly LoadMeter _ramMeter = new("RAM", LoadMeterKind.Memory, 0) { Margin = new Thickness(10, 0, 0, 0) };  // 10 DIP after the CPU
     private Toast? _shownToast;  // the toast the pill shows now; null when none
@@ -175,6 +177,9 @@ public partial class PillWindow : Window
         _ciSection = state => _ciCards.Sync(state.Snapshot.Alerts, state.Snapshot.BuildRunning, state.Settings.ToolIcons,
             state.Settings.ModuleColors, _chosenAccent, state.Processes, DateTimeOffset.Now);
         SectionRegistry.Register("ci", _ciSection);
+        // The Now Playing card while a session is shown: its art, seek bar and buttons act on the state (AppState's media calls).
+        _mediaSection = state => _mediaCard.Update(state, _chosenAccent) ? _mediaCard : null;
+        SectionRegistry.Register("media", _mediaSection);
 
         SourceInitialized += OnSourceInitialized;
         Closed += OnClosed;
@@ -929,6 +934,7 @@ public partial class PillWindow : Window
         SectionRegistry.Unregister("calls", _callSection);
         SectionRegistry.Unregister("privacy", _privacySection);
         SectionRegistry.Unregister("ci", _ciSection);
+        SectionRegistry.Unregister("media", _mediaSection);
     }
 
     /// Re-reads the pill's own texts after a language change. The ask cards and the toast keep the text they were made

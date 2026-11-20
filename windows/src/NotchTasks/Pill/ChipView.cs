@@ -8,6 +8,7 @@ using NotchTasks.ControlPanel;
 using NotchTasks.Core;
 using NotchTasks.Core.Agents;
 using NotchTasks.Core.Limits;
+using NotchTasks.Core.Media;
 using NotchTasks.Core.Notch;
 using NotchTasks.Pill.Sections;
 
@@ -32,10 +33,11 @@ public static class ChipView
     /// One chip as a panel for a wing: its lead, then its trail. Null when the chip has neither to show. toolIcons are the settings'
     /// badges by tool, which a build chip's lead uses.
     public static FrameworkElement? Panel(Chip chip, Color? accent, IReadOnlyDictionary<string, string> moduleColors,
-        DateTimeOffset now, bool lead, bool trail, IProcessReader? processes = null, IReadOnlyDictionary<string, JsonObject>? toolIcons = null)
+        DateTimeOffset now, bool lead, bool trail, IProcessReader? processes = null, IReadOnlyDictionary<string, JsonObject>? toolIcons = null,
+        Func<string, ImageSource?>? art = null)
     {
         var panel = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(3, 0, 3, 0) };
-        if (lead && Lead(chip, 18, accent, moduleColors, processes, toolIcons) is { } leadElement)
+        if (lead && Lead(chip, 18, accent, moduleColors, processes, toolIcons, art) is { } leadElement)
         {
             panel.Children.Add(leadElement);
         }
@@ -50,8 +52,12 @@ public static class ChipView
     /// An agent's lead is its item icon; a build chip's is its job's (BuildLead). The alerts chip has the warning glyph. A limit's is
     /// a gauge, or an hourglass at 100 %, in its own colour. An ask has no glyph here: its trail is its text.
     public static FrameworkElement? Lead(Chip chip, double size, Color? accent, IReadOnlyDictionary<string, string> moduleColors,
-        IProcessReader? processes = null, IReadOnlyDictionary<string, JsonObject>? toolIcons = null)
+        IProcessReader? processes = null, IReadOnlyDictionary<string, JsonObject>? toolIcons = null, Func<string, ImageSource?>? art = null)
     {
+        if (chip.Kind == ChipKind.Media && chip.Media is { } playing)
+        {
+            return MediaLead(playing, size, TintOf(chip, accent, moduleColors), art);
+        }
         if (chip.Kind == ChipKind.Alerts)
         {
             return Glyph("warning", size, HexColor.Brush(ToHex(TintOf(chip, accent, moduleColors))));
@@ -90,6 +96,47 @@ public static class ChipView
             _ => null,
         };
         return name is null ? null : Glyph(name, size, brush);
+    }
+
+    /// The Now Playing chip's lead (Mac: the artwork at the chip's size, corner 22 % of it): the artwork when it is cached, else the
+    /// app's icon when it is read, else the music note in the tint.
+    private static FrameworkElement MediaLead(NowPlaying playing, double size, Color tint, Func<string, ImageSource?>? art)
+    {
+        if (playing.ArtworkKey is { } key && art?.Invoke(key) is { } picture)
+        {
+            return new Image
+            {
+                Source = picture,
+                Width = size,
+                Height = size,
+                Stretch = Stretch.UniformToFill,
+                Clip = new RectangleGeometry(new Rect(0, 0, size, size), size * 0.22, size * 0.22),
+                VerticalAlignment = VerticalAlignment.Center,
+                SnapsToDevicePixels = true,
+                Focusable = false,
+            };
+        }
+        if (playing.AppExe is { } exe && ItemIcon.ExeIcon(exe) is { } icon)
+        {
+            return new Image
+            {
+                Source = icon,
+                Width = size,
+                Height = size,
+                VerticalAlignment = VerticalAlignment.Center,
+                SnapsToDevicePixels = true,
+                Focusable = false,
+            };
+        }
+        return Glyph("media", size, HexColor.Brush(ToHex(tint)));
+    }
+
+    /// The Now Playing chip's trail: the three working bars in the tint (Mac: the chip's bars while a session plays).
+    private static FrameworkElement MediaTrail(Color tint)
+    {
+        var bars = Loops.Bars(new SolidColorBrush(tint));
+        bars.Margin = new Thickness(6, 0, 6, 0);
+        return bars;
     }
 
     /// A build chip's lead (Mac: the chip's JobIcon). Only a dev item with no icon of its own shows its first job: the job's tool badge
@@ -188,6 +235,8 @@ public static class ChipView
                 };
             case ChipKind.Limit when chip.Limit is { } limit:
                 return LimitTrail(limit, size, now);
+            case ChipKind.Media when chip.Media is not null:
+                return MediaTrail(TintOf(chip, accent, moduleColors));
             case ChipKind.Alerts:
                 return new TextBlock
                 {
@@ -228,30 +277,32 @@ public static class ChipView
     /// left and its trail on the right; the others sit whole in the wing ChipBoard.Sides puts them in. Returns how many chips there are.
     public static int FillWings(StackPanel left, StackPanel right, AppState state, Color? accent) =>
         Fill(left, right, ChipBoard.Chips(state.Snapshot), state.Settings.Placements, state.Settings.ModuleColors, accent,
-            DateTimeOffset.Now, state.Processes, state.Settings.ToolIcons, state.Settings.Motion, SystemParameters.ClientAreaAnimation);
+            DateTimeOffset.Now, state.Processes, state.Settings.ToolIcons, state.Settings.Motion, SystemParameters.ClientAreaAnimation,
+            state.MediaArt);
 
     /// FillWings with its inputs given: the same placement, order and badge rule. Returns how many chips there are. A chip that
     /// is new enters (PillMotion.Enter); a chip that is gone exits after its fade; a chip updated in place is replaced without
     /// motion. The badges are never touched.
     public static int Fill(StackPanel left, StackPanel right, IReadOnlyList<Chip> chips, IReadOnlyDictionary<string, string> placements,
         IReadOnlyDictionary<string, string> colors, Color? accent, DateTimeOffset now, IProcessReader? processes,
-        IReadOnlyDictionary<string, JsonObject>? toolIcons = null, string motion = "smooth", bool animationsOn = true)
+        IReadOnlyDictionary<string, JsonObject>? toolIcons = null, string motion = "smooth", bool animationsOn = true,
+        Func<string, ImageSource?>? art = null)
     {
         var (leftChips, rightChips, single) = ChipBoard.Sides(chips, placements);
         var leftPanels = new List<(string Key, FrameworkElement Panel)>();
         var rightPanels = new List<(string Key, FrameworkElement Panel)>();
         if (single is { } lone)
         {
-            Collect(leftPanels, lone, accent, colors, now, lead: true, trail: false, side: "L", processes, toolIcons);
-            Collect(rightPanels, lone, accent, colors, now, lead: false, trail: true, side: "R", processes, toolIcons);
+            Collect(leftPanels, lone, accent, colors, now, lead: true, trail: false, side: "L", processes, toolIcons, art);
+            Collect(rightPanels, lone, accent, colors, now, lead: false, trail: true, side: "R", processes, toolIcons, art);
         }
         foreach (var chip in leftChips)
         {
-            Collect(leftPanels, chip, accent, colors, now, lead: true, trail: true, side: "L", processes, toolIcons);
+            Collect(leftPanels, chip, accent, colors, now, lead: true, trail: true, side: "L", processes, toolIcons, art);
         }
         foreach (var chip in rightChips)
         {
-            Collect(rightPanels, chip, accent, colors, now, lead: true, trail: true, side: "R", processes, toolIcons);
+            Collect(rightPanels, chip, accent, colors, now, lead: true, trail: true, side: "R", processes, toolIcons, art);
         }
         Reconcile(left, leftPanels, rightWing: false, motion, animationsOn);
         Reconcile(right, rightPanels, rightWing: true, motion, animationsOn);
@@ -261,9 +312,9 @@ public static class ChipView
     /// Makes a chip's panel for one wing and keys it by chip and side, so the next fill can tell it is the same chip.
     private static void Collect(List<(string Key, FrameworkElement Panel)> panels, Chip chip, Color? accent,
         IReadOnlyDictionary<string, string> colors, DateTimeOffset now, bool lead, bool trail, string side,
-        IProcessReader? processes, IReadOnlyDictionary<string, JsonObject>? toolIcons)
+        IProcessReader? processes, IReadOnlyDictionary<string, JsonObject>? toolIcons, Func<string, ImageSource?>? art)
     {
-        if (Panel(chip, accent, colors, now, lead, trail, processes, toolIcons) is { } panel)
+        if (Panel(chip, accent, colors, now, lead, trail, processes, toolIcons, art) is { } panel)
         {
             panel.Tag = ChipTag;
             panels.Add(($"{chip.Kind}|{chip.Module}|{chip.Id}|{side}", panel));
