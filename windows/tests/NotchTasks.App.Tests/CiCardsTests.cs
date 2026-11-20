@@ -222,4 +222,161 @@ public sealed class CiCardsTests
             Assert.NotNull(Geometry.Parse(data!));
         }
     }
+
+    [Fact]
+    public void AlertCard_BackgroundIsRedAt14Percent()
+    {
+        Sta.Run(() =>
+        {
+            var card = new AlertCard(_ => { }, _ => { });
+            card.Update(Alert("gh-1"));
+
+            Assert.Equal(Color.FromArgb(0x24, 0xFF, 0x45, 0x3A), ((SolidColorBrush)card.Background).Color);
+        });
+    }
+
+    [Fact]
+    public void AlertCard_TooltipShowsTheUrl_WhenSet()
+    {
+        Sta.Run(() =>
+        {
+            var card = new AlertCard(_ => { }, _ => { });
+
+            card.Update(Alert("gh-1", url: "https://example.test/run/7"));
+            Assert.Equal("https://example.test/run/7", card.ToolTip);
+
+            card.Update(Alert("gh-1", url: null!));
+            Assert.Null(card.ToolTip);
+        });
+    }
+
+    [Fact]
+    public void AlertCard_ViewLogPill_DeepensOnHover()
+    {
+        Sta.Run(() =>
+        {
+            var card = new AlertCard(_ => { }, _ => { });
+            card.Update(Alert("gh-1"));
+            var pill = (SolidColorBrush)card.ViewLogBackground;
+            Assert.Equal(Color.FromArgb(0x2E, 0xFF, 0x45, 0x3A), pill.Color);  // red at 18 %
+
+            card.ViewLogHover(true);
+            Assert.Equal(Color.FromArgb(0x4D, 0xFF, 0x45, 0x3A), ((SolidColorBrush)card.ViewLogBackground).Color);  // red at 30 %
+
+            card.ViewLogHover(false);
+            Assert.Equal(Color.FromArgb(0x2E, 0xFF, 0x45, 0x3A), ((SolidColorBrush)card.ViewLogBackground).Color);
+        });
+    }
+
+    [Fact]
+    public void AlertCard_HideButton_HasAFlatTemplate()
+    {
+        Sta.Run(() =>
+        {
+            var card = new AlertCard(_ => { }, _ => { });
+
+            Assert.NotNull(card.HideButton.Template);
+            Assert.Equal(typeof(Border), card.HideButton.Template.VisualTree.Type);  // no system chrome: a round backdrop
+        });
+    }
+
+    [Fact]
+    public void CiCards_BuildCard_HeaderIsTheHammerLead()
+    {
+        Sta.Run(() =>
+        {
+            var cards = new CiCards(_ => { }, _ => { });
+            var panel = Assert.IsType<StackPanel>(cards.Sync(Array.Empty<JobAlert>(), new[] { Build("b1") }, NoBadges, NoColours, null, null, Now));
+            var card = Assert.Single(panel.Children.OfType<ItemCard>());
+
+            var backdrop = Assert.IsType<Border>(card.IconContent);
+            var hammer = Assert.IsType<Path>(backdrop.Child);
+            Assert.Equal(Geometry.Parse(ModuleGlyphs.Vector("hammer.fill")!).ToString(), hammer.Data.ToString());
+        });
+    }
+
+    [Fact]
+    public void ItemCard_AgentHeader_KeepsItsIcon()
+    {
+        Sta.Run(() =>
+        {
+            var card = new ItemCard();
+            var agent = new ItemState(new WatchItem("a", "Agent", WatchKind.Process), new[] { new Job("1001", "Task", "3%", true) });
+
+            card.Update(agent, Array.Empty<LimitWindow>(), Tint, null, Now, NoBadges);
+
+            Assert.IsNotType<Border>(card.IconContent);  // the item icon, not a symbol backdrop
+        });
+    }
+
+    [Fact]
+    public void BuildChip_LeadOrder_ToolBadgeThenSymbolThenItemIcon()
+    {
+        Sta.Run(() =>
+        {
+            var badges = new Dictionary<string, JsonObject> { ["Gradle"] = Badge() };
+
+            // a dev item with no icon: the first job's tool badge comes first
+            var withBadge = new Chip(ChipKind.Agent, "ci", "ci-b1") { Agent = Build("b1", tool: "Gradle") };
+            Assert.IsType<Grid>(ChipView.Lead(withBadge, 18, null, NoColours, null, badges));
+
+            // no badge for its tool: its symbol
+            var withSymbol = new Chip(ChipKind.Agent, "ci", "ci-b2") { Agent = Build("b2", tool: "Unknown") };
+            Assert.IsType<Path>(ChipView.Lead(withSymbol, 18, null, NoColours, null, badges));
+
+            // no symbol either: the item's icon (the sparkles glyph here)
+            var bare = new ItemState(new WatchItem("b3", "Bare", WatchKind.Dev), new[] { new Job("b3-1", "x", "y", true, null, null, null, null) });
+            Assert.IsType<TextBlock>(ChipView.Lead(new Chip(ChipKind.Agent, "ci", "ci-b3") { Agent = bare }, 18, null, NoColours, null, badges));
+        });
+    }
+
+    [Fact]
+    public void BuildChip_NotADevItem_UsesItsItemIcon()
+    {
+        Sta.Run(() =>
+        {
+            var badges = new Dictionary<string, JsonObject> { ["Gradle"] = Badge() };
+            var process = new ItemState(new WatchItem("p", "Proc", WatchKind.Process), new[] { new Job("p-1", "x", "y", true, null, null, "hammer.fill", "Gradle") });
+
+            // a process item in the ci module is not a dev item: the badge and the symbol are not used
+            var lead = ChipView.Lead(new Chip(ChipKind.Agent, "ci", "ci-p") { Agent = process }, 18, null, NoColours, null, badges);
+
+            Assert.IsNotType<Grid>(lead);
+            Assert.IsNotType<Path>(lead);
+        });
+    }
+
+    [Fact]
+    public void AlertsChip_Tint_CiColourElseRed()
+    {
+        var chip = new Chip(ChipKind.Alerts, "ci", "alerts") { AlertCount = 1 };
+        var green = new Dictionary<string, string> { ["ci"] = "#30D158" };
+
+        Assert.Equal(Color.FromRgb(0x30, 0xD1, 0x58), ChipView.TintOf(chip, null, green));
+        Assert.Equal(Color.FromRgb(0xFF, 0x45, 0x3A), ChipView.TintOf(chip, null, NoColours));
+    }
+
+    [Fact]
+    public void ItemCard_ProgressFill_UsesTintEvenWhenNotWorking()
+    {
+        Sta.Run(() =>
+        {
+            var card = new ItemCard();
+            var stopped = new ItemState(WatchItems.BuildItem, new[] { new Job("b-1", "t", "d", false, null, 0.4) });
+
+            card.Update(stopped, Array.Empty<LimitWindow>(), Tint, null, Now, NoBadges);
+
+            Assert.Equal(Tint, ((SolidColorBrush)card.ProgressFill(0)!).Color);
+        });
+    }
+
+    [Fact]
+    public void ProgressFillWidth_MinimumThreePixels_AndWithinTheTrack()
+    {
+        Assert.Equal(3, ItemCard.ProgressFillWidth(0.01, 100));   // Mac max(3, ...)
+        Assert.Equal(50, ItemCard.ProgressFillWidth(0.5, 100));
+        Assert.Equal(100, ItemCard.ProgressFillWidth(1.5, 100));  // clamped to the track
+        Assert.Equal(2, ItemCard.ProgressFillWidth(0.5, 2));      // a track narrower than 3 px
+        Assert.Equal(0, ItemCard.ProgressFillWidth(0.5, 0));
+    }
 }

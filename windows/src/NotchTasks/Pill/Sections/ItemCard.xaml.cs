@@ -104,7 +104,7 @@ public partial class ItemCard : UserControl
         var path = ItemIcon.PathOf(state, processes);
         if (!_iconSet || path != _iconPath || tint != _iconTint)
         {
-            IconHost.Content = ItemIcon.Element(state, IconSize, tint, processes);
+            IconHost.Content = SymbolIcon(state.Item, tint) ?? ItemIcon.Element(state, IconSize, tint, processes);
             _iconSet = true;
             _iconPath = path;
             _iconTint = tint;
@@ -137,6 +137,36 @@ public partial class ItemCard : UserControl
             SetText(MoreText, L10n.L("+{0} more tasks", more));
         }
     }
+
+    /// The header icon of a dev item with no icon of its own (Mac ItemIcon): its symbol on a tinted rounded square. Null for any other item,
+    /// or when the symbol draws nothing.
+    public static FrameworkElement? SymbolIcon(WatchItem item, Color tint)
+    {
+        if (item.Kind != WatchKind.Dev || !string.IsNullOrEmpty(item.Icon))
+        {
+            return null;
+        }
+        if (JobLead.Element(WatchItems.Symbol(item), 12, TintBrushes.Of(tint)) is not { } lead)
+        {
+            return null;
+        }
+        return new Border
+        {
+            Width = IconSize,
+            Height = IconSize,
+            CornerRadius = new CornerRadius(6),
+            Background = TintBrushes.Of(Color.FromArgb(0x40, tint.R, tint.G, tint.B)),
+            Focusable = false,
+            Child = lead,
+        };
+    }
+
+    /// The fill of a progress line, `fraction` of the track's `total` width, at least 3 px (Mac max(3, ...)) and never wider than the track.
+    public static double ProgressFillWidth(double fraction, double total) =>
+        total <= 0 ? 0 : Math.Min(total, Math.Max(3, Math.Clamp(fraction, 0, 1) * total));
+
+    /// The fill brush of a row's progress line (for tests: its tint, working or not).
+    public Brush? ProgressFill(int row) => _rows[row].ProgressFill;
 
     /// What the badges depend on: the windows (label, used, reset), the tint, the name, the header's width, and the badge texts at
     /// the full width. The texts matter because a reset text drops its date as the clock moves, so a publish with the same limits
@@ -357,9 +387,8 @@ public partial class ItemCard : UserControl
             Focusable = false,
         };
         private readonly Grid _progress = new() { Height = 2, Margin = new Thickness(28, 3, 0, 0), Visibility = Visibility.Collapsed, Focusable = false };
-        private readonly ColumnDefinition _fillColumn = new();
-        private readonly ColumnDefinition _restColumn = new();
-        private readonly Border _progressFill = new() { Focusable = false };
+        private readonly Border _progressFill = new() { HorizontalAlignment = HorizontalAlignment.Left, Focusable = false };
+        private double _fraction;
         private string? _url;
         private string? _leadKind;
         private JsonObject? _leadBadge;
@@ -382,14 +411,10 @@ public partial class ItemCard : UserControl
             _line.Children.Add(_detail);
             _line.Children.Add(_log);
 
-            // the progress line: a fill column and the rest of the track, both in star widths of the progress
-            _progress.ColumnDefinitions.Add(_fillColumn);
-            _progress.ColumnDefinitions.Add(_restColumn);
-            Grid.SetColumn(_progressFill, 0);
+            // the progress line: the track, and on it the fill, whose width is set when the track is laid out
+            _progress.Children.Add(new Border { Background = TrackBrush, Focusable = false });
             _progress.Children.Add(_progressFill);
-            var track = new Border { Background = TrackBrush, Focusable = false };
-            Grid.SetColumn(track, 1);
-            _progress.Children.Add(track);
+            _progress.SizeChanged += (_, _) => ApplyProgressWidth();
 
             Root = new StackPanel { Focusable = false };
             Root.Children.Add(_line);
@@ -438,34 +463,37 @@ public partial class ItemCard : UserControl
             }
             _url = job.Url;
             _log.Visibility = job.Url is null ? Visibility.Collapsed : Visibility.Visible;
-            SetProgress(job.Progress, brush);
+            SetProgress(job.Progress, tint);
         }
+
+        /// The fill brush of the progress line (tests read its colour).
+        public Brush? ProgressFill => _progressFill.Background;
 
         /// The badge of the job's tool when the tool has one in settings (toolIcons), else null.
         private static JsonObject? ToolBadge(Job job, IReadOnlyDictionary<string, JsonObject>? toolIcons) =>
             job.Tool is { Length: > 0 } tool && toolIcons is not null && toolIcons.TryGetValue(tool, out var badge) ? badge : null;
 
-        /// The progress line: shown for a job with a progress, its fill the progress's share of the row, in the row's brush.
-        private void SetProgress(double? progress, Brush brush)
+        /// The progress line: shown for a job with a progress. Its fill is the progress's share of the track, in the tint whether or not
+        /// the job is working, and at least 3 px.
+        private void SetProgress(double? progress, Color tint)
         {
             if (progress is not { } value)
             {
                 _progress.Visibility = Visibility.Collapsed;
                 return;
             }
-            var fraction = Math.Clamp(value, 0, 1);
+            _fraction = Math.Clamp(value, 0, 1);
             _progress.Visibility = Visibility.Visible;
-            _progressFill.Background = brush;
-            SetStar(_fillColumn, fraction);
-            SetStar(_restColumn, 1 - fraction);
+            _progressFill.Background = TintBrushes.Of(tint);
+            ApplyProgressWidth();
         }
 
-        private static void SetStar(ColumnDefinition column, double part)
+        private void ApplyProgressWidth()
         {
-            var width = new GridLength(part, GridUnitType.Star);
-            if (!column.Width.Equals(width))
+            var width = ItemCard.ProgressFillWidth(_fraction, _progress.ActualWidth);
+            if (_progressFill.Width != width)
             {
-                column.Width = width;
+                _progressFill.Width = width;
             }
         }
 

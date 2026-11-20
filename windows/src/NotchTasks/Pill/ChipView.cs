@@ -89,19 +89,22 @@ public static class ChipView
         return name is null ? null : Glyph(name, size, brush);
     }
 
-    /// A build chip's lead (Mac: the chip's JobIcon): the first job's tool badge when its tool has one in settings, else the job's
-    /// symbol, else the item's icon.
+    /// A build chip's lead (Mac: the chip's JobIcon). Only a dev item with no icon of its own shows its first job: the job's tool badge
+    /// when its tool has one in settings, else the job's symbol. Any other item, or a job with neither, shows the item's icon.
     private static FrameworkElement BuildLead(ItemState build, double size, Color tint, IProcessReader? processes,
         IReadOnlyDictionary<string, JsonObject>? toolIcons)
     {
         var job = build.Jobs.Count > 0 ? build.Jobs[0] : null;
-        if (job?.Tool is { Length: > 0 } tool && toolIcons is not null && toolIcons.TryGetValue(tool, out var badge))
+        if (build.Item.Kind == WatchKind.Dev && string.IsNullOrEmpty(build.Item.Icon) && job is not null)
         {
-            return BadgeGlyph.Create(badge, size, tint);
-        }
-        if (JobLead.Element(job?.Symbol, size, HexColor.Brush(ToHex(tint))) is { } symbol)
-        {
-            return symbol;
+            if (job.Tool is { Length: > 0 } tool && toolIcons is not null && toolIcons.TryGetValue(tool, out var badge))
+            {
+                return BadgeGlyph.Create(badge, size, tint);
+            }
+            if (JobLead.Element(job.Symbol, size, HexColor.Brush(ToHex(tint))) is { } symbol)
+            {
+                return symbol;
+            }
         }
         return ItemIcon.Element(build, size, tint, processes);
     }

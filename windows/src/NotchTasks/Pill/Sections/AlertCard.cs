@@ -17,8 +17,10 @@ public sealed class AlertCard : Border
     private const double CloseSize = 9;
     private static readonly Brush RedBrush = Frozen(new SolidColorBrush(Color.FromRgb(0xFF, 0x45, 0x3A)));          // the Mac's red
     private static readonly Brush GreyBrush = Frozen(new SolidColorBrush(Color.FromRgb(0x8E, 0x8E, 0x93)));        // the Mac's .gray
-    private static readonly Brush CardBrush = Frozen(new SolidColorBrush(Color.FromArgb(0x0F, 0xFF, 0xFF, 0xFF)));  // white at 6 %
+    private static readonly Brush CardBrush = Frozen(new SolidColorBrush(Color.FromArgb(0x24, 0xFF, 0x45, 0x3A)));  // red at 14 % (Mac Views.swift:358)
     private static readonly Brush PillBrush = Frozen(new SolidColorBrush(Color.FromArgb(0x2E, 0xFF, 0x45, 0x3A)));  // red at 18 %
+    private static readonly Brush PillHoverBrush = Frozen(new SolidColorBrush(Color.FromArgb(0x4D, 0xFF, 0x45, 0x3A)));  // red at 30 %
+    private static readonly Brush CloseBackdrop = Frozen(new SolidColorBrush(Color.FromArgb(0x1A, 0xFF, 0xFF, 0xFF)));  // white at 10 % (Electron .xbtn)
 
     private readonly Action<string> _open;
     private readonly Action<string> _dismiss;
@@ -74,15 +76,16 @@ public sealed class AlertCard : Border
 
         HideButton = new Button
         {
-            Background = Brushes.Transparent,
-            BorderThickness = new Thickness(0),
-            Padding = new Thickness(4),
+            Template = FlatCloseTemplate(),
+            Padding = new Thickness(0),
             Margin = new Thickness(6, 0, 0, 0),
             Cursor = Cursors.Hand,
             VerticalAlignment = VerticalAlignment.Center,
             Focusable = false,
             Content = ToastView.GlyphOf("xmark", GreyBrush, CloseSize),
         };
+        _viewLog.MouseEnter += (_, _) => ViewLogHover(true);
+        _viewLog.MouseLeave += (_, _) => ViewLogHover(false);
 
         var grid = new Grid { Focusable = false };
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
@@ -123,6 +126,12 @@ public sealed class AlertCard : Border
     /// True when the "View log" pill shows (the alert has a log).
     public bool ViewLogShown => _viewLog.Visibility == Visibility.Visible;
 
+    /// The "View log" pill's background: red at 18 %, or 30 % while the pointer is over it.
+    public Brush ViewLogBackground => _viewLog.Background;
+
+    /// Sets the pill's background for the pointer over it (true) or not (false).
+    public void ViewLogHover(bool over) => _viewLog.Background = over ? PillHoverBrush : PillBrush;
+
     /// Opens the alert's log, when it has one.
     public void OpenLog()
     {
@@ -150,6 +159,27 @@ public sealed class AlertCard : Border
         {
             HideButton.ToolTip = tip;
         }
+        // the card's tooltip is the log's address, when it has one (Electron title = a.url)
+        var cardTip = string.IsNullOrEmpty(alert.Url) ? null : alert.Url;
+        if (ToolTip as string != cardTip)
+        {
+            ToolTip = cardTip;
+        }
+    }
+
+    /// The round, flat × of the Electron .xbtn: a white 10 % backdrop with the glyph on it, and no system hover chrome.
+    private static ControlTemplate FlatCloseTemplate()
+    {
+        var backdrop = new FrameworkElementFactory(typeof(Border));
+        backdrop.SetValue(Border.CornerRadiusProperty, new CornerRadius(9));
+        backdrop.SetValue(Border.BackgroundProperty, CloseBackdrop);
+        backdrop.SetValue(FrameworkElement.WidthProperty, 18.0);
+        backdrop.SetValue(FrameworkElement.HeightProperty, 18.0);
+        var content = new FrameworkElementFactory(typeof(ContentPresenter));
+        content.SetValue(FrameworkElement.HorizontalAlignmentProperty, HorizontalAlignment.Center);
+        content.SetValue(FrameworkElement.VerticalAlignmentProperty, VerticalAlignment.Center);
+        backdrop.AppendChild(content);
+        return new ControlTemplate(typeof(Button)) { VisualTree = backdrop };
     }
 
     private void OnHideClick(object sender, RoutedEventArgs e)
