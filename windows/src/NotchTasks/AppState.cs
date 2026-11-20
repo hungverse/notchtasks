@@ -179,7 +179,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         };
         if (dialog.ShowDialog() == true)
         {
-            Shelf.Add(dialog.FileNames);
+            ShelfSave.TrySave(() => Shelf.Add(dialog.FileNames));  // a failed save is logged and the shelf stays as it was
         }
     }
 

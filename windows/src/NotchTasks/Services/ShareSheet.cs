@@ -28,12 +28,14 @@ public static partial class ShareSheet
     /// The IID of IDataTransferManager, the interface GetForWindow returns.
     private static readonly Guid DataTransferManagerIid = new("A5CAEE9B-8708-49D1-8D36-67D25A8DA00C");
 
-    /// The manager of the last share, and the handler it offers with: a window has one manager, so the old handler is removed first.
+    /// The manager of the window that was last shared from. It is kept, so the DataRequested handler is subscribed once, and the
+    /// handler reads the files of the current share from _files.
     private static DataTransferManager? _manager;
-    private static TypedEventHandler<DataTransferManager, DataRequestedEventArgs>? _handler;
+    private static nint _managerWindow;
+    private static IReadOnlyList<string> _files = Array.Empty<string>();
 
     /// Shows the share sheet for the window, offering the files (existing files and folders). Returns false, with nothing shown,
-    /// when there is nothing to share or Windows does not show the sheet. Call on the UI thread.
+    /// when there is nothing to share or Windows does not show the sheet, for any reason; the reason is logged once. Call on the UI thread.
     public static bool Share(nint hwnd, IReadOnlyList<string> paths)
     {
         if (hwnd == nint.Zero || paths.Count == 0)
@@ -42,30 +44,31 @@ public static partial class ShareSheet
         }
         try
         {
+            _files = paths.ToList();
             var interop = ActivationFactory();
-            var iid = DataTransferManagerIid;
-            interop.GetForWindow(hwnd, ref iid, out var pointer);
-            var manager = MarshalInterface<DataTransferManager>.FromAbi(pointer);
-            if (_manager is not null && _handler is not null)
+            if (_manager is null || _managerWindow != hwnd)
             {
-                _manager.DataRequested -= _handler;
+                var iid = DataTransferManagerIid;
+                interop.GetForWindow(hwnd, ref iid, out var pointer);
+                var manager = MarshalInterface<DataTransferManager>.FromAbi(pointer);
+                manager.DataRequested += OnDataRequested;
+                _manager = manager;
+                _managerWindow = hwnd;
             }
-            var files = paths.ToList();
-            _handler = (_, args) => Offer(args.Request, files);
-            manager.DataRequested += _handler;
-            _manager = manager;
             interop.ShowShareUIForWindow(hwnd);
             return true;
         }
-        catch (Exception e) when (e is COMException or InvalidOperationException or ArgumentException or NotSupportedException
-            or InvalidCastException or IOException)
+        catch (Exception e)
         {
             ErrorLog.Write(e);
             return false;
         }
     }
 
-    /// The DataTransferManager's activation factory, as the share interop (RoGetActivationFactory with the interop's IID).
+    private static void OnDataRequested(DataTransferManager sender, DataRequestedEventArgs args) => Offer(args.Request, _files);
+
+    /// The DataTransferManager's activation factory, as the share interop (RoGetActivationFactory with the interop's IID). The factory
+    /// pointer is released once the wrapper holds it.
     private static IDataTransferManagerInterop ActivationFactory()
     {
         Check(WindowsCreateString(ManagerClass, ManagerClass.Length, out var name));
@@ -73,7 +76,14 @@ public static partial class ShareSheet
         {
             var iid = typeof(IDataTransferManagerInterop).GUID;
             Check(RoGetActivationFactory(name, ref iid, out var factory));
-            return (IDataTransferManagerInterop)Marshal.GetObjectForIUnknown(factory);
+            try
+            {
+                return (IDataTransferManagerInterop)Marshal.GetObjectForIUnknown(factory);
+            }
+            finally
+            {
+                Marshal.Release(factory);  // the wrapper holds its own reference: ours is released here
+            }
         }
         finally
         {

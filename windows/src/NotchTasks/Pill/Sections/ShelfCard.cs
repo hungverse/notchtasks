@@ -27,17 +27,21 @@ public sealed class ShelfCard : Border
     private const string TrashGlyph = "";   // delete: remove all
     private const string MinusGlyph = "";   // remove the selection
     private const string AddGlyph = "";     // add files
-    private const string CheckGlyph = "";   // a selected tile's badge
     private const string HintText = "Click to select · double-click to open · drag out to drop into another app";
     private const string DropHere = "Drop here";
     private const string EmptyHint = "Drag files onto the notch, or click + to choose";
     private const double DragThreshold = 3;
-    private const double MissingOpacity = 0.35;
     private const double DashedHeight = 44;
 
     private static readonly Color FillColor = Color.FromArgb(0x0F, 0xFF, 0xFF, 0xFF);
     private static readonly Color TargetedFill = Color.FromArgb(0x24, 0xFF, 0xFF, 0xFF);
     private static readonly Color GreyColor = Color.FromRgb(0x8E, 0x8E, 0x93);
+    private static readonly Brush FillBrush = Frozen(new SolidColorBrush(FillColor));
+    private static readonly Brush TargetedBrush = Frozen(new SolidColorBrush(TargetedFill));
+    private static readonly Brush MenuBackground = Frozen(new SolidColorBrush(Color.FromRgb(0x1C, 0x1C, 0x1E)));
+    private static readonly Brush MenuBorder = Frozen(new SolidColorBrush(Color.FromArgb(0x33, 0xFF, 0xFF, 0xFF)));
+    private static readonly FontFamily GlyphFamily = new("Segoe Fluent Icons, Segoe MDL2 Assets");
+    private static readonly FontFamily TextFamily = new("Segoe UI Variable Text, Segoe UI");
     private static readonly Lazy<ResourceDictionary> PillStyles = new(() => new ResourceDictionary
     {
         Source = new Uri("pack://application:,,,/NotchTasks;component/Pill/PillStyles.xaml", UriKind.Absolute),
@@ -49,6 +53,8 @@ public sealed class ShelfCard : Border
 
     private readonly Dictionary<string, ShelfTile> _tiles = new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<string> _selected = new(StringComparer.OrdinalIgnoreCase);
+    // Whether each shelf path exists, as the last background check found it. A path not checked yet shows as present.
+    private readonly Dictionary<string, bool> _present = new(StringComparer.OrdinalIgnoreCase);
     private readonly TextBlock _titleGlyph;
     private readonly TextBlock _title;
     private readonly TextBlock _count;
@@ -64,6 +70,8 @@ public sealed class ShelfCard : Border
     private readonly TextBlock _hint;
     private AppState? _state;
     private IReadOnlyList<string> _items = Array.Empty<string>();
+    private IReadOnlyList<string>? _checkedFor;  // the list the existence check last ran for (by reference: a change makes a new list)
+    private string _removeGlyph = TrashGlyph;    // the glyph the remove button shows now, so it is made again only on a change
     private Color _accent = Color.FromRgb(0x32, 0xD2, 0xFF);
     private bool _targeted;
     private bool _dragging;  // a drag out is in progress: the pill stays open
@@ -77,14 +85,14 @@ public sealed class ShelfCard : Border
     public ShelfCard()
     {
         Focusable = false;
-        Background = Frozen(new SolidColorBrush(FillColor));
+        Background = FillBrush;
         CornerRadius = new CornerRadius(14);
         Padding = new Thickness(10);
 
-        _titleGlyph = Text(TrayGlyph, 12, "Segoe Fluent Icons, Segoe MDL2 Assets", Brushes.White);
+        _titleGlyph = Text(TrayGlyph, 12, GlyphFamily, Brushes.White);
         _titleGlyph.Margin = new Thickness(0, 0, 6, 0);
-        _title = Text(string.Empty, 12, "Segoe UI Variable Text, Segoe UI", Brushes.White, FontWeights.SemiBold);
-        _count = Text(string.Empty, 11, "Segoe UI Variable Text, Segoe UI", Brushes.Gray);
+        _title = Text(string.Empty, 12, TextFamily, Brushes.White, FontWeights.SemiBold);
+        _count = Text(string.Empty, 11, TextFamily, Brushes.Gray);
         _count.Margin = new Thickness(6, 0, 0, 0);
         var titles = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center, Focusable = false };
         titles.Children.Add(_titleGlyph);
@@ -98,7 +106,7 @@ public sealed class ShelfCard : Border
         _share = Wire(Glyph(ShareGlyph), FooterStyle(), OnShare);
         _remove = Wire(Glyph(TrashGlyph), FooterStyle(), OnRemove);
         var add = Wire(Glyph(AddGlyph), FooterStyle(), (_, _) => _state?.PickShelfFiles());
-        ToolTipOf(add, L10n.L("Add files…"));
+        add.ToolTip = L10n.L("Add files…");
         var actions = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Focusable = false };
         foreach (var button in new[] { _selectAll, _open, _reveal, _share, _remove, add })
         {
@@ -113,8 +121,9 @@ public sealed class ShelfCard : Border
         header.Children.Add(titles);
         header.Children.Add(actions);
 
-        _emptyText = Text(string.Empty, 11, "Segoe UI Variable Text, Segoe UI", Brushes.Gray);
+        _emptyText = Text(string.Empty, 11, TextFamily, Brushes.Gray);
         _emptyText.TextAlignment = TextAlignment.Center;
+        _emptyText.VerticalAlignment = VerticalAlignment.Center;
         _emptyBox = new Grid { Height = DashedHeight, Margin = new Thickness(0, 8, 0, 0), Focusable = false };
         _emptyBox.Children.Add(new Rectangle
         {
@@ -125,7 +134,6 @@ public sealed class ShelfCard : Border
             RadiusY = 10,
         });
         _emptyBox.Children.Add(_emptyText);
-        _emptyText.VerticalAlignment = VerticalAlignment.Center;
 
         _tileRow = new StackPanel { Orientation = Orientation.Horizontal, Focusable = false };
         _tileScroll = new ScrollViewer
@@ -136,7 +144,7 @@ public sealed class ShelfCard : Border
             Margin = new Thickness(0, 8, 0, 0),
             Content = _tileRow,
         };
-        _hint = Text(HintText, 9, "Segoe UI Variable Text, Segoe UI", Brushes.Gray);
+        _hint = Text(HintText, 9, TextFamily, Brushes.Gray);
         _hint.Margin = new Thickness(0, 8, 0, 0);
 
         var stack = new StackPanel { Focusable = false };
@@ -168,11 +176,20 @@ public sealed class ShelfCard : Border
     /// The selected paths (the tiles the user picked, in no particular order).
     public IReadOnlyCollection<string> Selected => _selected;
 
-    /// True while a drag out or a tile's menu is open: the pill stays open then.
+    /// True while a drag out or a tile's menu is open: the pill stays open then, and no drop lands on the card's own drag.
     public bool Busy => _dragging || _menuOpen;
 
+    /// Whether a drag that carries files may drop on the pill: the shelf module is on, the drag has files, and the card is not dragging
+    /// files out (its own drag never drops on the pill).
+    public static bool AcceptsDrop(bool shelfOn, bool hasFiles, bool busy) => shelfOn && hasFiles && !busy;
+
+    /// Whether the drop prompt clears on a cursor poll: it is up, the pointer is off the pill, and no mouse button is down. A DragLeave
+    /// that never came is then not left to keep the pill open.
+    public static bool ClearsTarget(bool targeted, bool pointerOverPill, bool buttonDown) => targeted && !pointerOverPill && !buttonDown;
+
     /// Brings the card in line with the app state and returns true, or returns false (and shows nothing) while the shelf module is
-    /// off, or the shelf is empty and no file is dragged over the pill. Selected paths that left the shelf are dropped.
+    /// off, or the shelf is empty and no file is dragged over the pill. Selected paths that left the shelf are dropped. The files'
+    /// existence is checked on the background when the shelf changes; the tiles show it when the check lands.
     public bool Update(AppState state, Color accent)
     {
         _state = state;
@@ -180,8 +197,19 @@ public sealed class ShelfCard : Border
         _targeted = state.ShelfTargeted;
         var shown = state.Snapshot.ActiveModules.Contains("shelf") && (state.Shelf.Items.Count > 0 || _targeted);
         _items = shown ? state.Shelf.Items : Array.Empty<string>();
+        if (shown && _items.Count > 0 && !ReferenceEquals(_checkedFor, _items))
+        {
+            CheckExistenceAsync(_items);
+        }
         Render();
         return shown;
+    }
+
+    /// Checks the files again (the pill calls it when it opens: a file may have gone while it was closed).
+    public void InvalidateExistence()
+    {
+        _checkedFor = null;
+        Refresh();
     }
 
     /// Selects a tile, or deselects it when it is selected (a click on the tile).
@@ -209,12 +237,16 @@ public sealed class ShelfCard : Border
         Render();
     }
 
-    /// Removes the selected files from the shelf, or every file when none is selected. The originals stay.
+    /// Removes the selected files from the shelf, or every file when none is selected. The originals stay. A save that fails leaves the
+    /// shelf and the selection as they were.
     public void RemoveTargets()
     {
         var targets = Targets();
+        if (!ShelfSave.TrySave(() => _state?.Shelf.Remove(targets)))
+        {
+            return;
+        }
         _selected.ExceptWith(targets);
-        _state?.Shelf.Remove(targets);
         Refresh();
     }
 
@@ -243,7 +275,29 @@ public sealed class ShelfCard : Border
     /// The files the header and the tiles' actions act on: the selection when there is one, else all of the shelf.
     private List<string> Targets() => _selected.Count > 0 ? _items.Where(_selected.Contains).ToList() : _items.ToList();
 
-    /// Shows the items, the selection and the header from the current state. Cheap: the tiles are kept per path.
+    /// The existence of the shelf's files, checked on a thread-pool thread. The result is applied on the UI thread, and only when the
+    /// list is still the one checked (a newer list, or an invalidation, makes this result stale).
+    private async void CheckExistenceAsync(IReadOnlyList<string> items)
+    {
+        _checkedFor = items;
+        var paths = items.ToArray();
+        var found = await Task.Run(() => paths.Select(p => File.Exists(p) || Directory.Exists(p)).ToArray());
+        if (!ReferenceEquals(_checkedFor, items))
+        {
+            return;
+        }
+        _present.Clear();
+        for (var i = 0; i < paths.Length; i++)
+        {
+            _present[paths[i]] = found[i];
+        }
+        Render();
+    }
+
+    private bool Present(string path) => !_present.TryGetValue(path, out var present) || present;
+
+    /// Shows the items, the selection and the header from the current state. Each element is changed only when its value changed, so a
+    /// publish that changes nothing makes no new brush, glyph or tooltip.
     private void Render()
     {
         var picked = _items.Where(_selected.Contains).ToList();
@@ -260,14 +314,24 @@ public sealed class ShelfCard : Border
 
         var hasItems = !empty;
         _selectAll.Visibility = hasItems ? Visibility.Visible : Visibility.Collapsed;
-        ((TextBlock)_selectAll.Content).Text = picked.Count == _items.Count && hasItems ? L10n.L("Deselect") : L10n.L("Select all");
+        var selectAllText = picked.Count == _items.Count && hasItems ? L10n.L("Deselect") : L10n.L("Select all");
+        var selectAllLabel = (TextBlock)_selectAll.Content;
+        if (selectAllLabel.Text != selectAllText)
+        {
+            selectAllLabel.Text = selectAllText;
+        }
         _open.Visibility = picked.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         _reveal.Visibility = hasItems ? Visibility.Visible : Visibility.Collapsed;
         _share.Visibility = hasItems ? Visibility.Visible : Visibility.Collapsed;
-        ToolTipOf(_share, noSelection ? L10n.L("Share all") : L10n.L("Share"));
+        SetTip(_share, noSelection ? L10n.L("Share all") : L10n.L("Share"));
         _remove.Visibility = hasItems ? Visibility.Visible : Visibility.Collapsed;
-        _remove.Content = Glyph(noSelection ? TrashGlyph : MinusGlyph);
-        ToolTipOf(_remove, noSelection ? L10n.L("Remove all from the shelf (originals stay)") : L10n.L("Remove from the shelf (original stays)"));
+        var removeGlyph = noSelection ? TrashGlyph : MinusGlyph;
+        if (removeGlyph != _removeGlyph)
+        {
+            _remove.Content = Glyph(removeGlyph);
+            _removeGlyph = removeGlyph;
+        }
+        SetTip(_remove, noSelection ? L10n.L("Remove all from the shelf (originals stay)") : L10n.L("Remove from the shelf (original stays)"));
 
         _emptyBox.Visibility = empty ? Visibility.Visible : Visibility.Collapsed;
         _emptyText.Text = _targeted ? L10n.L(DropHere) : L10n.L(EmptyHint);
@@ -277,7 +341,16 @@ public sealed class ShelfCard : Border
         _hint.Text = noSelection ? L10n.L(HintText) : L10n.L("Drag one selected file to bring all {0} files", picked.Count);
 
         SyncTiles();
-        Background = Frozen(new SolidColorBrush(_targeted ? TargetedFill : FillColor));
+        Background = _targeted ? TargetedBrush : FillBrush;
+    }
+
+    /// Sets a button's tooltip only when its text changed.
+    private static void SetTip(Button button, string text)
+    {
+        if (button.ToolTip as string != text)
+        {
+            button.ToolTip = text;
+        }
     }
 
     /// The tiles, one per item, in the shelf's order. A tile is made once per path; the row is set again only when its order changes.
@@ -291,8 +364,7 @@ public sealed class ShelfCard : Border
                 tile = MakeTile(path);
                 _tiles[path] = tile;
             }
-            var exists = _state?.Shelf.Exists(path) ?? false;
-            tile.Show(exists, _selected.Contains(path), _accent);
+            tile.Show(Present(path), _selected.Contains(path), _accent);
             wanted.Add(tile);
         }
         foreach (var path in _tiles.Keys.Where(p => !_items.Contains(p, StringComparer.OrdinalIgnoreCase)).ToList())
@@ -309,7 +381,7 @@ public sealed class ShelfCard : Border
         }
     }
 
-    /// One tile: its thumbnail (the shell icon at once, the WinRT thumbnail when it arrives), its name, and its input.
+    /// One tile: its thumbnail (the large icon at once, the WinRT thumbnail when it arrives), its name, and its input.
     private ShelfTile MakeTile(string path)
     {
         var tile = new ShelfTile(path);
@@ -317,20 +389,17 @@ public sealed class ShelfCard : Border
         tile.MouseLeftButtonDown += (_, e) => OnTileDown(tile, e);
         tile.MouseMove += (_, e) => OnTileMove(tile, e);
         tile.MouseLeftButtonUp += (_, e) => OnTileUp(tile, e);
-        var menu = new ContextMenu
-        {
-            Background = Frozen(new SolidColorBrush(Color.FromRgb(0x1C, 0x1C, 0x1E))),
-            Foreground = Brushes.White,
-            BorderBrush = Frozen(new SolidColorBrush(Color.FromArgb(0x33, 0xFF, 0xFF, 0xFF))),
-        };
+        var menu = new ContextMenu { Background = MenuBackground, Foreground = Brushes.White, BorderBrush = MenuBorder };
         menu.Items.Add(Entry(L10n.L("Open"), () => OpenPath(path)));
         menu.Items.Add(Entry(L10n.L("Show in folder"), () => RevealPaths(new[] { path })));
         menu.Items.Add(Entry(L10n.L("Share"), () => ShareFiles(new[] { path })));
         menu.Items.Add(Entry(L10n.L("Remove from shelf"), () =>
         {
-            _selected.Remove(path);
-            _state?.Shelf.Remove(new[] { path });
-            Refresh();
+            if (ShelfSave.TrySave(() => _state?.Shelf.Remove(new[] { path })))
+            {
+                _selected.Remove(path);
+                Refresh();
+            }
         }));
         menu.Opened += (_, _) => _menuOpen = true;
         menu.Closed += (_, _) => _menuOpen = false;
@@ -365,7 +434,8 @@ public sealed class ShelfCard : Border
             return;
         }
         _dragged.Add(tile);
-        var files = DragFiles(tile.FilePath, _items, _selected, path => _state?.Shelf.Exists(path) ?? false);
+        // A drag starts from a user's press, so the files are checked now (the only check off the background, and only on a drag).
+        var files = DragFiles(tile.FilePath, _items, _selected, path => File.Exists(path) || Directory.Exists(path));
         tile.ReleaseMouseCapture();
         if (files.Count > 0)
         {
@@ -420,17 +490,21 @@ public sealed class ShelfCard : Border
 
     private void OnRemove(object sender, RoutedEventArgs e) => RemoveTargets();
 
-    /// The share sheet for the existing files, shown for the pill's window. A window that is not there shares nothing.
+    /// The share sheet for the existing files, shown for the pill's window. When the sheet does not open (no window, or Windows refuses),
+    /// the files are shown in their folders instead, so the button never does nothing.
     private void ShareFiles(IReadOnlyList<string> paths)
     {
         var files = paths.Where(p => File.Exists(p) || Directory.Exists(p)).ToList();
-        var window = Window.GetWindow(this);
-        if (files.Count == 0 || window is null)
+        if (files.Count == 0)
         {
             return;
         }
-        var hwnd = new WindowInteropHelper(window).Handle;
-        ShareSheet.Share(hwnd, files);
+        var window = Window.GetWindow(this);
+        var shared = window is not null && ShareSheet.Share(new WindowInteropHelper(window).Handle, files);
+        if (!shared)
+        {
+            RevealPaths(files);
+        }
     }
 
     /// Opens a file or folder in its own program (shell execute). A path that is gone does nothing.
@@ -486,8 +560,6 @@ public sealed class ShelfCard : Border
         return button;
     }
 
-    private static void ToolTipOf(Button button, string text) => button.ToolTip = text;
-
     private static Style FooterStyle() => (Style)PillStyles.Value["FooterButton"];
 
     private static Style ChoiceStyle() => (Style)AskStyles.Value["ChoiceButton"];
@@ -495,18 +567,18 @@ public sealed class ShelfCard : Border
     private static TextBlock Glyph(string glyph) => new()
     {
         Text = glyph,
-        FontFamily = new FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets"),
+        FontFamily = GlyphFamily,
         FontSize = 12,
         Foreground = Brushes.White,
         VerticalAlignment = VerticalAlignment.Center,
         HorizontalAlignment = HorizontalAlignment.Center,
     };
 
-    private static TextBlock Text(string text, double size, string family, Brush brush, FontWeight? weight = null) => new()
+    private static TextBlock Text(string text, double size, FontFamily family, Brush brush, FontWeight? weight = null) => new()
     {
         Text = text,
         FontSize = size,
-        FontFamily = new FontFamily(family),
+        FontFamily = family,
         Foreground = brush,
         FontWeight = weight ?? FontWeights.Normal,
         VerticalAlignment = VerticalAlignment.Center,
@@ -524,13 +596,14 @@ public sealed class ShelfCard : Border
 /// file that is gone shows dimmed. The tile is kept per path by the card.
 public sealed class ShelfTile : Border
 {
+    private const string CheckGlyph = "";  // a selected tile's badge
     private static readonly Brush NameBrush = Frozen(new SolidColorBrush(Color.FromArgb(0xD9, 0xFF, 0xFF, 0xFF)));
     private static readonly Brush MissingNameBrush = Frozen(new SolidColorBrush(Color.FromArgb(0x66, 0xFF, 0xFF, 0xFF)));
     private static readonly Brush PlainFill = Frozen(new SolidColorBrush(Color.FromArgb(0x0A, 0xFF, 0xFF, 0xFF)));
 
     private readonly TextBlock _name;
     private readonly TextBlock _check;
-    private Color? _shownAccent;
+    private (bool Exists, bool Selected, Color Accent)? _shown;  // what the tile shows now: Show changes nothing when it is the same
 
     public ShelfTile(string filePath)
     {
@@ -543,7 +616,6 @@ public sealed class ShelfTile : Border
         Background = PlainFill;
         BorderThickness = new Thickness(1.5);
         BorderBrush = Brushes.Transparent;
-        ToolTip = filePath;
 
         Thumb = new Image
         {
@@ -554,8 +626,10 @@ public sealed class ShelfTile : Border
             SnapsToDevicePixels = true,
             Focusable = false,
         };
+        var name = Path.GetFileName(filePath);
         _name = new TextBlock
         {
+            Text = ShelfText.Middle(name.Length > 0 ? name : filePath),
             FontSize = 9,
             FontFamily = new FontFamily("Segoe UI Variable Text, Segoe UI"),
             Foreground = NameBrush,
@@ -570,7 +644,7 @@ public sealed class ShelfTile : Border
 
         _check = new TextBlock
         {
-            Text = "",
+            Text = CheckGlyph,
             FontFamily = new FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets"),
             FontSize = 13,
             HorizontalAlignment = HorizontalAlignment.Right,
@@ -597,31 +671,29 @@ public sealed class ShelfTile : Border
     /// Sets the tile's thumbnail to the WinRT thumbnail when it arrives.
     public void SetThumb(ImageSource image) => Thumb.Source = image;
 
-    /// Shows the file's state: its name, whether it exists (dimmed and titled "File not found anymore" when not), and whether it is
-    /// selected (accent fill, accent stroke and check badge).
+    /// Shows the file's state: whether it exists (dimmed and titled "File not found anymore" when not), and whether it is selected (accent
+    /// fill, accent stroke and check badge). A call with the state the tile already shows changes nothing.
     public void Show(bool exists, bool selected, Color accent)
     {
         IsSelected = selected;
-        var name = Path.GetFileName(FilePath);
-        _name.Text = ShelfText.Middle(name.Length > 0 ? name : FilePath);
+        if (_shown is { } shown && shown.Exists == exists && shown.Selected == selected && shown.Accent == accent)
+        {
+            return;
+        }
+        _shown = (exists, selected, accent);
         _name.Foreground = exists ? NameBrush : MissingNameBrush;
         Thumb.Opacity = exists ? 1 : 0.35;
         ToolTip = exists ? FilePath : L10n.L("File not found anymore: {0}", FilePath);
         if (selected)
         {
-            if (_shownAccent != accent)
-            {
-                Background = Frozen(new SolidColorBrush(Color.FromArgb(0x47, accent.R, accent.G, accent.B)));
-                BorderBrush = TintBrushes.Of(accent);
-                _check.Foreground = TintBrushes.Of(accent);
-                _shownAccent = accent;
-            }
+            Background = Frozen(new SolidColorBrush(Color.FromArgb(0x47, accent.R, accent.G, accent.B)));
+            BorderBrush = TintBrushes.Of(accent);
+            _check.Foreground = TintBrushes.Of(accent);
         }
-        else if (_shownAccent is not null)
+        else
         {
             Background = PlainFill;
             BorderBrush = Brushes.Transparent;
-            _shownAccent = null;
         }
         _check.Visibility = selected ? Visibility.Visible : Visibility.Collapsed;
     }

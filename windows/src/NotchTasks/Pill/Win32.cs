@@ -71,6 +71,12 @@ internal static partial class Win32
     [return: MarshalAs(UnmanagedType.Bool)]
     public static partial bool GetCursorPos(out NativePoint point);
 
+    /// The physical state of a virtual key: the high bit is set while it is down (VK_LBUTTON is 0x01).
+    [LibraryImport("user32.dll")]
+    public static partial short GetAsyncKeyState(int virtualKey);
+
+    public const int VK_LBUTTON = 0x01;
+
     [LibraryImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static partial bool ScreenToClient(nint hwnd, ref NativePoint point);

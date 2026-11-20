@@ -114,6 +114,8 @@ public sealed class ShelfCardTests
             var card = new ShelfCard();
 
             Assert.True(card.Update(state, Accent));
+            // The existence check runs on the background and the tiles show it when it lands.
+            Fixture.PumpUntil(() => card.Tiles.Count == 2 && card.Tiles[1].Thumb.Opacity < 1);
 
             Assert.Equal(2, card.Tiles.Count);
             Assert.Equal(1.0, card.Tiles[0].Thumb.Opacity);

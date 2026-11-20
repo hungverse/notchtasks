@@ -312,6 +312,11 @@ public partial class PillWindow : Window
             return;
         }
         SetPollRate(IsNearShape(point));
+        // Safety net: a drop prompt whose DragLeave never came clears once the pointer is off the pill with no button down.
+        if (ShelfCard.ClearsTarget(_state.ShelfTargeted, IsOverShape(point), Win32.GetAsyncKeyState(Win32.VK_LBUTTON) < 0))
+        {
+            _state.ShelfTargeted = false;
+        }
         var moved = !_havePoint || point.X != _lastPoint.X || point.Y != _lastPoint.Y;
         var hoverWaiting = _enteredAt is not null && !_open && _state.Settings.ExpandMode == "hover";
         if (!moved && !hoverWaiting && !_animating)
@@ -371,9 +376,10 @@ public partial class PillWindow : Window
         }
     }
 
-    /// True when a drag carries files and the shelf module is on: the shelf takes the drop (its effect is Copy, else None).
+    /// True when a drag carries files, the shelf module is on, and the card is not dragging its own files out: the shelf takes the drop
+    /// (its effect is Copy, else None).
     private bool ShelfAccepts(DragEventArgs e) =>
-        _state.Snapshot.ActiveModules.Contains("shelf") && e.Data.GetDataPresent(DataFormats.FileDrop);
+        ShelfCard.AcceptsDrop(_state.Snapshot.ActiveModules.Contains("shelf"), e.Data.GetDataPresent(DataFormats.FileDrop), _shelfCard.Busy);
 
     /// A drag enters the pill: with files and the shelf on, the pill opens and the shelf shows its drop prompt.
     private void OnShelfDragEnter(object sender, DragEventArgs e)
@@ -415,8 +421,8 @@ public partial class PillWindow : Window
         _state.ShelfTargeted = false;
         if (ShelfAccepts(e) && e.Data.GetData(DataFormats.FileDrop) is string[] paths)
         {
-            _state.Shelf.Add(paths);
-            e.Effects = DragDropEffects.Copy;
+            // A failed save leaves the shelf as it was, and the drop is refused.
+            e.Effects = ShelfSave.TrySave(() => _state.Shelf.Add(paths)) ? DragDropEffects.Copy : DragDropEffects.None;
         }
         else
         {
@@ -455,6 +461,7 @@ public partial class PillWindow : Window
         }
         _open = true;
         _outsideSince = null;
+        _shelfCard.InvalidateExistence();  // a file may have gone while the pill was closed
         // Topmost is asserted again on every open; the window itself never activates.
         Win32.SetWindowPos(_hwnd, Win32.HwndTopmost, 0, 0, 0, 0, Win32.SWP_NOMOVE | Win32.SWP_NOSIZE | Win32.SWP_NOACTIVATE);
         // Opening the pill takes over the toast; its ask stays in the sections.
