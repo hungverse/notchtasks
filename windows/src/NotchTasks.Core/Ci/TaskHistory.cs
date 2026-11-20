@@ -11,11 +11,17 @@ public sealed class TaskHistory
     private const double MinSeconds = 5;   // shorter runs say nothing about the usual duration
 
     private readonly Action<IReadOnlyDictionary<string, IReadOnlyList<double>>> save;
+    private readonly Action<Exception>? onSaveError;
     private Dictionary<string, List<double>> runs = new(StringComparer.Ordinal);
+    private bool saveFailureReported;
 
-    public TaskHistory(IReadOnlyDictionary<string, IReadOnlyList<double>>? loaded, Action<IReadOnlyDictionary<string, IReadOnlyList<double>>> save)
+    /// onSaveError gets the first failed save (IOException, UnauthorizedAccessException); later failures are silent. A failed
+    /// save never throws out of Record: the run stays in memory and the next Record saves again.
+    public TaskHistory(IReadOnlyDictionary<string, IReadOnlyList<double>>? loaded, Action<IReadOnlyDictionary<string, IReadOnlyList<double>>> save,
+        Action<Exception>? onSaveError = null)
     {
         this.save = save;
+        this.onSaveError = onSaveError;
         if (loaded is null)
         {
             return;
@@ -58,7 +64,27 @@ public sealed class TaskHistory
             Random.Shared.Shuffle(keys);
             runs = keys.Take(KeysAfterTrim).ToDictionary(k => k, k => runs[k], StringComparer.Ordinal);
         }
-        save(Runs);
+        try
+        {
+            save(Runs);
+        }
+        catch (IOException e)
+        {
+            ReportSaveFailure(e);
+        }
+        catch (UnauthorizedAccessException e)
+        {
+            ReportSaveFailure(e);
+        }
+    }
+
+    private void ReportSaveFailure(Exception e)
+    {
+        if (!saveFailureReported)
+        {
+            saveFailureReported = true;
+            onSaveError?.Invoke(e);
+        }
     }
 
     /// The progress (0 to 0.99, or null without an estimate) and the label for a task that ran for elapsed seconds,

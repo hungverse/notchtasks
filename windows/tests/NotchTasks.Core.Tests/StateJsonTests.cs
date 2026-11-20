@@ -35,6 +35,30 @@ public sealed class StateJsonTests : IDisposable
     }
 
     [Fact]
+    public async Task Set_FromTwoThreads_KeepsBothKeys()
+    {
+        // Each Set is a read-modify-write of the whole file; without one lock a write from the other thread is lost.
+        var first = Task.Run(() =>
+        {
+            for (var i = 0; i < 200; i++)
+            {
+                StateJson.Set(StatePath, "alpha", JsonValue.Create(i));
+            }
+        });
+        var second = Task.Run(() =>
+        {
+            for (var i = 0; i < 200; i++)
+            {
+                StateJson.Set(StatePath, "beta", JsonValue.Create(i));
+            }
+        });
+        await Task.WhenAll(first, second);
+
+        Assert.Equal(199, StateJson.Get(StatePath, "alpha")!.GetValue<int>());
+        Assert.Equal(199, StateJson.Get(StatePath, "beta")!.GetValue<int>());
+    }
+
+    [Fact]
     public void Set_CorruptFileIsMovedAside()
     {
         File.WriteAllText(StatePath, "{ not json");

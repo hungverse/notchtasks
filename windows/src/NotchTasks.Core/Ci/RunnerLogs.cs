@@ -76,7 +76,7 @@ public static class RunnerLogs
             if (received)
             {
                 var project = FirstNonEmpty(ProjectFromRepoUrl(Get(f, "repo_url")), Get(f, "project_full_path"));
-                running.Add(new RunnerJob(id, Get(f, "job_name") ?? $"job {id}", project ?? "?", JobUrl(server, project, id)));
+                running.Add(new RunnerJob(id, Get(f, "job_name") ?? $"job {id}", project ?? "?", JobUrl(JobServer(f, server), project, id)));
                 continue;
             }
             running.RemoveAll(r => r.Id == id);
@@ -90,7 +90,7 @@ public static class RunnerLogs
                 var exit = Get(f, "exit_code");
                 var parts = new[] { Get(f, "failure_reason"), string.IsNullOrEmpty(exit) ? null : $"exit {exit}" };
                 var reason = string.Join(" · ", parts.Where(s => !string.IsNullOrEmpty(s)));
-                failed.Add(new JobAlert(id, Get(f, "job_name") ?? $"job {id}", project ?? "?", reason, JobUrl(server, project, id)));
+                failed.Add(new JobAlert(id, Get(f, "job_name") ?? $"job {id}", project ?? "?", reason, JobUrl(JobServer(f, server), project, id)));
             }
         }
         return (running, failed, succeeded);
@@ -235,6 +235,19 @@ public static class RunnerLogs
 
     private static string? JobUrl(string server, string? project, string id) =>
         string.IsNullOrEmpty(project) ? null : $"{server}/{project}/-/jobs/{id}";
+
+    /// The GitLab server of a job: scheme and host (and port) of its repo_url, so a self-managed server gets its own job
+    /// links; the caller's server when the line has no usable repo_url.
+    private static string JobServer(Dictionary<string, string> fields, string server)
+    {
+        var url = Get(fields, "repo_url");
+        if (string.IsNullOrEmpty(url) || !Uri.TryCreate(url, UriKind.Absolute, out var uri) ||
+            (uri.Scheme != Uri.UriSchemeHttps && uri.Scheme != Uri.UriSchemeHttp))
+        {
+            return server;
+        }
+        return uri.GetLeftPart(UriPartial.Authority);
+    }
 
     private static string? Get(Dictionary<string, string> fields, string key) =>
         fields.TryGetValue(key, out var value) ? value : null;

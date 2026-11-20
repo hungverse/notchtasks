@@ -327,6 +327,113 @@ public sealed class GitHubTests : IDisposable
         await first;
     }
 
+    [Fact]
+    public async Task Poll_UnwatchedAfterAnHour_DropsItsInProgressRun()
+    {
+        clock = Ms("2026-11-10T03:20:00Z");
+        var watcher = NewWatcher();
+        watcher.Pushed(MakeRepo());
+        api.Routes[RunsRoute] = RunJson(9001, "in_progress", "null");
+        api.Routes[JobsRoute] = Fixture("gh-run-jobs.json");
+        await watcher.Poll(_ => { });
+        Assert.Single(watcher.Jobs);
+
+        clock += 3600001;  // past the one-hour limit: the repo is unwatched on this poll
+        await watcher.Poll(_ => { });
+
+        Assert.False(watcher.Watching);
+        Assert.Empty(watcher.Jobs);
+    }
+
+    [Fact]
+    public async Task Poll_UnwatchedWithDifferentCase_DropsItsRun()
+    {
+        clock = Ms("2026-11-10T03:20:00Z");
+        var watcher = NewWatcher();
+        watcher.Pushed(MakeRepo("git@github.com:Acme/App.git"));
+        api.Routes["repos/Acme/App/actions/runs?branch=main&per_page=10"] = RunJson(9001, "in_progress", "null");
+        await watcher.Poll(_ => { });
+        Assert.Single(watcher.Jobs);  // run full_name is acme/app: the same repo
+
+        clock += 3600001;
+        await watcher.Poll(_ => { });
+
+        Assert.Empty(watcher.Jobs);
+    }
+
+    [Fact]
+    public async Task Poll_RepoNamesDifferingOnlyInCase_AreOneWatch()
+    {
+        clock = Ms("2026-11-10T03:20:00Z");
+        var watcher = NewWatcher();
+        watcher.Pushed(MakeRepo("git@github.com:acme/app.git"));
+        watcher.Pushed(MakeRepo("git@github.com:Acme/App.git"));
+        api.Routes[RunsRoute] = NoRuns;
+
+        await watcher.Poll(_ => { });
+
+        Assert.Single(api.Requested, r => r.StartsWith("repos/", StringComparison.Ordinal) && r.Contains("/actions/runs?"));
+    }
+
+    [Fact]
+    public async Task Poll_RunStartedNinetySecondsBeforeThePush_IsKept()
+    {
+        clock = Ms("2026-11-10T03:20:00Z");
+        var watcher = NewWatcher();
+        watcher.Pushed(MakeRepo());
+        api.Routes[RunsRoute] = RunJson(9001, "in_progress", "null", started: "2026-11-10T03:18:31Z");  // 89 s before
+        api.Routes[JobsRoute] = Fixture("gh-run-jobs.json");
+
+        await watcher.Poll(_ => { });
+
+        Assert.Single(watcher.Jobs);
+    }
+
+    [Fact]
+    public async Task Poll_RunStarted91SecondsBeforeThePush_IsDropped()
+    {
+        clock = Ms("2026-11-10T03:20:00Z");
+        var watcher = NewWatcher();
+        watcher.Pushed(MakeRepo());
+        api.Routes[RunsRoute] = RunJson(9001, "in_progress", "null", started: "2026-11-10T03:18:29Z");  // 91 s before
+        api.Routes[JobsRoute] = Fixture("gh-run-jobs.json");
+
+        await watcher.Poll(_ => { });
+
+        Assert.Empty(watcher.Jobs);
+    }
+
+    [Fact]
+    public async Task Poll_BranchWithSlash_IsPercentEncodedInTheRoute()
+    {
+        clock = Ms("2026-11-10T03:20:00Z");
+        var watcher = NewWatcher();
+        watcher.Pushed(MakeRepo(head: "ref: refs/heads/feature/login\n"));
+        api.Routes[RunsRoute] = NoRuns;
+
+        await watcher.Poll(_ => { });
+
+        Assert.Equal("repos/acme/app/actions/runs?branch=feature%2Flogin&per_page=10", api.Requested[0]);
+    }
+
+    [Fact]
+    public async Task Pushed_AgainSameRepo_ResetsTheWatchWindow()
+    {
+        clock = Ms("2026-11-10T03:20:00Z");
+        var watcher = NewWatcher();
+        watcher.Pushed(MakeRepo());
+        clock += 3000000;  // 50 min later the same repo is pushed again
+        watcher.Pushed(MakeRepo());
+        clock += 1800000;  // 30 min after the re-push, 80 min after the first push
+        api.Routes[RunsRoute] = RunJson(9001, "in_progress", "null", started: "2026-11-10T04:10:05Z");  // after the re-push
+        api.Routes[JobsRoute] = Fixture("gh-run-jobs.json");
+
+        await watcher.Poll(_ => { });
+
+        Assert.True(watcher.Watching);
+        Assert.Single(watcher.Jobs);
+    }
+
     /// Fake of the GitHub seam. Routes maps a route to its JSON text; a route with no entry answers null (a failure).
     private sealed class FakeGitHubApi : IGitHubApi
     {

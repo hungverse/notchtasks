@@ -47,8 +47,27 @@ public sealed class RunnerLogsTests : IDisposable
         var (running, failed, _) = RunnerLogs.ParseGitLab(text, "https://gl.example.com");
 
         var job = Assert.Single(running);
-        Assert.Equal(new RunnerJob("7", "unit tests", "shop/api", "https://gl.example.com/shop/api/-/jobs/7"), job);
+        Assert.Equal(new RunnerJob("7", "unit tests", "shop/api", "https://gitlab.com/shop/api/-/jobs/7"), job);
         Assert.Empty(failed);
+    }
+
+    [Fact]
+    public void ParseGitLab_SelfManagedRepoUrl_JobLinkUsesItsServer()
+    {
+        const string text = "Feb 10 10:00:01 received job=7 job_name=\"deploy\" repo_url=\"https://git.company.local/group/proj.git\"\n";
+        var (running, _, _) = RunnerLogs.ParseGitLab(text, "https://gitlab.com");
+
+        Assert.Equal("https://git.company.local/group/proj/-/jobs/7", Assert.Single(running).Url);
+    }
+
+    [Fact]
+    public void ParseGitLab_SelfManagedRepoUrlWithPort_FailedJobLinkKeepsThePort()
+    {
+        const string text = "Feb 10 10:00:01 Job failed job=8 job_name=\"lint\" project_full_path=\"group/proj\" " +
+                            "repo_url=\"https://git.company.local:8443/group/proj.git\"\n";
+        var (_, failed, _) = RunnerLogs.ParseGitLab(text, "https://gitlab.com");
+
+        Assert.Equal("https://git.company.local:8443/group/proj/-/jobs/8", Assert.Single(failed).Url);
     }
 
     [Fact]

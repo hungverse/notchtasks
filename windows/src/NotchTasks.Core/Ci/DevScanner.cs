@@ -191,15 +191,16 @@ public sealed class DevScanner
             Keep(id, m, label, since.Value, $"app|{label}", busy);
         }
 
-        // Tasks that ended are recorded in the history.
-        foreach (var (id, r) in running)
-        {
-            if (!found.ContainsKey(id))
-            {
-                history.Record(r.Key, (nowMs - r.Since) / 1000.0);
-            }
-        }
+        // Tasks that ended are recorded in the history. running is replaced first, so a record that throws can never repeat.
+        var ended = running
+            .Where(kv => !found.ContainsKey(kv.Key))
+            .Select(kv => (Key: kv.Value.Key, Seconds: (nowMs - kv.Value.Since) / 1000.0))
+            .ToList();
         running = found;
+        foreach (var (key, seconds) in ended)
+        {
+            history.Record(key, seconds);
+        }
 
         var jobs = new List<Job>();
         foreach (var (id, r) in found)

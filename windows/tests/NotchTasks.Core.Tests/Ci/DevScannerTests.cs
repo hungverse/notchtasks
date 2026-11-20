@@ -111,6 +111,26 @@ public sealed class DevScannerTests
     }
 
     [Fact]
+    public void TaskHistory_SaveThrows_RunIsKeptAndTheFailureReportedOnce()
+    {
+        var reported = new List<Exception>();
+        var saves = 0;
+        var h = new TaskHistory(null, _ =>
+        {
+            saves++;
+            throw new IOException("disk full");
+        }, reported.Add);
+
+        h.Record("k", 30);
+        h.Record("k", 40);
+
+        Assert.Equal(2, saves);
+        Assert.Equal(new double[] { 30, 40 }, h.Runs["k"]);
+        Assert.Single(reported);
+        Assert.IsType<IOException>(reported[0]);
+    }
+
+    [Fact]
     public void TaskHistory_Estimate_ProgressAndLabel()
     {
         var (p1, l1) = TaskHistory.Estimate(30, 60);
@@ -156,6 +176,34 @@ public sealed class DevScannerTests
         Assert.Single(saved);
         Assert.Single(saved[0]["next|build|proj"]);
         Assert.True(saved[0]["next|build|proj"][0] >= 60);
+    }
+
+    [Fact]
+    public void Scan_HistorySaveThrows_ScanReturnsAndTheEndedTaskIsRecordedOnce()
+    {
+        var saves = 0;
+        var scanner = new DevScanner(new TaskHistory(null, _ =>
+        {
+            saves++;
+            throw new IOException("disk full");
+        }));
+        var lines = FixtureArgv();
+        var procs = Fixture();
+        long t0 = 1731500600000 + 10_000;
+
+        var first = scanner.Scan(Snap(procs), lines.Argv, NoCwd, t0);
+        Assert.NotNull(Find(first, "dev:812"));
+
+        // the build ends: the scan returns its rows although the save throws, and records the run once
+        var later = procs.Where(p => p.Pid != 812 && p.Pid != 2044).ToArray();
+        var second = scanner.Scan(Snap(later), lines.Argv, NoCwd, t0 + 60_000);
+        Assert.Null(Find(second, "dev:812"));
+        Assert.Equal(1, saves);
+
+        // the next scan does not record it again
+        var third = scanner.Scan(Snap(later), lines.Argv, NoCwd, t0 + 120_000);
+        Assert.Null(Find(third, "dev:812"));
+        Assert.Equal(1, saves);
     }
 
     [Fact]

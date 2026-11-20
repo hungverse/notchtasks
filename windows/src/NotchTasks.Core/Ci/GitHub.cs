@@ -234,7 +234,7 @@ public sealed class GitHubWatcher
 
     private readonly IGitHubApi api;
     private readonly Func<long> nowMs;
-    private readonly Dictionary<string, (string Branch, long Since)> watched = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, (string Branch, long Since)> watched = new(StringComparer.OrdinalIgnoreCase);  // repo names are case-insensitive
     private Dictionary<long, GhRun> runs = new();
     private bool busy;
     private string? token;
@@ -310,7 +310,6 @@ public sealed class GitHubWatcher
             var justFinished = next.Values
                 .Where(r => r.Status == "completed" && previous.TryGetValue(r.Id, out var before) && before.Status != "completed")
                 .ToList();
-            runs = next;
 
             var now = nowMs();
             // stop watching a repo once its runs are all done (after 2 min), or after an hour
@@ -323,6 +322,8 @@ public sealed class GitHubWatcher
                     watched.Remove(repo);
                 }
             }
+            // Runs of a repo that is no longer watched go too (unwatched above, or kept by a failed listing until now).
+            runs = next.Where(kv => watched.ContainsKey(kv.Value.Repo)).ToDictionary(kv => kv.Key, kv => kv.Value);
 
             if (justFinished.Count > 0)
             {
