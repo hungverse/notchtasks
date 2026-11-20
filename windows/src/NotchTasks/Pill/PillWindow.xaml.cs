@@ -88,6 +88,8 @@ public partial class PillWindow : Window
     private readonly Func<AppState, FrameworkElement?> _callSection;  // the builder this pill registered for "calls"
     private readonly SensorRow _sensorRow = new();  // the mic and camera row, outside a call
     private readonly Func<AppState, FrameworkElement?> _privacySection;  // the builder this pill registered for "privacy"
+    private readonly CiCards _ciCards;  // the Build & CI section's alert cards and build cards, kept per id
+    private readonly Func<AppState, FrameworkElement?> _ciSection;  // the builder this pill registered for "ci"
     private readonly LoadMeter _cpuMeter = new("CPU", LoadMeterKind.Cpu, 0);  // the header's CPU meter, shown while SystemLoad is on
     private readonly LoadMeter _ramMeter = new("RAM", LoadMeterKind.Memory, 0) { Margin = new Thickness(10, 0, 0, 0) };  // 10 DIP after the CPU
     private Toast? _shownToast;  // the toast the pill shows now; null when none
@@ -141,6 +143,15 @@ public partial class PillWindow : Window
         SectionRegistry.Register("calls", _callSection);
         _privacySection = state => _sensorRow.Update(state) ? _sensorRow : null;
         SectionRegistry.Register("privacy", _privacySection);
+        // The Build & CI section: the failure alerts, then the working build rows. Dismissing an alert publishes at once, so it leaves now.
+        _ciCards = new CiCards(id =>
+        {
+            _state.Ci.Dismiss(id);
+            _state.Publish();
+        }, ItemCard.OpenUrl);
+        _ciSection = state => _ciCards.Sync(state.Snapshot.Alerts, state.Snapshot.BuildRunning, state.Settings.ToolIcons,
+            state.Settings.ModuleColors, _chosenAccent, state.Processes, DateTimeOffset.Now);
+        SectionRegistry.Register("ci", _ciSection);
 
         SourceInitialized += OnSourceInitialized;
         Closed += OnClosed;
@@ -852,6 +863,7 @@ public partial class PillWindow : Window
         SectionRegistry.Unregister("timer", _timerSection);
         SectionRegistry.Unregister("calls", _callSection);
         SectionRegistry.Unregister("privacy", _privacySection);
+        SectionRegistry.Unregister("ci", _ciSection);
     }
 
     /// Re-reads the pill's own texts after a language change. The ask cards and the toast keep the text they were made

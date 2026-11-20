@@ -1,3 +1,5 @@
+using NotchTasks.Core.Agents;
+using NotchTasks.Core.Ci;
 using NotchTasks.Core.Notch;
 using Xunit;
 
@@ -138,5 +140,50 @@ public class ChipBoardTests
         Assert.Null(single);
         Assert.Equal(new[] { ChipKind.Timer }, left.Select(c => c.Kind));
         Assert.Equal(new[] { ChipKind.Sensor }, right.Select(c => c.Kind));
+    }
+
+    private static WatchItem BuildItem(string id) => new(id, id, WatchKind.Dev);
+
+    private static ItemState BuildRow(string id) => new(BuildItem(id), new[] { new Job(id + "-1", id, "build", true, Symbol: "hammer.fill") });
+
+    private static JobAlert Alert(string id) => new(id, "Build", "repo", "failure", "https://example.test/log");
+
+    [Fact]
+    public void ChipBoard_Ci_AlertsThenBuildChips_NoCap()
+    {
+        var builds = Enumerable.Range(1, 6).Select(i => BuildRow("b" + i)).ToArray();
+        var snap = new NotchSnapshot(new[] { "ci" }, 0, null, null, Quiet, null, null)
+        {
+            Alerts = new[] { Alert("gh-1") },
+            BuildRunning = builds,
+        };
+
+        var chips = ChipBoard.Chips(snap);
+
+        Assert.Equal(new[] { ChipKind.Alerts, ChipKind.Agent, ChipKind.Agent, ChipKind.Agent, ChipKind.Agent, ChipKind.Agent, ChipKind.Agent }, chips.Select(c => c.Kind));
+        Assert.All(chips, c => Assert.Equal("ci", c.Module));
+        Assert.Equal("alerts", chips[0].Id);
+        Assert.Equal(1, chips[0].AlertCount);
+        Assert.Equal(builds.Select(b => b.Item.Id), chips.Skip(1).Select(c => c.Agent!.Item.Id));
+    }
+
+    [Fact]
+    public void ChipBoard_Ci_NoAlertChip_WithoutAlerts()
+    {
+        var snap = new NotchSnapshot(new[] { "ci" }, 0, null, null, Quiet, null, null) { BuildRunning = new[] { BuildRow("b1") } };
+
+        Assert.Equal(new[] { ChipKind.Agent }, ChipBoard.Chips(snap).Select(c => c.Kind));
+    }
+
+    [Fact]
+    public void ChipBoard_CiOff_NoChips()
+    {
+        var snap = new NotchSnapshot(new[] { "timer" }, 0, null, null, Quiet, null, null)
+        {
+            Alerts = new[] { Alert("gh-1") },
+            BuildRunning = new[] { BuildRow("b1") },
+        };
+
+        Assert.Empty(ChipBoard.Chips(snap));
     }
 }

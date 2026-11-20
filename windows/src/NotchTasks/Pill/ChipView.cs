@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -8,6 +9,7 @@ using NotchTasks.Core;
 using NotchTasks.Core.Agents;
 using NotchTasks.Core.Limits;
 using NotchTasks.Core.Notch;
+using NotchTasks.Pill.Sections;
 
 namespace NotchTasks.Pill;
 
@@ -22,13 +24,15 @@ public static class ChipView
     private static readonly Color AskOrange = Color.FromRgb(0xFF, 0x9F, 0x0A);
     private static readonly Color CallGreen = Color.FromRgb(0x30, 0xD1, 0x58);  // the Mac's green: a call's time
     private static readonly Color CallRed = Color.FromRgb(0xFF, 0x45, 0x3A);    // the Mac's red: a call's time while muted
+    private static readonly Color AlertRed = Color.FromRgb(0xFF, 0x45, 0x3A);   // the Mac's red: a failed CI alert (the alerts chip)
 
-    /// One chip as a panel for a wing: its lead, then its trail. Null when the chip has neither to show.
+    /// One chip as a panel for a wing: its lead, then its trail. Null when the chip has neither to show. toolIcons are the settings'
+    /// badges by tool, which a build chip's lead uses.
     public static FrameworkElement? Panel(Chip chip, Color? accent, IReadOnlyDictionary<string, string> moduleColors,
-        DateTimeOffset now, bool lead, bool trail, IProcessReader? processes = null)
+        DateTimeOffset now, bool lead, bool trail, IProcessReader? processes = null, IReadOnlyDictionary<string, JsonObject>? toolIcons = null)
     {
         var panel = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(3, 0, 3, 0) };
-        if (lead && Lead(chip, 18, accent, moduleColors, processes) is { } leadElement)
+        if (lead && Lead(chip, 18, accent, moduleColors, processes, toolIcons) is { } leadElement)
         {
             panel.Children.Add(leadElement);
         }
@@ -40,11 +44,19 @@ public static class ChipView
     }
 
     /// The chip's glyph in its tint: the timer's, the call's (phone, video or muted mic) and the sensor's (mic and/or camera).
-    /// An agent's lead is its item icon. A limit's is a gauge, or an hourglass at 100 %, in its own colour. An ask has no glyph
-    /// here: its trail is its text.
+    /// An agent's lead is its item icon; a build chip's is its job's (BuildLead). The alerts chip has the warning glyph. A limit's is
+    /// a gauge, or an hourglass at 100 %, in its own colour. An ask has no glyph here: its trail is its text.
     public static FrameworkElement? Lead(Chip chip, double size, Color? accent, IReadOnlyDictionary<string, string> moduleColors,
-        IProcessReader? processes = null)
+        IProcessReader? processes = null, IReadOnlyDictionary<string, JsonObject>? toolIcons = null)
     {
+        if (chip.Kind == ChipKind.Alerts)
+        {
+            return Glyph("warning", size, HexColor.Brush(ToHex(TintOf(chip, accent, moduleColors))));
+        }
+        if (chip.Kind == ChipKind.Agent && chip.Module == "ci" && chip.Agent is { } build)
+        {
+            return BuildLead(build, size, TintOf(chip, accent, moduleColors), processes, toolIcons);
+        }
         if (chip.Kind == ChipKind.Agent && chip.Agent is { } agent)
         {
             return ItemIcon.Element(agent, size, TintOf(chip, accent, moduleColors), processes);
@@ -75,6 +87,23 @@ public static class ChipView
             _ => null,
         };
         return name is null ? null : Glyph(name, size, brush);
+    }
+
+    /// A build chip's lead (Mac: the chip's JobIcon): the first job's tool badge when its tool has one in settings, else the job's
+    /// symbol, else the item's icon.
+    private static FrameworkElement BuildLead(ItemState build, double size, Color tint, IProcessReader? processes,
+        IReadOnlyDictionary<string, JsonObject>? toolIcons)
+    {
+        var job = build.Jobs.Count > 0 ? build.Jobs[0] : null;
+        if (job?.Tool is { Length: > 0 } tool && toolIcons is not null && toolIcons.TryGetValue(tool, out var badge))
+        {
+            return BadgeGlyph.Create(badge, size, tint);
+        }
+        if (JobLead.Element(job?.Symbol, size, HexColor.Brush(ToHex(tint))) is { } symbol)
+        {
+            return symbol;
+        }
+        return ItemIcon.Element(build, size, tint, processes);
     }
 
     /// A glyph in a brush, from the Segoe Fluent Icons font.
@@ -153,6 +182,18 @@ public static class ChipView
                 };
             case ChipKind.Limit when chip.Limit is { } limit:
                 return LimitTrail(limit, size, now);
+            case ChipKind.Alerts:
+                return new TextBlock
+                {
+                    Text = chip.AlertCount == 1
+                        ? L10n.L("1 error")
+                        : L10n.L("{0} errors", chip.AlertCount.ToString(CultureInfo.InvariantCulture)),
+                    Foreground = HexColor.Brush(ToHex(TintOf(chip, accent, moduleColors))),
+                    FontSize = size,
+                    FontWeight = FontWeights.Bold,
+                    Margin = new Thickness(6, 0, 6, 0),
+                    VerticalAlignment = VerticalAlignment.Center,
+                };
             default:
                 return null;
         }
@@ -181,27 +222,28 @@ public static class ChipView
     /// left and its trail on the right; the others sit whole in the wing ChipBoard.Sides puts them in. Returns how many chips there are.
     public static int FillWings(StackPanel left, StackPanel right, AppState state, Color? accent) =>
         Fill(left, right, ChipBoard.Chips(state.Snapshot), state.Settings.Placements, state.Settings.ModuleColors, accent,
-            DateTimeOffset.Now, state.Processes);
+            DateTimeOffset.Now, state.Processes, state.Settings.ToolIcons);
 
     /// FillWings with its inputs given: the same placement, order and badge rule. Returns how many chips there are.
     public static int Fill(StackPanel left, StackPanel right, IReadOnlyList<Chip> chips, IReadOnlyDictionary<string, string> placements,
-        IReadOnlyDictionary<string, string> colors, Color? accent, DateTimeOffset now, IProcessReader? processes)
+        IReadOnlyDictionary<string, string> colors, Color? accent, DateTimeOffset now, IProcessReader? processes,
+        IReadOnlyDictionary<string, JsonObject>? toolIcons = null)
     {
         RemoveChips(left);
         RemoveChips(right);
         var (leftChips, rightChips, single) = ChipBoard.Sides(chips, placements);
         if (single is { } lone)
         {
-            AddTo(left, lone, accent, colors, now, lead: true, trail: false, rightWing: false, processes);
-            AddTo(right, lone, accent, colors, now, lead: false, trail: true, rightWing: true, processes);
+            AddTo(left, lone, accent, colors, now, lead: true, trail: false, rightWing: false, processes, toolIcons);
+            AddTo(right, lone, accent, colors, now, lead: false, trail: true, rightWing: true, processes, toolIcons);
         }
         foreach (var chip in leftChips)
         {
-            AddTo(left, chip, accent, colors, now, lead: true, trail: true, rightWing: false, processes);
+            AddTo(left, chip, accent, colors, now, lead: true, trail: true, rightWing: false, processes, toolIcons);
         }
         foreach (var chip in rightChips)
         {
-            AddTo(right, chip, accent, colors, now, lead: true, trail: true, rightWing: true, processes);
+            AddTo(right, chip, accent, colors, now, lead: true, trail: true, rightWing: true, processes, toolIcons);
         }
         return chips.Count;
     }
@@ -209,9 +251,10 @@ public static class ChipView
     /// Adds a chip's panel to a wing. A left wing's chips go after its badges; a right wing's chips go before its badges, after
     /// the chips already there, so their order holds.
     private static void AddTo(StackPanel wing, Chip chip, Color? accent, IReadOnlyDictionary<string, string> colors,
-        DateTimeOffset now, bool lead, bool trail, bool rightWing, IProcessReader? processes)
+        DateTimeOffset now, bool lead, bool trail, bool rightWing, IProcessReader? processes,
+        IReadOnlyDictionary<string, JsonObject>? toolIcons)
     {
-        if (Panel(chip, accent, colors, now, lead, trail, processes) is { } panel)
+        if (Panel(chip, accent, colors, now, lead, trail, processes, toolIcons) is { } panel)
         {
             panel.Tag = ChipTag;
             if (rightWing)
@@ -249,11 +292,18 @@ public static class ChipView
         }
         if (chip.Kind == ChipKind.Agent && chip.Agent is { } agent)
         {
-            return ItemTint.Of(agent.Item, moduleColors, accent);  // the same colour as the agent's card
+            // the same colour as the agent's card (a build chip, as its build card: the ci colour, else the item's)
+            return chip.Module == "ci"
+                ? CiCards.TintOf(agent.Item, moduleColors, accent)
+                : ItemTint.Of(agent.Item, moduleColors, accent);
         }
         if (moduleColors.TryGetValue(chip.Module, out var hex) && HexColor.TryNormalize(hex, out var normalized))
         {
             return HexColor.ToColor(normalized);
+        }
+        if (chip.Kind == ChipKind.Alerts)
+        {
+            return AlertRed;
         }
         return accent ?? DefaultTint(chip.Kind);
     }

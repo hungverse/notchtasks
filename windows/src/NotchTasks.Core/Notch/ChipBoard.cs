@@ -34,6 +34,13 @@ public static class ChipBoard
                     foreach (var state in s.Running.Take(MaxAgentChips))
                         list.Add(new Chip(ChipKind.Agent, "agents", "agent-" + state.Item.Id) { Agent = state });
                     break;
+                case "ci":
+                    // the failure alerts first, then one chip per working build row (no cap, as the Mac's running.filter(inBuild))
+                    if (s.Alerts.Count > 0)
+                        list.Add(new Chip(ChipKind.Alerts, "ci", "alerts") { AlertCount = s.Alerts.Count });
+                    foreach (var state in s.BuildRunning)
+                        list.Add(new Chip(ChipKind.Agent, "ci", "ci-" + state.Item.Id) { Agent = state });
+                    break;
                 case "limits":
                     // per provider, the window fullest among those at or above the warning level (NotchView .limits)
                     foreach (var p in s.Limits)

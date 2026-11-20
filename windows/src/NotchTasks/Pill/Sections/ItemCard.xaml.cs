@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
+using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -53,6 +54,9 @@ public partial class ItemCard : UserControl
     /// The job rows showing now (at most MaxRows).
     public int ShownRows => _rows.Count(r => r.Root.Visibility == Visibility.Visible);
 
+    /// The job rows showing a progress line now.
+    public int ProgressLines => _rows.Count(r => r.ProgressShown);
+
     /// The limit badges in the header now.
     public int LimitBadgeCount => Badges.Children.OfType<FrameworkElement>().Count(e => e.Tag is string tag && tag == LimitBadge.Tag);
 
@@ -86,8 +90,10 @@ public partial class ItemCard : UserControl
     /// The program an app item opens: its exe name or path (WatchItems.AppExe), or null when none is known.
     public static string? LaunchTarget(WatchItem item) => WatchItems.AppExe(item);
 
-    /// Refreshes the card from the item. processes reads an app item's icon (null: the sparkles glyph).
-    public void Update(ItemState state, IReadOnlyList<LimitWindow> limits, Color tint, IProcessReader? processes, DateTimeOffset now)
+    /// Refreshes the card from the item. processes reads an app item's icon (null: the sparkles glyph). toolIcons are the settings'
+    /// badges by tool: a job whose tool has one is led by it (null: none).
+    public void Update(ItemState state, IReadOnlyList<LimitWindow> limits, Color tint, IProcessReader? processes, DateTimeOffset now,
+        IReadOnlyDictionary<string, JsonObject>? toolIcons = null)
     {
         _state = state;
         _limits = limits;
@@ -117,7 +123,7 @@ public partial class ItemCard : UserControl
         {
             if (i < state.Jobs.Count)
             {
-                _rows[i].Set(state.Jobs[i], tint);
+                _rows[i].Set(state.Jobs[i], tint, toolIcons);
             }
             else
             {
@@ -272,7 +278,7 @@ public partial class ItemCard : UserControl
     }
 
     /// Opens a job's link in its program. Only web links open: a job's text must not start a program or a file.
-    private static void OpenUrl(string url)
+    internal static void OpenUrl(string url)
     {
         if (Uri.TryCreate(url, UriKind.Absolute, out var uri) && uri.Scheme is "http" or "https")
         {
@@ -316,33 +322,17 @@ public partial class ItemCard : UserControl
         return freezable;
     }
 
-    /// The glyph or vector name of a job's symbol (the Mac's symbol names), or null for a plain status dot.
-    internal static string? MarkOf(string? symbol)
-    {
-        if (symbol is null)
-        {
-            return null;
-        }
-        if (symbol.Contains("checkmark", StringComparison.OrdinalIgnoreCase))
-        {
-            return "check";
-        }
-        if (symbol.Contains("sparkles", StringComparison.OrdinalIgnoreCase))
-        {
-            return "sparkles";
-        }
-        if (symbol.StartsWith("gauge", StringComparison.OrdinalIgnoreCase))
-        {
-            return "gauge";
-        }
-        return symbol.Equals("hourglass", StringComparison.OrdinalIgnoreCase) ? "hourglass" : null;
-    }
-
-    /// One job row: its lead (a status dot, or the job's symbol), its title, its detail and, with a link, the log glyph. The lead
-    /// element is kept while its kind stays the same; only its colour is set again.
+    /// One job row: its lead (the tool's badge when the job has one, else its symbol, else a status dot), its title, its detail, a
+    /// progress line under it when the job has a progress, and, with a link, the log glyph. The lead is kept while its kind stays
+    /// the same; only its colour is set again.
     private sealed class JobRow
     {
+        private const double RowGlyphSize = 12;
+        private const double RowBadgeSize = 15;
+        private static readonly Brush TrackBrush = Frozen(new SolidColorBrush(Color.FromArgb(0x1F, 0xFF, 0xFF, 0xFF)));  // white at 12 %
+
         private readonly Action<string> _open;
+        private readonly Grid _line;
         private readonly ContentControl _lead = new() { Width = 20, Height = 20, Focusable = false, VerticalAlignment = VerticalAlignment.Center };
         private readonly TextBlock _title = new()
         {
@@ -366,55 +356,81 @@ public partial class ItemCard : UserControl
             ToolTip = L10n.L("Open log"),
             Focusable = false,
         };
+        private readonly Grid _progress = new() { Height = 2, Margin = new Thickness(28, 3, 0, 0), Visibility = Visibility.Collapsed, Focusable = false };
+        private readonly ColumnDefinition _fillColumn = new();
+        private readonly ColumnDefinition _restColumn = new();
+        private readonly Border _progressFill = new() { Focusable = false };
         private string? _url;
         private string? _leadKind;
+        private JsonObject? _leadBadge;
+        private Color _leadTint;
 
         public JobRow(int index, Action<string> open)
         {
             _open = open;
-            var grid = new Grid { Focusable = false, Background = Brushes.Transparent, Cursor = Cursors.Hand };
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(28) });  // the lead, indented as the Mac's 28 pt
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            _line = new Grid { Focusable = false, Background = Brushes.Transparent, Cursor = Cursors.Hand };
+            _line.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(28) });  // the lead, indented as the Mac's 28 pt
+            _line.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            _line.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            _line.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
             Grid.SetColumn(_lead, 0);
             Grid.SetColumn(_title, 1);
             Grid.SetColumn(_detail, 2);
             Grid.SetColumn(_log, 3);
-            grid.Children.Add(_lead);
-            grid.Children.Add(_title);
-            grid.Children.Add(_detail);
-            grid.Children.Add(_log);
-            Root = grid;
+            _line.Children.Add(_lead);
+            _line.Children.Add(_title);
+            _line.Children.Add(_detail);
+            _line.Children.Add(_log);
+
+            // the progress line: a fill column and the rest of the track, both in star widths of the progress
+            _progress.ColumnDefinitions.Add(_fillColumn);
+            _progress.ColumnDefinitions.Add(_restColumn);
+            Grid.SetColumn(_progressFill, 0);
+            _progress.Children.Add(_progressFill);
+            var track = new Border { Background = TrackBrush, Focusable = false };
+            Grid.SetColumn(track, 1);
+            _progress.Children.Add(track);
+
+            Root = new StackPanel { Focusable = false };
+            Root.Children.Add(_line);
+            Root.Children.Add(_progress);
             Root.Margin = new Thickness(0, index == 0 ? 0 : 7, 0, 0);
             Root.Visibility = Visibility.Collapsed;
-            Root.MouseLeftButtonUp += OnRowClick;
+            _line.MouseLeftButtonUp += OnRowClick;
             _log.MouseLeftButtonUp += OnLogClick;
         }
 
-        public Grid Root { get; }
+        public StackPanel Root { get; }
 
         /// The lead element now (null before the row is first set).
         public object? Lead => _lead.Content;
 
-        /// Shows a job in this row, in the tint while it works and grey when it has stopped.
-        public void Set(Job job, Color tint)
+        /// True when the row is shown with its progress line.
+        public bool ProgressShown => Root.Visibility == Visibility.Visible && _progress.Visibility == Visibility.Visible;
+
+        /// Shows a job in this row, in the tint while it works and grey when it has stopped. toolIcons gives the badge of the job's
+        /// tool, which leads the row when it has one.
+        public void Set(Job job, Color tint, IReadOnlyDictionary<string, JsonObject>? toolIcons)
         {
             var brush = job.Working ? TintBrushes.Of(tint) : GreyBrush;
             Root.Visibility = Visibility.Visible;
             var tip = job.Title + " — " + job.Detail;
-            if (Root.ToolTip as string != tip)
+            if (_line.ToolTip as string != tip)
             {
-                Root.ToolTip = tip;
+                _line.ToolTip = tip;
             }
             SetText(_title, job.Title);
             SetText(_detail, job.Detail);
             _detail.Foreground = brush;
-            var kind = LeadKind(job.Symbol);
-            if (kind != _leadKind || _lead.Content is null)
+
+            var badge = ToolBadge(job, toolIcons);
+            var kind = badge is not null ? "badge" : LeadKind(job.Symbol);
+            if (kind != _leadKind || _lead.Content is null || (badge is not null && (!ReferenceEquals(badge, _leadBadge) || _leadTint != tint)))
             {
-                _lead.Content = BuildLead(job.Symbol, brush);
+                _lead.Content = badge is not null ? BadgeGlyph.Create(badge, RowBadgeSize, tint) : BuildLead(job.Symbol, brush);
                 _leadKind = kind;
+                _leadBadge = badge;
+                _leadTint = tint;
             }
             else
             {
@@ -422,45 +438,44 @@ public partial class ItemCard : UserControl
             }
             _url = job.Url;
             _log.Visibility = job.Url is null ? Visibility.Collapsed : Visibility.Visible;
+            SetProgress(job.Progress, brush);
+        }
+
+        /// The badge of the job's tool when the tool has one in settings (toolIcons), else null.
+        private static JsonObject? ToolBadge(Job job, IReadOnlyDictionary<string, JsonObject>? toolIcons) =>
+            job.Tool is { Length: > 0 } tool && toolIcons is not null && toolIcons.TryGetValue(tool, out var badge) ? badge : null;
+
+        /// The progress line: shown for a job with a progress, its fill the progress's share of the row, in the row's brush.
+        private void SetProgress(double? progress, Brush brush)
+        {
+            if (progress is not { } value)
+            {
+                _progress.Visibility = Visibility.Collapsed;
+                return;
+            }
+            var fraction = Math.Clamp(value, 0, 1);
+            _progress.Visibility = Visibility.Visible;
+            _progressFill.Background = brush;
+            SetStar(_fillColumn, fraction);
+            SetStar(_restColumn, 1 - fraction);
+        }
+
+        private static void SetStar(ColumnDefinition column, double part)
+        {
+            var width = new GridLength(part, GridUnitType.Star);
+            if (!column.Width.Equals(width))
+            {
+                column.Width = width;
+            }
         }
 
         /// The kind of lead a symbol gives: a dot, a font glyph, or a vector.
-        private static string LeadKind(string? symbol) => MarkOf(symbol) is { } mark
+        private static string LeadKind(string? symbol) => JobLead.MarkOf(symbol) is { } mark
             ? (ModuleGlyphs.Vector(mark) is not null ? "vector:" : "glyph:") + mark
             : "dot";
 
-        private static FrameworkElement BuildLead(string? symbol, Brush brush)
-        {
-            var mark = MarkOf(symbol);
-            if (mark is not null && ModuleGlyphs.Vector(mark) is { } path)
-            {
-                return new Path
-                {
-                    Data = Geometry.Parse(path),
-                    Stroke = brush,
-                    StrokeThickness = 1.4,
-                    Stretch = Stretch.Uniform,
-                    Width = 12,
-                    Height = 12,
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    VerticalAlignment = VerticalAlignment.Center,
-                    Focusable = false,
-                };
-            }
-            if (mark is not null)
-            {
-                return new TextBlock
-                {
-                    Text = ModuleGlyphs.Get(mark),
-                    FontFamily = SegoeFamily,
-                    FontSize = 12,
-                    Foreground = brush,
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    VerticalAlignment = VerticalAlignment.Center,
-                    Focusable = false,
-                };
-            }
-            return new Ellipse
+        private static FrameworkElement BuildLead(string? symbol, Brush brush) =>
+            JobLead.Element(symbol, RowGlyphSize, brush) ?? new Ellipse
             {
                 Width = 7,
                 Height = 7,
@@ -469,7 +484,6 @@ public partial class ItemCard : UserControl
                 VerticalAlignment = VerticalAlignment.Center,
                 Focusable = false,
             };
-        }
 
         /// Sets the colour of a lead element of the same kind.
         private static void Recolour(object content, Brush brush)
