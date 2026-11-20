@@ -77,34 +77,35 @@ public partial class AppearancePane : SettingsPane
         PreviewGlyph.Foreground = accentBrush;
 
         // The toast sample takes the toast style's shape: island and banner hang from the pill, the compact one sits inside
-        // it, the card floats below it.
+        // it, the card floats below it. Every toast is a floating island below the pill's 4 px gap (the Mac's
+        // NotchView toast radius is 18), so none of them hugs the top edge.
         switch (Store.ToastStyle)
         {
             case "compact":
                 PreviewToast.Width = 200;
-                PreviewToast.Margin = new Thickness(0, 36, 0, 0);
-                PreviewToast.CornerRadius = new CornerRadius(0, 0, 10, 10);
+                PreviewToast.Margin = new Thickness(0, 44, 0, 0);
+                PreviewToast.CornerRadius = new CornerRadius(18);
                 PreviewToast.Padding = new Thickness(12, 6, 12, 6);
                 PreviewTitle.FontSize = 12;
                 break;
             case "card":
                 PreviewToast.Width = 260;
-                PreviewToast.Margin = new Thickness(0, 46, 0, 0);
+                PreviewToast.Margin = new Thickness(0, 54, 0, 0);
                 PreviewToast.CornerRadius = new CornerRadius(14);
                 PreviewToast.Padding = new Thickness(14, 10, 14, 10);
                 PreviewTitle.FontSize = 13;
                 break;
             case "banner":
                 PreviewToast.Width = 300;
-                PreviewToast.Margin = new Thickness(0, 36, 0, 0);
-                PreviewToast.CornerRadius = new CornerRadius(0, 0, 12, 12);
+                PreviewToast.Margin = new Thickness(0, 44, 0, 0);
+                PreviewToast.CornerRadius = new CornerRadius(18);
                 PreviewToast.Padding = new Thickness(14, 12, 14, 12);
                 PreviewTitle.FontSize = 16;
                 break;
             default:
                 PreviewToast.Width = 260;
-                PreviewToast.Margin = new Thickness(0, 36, 0, 0);
-                PreviewToast.CornerRadius = new CornerRadius(0, 0, 16, 16);
+                PreviewToast.Margin = new Thickness(0, 44, 0, 0);
+                PreviewToast.CornerRadius = new CornerRadius(18);
                 PreviewToast.Padding = new Thickness(14, 10, 14, 10);
                 PreviewTitle.FontSize = 13;
                 break;

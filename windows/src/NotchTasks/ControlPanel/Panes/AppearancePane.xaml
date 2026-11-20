@@ -10,12 +10,18 @@
          it. It keeps the pill's dark look in both Windows themes. -->
     <Border Style="{StaticResource Card}" Margin="0,8,0,0" Padding="0,20">
       <Grid Height="150">
-        <Border x:Name="PreviewGlow" Width="200" Height="32" VerticalAlignment="Top" CornerRadius="0,0,16,16"
+        <!-- The screen's top edge: the island floats below it, 4 px down, as on the Mac. -->
+        <Border Height="1" VerticalAlignment="Top" Background="#33FFFFFF" />
+        <Border x:Name="PreviewGlow" Width="200" Height="32" VerticalAlignment="Top" Margin="0,4,0,0" CornerRadius="16"
                 BorderThickness="1.5" Visibility="Collapsed" />
-        <Border x:Name="PreviewPill" Width="200" Height="32" VerticalAlignment="Top" CornerRadius="0,0,16,16"
-                Background="Black" />
-        <Border x:Name="PreviewToast" Width="260" VerticalAlignment="Top" Margin="0,36,0,0" Padding="14,10"
-                CornerRadius="0,0,16,16" Background="Black">
+        <Border x:Name="PreviewPill" Width="200" Height="32" VerticalAlignment="Top" Margin="0,4,0,0" CornerRadius="16"
+                Background="Black">
+          <Border.Effect>
+            <DropShadowEffect Color="Black" Opacity="0.3" BlurRadius="6" ShadowDepth="2" Direction="270" />
+          </Border.Effect>
+        </Border>
+        <Border x:Name="PreviewToast" Width="260" VerticalAlignment="Top" Margin="0,44,0,0" Padding="14,10"
+                CornerRadius="18" Background="Black">
           <Grid>
             <Grid.ColumnDefinitions>
               <ColumnDefinition Width="Auto" />
