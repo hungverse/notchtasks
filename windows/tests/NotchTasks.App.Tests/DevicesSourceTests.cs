@@ -9,14 +9,19 @@ using Xunit;
 
 namespace NotchTasks.AppTests;
 
-/// A device reader the tests drive: the containers it lists, the Changed subscribers and the starts and stops it had.
+/// A device reader the tests drive: the containers it lists, the Changed subscribers and the starts and stops it had. Fail makes
+/// every read fail (null), as a failed container listing does.
 internal sealed class FakeDeviceReader : IDeviceReader
 {
     private Action? _changed;
 
     public List<DeviceFact> Devices { get; set; } = new();
 
+    public bool Fail { get; set; }
+
     public int Reads { get; private set; }
+
+    public int BatteryReads { get; private set; }
 
     public int Starts { get; private set; }
 
@@ -45,10 +50,16 @@ internal sealed class FakeDeviceReader : IDeviceReader
 
     public void Stop() => Stops++;
 
-    public Task<IReadOnlyList<DeviceFact>> Read()
+    public Task<IReadOnlyList<DeviceFact>?> Read()
     {
         Reads++;
-        return Task.FromResult<IReadOnlyList<DeviceFact>>(Devices.ToList());
+        return Task.FromResult<IReadOnlyList<DeviceFact>?>(Fail ? null : Devices.ToList());
+    }
+
+    public Task<IReadOnlyList<DeviceFact>?> ReadBatteries()
+    {
+        BatteryReads++;
+        return Task.FromResult<IReadOnlyList<DeviceFact>?>(Fail ? null : Devices.ToList());
     }
 }
 
@@ -61,17 +72,23 @@ internal sealed class RecordingAnnouncer : IAnnouncer
 }
 
 /// The devices source (module "devices"): a burst of watcher events makes one read after 500 ms, the 60 s battery timer runs only
-/// while a listed device has a level, and stopping stops the reader and the timers and clears the module.
+/// while a listed device has a level, stopping stops the reader and the timers and clears the module, and a failed read changes
+/// nothing (no toasts, the list kept), whether it is the first read or a later one.
 public sealed class DevicesSourceTests
 {
     private static DeviceFact Keyboard(int? battery = null) => new(
         "{container-1}", "Keyboard", new[] { "Input.Keyboard", "Bus.Usb" }, battery);
 
-    private static (DevicesSource Source, DevicesModule Module, FakeDeviceReader Reader) Make(FakeDeviceReader reader)
+    private static DeviceFact Mouse() => new(
+        "{container-2}", "Mouse", new[] { "Input.Mouse", "Bus.Usb" }, null);
+
+    private static (DevicesSource Source, DevicesModule Module, FakeDeviceReader Reader, RecordingAnnouncer Toasts) Make(
+        FakeDeviceReader reader)
     {
-        var module = new DevicesModule(new RecordingAnnouncer(), () => null);
+        var announcer = new RecordingAnnouncer();
+        var module = new DevicesModule(announcer, () => null);
         var source = new DevicesSource(module, reader, () => { });
-        return (source, module, reader);
+        return (source, module, reader, announcer);
     }
 
     [Fact]
@@ -81,7 +98,7 @@ public sealed class DevicesSourceTests
         {
             using var root = new TempRoot();
             var reader = new FakeDeviceReader { Devices = { Keyboard() } };
-            var (source, module, _) = Make(reader);
+            var (source, module, _, _) = Make(reader);
 
             source.Start();
             Fixture.PumpUntil(() => reader.Reads >= 1);
@@ -107,7 +124,7 @@ public sealed class DevicesSourceTests
         {
             using var root = new TempRoot();
             var reader = new FakeDeviceReader { Devices = { Keyboard() } };
-            var (source, _, _) = Make(reader);
+            var (source, _, _, _) = Make(reader);
             var battery = Fixture.Field<DispatcherTimer>(source, "_battery");
 
             source.Start();
@@ -135,7 +152,7 @@ public sealed class DevicesSourceTests
         {
             using var root = new TempRoot();
             var reader = new FakeDeviceReader { Devices = { Keyboard(battery: 50) } };
-            var (source, module, _) = Make(reader);
+            var (source, module, _, _) = Make(reader);
             var battery = Fixture.Field<DispatcherTimer>(source, "_battery");
             var coalesce = Fixture.Field<DispatcherTimer>(source, "_coalesce");
 
@@ -150,6 +167,71 @@ public sealed class DevicesSourceTests
             Assert.False(battery.IsEnabled);
             Assert.False(coalesce.IsEnabled);
             Assert.Empty(module.Devices);
+        });
+    }
+
+    [Fact]
+    public void FailedFirstRead_NoToastsAndNoBaseline()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            var reader = new FakeDeviceReader { Fail = true, Devices = { Keyboard() } };
+            var (source, module, _, toasts) = Make(reader);
+
+            source.Start();
+            Fixture.PumpUntil(() => reader.Reads >= 1);
+            Fixture.PumpUntil(() => false, 50);
+            Assert.Empty(module.Devices);
+            Assert.Empty(toasts.Toasts);
+
+            // The first good read is the baseline: the keyboard that was there all along toasts nothing.
+            reader.Fail = false;
+            reader.Raise();
+            Fixture.PumpUntil(() => module.Devices.Count == 1);
+            Assert.Empty(toasts.Toasts);
+
+            // A device that comes after the baseline does toast.
+            reader.Devices.Add(Mouse());
+            reader.Raise();
+            Fixture.PumpUntil(() => module.Devices.Count == 2);
+            Assert.Single(toasts.Toasts);
+            Assert.Equal("deviceOn", toasts.Toasts[0].Event);
+            source.Stop();
+        });
+    }
+
+    [Fact]
+    public void FailedLaterRead_KeepsListAndNoToasts()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            var reader = new FakeDeviceReader { Devices = { Keyboard(), Mouse() } };
+            var (source, module, _, toasts) = Make(reader);
+
+            source.Start();
+            Fixture.PumpUntil(() => module.Devices.Count == 2);
+            Assert.Empty(toasts.Toasts);  // the baseline
+
+            // A failed read is not "all devices gone": the list stays, and no disconnect toasts.
+            reader.Fail = true;
+            var before = reader.Reads;
+            reader.Raise();
+            Fixture.PumpUntil(() => reader.Reads > before);
+            Fixture.PumpUntil(() => false, 50);
+            Assert.Equal(2, module.Devices.Count);
+            Assert.Empty(toasts.Toasts);
+
+            // The next good read shows the same list: no connect toasts for devices that never left.
+            reader.Fail = false;
+            before = reader.Reads;
+            reader.Raise();
+            Fixture.PumpUntil(() => reader.Reads > before);
+            Fixture.PumpUntil(() => false, 50);
+            Assert.Equal(2, module.Devices.Count);
+            Assert.Empty(toasts.Toasts);
+            source.Stop();
         });
     }
 }

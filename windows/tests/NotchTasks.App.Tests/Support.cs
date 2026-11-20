@@ -214,7 +214,9 @@ internal static class Fixture
         {
         }
 
-        public Task<IReadOnlyList<DeviceFact>> Read() => Task.FromResult<IReadOnlyList<DeviceFact>>(Array.Empty<DeviceFact>());
+        public Task<IReadOnlyList<DeviceFact>?> Read() => Task.FromResult<IReadOnlyList<DeviceFact>?>(Array.Empty<DeviceFact>());
+
+        public Task<IReadOnlyList<DeviceFact>?> ReadBatteries() => Task.FromResult<IReadOnlyList<DeviceFact>?>(Array.Empty<DeviceFact>());
     }
 
     /// The GitHub seam with no network: every request is unanswered and there is no gh token.

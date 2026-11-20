@@ -73,12 +73,16 @@ public sealed class DeviceArtView : Grid
         });
         if (art.Connected)
         {
+            // 0 → up → 0 → down → 0, each leg eased: the float starts at rest, so the rise hands over without a jump.
             var amplitude = FloatAt40 * size / ReferenceSize;
-            var bob = new DoubleAnimation(-amplitude, amplitude, TimeSpan.FromSeconds(FloatHalfPeriod))
-            {
-                AutoReverse = true,
-                EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut },
-            };
+            var half = TimeSpan.FromSeconds(FloatHalfPeriod);
+            var bob = new DoubleAnimationUsingKeyFrames { Duration = new Duration(half * 2) };
+            var ease = new SineEase { EasingMode = EasingMode.EaseInOut };
+            bob.KeyFrames.Add(new EasingDoubleKeyFrame(0, KeyTime.FromTimeSpan(TimeSpan.Zero), ease));
+            bob.KeyFrames.Add(new EasingDoubleKeyFrame(amplitude, KeyTime.FromTimeSpan(half / 2), ease));
+            bob.KeyFrames.Add(new EasingDoubleKeyFrame(0, KeyTime.FromTimeSpan(half), ease));
+            bob.KeyFrames.Add(new EasingDoubleKeyFrame(-amplitude, KeyTime.FromTimeSpan(half + half / 2), ease));
+            bob.KeyFrames.Add(new EasingDoubleKeyFrame(0, KeyTime.FromTimeSpan(half * 2), ease));
             Loops.Run(this, this, FloatProperty, bob);
         }
     }
@@ -100,7 +104,7 @@ public sealed class DeviceArtView : Grid
     /// The glyph's look at the spring's position and the float's offset.
     private void Apply()
     {
-        var p = Math.Clamp(Progress, 0, 1);
+        var p = Progress;  // not clamped: the spring overshoots and the scale and offset follow it; only the opacity is clamped
         double offset;
         double scale;
         double opacity;
@@ -119,7 +123,7 @@ public sealed class DeviceArtView : Grid
         _scale.ScaleX = scale;
         _scale.ScaleY = scale;
         _translate.Y = offset;
-        _glyph.Opacity = opacity;
+        _glyph.Opacity = Math.Clamp(opacity, 0, 1);
     }
 
     private static void OnChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) => ((DeviceArtView)d).Apply();
