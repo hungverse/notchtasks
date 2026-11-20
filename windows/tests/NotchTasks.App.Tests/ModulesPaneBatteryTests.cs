@@ -17,7 +17,7 @@ public sealed class ModulesPaneBatteryTests
         Fixture.Call(pane, "Apply");
         var rows = Fixture.Named<StackPanel>(pane, "Rows");
         return rows.Children.OfType<Grid>()
-            .Select(row => Descendants<TextBlock>(row).First(t => t.FontWeight == FontWeights.Medium).Text)
+            .Select(row => Descendants<TextBlock>(row).First(t => t.FontWeight == FontWeights.SemiBold).Text)
             .ToList();
     }
 

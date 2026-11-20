@@ -3,6 +3,38 @@
                        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                        xmlns:l="clr-namespace:NotchTasks.ControlPanel"
                        xmlns:local="clr-namespace:NotchTasks.ControlPanel">
+  <local:SettingsPane.Resources>
+    <!-- The up and down arrows of a row: small, quiet, and the accent under the mouse (the Windows stand-in for the Mac's
+         drag handle). -->
+    <Style x:Key="MoveArrow" TargetType="Button">
+      <Setter Property="Width" Value="24" />
+      <Setter Property="Height" Value="24" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="Margin" Value="0,0,4,0" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+      <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border x:Name="Body" CornerRadius="6" Background="{TemplateBinding Background}">
+              <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                TextElement.Foreground="{TemplateBinding Foreground}" />
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Foreground" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+              </Trigger>
+              <Trigger Property="IsEnabled" Value="False">
+                <Setter TargetName="Body" Property="Opacity" Value="0.4" />
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+  </local:SettingsPane.Resources>
   <StackPanel>
     <TextBlock Style="{StaticResource PaneTitle}" Text="{l:L Modules}" />
     <TextBlock Style="{StaticResource PaneNote}" Text="{l:L Use the arrows to reorder the modules on the notch.}" />
@@ -22,7 +54,8 @@
       <TextBlock Grid.Column="5" Style="{StaticResource CardNote}" Margin="0" HorizontalAlignment="Center" Text="{l:L On}" />
     </Grid>
 
-    <Border Style="{StaticResource Card}">
+    <!-- All the rows are one card; a hairline divides them. -->
+    <Border Style="{StaticResource Card}" Padding="0,6">
       <StackPanel x:Name="Rows" />
     </Border>
   </StackPanel>

@@ -18,6 +18,9 @@ public partial class ModulesPane : SettingsPane
 {
     private const string DefaultColor = "#808080";
 
+    /// The tile of a module that is off: the Mac's grey, 50% (the Mac uses .gray at half opacity).
+    private static readonly SolidColorBrush OffTile = new(Color.FromArgb(0x80, 0x80, 0x80, 0x80));
+
     private readonly Dictionary<string, ModuleRow> _rows = new();
     private readonly bool _hasBattery;
 
@@ -51,9 +54,18 @@ public partial class ModulesPane : SettingsPane
             row.Title.Text = title;
             row.Title.SetResourceReference(TextBlock.ForegroundProperty,
                 on ? "TextFillColorPrimaryBrush" : "TextFillColorSecondaryBrush");
-            row.Caption.Visibility = ModuleCatalog.Built(id) ? Visibility.Collapsed : Visibility.Visible;
-            row.Tile.SetResourceReference(Border.BackgroundProperty,
-                on ? "AccentFillColorDefaultBrush" : "ControlStrongFillColorDefaultBrush");
+            // The blurb says what the module does; a module not built yet says so after it.
+            row.Caption.Text = ModuleCatalog.Built(id)
+                ? L10n.L(ModuleCatalog.Blurb(id))
+                : L10n.L(ModuleCatalog.Blurb(id)) + " · " + L10n.L("Coming soon");
+            if (on)
+            {
+                row.Tile.SetResourceReference(Border.BackgroundProperty, "AccentFillColorDefaultBrush");
+            }
+            else
+            {
+                row.Tile.Background = OffTile;
+            }
             row.Up.IsEnabled = i > 0;
             row.Down.IsEnabled = i < order.Count - 1;
             row.On.IsChecked = on;
@@ -65,7 +77,7 @@ public partial class ModulesPane : SettingsPane
 
             if (i > 0)
             {
-                Rows.Children.Add(new Separator { Margin = new Thickness(16, 0, 16, 0) });
+                Rows.Children.Add(new Separator { Margin = new Thickness(56, 0, 16, 0) });
             }
             Rows.Children.Add(row.Element);
         }
@@ -82,13 +94,13 @@ public partial class ModulesPane : SettingsPane
         {
             VerticalAlignment = VerticalAlignment.Center,
             TextTrimming = TextTrimming.CharacterEllipsis,
-            FontWeight = FontWeights.Medium,
+            FontSize = 14,
+            FontWeight = FontWeights.SemiBold,
         };
         var caption = new TextBlock
         {
             Style = (Style)FindResource("CardNote"),
             Margin = new Thickness(0, 2, 0, 0),
-            Text = L10n.L("Coming soon"),
         };
         var text = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Children = { title, caption } };
 
@@ -104,11 +116,7 @@ public partial class ModulesPane : SettingsPane
         var glyph = new TextBlock
         {
             Text = ModuleCatalog.Glyph(id),
-            FontFamily = new FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets"),
-            FontSize = 14,
-            Foreground = Brushes.White,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center,
+            Style = (Style)FindResource("IconGlyph"),
         };
         var tile = new Border
         {
@@ -144,7 +152,7 @@ public partial class ModulesPane : SettingsPane
         resetColor.Click += (_, _) => ResetColor(id);
         var swatch = new Button
         {
-            Style = (Style)FindResource("ColorSwatch"),
+            Style = (Style)FindResource("ColorWell"),
             Margin = new Thickness(0),
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
@@ -167,7 +175,7 @@ public partial class ModulesPane : SettingsPane
         };
         swatch.Click += (_, _) => popup.IsOpen = true;
 
-        var element = new Grid { Margin = new Thickness(16, 10, 16, 10) };
+        var element = new Grid { Margin = new Thickness(16, 0, 16, 0), MinHeight = 56 };
         element.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(60) });
         element.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         element.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
@@ -185,20 +193,17 @@ public partial class ModulesPane : SettingsPane
         return new ModuleRow(element, up, down, tile, title, caption, placement, swatch, on, color, resetColor);
     }
 
-    private static Button Arrow(string glyph, string tip, Action click)
+    private Button Arrow(string glyph, string tip, Action click)
     {
         var button = new Button
         {
-            Width = 28,
-            Height = 28,
-            Padding = new Thickness(0),
-            Margin = new Thickness(0, 0, 4, 0),
+            Style = (Style)FindResource("MoveArrow"),
             ToolTip = tip,
             Content = new TextBlock
             {
                 Text = glyph,
                 FontFamily = new FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets"),
-                FontSize = 12,
+                FontSize = 10,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,
             },
