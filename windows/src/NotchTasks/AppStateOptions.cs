@@ -20,6 +20,7 @@ namespace NotchTasks;
 /// a test passes inert ones, so no test reads a runner folder or the network).
 /// Media is the Windows media sessions reader (null: SmtcReader; a test passes a fake, so no test touches SMTC).
 /// Devices is the device container reader (null: ContainerReader; a test passes a fake, so no test touches device enumeration).
+/// Camera makes the mirror's camera session (null: this PC's CameraSession; a test passes a fake, so no test touches the camera).
 public sealed record AppStateOptions(
     string? DownloadsFolder = null,
     NetworkReaders? Network = null,
@@ -37,7 +38,8 @@ public sealed record AppStateOptions(
     ICodexCli? Codex = null,
     CiReaders? Ci = null,
     IMediaReader? Media = null,
-    IDeviceReader? Devices = null)
+    IDeviceReader? Devices = null,
+    Func<ICameraSession>? Camera = null)
 {
     /// This PC's readers: the options the app runs with (the same as passing none).
     public static AppStateOptions Production { get; } = new();

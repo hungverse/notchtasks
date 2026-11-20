@@ -90,6 +90,8 @@ public static class ModuleGlyphs
         ["applewatch"] = "M5,4.5 H11 V11.5 H5 Z M6.5,4.5 L7,2 H9 L9.5,4.5 M6.5,11.5 L7,14 H9 L9.5,11.5",
         ["dot.radiowaves.left.and.right"] = "M6.9,8 A1.1,1.1 0 1 0 9.1,8 A1.1,1.1 0 1 0 6.9,8 Z M4.2,5.2 A4,4 0 0 0 4.2,10.8 M11.8,5.2 A4,4 0 0 1 11.8,10.8 M2.2,2.8 A7,7 0 0 0 2.2,13.2 M13.8,2.8 A7,7 0 0 1 13.8,13.2",
         ["cable.connector"] = "M6,1.5 V5 M10,1.5 V5 M4.5,5 H11.5 V8 A3.5,3.5 0 0 1 4.5,8 Z M8,11.5 V14.5",
+        // the camera mirror's "no picture" mark (Mac video.slash.fill): a camera body with its lens, crossed by a slash
+        ["video.slash"] = "M1.8,4 H9.8 V12 H1.8 Z M9.8,7 L14.2,4.5 V11.5 L9.8,9 M1.5,1.5 L14.5,14.5",
     };
 
     /// The glyph for a name, or the fallback when the name is not in the map.

@@ -9,6 +9,11 @@
         <ResourceDictionary Source="PillStyles.xaml" />
         <ResourceDictionary Source="AskStyles.xaml" />
       </ResourceDictionary.MergedDictionaries>
+      <!-- The Mirror pill: a grey-white capsule, 22 px high (Mac Mirror label: white semibold 11 on a 12% white fill). -->
+      <Style x:Key="MirrorChip" TargetType="Button" BasedOn="{StaticResource ChoiceButton}">
+        <Setter Property="Background" Value="#1FFFFFFF" />
+        <Setter Property="Height" Value="22" />
+      </Style>
     </ResourceDictionary>
   </UserControl.Resources>
   <Grid>
@@ -16,17 +21,28 @@
       <ColumnDefinition Width="*" />
       <ColumnDefinition Width="Auto" />
     </Grid.ColumnDefinitions>
-    <!-- The timer's glyph and quick-start pills, at the left: shown while the timer module is on and no timer runs. -->
-    <StackPanel x:Name="TimerBar" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-      <!-- Grey, as the Mac's quick bar (.foregroundStyle(.gray)); the card and the chip take the timer's tint. -->
-      <TextBlock x:Name="TimerGlyph" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12"
-                 Foreground="#8E8E93" VerticalAlignment="Center" Margin="0,0,8,0" />
-      <StackPanel x:Name="TimerPills" Orientation="Horizontal" VerticalAlignment="Center">
-        <Button Focusable="False" x:Name="Timer5" Tag="5" Style="{StaticResource ChoiceButton}" Padding="9,0" Margin="0,0,4,0" Content="5&#x2032;" />
-        <Button Focusable="False" x:Name="Timer15" Tag="15" Style="{StaticResource ChoiceButton}" Padding="9,0" Margin="0,0,4,0" Content="15&#x2032;" />
-        <Button Focusable="False" x:Name="Timer25" Tag="25" Style="{StaticResource ChoiceButton}" Padding="9,0" Margin="0,0,4,0" Content="25&#x2032;" />
-        <Button Focusable="False" x:Name="Timer45" Tag="45" Style="{StaticResource ChoiceButton}" Padding="9,0" Content="45&#x2032;" />
+    <!-- The timer's glyph and quick-start pills, then the camera mirror's Mirror pill, at the left. The timer's bar shows while the
+         timer module is on and no timer runs; the Mirror pill shows while the mirror module is on and the mirror is closed. -->
+    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+      <StackPanel x:Name="TimerBar" Orientation="Horizontal" VerticalAlignment="Center">
+        <!-- Grey, as the Mac's quick bar (.foregroundStyle(.gray)); the card and the chip take the timer's tint. -->
+        <TextBlock x:Name="TimerGlyph" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12"
+                   Foreground="#8E8E93" VerticalAlignment="Center" Margin="0,0,8,0" />
+        <StackPanel x:Name="TimerPills" Orientation="Horizontal" VerticalAlignment="Center">
+          <Button Focusable="False" x:Name="Timer5" Tag="5" Style="{StaticResource ChoiceButton}" Padding="9,0" Margin="0,0,4,0" Content="5&#x2032;" />
+          <Button Focusable="False" x:Name="Timer15" Tag="15" Style="{StaticResource ChoiceButton}" Padding="9,0" Margin="0,0,4,0" Content="15&#x2032;" />
+          <Button Focusable="False" x:Name="Timer25" Tag="25" Style="{StaticResource ChoiceButton}" Padding="9,0" Margin="0,0,4,0" Content="25&#x2032;" />
+          <Button Focusable="False" x:Name="Timer45" Tag="45" Style="{StaticResource ChoiceButton}" Padding="9,0" Content="45&#x2032;" />
+        </StackPanel>
       </StackPanel>
+      <Button Focusable="False" x:Name="MirrorButton" Style="{StaticResource MirrorChip}" Padding="9,0" VerticalAlignment="Center"
+              Visibility="Collapsed">
+        <StackPanel Orientation="Horizontal">
+          <TextBlock x:Name="MirrorGlyph" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="11"
+                     VerticalAlignment="Center" Margin="0,0,5,0" />
+          <TextBlock x:Name="MirrorLabel" VerticalAlignment="Center" />
+        </StackPanel>
+      </Button>
     </StackPanel>
     <!-- The Control Panel (gear) and Quit (power), at the right, as on the Mac. The shelf's link comes before them, shown only
          while the shelf is on, empty and no file is dragged over the pill. -->

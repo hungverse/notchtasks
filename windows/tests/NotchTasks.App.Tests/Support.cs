@@ -162,7 +162,20 @@ internal static class Fixture
             Path.Combine(AppPaths.Root, "NoRunner"),
             () => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()),
         Media: new NoMedia(),
-        Devices: new NoDevices());
+        Devices: new NoDevices(),
+        Camera: () => new NoCamera());
+
+    /// The camera seam with no camera: a start finds none, and nothing is captured.
+    public sealed class NoCamera : ICameraSession
+    {
+        public Task<CameraStart> Start(Action<int, int, byte[]> frame) => Task.FromResult(CameraStart.NoCamera);
+
+        public Task Stop() => Task.CompletedTask;
+
+        public void Dispose()
+        {
+        }
+    }
 
     /// The media seam with no SMTC: no session is listed, nothing is sent, and there is no artwork.
     public sealed class NoMedia : IMediaReader

@@ -20,6 +20,7 @@ public partial class QuickBar : UserControl
             pill.Click += OnTimerPill;
         }
         ShelfLink.Click += (_, _) => _state?.PickShelfFiles();
+        MirrorButton.Click += (_, _) => _state?.OpenMirror();
     }
 
     /// The shelf's tray glyph (Segoe Fluent Icons E8B7, the folder the shelf uses).
@@ -39,6 +40,14 @@ public partial class QuickBar : UserControl
         TimerGlyph.Text = ModuleGlyphs.Get("timer");
         var show = state.Snapshot.ActiveModules.Contains("timer") && state.Timer.State is null;
         TimerBar.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+        // The Mirror pill: while the mirror module is on and the mirror is closed. It follows the timer's pills, with a gap when they show.
+        MirrorGlyph.Text = ModuleGlyphs.Get("camera");
+        MirrorLabel.Text = L10n.L("Mirror");
+        MirrorButton.ToolTip = L10n.L("Quick camera check");
+        MirrorButton.Margin = new Thickness(show ? 8 : 0, 0, 0, 0);
+        MirrorButton.Visibility = state.Snapshot.ActiveModules.Contains("mirror") && !state.MirrorOn
+            ? Visibility.Visible
+            : Visibility.Collapsed;
         // The shelf's link: while the shelf is on, empty and no file is dragged over the pill (the card shows then).
         var shelfLink = state.Snapshot.ActiveModules.Contains("shelf") && state.Shelf.Items.Count == 0 && !state.ShelfTargeted;
         ShelfGlyph.Text = ShelfGlyphText;

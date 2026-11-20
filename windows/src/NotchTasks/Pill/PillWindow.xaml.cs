@@ -99,6 +99,8 @@ public partial class PillWindow : Window
     private readonly Func<AppState, FrameworkElement?> _devicesSection;  // the builder this pill registered for "devices"
     private readonly ShelfCard _shelfCard = new();  // the File shelf card: one element kept for the pill's life, refreshed by its builder
     private readonly Func<AppState, FrameworkElement?> _shelfSection;  // the builder this pill registered for "shelf"
+    private readonly MirrorCard _mirrorCard = new();  // the camera mirror card: one element kept for the pill's life, refreshed by its builder
+    private readonly Func<AppState, FrameworkElement?> _mirrorSection;  // the builder this pill registered for "mirror"
     private readonly DispatcherTimer _shelfLeaveTimer = new() { Interval = TimeSpan.FromMilliseconds(100) };  // a drag that left clears the drop prompt after this
     private readonly LoadMeter _cpuMeter = new("CPU", LoadMeterKind.Cpu, 0);  // the header's CPU meter, shown while SystemLoad is on
     private readonly LoadMeter _ramMeter = new("RAM", LoadMeterKind.Memory, 0) { Margin = new Thickness(10, 0, 0, 0) };  // 10 DIP after the CPU
@@ -204,6 +206,9 @@ public partial class PillWindow : Window
         // The File shelf while it holds files or one is dragged over the pill: its tiles, refreshed by the state.
         _shelfSection = state => _shelfCard.Update(state, _accent) ? _shelfCard : null;
         SectionRegistry.Register("shelf", _shelfSection);
+        // The camera mirror while it is open: its frames, or the message for why there is no picture. The camera runs in the state.
+        _mirrorSection = state => _mirrorCard.Update(state) ? _mirrorCard : null;
+        SectionRegistry.Register("mirror", _mirrorSection);
 
         SourceInitialized += OnSourceInitialized;
         Closed += OnClosed;
@@ -1024,6 +1029,7 @@ public partial class PillWindow : Window
         SectionRegistry.Unregister("media", _mediaSection);
         SectionRegistry.Unregister("devices", _devicesSection);
         SectionRegistry.Unregister("shelf", _shelfSection);
+        SectionRegistry.Unregister("mirror", _mirrorSection);
         _state.ShelfPickStarting -= ClosePill;
         _shelfLeaveTimer.Stop();
     }

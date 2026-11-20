@@ -51,6 +51,9 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
     /// The Codex questions answered in this session (the Mac's answeredCodex): they stay gone while the agents module cycles.
     private readonly HashSet<string> _answeredCodex = new(StringComparer.Ordinal);
     private readonly ICodexCli _codex;
+    private readonly Func<ICameraSession> _cameraFactory;  // the mirror's camera (AppStateOptions.Camera; this PC's camera by default)
+    private readonly MirrorFrames _mirrorFrames = new();
+    private ICameraSession? _camera;  // the running mirror's camera: null while the mirror is closed
     private bool _disposed;
 
     /// Creates the state on the UI thread. Call StartWatching next. The modules that are on start here. options holds the OS
@@ -78,6 +81,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         var (agentReaders, limitReaders) = ResolveReaders(o);
         Processes = agentReaders.Processes;
         _codex = o.Codex ?? new CodexCli(HomeOf(o));
+        _cameraFactory = o.Camera ?? (() => new CameraSession());
         _agentsSource = new AgentsSource(Agents, settings, agentReaders, Publish, SetCodexAsks);
         _limitsSource = new LimitsSource(LimitsModule, settings, limitReaders, _agentsSource, Publish);
         BuildAgents = new AgentsModule(this, build: true);
@@ -566,13 +570,134 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         }
     }
 
+    /// True while the camera mirror card is on in the open pill (the quick bar's Mirror button sets it).
+    public bool MirrorOn { get; private set; }
+
+    /// How the mirror's camera started: null while it starts (or the mirror is closed), then its result.
+    public CameraStart? MirrorStatus { get; private set; }
+
+    /// A camera frame for the mirror card, on the UI thread. The pixels are valid only during the handlers.
+    public event Action<MirrorPixels>? MirrorFrameReady;
+
+    /// Opens the mirror and starts its camera. Only while the mirror module is on, and the mirror is not open already.
+    public void OpenMirror()
+    {
+        if (_disposed || MirrorOn || !ActiveModules(Settings).Contains("mirror"))
+        {
+            return;
+        }
+        MirrorOn = true;
+        MirrorStatus = null;
+        var camera = _cameraFactory();
+        _camera = camera;
+        _ = StartMirrorAsync(camera);
+        Publish();
+    }
+
+    /// Closes the mirror: its camera stops and is released. Nothing happens when it is closed already.
+    public void CloseMirror()
+    {
+        if (_disposed || !MirrorOn)
+        {
+            return;
+        }
+        StopMirror();
+        Publish();
+    }
+
+    /// Starts the camera and keeps its result, unless the mirror was closed (or the camera replaced) while it started.
+    private async Task StartMirrorAsync(ICameraSession camera)
+    {
+        CameraStart result;
+        try
+        {
+            result = await camera.Start((width, height, bgra) => OnMirrorFrame(camera, width, height, bgra));
+        }
+        catch (Exception e)
+        {
+            ErrorLog.Write(e);
+            result = CameraStart.Failed;
+        }
+        if (ReferenceEquals(_camera, camera) && MirrorOn)
+        {
+            MirrorStatus = result;
+            Publish();
+        }
+    }
+
+    /// Stops the mirror without publishing: the mirror is off, its frames are dropped, and its camera is stopped and released.
+    private void StopMirror()
+    {
+        MirrorOn = false;
+        MirrorStatus = null;
+        _mirrorFrames.Clear();
+        var camera = _camera;
+        _camera = null;
+        if (camera is not null)
+        {
+            _ = StopCameraAsync(camera);
+        }
+    }
+
+    private static async Task StopCameraAsync(ICameraSession camera)
+    {
+        try
+        {
+            await camera.Stop();
+        }
+        catch (Exception e)
+        {
+            ErrorLog.Write(e);
+        }
+        finally
+        {
+            camera.Dispose();
+        }
+    }
+
+    /// A camera frame, on the camera's thread: kept for the UI thread when it is still the mirror's camera. The UI is asked to
+    /// deliver it only when no delivery waits already.
+    private void OnMirrorFrame(ICameraSession camera, int width, int height, byte[] bgra)
+    {
+        if (!ReferenceEquals(Volatile.Read(ref _camera), camera))
+        {
+            return;
+        }
+        if (_mirrorFrames.Offer(width, height, bgra))
+        {
+            _dispatcher.BeginInvoke(new Action(DeliverMirrorFrame));
+        }
+    }
+
+    /// Hands the waiting frame to the mirror card, then returns its buffer.
+    private void DeliverMirrorFrame()
+    {
+        if (_mirrorFrames.Take() is not { } frame)
+        {
+            return;
+        }
+        try
+        {
+            MirrorFrameReady?.Invoke(frame);
+        }
+        finally
+        {
+            _mirrorFrames.Return(frame);
+        }
+    }
+
     /// The open pill starts or stops the load sampling: the CPU and RAM are read only while the pill is open (and SystemLoad is on).
+    /// The mirror closes with the pill: no camera runs while the pill is closed.
     public void PillOpened(bool open)
     {
         if (!_disposed)
         {
             _healthSource.PillOpened(open);
             _thermalSource.PillOpened(open);
+            if (!open && MirrorOn)
+            {
+                CloseMirror();
+            }
         }
     }
 
@@ -619,6 +744,10 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         {
             _sensorsSource.ForgetCall();
         }
+        if (id == "mirror" && MirrorOn)
+        {
+            StopMirror();  // the mirror's camera goes off with its module
+        }
         Publish();
     }
 
@@ -633,6 +762,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         _disposed = true;
         Settings.Changed -= OnSettingsChanged;
         _watcher?.Dispose();
+        StopMirror();  // the camera is released, and no frame is delivered after this
         _host.StopAll();
         _thermalSource.Dispose();  // unsubscribes from the helper's StateChanged
     }
