@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Windows.Shapes;
 using System.Windows.Threading;
 using NotchTasks.Core.Notch;
 using NotchTasks.Pill;
@@ -78,13 +79,13 @@ public sealed class PillMotionTests
         Sta.Run(() =>
         {
             var transform = new ScaleTransform(1, 1);
-            var pulse = Pulse(transform);
+            var pulse = Pulse();
             var owner = new Border();
             var window = new Window { Content = owner };
             Fixture.ShowOffScreen(window);
             try
             {
-                Loops.Run(owner, pulse);
+                Loops.Run(owner, transform, ScaleTransform.ScaleYProperty, pulse);
                 PumpFor(TimeSpan.FromMilliseconds(100));
                 Assert.True(transform.HasAnimatedProperties, "the loop runs while its owner is on screen");
 
@@ -104,9 +105,9 @@ public sealed class PillMotionTests
     {
         Sta.Run(() =>
         {
-            var pulse = Pulse(new ScaleTransform(1, 1));
+            var pulse = Pulse();
 
-            Loops.Run(new Border(), pulse);
+            Loops.Run(new Border(), new ScaleTransform(1, 1), ScaleTransform.ScaleYProperty, pulse);
 
             Assert.Equal(30, Timeline.GetDesiredFrameRate(pulse));
             Assert.Equal(RepeatBehavior.Forever, pulse.RepeatBehavior);
@@ -271,13 +272,55 @@ public sealed class PillMotionTests
         });
     }
 
-    /// A ScaleY animation the loop tests run: a pulse on the transform, over a second, repeated by Loops.Run.
-    private static DoubleAnimation Pulse(ScaleTransform transform)
+    [Fact]
+    public void Bars_ShownOwner_RunsWithoutException()
     {
-        var animation = new DoubleAnimation(0.3, 1, TimeSpan.FromSeconds(1)) { AutoReverse = true };
-        Loops.Aim(animation, transform, ScaleTransform.ScaleYProperty);
-        return animation;
+        Sta.Run(() =>
+        {
+            var bars = Loops.Bars(Brushes.White);
+            var window = ShownWindow(bars);
+            try
+            {
+                PumpFor(TimeSpan.FromMilliseconds(100));  // Loaded and IsVisible: the loops start
+                var bar = Assert.IsType<Rectangle>(((Panel)bars).Children[0]);
+                Assert.True(Assert.IsType<ScaleTransform>(bar.RenderTransform).HasAnimatedProperties);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
     }
+
+    [Fact]
+    public void Ripple_ShownOwner_RunsWithoutException()
+    {
+        Sta.Run(() =>
+        {
+            var ripple = Loops.Ripple(Brushes.White, 7);
+            var window = ShownWindow(ripple);
+            try
+            {
+                PumpFor(TimeSpan.FromMilliseconds(100));
+                Assert.True(Assert.IsType<ScaleTransform>(ripple.RenderTransform).HasAnimatedProperties);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    /// A window with the content, shown off screen, without a frame and without taking the focus, so the content is visible.
+    private static Window ShownWindow(UIElement content)
+    {
+        var window = new Window { WindowStyle = WindowStyle.None, Content = content };
+        Fixture.ShowOffScreen(window);
+        return window;
+    }
+
+    /// A ScaleY animation the loop tests run: a pulse on the transform, over a second, repeated by Loops.Run.
+    private static DoubleAnimation Pulse() => new(0.3, 1, TimeSpan.FromSeconds(1)) { AutoReverse = true };
 
     private static (StackPanel Left, StackPanel Right, StackPanel Host) ChipHost()
     {

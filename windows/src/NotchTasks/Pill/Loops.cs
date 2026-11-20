@@ -3,12 +3,13 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
+using NotchTasks.Services;
 
 namespace NotchTasks.Pill;
 
-/// The pill's decorative loops (the working bars, the ripple). A loop runs at 30 fps, and it runs only while its owner is on
-/// screen: WPF keeps an animation ticking after its element leaves the tree, so Run stops it on Unloaded and when the owner
-/// is hidden, and starts it again on Loaded and when it shows.
+/// The pill's decorative loops (the working bars, the status ripple). A loop runs at 30 fps, and only while its owner is on
+/// screen: WPF keeps an animation ticking after its element leaves the tree, so Run stops it on Unloaded and when the owner is
+/// hidden, and starts it again on Loaded and when it shows. A loop must never break the pill: a failed start is logged once.
 public static class Loops
 {
     /// The frame rate a decorative loop is drawn at.
@@ -20,45 +21,47 @@ public static class Loops
     /// The ripple's length.
     private static readonly TimeSpan RipplePeriod = TimeSpan.FromSeconds(1.2);
 
-    /// The object an animation is aimed at, and its property: set by Aim, read by Run.
-    private static readonly DependencyProperty AimTargetProperty = DependencyProperty.RegisterAttached(
-        "AimTarget", typeof(IAnimatable), typeof(Loops), new PropertyMetadata(null));
-    private static readonly DependencyProperty AimPropertyProperty = DependencyProperty.RegisterAttached(
-        "AimProperty", typeof(DependencyProperty), typeof(Loops), new PropertyMetadata(null));
+    /// Whether a failed loop start has been logged. Only the first is written, so a repeating failure does not flood the log.
+    private static bool _startFailureLogged;
 
-    /// Aims an animation at a property of an object (a transform or an element), as a storyboard would be.
-    public static void Aim(AnimationTimeline animation, IAnimatable target, DependencyProperty property)
+    /// Repeats an animation of a property of a target forever, at 30 fps, while the owner is on screen. The animation is not
+    /// changed beyond its repeat and frame rate: nothing is stored on it, so it can be frozen when it starts.
+    public static void Run(FrameworkElement owner, IAnimatable target, DependencyProperty property, AnimationTimeline animation)
     {
-        animation.SetValue(AimTargetProperty, target);
-        animation.SetValue(AimPropertyProperty, property);
-    }
-
-    /// Makes a loop of an animation aimed with Aim: repeated forever, at 30 fps, running while the owner is on screen.
-    public static void Run(FrameworkElement owner, Timeline t)
-    {
-        var animation = t as AnimationTimeline ?? throw new ArgumentException("A loop is an animation aimed with Aim.", nameof(t));
-        var target = animation.GetValue(AimTargetProperty) as IAnimatable
-            ?? throw new ArgumentException("The loop has no target: call Loops.Aim first.", nameof(t));
-        var property = animation.GetValue(AimPropertyProperty) as DependencyProperty
-            ?? throw new ArgumentException("The loop has no property: call Loops.Aim first.", nameof(t));
         Timeline.SetDesiredFrameRate(animation, (int)FrameRate);
         animation.RepeatBehavior = RepeatBehavior.Forever;
 
         var running = false;
         void Start()
         {
-            if (!running && owner.IsLoaded && owner.IsVisible)
+            if (running || !owner.IsLoaded || !owner.IsVisible)
+            {
+                return;
+            }
+            try
             {
                 target.BeginAnimation(property, animation);
                 running = true;
             }
+            catch (Exception error)
+            {
+                LogStartFailure(error);  // the loop stays off; the pill goes on
+            }
         }
         void Stop()
         {
-            if (running)
+            if (!running)
+            {
+                return;
+            }
+            running = false;
+            try
             {
                 target.BeginAnimation(property, null);
-                running = false;
+            }
+            catch (Exception error)
+            {
+                LogStartFailure(error);
             }
         }
 
@@ -98,7 +101,7 @@ public static class Loops
                 RenderTransform = transform,
                 Focusable = false,
             };
-            Run(panel, BarAnimation(transform, i));
+            Run(panel, transform, ScaleTransform.ScaleYProperty, BarAnimation(i));
             panel.Children.Add(bar);
         }
         return panel;
@@ -122,15 +125,9 @@ public static class Loops
             Focusable = false,
         };
         var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
-        var scaleX = new DoubleAnimation(1, 2.4, RipplePeriod) { EasingFunction = ease };
-        var scaleY = new DoubleAnimation(1, 2.4, RipplePeriod) { EasingFunction = ease };
-        var fade = new DoubleAnimation(0.8, 0, RipplePeriod) { EasingFunction = ease };
-        Aim(scaleX, transform, ScaleTransform.ScaleXProperty);
-        Aim(scaleY, transform, ScaleTransform.ScaleYProperty);
-        Aim(fade, circle, UIElement.OpacityProperty);
-        Run(circle, scaleX);
-        Run(circle, scaleY);
-        Run(circle, fade);
+        Run(circle, transform, ScaleTransform.ScaleXProperty, new DoubleAnimation(1, 2.4, RipplePeriod) { EasingFunction = ease });
+        Run(circle, transform, ScaleTransform.ScaleYProperty, new DoubleAnimation(1, 2.4, RipplePeriod) { EasingFunction = ease });
+        Run(circle, circle, UIElement.OpacityProperty, new DoubleAnimation(0.8, 0, RipplePeriod) { EasingFunction = ease });
         return circle;
     }
 
@@ -139,7 +136,7 @@ public static class Loops
 
     /// One bar's Y scale over one period, as 24 linear keyframes. The last keyframe is at the period's end, where the wave
     /// is back at its start, so the loop has no hold.
-    private static DoubleAnimationUsingKeyFrames BarAnimation(ScaleTransform transform, int i)
+    private static DoubleAnimationUsingKeyFrames BarAnimation(int i)
     {
         const int steps = 24;
         var animation = new DoubleAnimationUsingKeyFrames { Duration = new Duration(BarsPeriod) };
@@ -148,7 +145,17 @@ public static class Loops
             var time = BarsPeriod.TotalSeconds * k / steps;
             animation.KeyFrames.Add(new LinearDoubleKeyFrame(Bar(time, i), KeyTime.FromTimeSpan(TimeSpan.FromSeconds(time))));
         }
-        Aim(animation, transform, ScaleTransform.ScaleYProperty);
         return animation;
+    }
+
+    /// Logs a failed loop start or stop, once for the process.
+    private static void LogStartFailure(Exception error)
+    {
+        if (_startFailureLogged)
+        {
+            return;
+        }
+        _startFailureLogged = true;
+        ErrorLog.Write(error);
     }
 }
