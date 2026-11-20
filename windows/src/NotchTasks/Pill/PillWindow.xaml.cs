@@ -256,6 +256,10 @@ public partial class PillWindow : Window
             case Win32.WM_MOUSEACTIVATE:
                 handled = true;
                 return Win32.MA_NOACTIVATE;
+            case Win32.WM_MOUSEHWHEEL:
+                // A horizontal wheel (a touchpad swipe) scrolls the row under the pointer, whichever window has focus.
+                handled = RouteHorizontalWheel(lParam, wParam);
+                break;
             case Win32.WM_DPICHANGED:
                 // WPF moves the window to the suggested rectangle first; then the pill is placed again at the new DPI.
                 Dispatcher.BeginInvoke(new Action(Place));
@@ -733,6 +737,30 @@ public partial class PillWindow : Window
         target.BeginAnimation(property, new DoubleAnimation(to, duration) { EasingFunction = new SpringEase(curve) });
 
     private static Rect ToRect((double X, double Y, double W, double H) r) => new(r.X, r.Y, r.W, r.H);
+
+    /// Sends a horizontal wheel turn to the RowScroller under the pointer. False when the pointer is over no row.
+    private bool RouteHorizontalWheel(nint lParam, nint wParam)
+    {
+        var delta = (short)((wParam.ToInt64() >> 16) & 0xFFFF);
+        if (delta == 0 || PresentationSource.FromVisual(this) is null)
+        {
+            return false;
+        }
+        var screen = new Point((short)(lParam.ToInt64() & 0xFFFF), (short)((lParam.ToInt64() >> 16) & 0xFFFF));
+        if (VisualTreeHelper.HitTest(this, PointFromScreen(screen))?.VisualHit is not DependencyObject hit)
+        {
+            return false;
+        }
+        for (DependencyObject? node = hit; node is not null; node = VisualTreeHelper.GetParent(node))
+        {
+            if (node is RowScroller row)
+            {
+                row.ScrollNotches(delta);
+                return true;
+            }
+        }
+        return false;
+    }
 
     private bool IsOverPointer(nint lParam)
     {

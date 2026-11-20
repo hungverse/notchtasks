@@ -4,6 +4,7 @@ using System.Windows.Documents;
 using System.Windows.Media;
 using NotchTasks.ControlPanel;
 using NotchTasks.Core.Devices;
+using NotchTasks.Pill;
 
 namespace NotchTasks.Pill.Sections;
 
@@ -22,13 +23,7 @@ public sealed class DevicesCard : Border
     public DevicesCard()
     {
         Focusable = false;
-        Child = new ScrollViewer
-        {
-            HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden,
-            VerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
-            Focusable = false,
-            Content = _row,
-        };
+        Child = new RowScroller { Content = _row };
     }
 
     /// The capsules now shown, in order.

@@ -9,6 +9,7 @@ using System.Windows.Media;
 using Rectangle = System.Windows.Shapes.Rectangle;
 using NotchTasks.Core;
 using NotchTasks.Core.Shelf;
+using NotchTasks.Pill;
 using NotchTasks.Services;
 
 namespace NotchTasks.Pill.Sections;
@@ -65,7 +66,7 @@ public sealed class ShelfCard : Border
     private readonly Button _remove;
     private readonly Grid _emptyBox;
     private readonly TextBlock _emptyText;
-    private readonly ScrollViewer _tileScroll;
+    private readonly RowScroller _tileScroll;
     private readonly StackPanel _tileRow;
     private readonly TextBlock _hint;
     private AppState? _state;
@@ -136,11 +137,8 @@ public sealed class ShelfCard : Border
         _emptyBox.Children.Add(_emptyText);
 
         _tileRow = new StackPanel { Orientation = Orientation.Horizontal, Focusable = false };
-        _tileScroll = new ScrollViewer
+        _tileScroll = new RowScroller
         {
-            HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden,
-            VerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
-            Focusable = false,
             Margin = new Thickness(0, 8, 0, 0),
             Content = _tileRow,
         };

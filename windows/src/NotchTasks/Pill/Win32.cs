@@ -10,6 +10,7 @@ internal static partial class Win32
     public const int WM_SETTINGCHANGE = 0x001A;
     public const int WM_NCHITTEST = 0x0084;
     public const int WM_MOUSEACTIVATE = 0x0021;
+    public const int WM_MOUSEHWHEEL = 0x020E;
     public const int WM_DPICHANGED = 0x02E0;
     public const int WM_POWERBROADCAST = 0x0218;
     public const int PBT_POWERSETTINGCHANGE = 0x8013;
