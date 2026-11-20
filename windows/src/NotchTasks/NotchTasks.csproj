@@ -6,8 +6,9 @@
     <RootNamespace>NotchTasks</RootNamespace>
     <AssemblyName>NotchTasks</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <!-- Plain net10.0-windows: nothing in the app uses WinRT now (the accent is read from the registry). -->
-    <TargetFramework>net10.0-windows</TargetFramework>
+    <!-- Windows SDK target: the app uses WinRT (SMTC, devices, camera, share). Core, the hook and the sensors stay net10.0-windows. -->
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
     <ApplicationIcon>Assets\NotchTasks.ico</ApplicationIcon>
     <!-- The colour dialog of the Control Panel (ColorField) is WinForms' ColorDialog. Its namespaces are not imported
          into the app: the WPF names would clash, so the one file that needs it aliases them. -->
