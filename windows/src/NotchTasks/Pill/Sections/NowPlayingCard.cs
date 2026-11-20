@@ -217,6 +217,33 @@ public sealed class NowPlayingCard : Border
         _ => ModuleGlyphs.Get(name),
     };
 
+    /// The plain template of the control buttons: a transparent border, so the whole square takes the mouse, around the centred
+    /// content. WPF's default template paints a grey background when a button is disabled; the Mac's buttons have no chrome.
+    private static readonly ControlTemplate PlainControl = PlainControlTemplate();
+
+    private static ControlTemplate PlainControlTemplate()
+    {
+        var body = new FrameworkElementFactory(typeof(Border), "Body");
+        body.SetValue(Border.BackgroundProperty, Brushes.Transparent);
+        var content = new FrameworkElementFactory(typeof(ContentPresenter));
+        content.SetValue(FrameworkElement.HorizontalAlignmentProperty, HorizontalAlignment.Center);
+        content.SetValue(FrameworkElement.VerticalAlignmentProperty, VerticalAlignment.Center);
+        body.AppendChild(content);
+
+        var template = new ControlTemplate(typeof(Button)) { VisualTree = body };
+        // The Mac dims a pressable control under the pointer to 0.8; a disabled one keeps its 0.35 and does not brighten.
+        template.Triggers.Add(new MultiTrigger
+        {
+            Conditions =
+            {
+                new Condition(UIElement.IsMouseOverProperty, true),
+                new Condition(UIElement.IsEnabledProperty, true),
+            },
+            Setters = { new Setter(UIElement.OpacityProperty, 0.8, "Body") },
+        });
+        return template;
+    }
+
     private static Button ControlButton(string glyph, double size, Thickness margin) => new()
     {
         Width = ControlSize,
@@ -230,6 +257,7 @@ public sealed class NowPlayingCard : Border
         FontSize = size,
         FontWeight = FontWeights.Bold,
         Content = ControlContent(glyph),
+        Template = PlainControl,
         Cursor = Cursors.Hand,
         Focusable = false,
         FocusVisualStyle = null,

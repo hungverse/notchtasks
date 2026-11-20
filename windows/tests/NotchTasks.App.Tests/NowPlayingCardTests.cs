@@ -59,6 +59,27 @@ public sealed class NowPlayingCardTests
     }
 
     [Fact]
+    public void Controls_HaveNoGreyChromeWhenDisabled()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            var (state, card) = CardFor(Session(canNext: false, canToggle: true));
+
+            // A disabled button keeps the template's transparent body: no grey square, only the 0.35 dimming.
+            Assert.False(card.NextButton.IsEnabled);
+            foreach (var button in new[] { card.PreviousButton, card.PlayPauseButton, card.NextButton })
+            {
+                button.ApplyTemplate();
+                var body = Assert.IsType<Border>(VisualTreeHelper.GetChild(button, 0));
+                Assert.Equal(Colors.Transparent, Assert.IsType<SolidColorBrush>(body.Background).Color);
+            }
+            Assert.Equal(0.35, card.NextButton.Opacity, 2);
+            state.Dispose();
+        });
+    }
+
+    [Fact]
     public void Card_DisabledButtons_FollowCan()
     {
         Sta.Run(() =>
