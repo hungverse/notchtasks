@@ -168,14 +168,24 @@ public sealed class ContainerReader : IDeviceReader
                 }
                 var name = container.Name;
                 var old = known.FirstOrDefault(f => f.Id == container.Id && f.Name == name);
-                if (old is null)
+                if (old is null || DeviceCache.NeedsClassify(old))
                 {
-                    facts.Add(await Classify(container));
-                    continue;
-                }
-                if (old.Categories.Count == 0)
-                {
-                    facts.Add(old);  // not an accessory: nothing to read again
+                    // A new container, or one that was not an accessory last time: its nodes may have appeared since (a device
+                    // plugged in), so they are read again. A known non-accessory whose nodes still fail keeps its last fact.
+                    if (old is null)
+                    {
+                        facts.Add(await Classify(container));
+                        continue;
+                    }
+                    try
+                    {
+                        facts.Add(await Classify(container));
+                    }
+                    catch (Exception e)
+                    {
+                        Log("classify", e);
+                        facts.Add(old);
+                    }
                     continue;
                 }
                 try
