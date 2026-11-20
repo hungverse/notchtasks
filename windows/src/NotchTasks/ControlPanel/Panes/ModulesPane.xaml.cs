@@ -233,14 +233,18 @@ public partial class ModulesPane : SettingsPane
     }
 
     /// Saves the switch: a module that is on is not in the disabled list.
-    private void ChangeOn(string id, bool on)
+    private void ChangeOn(string id, bool on) => Write("disabled", DisabledWith(Store.Disabled, id, on));
+
+    /// The disabled list with module `id` turned on or off: a module that is on is never in the list. The Overview's switches
+    /// write through here too, so both panes save the same list.
+    public static JsonArray DisabledWith(IEnumerable<string> disabled, string id, bool on)
     {
-        var disabled = Store.Disabled.Where(item => item != id).ToList();
+        var list = disabled.Where(item => item != id).ToList();
         if (!on)
         {
-            disabled.Add(id);
+            list.Add(id);
         }
-        Write("disabled", ToArray(disabled));
+        return ToArray(list);
     }
 
     /// Saves the position. Automatic is stored as no entry, as the Mac does.

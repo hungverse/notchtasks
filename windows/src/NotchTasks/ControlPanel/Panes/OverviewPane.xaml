@@ -4,27 +4,58 @@
                        xmlns:l="clr-namespace:NotchTasks.ControlPanel"
                        xmlns:local="clr-namespace:NotchTasks.ControlPanel">
   <StackPanel>
-    <TextBlock Style="{StaticResource PaneTitle}" Text="{l:L Overview}" />
-    <!-- The note is set by the pane: its text has an apostrophe, which a {l:L} attribute cannot hold. -->
-    <TextBlock x:Name="Note" Style="{StaticResource PaneNote}" />
-
-    <!-- The stats: the modules on, the agents watched. Each tile is built by the pane. -->
-    <UniformGrid x:Name="Stats" Columns="2" Margin="0,20,0,0" />
-
-    <!-- The next steps: shown after the first run, while something is still to do. Rows are built by the pane. -->
-    <StackPanel x:Name="NextStepsSection" Visibility="Collapsed">
-      <TextBlock Style="{StaticResource SectionHeader}" Text="{l:L Next steps}" />
-      <Border Style="{StaticResource Card}">
-        <StackPanel x:Name="NextStepRows" />
+    <!-- The hero, as the Mac's overview: the notch on a purple wash with a sample of the pill (its sparkle, its count and
+         its hammer), beside the app's name. The note is set by the pane: its text has an apostrophe, which a {l:L}
+         attribute cannot hold. -->
+    <Grid>
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="*" />
+      </Grid.ColumnDefinitions>
+      <Border Width="280" Height="70" CornerRadius="10" VerticalAlignment="Center">
+        <Border.Background>
+          <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Color="#B35856D6" Offset="0" />
+            <GradientStop Color="#80AF52DE" Offset="1" />
+          </LinearGradientBrush>
+        </Border.Background>
+        <Border Width="220" Height="30" VerticalAlignment="Top" HorizontalAlignment="Center"
+                Background="Black" CornerRadius="0,0,10,10">
+          <Grid Margin="10,0">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+              <TextBlock Text="&#xE8BD;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12"
+                         Foreground="#FF9F0A" VerticalAlignment="Center" />
+              <TextBlock Text="2" FontWeight="Bold" FontSize="12" Foreground="#FF9F0A" Margin="6,0,0,0" VerticalAlignment="Center" />
+            </StackPanel>
+            <TextBlock Text="&#xE90F;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12"
+                       Foreground="#FF9F0A" HorizontalAlignment="Right" VerticalAlignment="Center" />
+          </Grid>
+        </Border>
       </Border>
+      <StackPanel Grid.Column="1" Margin="20,0,0,0" VerticalAlignment="Center">
+        <TextBlock Text="NotchTasks" FontSize="28" FontWeight="Bold" />
+        <TextBlock x:Name="Note" Style="{StaticResource PaneNote}" Margin="0,4,0,0" />
+      </StackPanel>
+    </Grid>
+
+    <!-- The stats: the agents running now, the CI errors, the permissions granted. Each card is built by the pane. -->
+    <UniformGrid x:Name="Stats" Columns="3" Margin="0,20,0,0" />
+
+    <!-- The next steps: shown after the first run, while something is still to do. Each step is a card of its own. -->
+    <StackPanel x:Name="NextStepsSection" Visibility="Collapsed">
+      <TextBlock Text="{l:L Next steps}" FontSize="15" FontWeight="SemiBold" Margin="0,20,0,8"
+                 Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+      <StackPanel x:Name="NextStepRows" />
     </StackPanel>
 
     <TextBlock x:Name="ErrorText" Style="{StaticResource CardNote}" Margin="0,8,0,0" Visibility="Collapsed"
                Foreground="{DynamicResource SystemFillColorCriticalBrush}" />
 
     <TextBlock Style="{StaticResource SectionHeader}" Text="{l:L Modules}" />
-    <UniformGrid x:Name="ModuleCells" Columns="2" />
+    <!-- The module groups (Work, Music &amp; devices, ...): a caps heading and a two-column grid of switches for each. -->
+    <StackPanel x:Name="ModuleGroups" />
 
-    <Button x:Name="GuideButton" HorizontalAlignment="Left" Margin="0,20,0,0" Content="{l:L See the guide}" />
+    <Button x:Name="GuideButton" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Left" Margin="0,20,0,0"
+            Content="{l:L See the guide}" />
   </StackPanel>
 </local:SettingsPane>

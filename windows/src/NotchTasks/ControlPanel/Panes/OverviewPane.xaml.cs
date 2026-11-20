@@ -3,9 +3,11 @@ using System.IO;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using NotchTasks.Core;
 using NotchTasks.Core.Asks;
+using NotchTasks.Core.Modules;
 using NotchTasks.Core.Onboarding;
 using NotchTasks.Core.Permissions;
 using NotchTasks.Core.Settings;
@@ -14,19 +16,34 @@ using NotchTasks.Services;
 
 namespace NotchTasks.ControlPanel.Panes;
 
-/// The Overview pane (Preferences.swift overview): two stats (the modules on, the agents watched), the next steps still to do
-/// (after the first run only), one cell per module (a click opens Modules) and the way back to the guide. The states are read
-/// each time the pane is drawn and when the Control Panel is activated.
+/// The Overview pane (Preferences.swift overview): the hero, three stats (the agents running, the CI errors, the permissions
+/// granted), the next steps still to do (after the first run only), the modules in groups with a switch each, and the way back
+/// to the guide. The states are read each time the pane is drawn and when the Control Panel is activated; the running and error
+/// counts follow the notch as it changes.
 public partial class OverviewPane : SettingsPane
 {
     /// The glyph of a permission row. The permission rows carry no glyph of their own, so the lock stands for all of them.
-    private const string PermissionGlyph = "";
+    private const string PermissionGlyph = "";
 
     /// The glyph of an agent row (the sparkle the Mac uses for agents; the same as the agent module).
-    private const string AgentGlyph = "";
+    private const string AgentGlyph = "";
+
+    /// The module groups of the Mac's overview (Settings.swift groups), in the Mac's order. The last group also takes every
+    /// Windows module no other group names.
+    private static readonly (string Title, string[] Ids)[] Groups =
+    [
+        ("Work", ["agents", "ci", "limits", "timer"]),
+        ("Music & devices", ["media", "devices", "battery"]),
+        ("Calls & privacy", ["calls", "privacy", "mirror"]),
+        ("System", ["network", "downloads", "health", "shelf"]),
+    ];
 
     private readonly AppState _state;
     private readonly RegistryAccess _registry = new();
+    private readonly bool _hasBattery;
+    private readonly TextBlock _runningValue;
+    private readonly TextBlock _alertsValue;
+    private readonly TextBlock _permissionsValue;
 
     /// The error of the last hook switch that could not be saved, until the next one that works.
     private string? _actionError;
@@ -34,8 +51,16 @@ public partial class OverviewPane : SettingsPane
     public OverviewPane(SettingsStore store, AppState state) : base(store)
     {
         _state = state;
+        _hasBattery = PowerFacts.HasSystemBattery();
         InitializeComponent();
+        Stats.Children.Add(StatCard("", null, L10n.L("Running"), out _runningValue));
+        Stats.Children.Add(StatCard("", ControlPanelLook.Red, L10n.L("CI errors"), out _alertsValue));
+        Stats.Children.Add(StatCard("", ControlPanelLook.Green, L10n.L("Permissions"), out _permissionsValue));
         GuideButton.Click += (_, _) => OnboardingWindow.Show(_state);
+
+        // The running and error counts follow the notch while the pane is shown; the handler is removed when it is hidden.
+        Loaded += (_, _) => _state.NotchChanged += OnNotchChanged;
+        Unloaded += (_, _) => _state.NotchChanged -= OnNotchChanged;
     }
 
     protected override void Apply() => Render();
@@ -43,7 +68,7 @@ public partial class OverviewPane : SettingsPane
     /// The user may have come back from Settings or the Watching pane: the states are read again.
     protected override void OnWindowActivated() => ApplyStored();
 
-    /// Draws the stats, the next steps and the module cells from the current states.
+    /// Draws the next steps and the module groups from the current states, and the counts.
     private void Render()
     {
         Note.Text = L10n.L("The pill shows what's running, and stays quiet when nothing is.");
@@ -56,31 +81,61 @@ public partial class OverviewPane : SettingsPane
         var modules = ModuleCatalog.All.Where(id => ModuleCatalog.OnWindows(id) && !Store.Disabled.Contains(id))
             .ToHashSet(StringComparer.Ordinal);
 
-        RenderStats(modules.Count, installed.Count);
+        UpdateCounts();
+        _permissionsValue.Text = string.Format(CultureInfo.InvariantCulture, "{0}/{1}",
+            items.Count(item => item.State == PermState.Granted), items.Count);
         RenderNextSteps(NextSteps.Compute(items, modules, Store.SystemNotifications, present, installed), items);
         ErrorText.Text = _actionError ?? string.Empty;
         ErrorText.Visibility = _actionError is null ? Visibility.Collapsed : Visibility.Visible;
         RenderModules();
     }
 
-    private void RenderStats(int modulesOn, int agentsWatched)
+    /// The notch changed: the running and error counts follow it. Its thread is the one that changed the notch.
+    private void OnNotchChanged()
     {
-        Stats.Children.Clear();
-        Stats.Children.Add(Stat(modulesOn.ToString(CultureInfo.InvariantCulture), L10n.L("Modules on")));
-        Stats.Children.Add(Stat(agentsWatched.ToString(CultureInfo.InvariantCulture), L10n.L("Agents watched")));
+        if (Dispatcher.CheckAccess())
+        {
+            UpdateCounts();
+        }
+        else
+        {
+            Dispatcher.BeginInvoke(new Action(UpdateCounts));
+        }
     }
 
-    /// One stat: its value over its label, in a card.
-    private Border Stat(string value, string label)
+    private void UpdateCounts()
     {
+        _runningValue.Text = _state.Snapshot.Running.Count.ToString(CultureInfo.InvariantCulture);
+        _alertsValue.Text = _state.Snapshot.Alerts.Count.ToString(CultureInfo.InvariantCulture);
+    }
+
+    /// One stat: its glyph in its colour (the accent when color is null), its value over its label, in a card.
+    private Border StatCard(string glyph, Color? color, string label, out TextBlock value)
+    {
+        var icon = new TextBlock
+        {
+            Text = glyph,
+            FontFamily = new FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets"),
+            FontSize = 16,
+        };
+        if (color is { } tint)
+        {
+            icon.Foreground = new SolidColorBrush(tint);
+        }
+        else
+        {
+            icon.SetResourceReference(TextBlock.ForegroundProperty, "AccentFillColorDefaultBrush");
+        }
+        value = new TextBlock { FontSize = 24, FontWeight = FontWeights.Bold, Margin = new Thickness(0, 6, 0, 0) };
         var text = new StackPanel();
-        text.Children.Add(new TextBlock { Text = value, FontSize = 24, FontWeight = FontWeights.SemiBold });
+        text.Children.Add(icon);
+        text.Children.Add(value);
         text.Children.Add(new TextBlock { Style = (Style)FindResource("CardNote"), Margin = new Thickness(0, 2, 0, 0), Text = label });
         return new Border
         {
             Style = (Style)FindResource("Card"),
-            Padding = new Thickness(16, 12, 16, 12),
-            Margin = new Thickness(0, 0, 8, 8),
+            Padding = new Thickness(14),
+            Margin = new Thickness(0, 0, 12, 0),
             Child = text,
         };
     }
@@ -89,13 +144,9 @@ public partial class OverviewPane : SettingsPane
     {
         NextStepRows.Children.Clear();
         NextStepsSection.Visibility = Store.OnboardingDone && steps.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
-        for (var i = 0; i < steps.Count; i++)
+        foreach (var step in steps)
         {
-            if (i > 0)
-            {
-                NextStepRows.Children.Add(new Separator { Margin = new Thickness(16, 0, 16, 0) });
-            }
-            NextStepRows.Children.Add(StepRow(steps[i], items));
+            NextStepRows.Children.Add(StepRow(step, items));
         }
     }
 
@@ -151,10 +202,10 @@ public partial class OverviewPane : SettingsPane
         }
     }
 
-    /// One step: its glyph, its text and the one button that does it.
-    private static Grid Row(string glyph, string text, string buttonText, Action click)
+    /// One step: a card with its glyph, its text and the one button that does it.
+    private static Border Row(string glyph, string text, string buttonText, Action click)
     {
-        var grid = new Grid { Margin = new Thickness(16, 10, 16, 10) };
+        var grid = new Grid();
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
@@ -167,89 +218,129 @@ public partial class OverviewPane : SettingsPane
             Margin = new Thickness(0, 0, 12, 0),
             VerticalAlignment = VerticalAlignment.Center,
         };
+        icon.SetResourceReference(TextBlock.ForegroundProperty, "TextFillColorSecondaryBrush");
         Grid.SetColumn(icon, 0);
         grid.Children.Add(icon);
 
-        var label = new TextBlock { Text = text, TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center };
+        var label = new TextBlock
+        {
+            Text = text,
+            FontSize = 14,
+            TextWrapping = TextWrapping.Wrap,
+            VerticalAlignment = VerticalAlignment.Center,
+        };
         Grid.SetColumn(label, 1);
         grid.Children.Add(label);
 
-        var button = new Button { Content = buttonText, Margin = new Thickness(12, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center };
+        var button = new Button
+        {
+            Content = buttonText,
+            Style = (Style)Application.Current.FindResource("SecondaryButton"),
+            Margin = new Thickness(12, 0, 0, 0),
+            VerticalAlignment = VerticalAlignment.Center,
+        };
         button.Click += (_, _) => click();
         Grid.SetColumn(button, 2);
         grid.Children.Add(button);
-        return grid;
+
+        return new Border
+        {
+            Style = (Style)Application.Current.FindResource("Card"),
+            CornerRadius = new CornerRadius(10),
+            Padding = new Thickness(12, 8, 12, 8),
+            Margin = new Thickness(0, 0, 0, 8),
+            Child = grid,
+        };
     }
 
-    /// One cell per module on Windows, in the user's order: its icon, its name and On or Off. A click opens Modules.
+    /// The module groups: a caps heading, then a two-column grid of cells. Each cell is the module's icon, its name and a switch
+    /// that turns the module on or off at once (the Modules pane writes the same setting).
     private void RenderModules()
     {
-        ModuleCells.Children.Clear();
-        foreach (var id in ModuleCatalog.Order(Store.Modules))
+        ModuleGroups.Children.Clear();
+        var visible = ModuleCatalog.All.Where(id => ModuleCatalog.OnWindows(id) && (id != "battery" || _hasBattery)).ToList();
+        var grouped = Groups.SelectMany(group => group.Ids).ToHashSet(StringComparer.Ordinal);
+        for (var g = 0; g < Groups.Length; g++)
         {
-            var on = !Store.Disabled.Contains(id);
-            var title = L10n.L(ModuleCatalog.Title(id));
-
-            var tile = new Border
+            var (title, ids) = Groups[g];
+            var last = g == Groups.Length - 1;
+            var members = visible.Where(id => ids.Contains(id, StringComparer.Ordinal) || (last && !grouped.Contains(id))).ToList();
+            if (members.Count == 0)
             {
-                Width = 24,
-                Height = 24,
-                CornerRadius = new CornerRadius(6),
-                Margin = new Thickness(0, 0, 10, 0),
-                VerticalAlignment = VerticalAlignment.Center,
-                Child = new TextBlock
-                {
-                    Text = ModuleCatalog.Glyph(id),
-                    FontFamily = new FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets"),
-                    FontSize = 12,
-                    Foreground = Brushes.White,
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    VerticalAlignment = VerticalAlignment.Center,
-                },
-            };
-            tile.SetResourceReference(Border.BackgroundProperty,
-                on ? "AccentFillColorDefaultBrush" : "ControlStrongFillColorDefaultBrush");
+                continue;
+            }
 
-            var name = new TextBlock
+            ModuleGroups.Children.Add(new TextBlock
             {
-                Text = title,
-                TextTrimming = TextTrimming.CharacterEllipsis,
-                VerticalAlignment = VerticalAlignment.Center,
-            };
-            name.SetResourceReference(TextBlock.ForegroundProperty,
-                on ? "TextFillColorPrimaryBrush" : "TextFillColorSecondaryBrush");
-
-            var state = new TextBlock
+                Style = (Style)FindResource("GroupCaps"),
+                Text = L10n.L(title).ToUpper(CultureInfo.CurrentUICulture),
+            });
+            var cells = new UniformGrid { Columns = 2 };
+            foreach (var id in members)
             {
-                Text = on ? L10n.L("On") : L10n.L("Off"),
-                FontSize = 12,
-                Margin = new Thickness(8, 0, 0, 0),
-                VerticalAlignment = VerticalAlignment.Center,
-            };
-            state.SetResourceReference(TextBlock.ForegroundProperty, "TextFillColorSecondaryBrush");
-
-            var line = new DockPanel { LastChildFill = true };
-            DockPanel.SetDock(tile, Dock.Left);
-            DockPanel.SetDock(state, Dock.Right);
-            line.Children.Add(tile);
-            line.Children.Add(state);
-            line.Children.Add(name);
-
-            var cell = new Button
-            {
-                Style = (Style)FindResource("TileButton"),
-                ToolTip = L10n.L(ModuleCatalog.Blurb(id)),
-                Content = new Border
-                {
-                    Style = (Style)FindResource("Card"),
-                    Padding = new Thickness(12, 10, 12, 10),
-                    Margin = new Thickness(0, 0, 8, 8),
-                    Child = line,
-                },
-            };
-            AutomationProperties.SetName(cell, title);
-            cell.Click += (_, _) => ControlPanelWindow.Show(_state, PaneId.Modules);
-            ModuleCells.Children.Add(cell);
+                cells.Children.Add(ModuleCell(id));
+            }
+            ModuleGroups.Children.Add(cells);
         }
+    }
+
+    /// One module's cell: its tile, its name and its switch. The tile is accent when the module is on and grey when it is off.
+    private Border ModuleCell(string id)
+    {
+        var on = !Store.Disabled.Contains(id);
+        var title = L10n.L(ModuleCatalog.Title(id));
+
+        var tile = new Border
+        {
+            Width = 24,
+            Height = 24,
+            CornerRadius = new CornerRadius(6),
+            Margin = new Thickness(0, 0, 10, 0),
+            VerticalAlignment = VerticalAlignment.Center,
+            Child = new TextBlock
+            {
+                Text = ModuleCatalog.Glyph(id),
+                Style = (Style)FindResource("IconGlyph"),
+                FontSize = 12,
+            },
+        };
+        tile.SetResourceReference(Border.BackgroundProperty, on ? "AccentFillColorDefaultBrush" : "ControlStrongFillColorDefaultBrush");
+
+        var name = new TextBlock
+        {
+            Text = title,
+            FontSize = 14,
+            TextTrimming = TextTrimming.CharacterEllipsis,
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        name.SetResourceReference(TextBlock.ForegroundProperty, on ? "TextFillColorPrimaryBrush" : "TextFillColorSecondaryBrush");
+
+        var toggle = new CheckBox
+        {
+            IsChecked = on,
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(10, 0, 0, 0),
+            ToolTip = L10n.L(ModuleCatalog.Blurb(id)),
+        };
+        AutomationProperties.SetName(toggle, title);
+        toggle.Click += (_, _) => Write("disabled", ModulesPane.DisabledWith(Store.Disabled, id, toggle.IsChecked == true));
+
+        var line = new DockPanel { LastChildFill = true };
+        DockPanel.SetDock(toggle, Dock.Right);
+        DockPanel.SetDock(tile, Dock.Left);
+        line.Children.Add(toggle);
+        line.Children.Add(tile);
+        line.Children.Add(name);
+
+        return new Border
+        {
+            Style = (Style)FindResource("Card"),
+            CornerRadius = new CornerRadius(10),
+            Height = 44,
+            Padding = new Thickness(10, 0, 10, 0),
+            Margin = new Thickness(0, 0, 8, 8),
+            ToolTip = L10n.L(ModuleCatalog.Blurb(id)),
+            Child = line,
+        };
     }
 }
