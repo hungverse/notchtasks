@@ -37,24 +37,42 @@ public static class PillMotion
 
     /// Fades an element in from opacity 0, and with scale set, from 0.92 to 1 about its centre (not when reduced).
     /// Also reuses an element that is exiting: its exit is cancelled and it is not removed.
+    /// The local values are the resting ones (opacity 1, scale 1). Each animation uses FillBehavior.Stop, so it ends and gives
+    /// the local value back: a later local set takes effect. An element with a transform of its own (not the identity, nor a
+    /// scale at 1) enters by opacity only, and its transform is left as it is.
     public static void Enter(UIElement e, bool scale, string motion, bool animationsOn)
     {
         e.SetValue(ExitingProperty, null);
         e.BeginAnimation(UIElement.OpacityProperty, null);
-        e.Opacity = 0;
         var duration = Fade(motion, animationsOn);
         var ease = Ease(duration);
-        e.BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation(1, duration) { EasingFunction = ease });
+        e.Opacity = 1;
+        e.BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation(0, 1, duration) { EasingFunction = ease, FillBehavior = FillBehavior.Stop });
 
         var reduced = !animationsOn || motion == "reduced";
-        if (scale && !reduced)
+        if (scale && !reduced && ScaleFor(e) is { } transform)
         {
-            var transform = new ScaleTransform(EnterScale, EnterScale);
-            e.RenderTransformOrigin = new Point(0.5, 0.5);
-            e.RenderTransform = transform;
-            transform.BeginAnimation(ScaleTransform.ScaleXProperty, new DoubleAnimation(1, duration) { EasingFunction = ease });
-            transform.BeginAnimation(ScaleTransform.ScaleYProperty, new DoubleAnimation(1, duration) { EasingFunction = ease });
+            transform.BeginAnimation(ScaleTransform.ScaleXProperty, new DoubleAnimation(EnterScale, 1, duration) { EasingFunction = ease, FillBehavior = FillBehavior.Stop });
+            transform.BeginAnimation(ScaleTransform.ScaleYProperty, new DoubleAnimation(EnterScale, 1, duration) { EasingFunction = ease, FillBehavior = FillBehavior.Stop });
         }
+    }
+
+    /// The scale transform an entering element uses: a new one when it has the identity transform, or its scale transform while that
+    /// is at 1 (from an earlier enter). Null for any other transform: the element's own transform is never overwritten.
+    private static ScaleTransform? ScaleFor(UIElement e)
+    {
+        if (ReferenceEquals(e.RenderTransform, Transform.Identity))
+        {
+            var created = new ScaleTransform(1, 1);
+            e.RenderTransformOrigin = new Point(0.5, 0.5);
+            e.RenderTransform = created;
+            return created;
+        }
+        return e.RenderTransform is ScaleTransform s
+            && (double)s.GetAnimationBaseValue(ScaleTransform.ScaleXProperty) == 1
+            && (double)s.GetAnimationBaseValue(ScaleTransform.ScaleYProperty) == 1
+            ? s
+            : null;
     }
 
     /// Fades an element out, then removes it from its parent. It is not hit-testable while it fades. If it is entered again

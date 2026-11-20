@@ -195,6 +195,82 @@ public sealed class PillMotionTests
         });
     }
 
+    [Fact]
+    public void Enter_Completed_LocalOpacityIsNotPinned()
+    {
+        Sta.Run(() =>
+        {
+            var e = new Border();
+            var window = new Window { Content = e };
+            Fixture.ShowOffScreen(window);
+            try
+            {
+                PillMotion.Enter(e, scale: true, "smooth", animationsOn: true);
+                PumpFor(TimeSpan.FromMilliseconds(800));
+                Assert.Equal(1.0, e.Opacity);
+
+                e.Opacity = 0.5;  // a later local set takes effect: the Enter animation is no longer held
+                Assert.Equal(0.5, e.Opacity);
+                var scale = Assert.IsType<ScaleTransform>(e.RenderTransform);
+                scale.ScaleX = 0.7;
+                Assert.Equal(0.7, scale.ScaleX);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    [Fact]
+    public void Enter_ForeignRenderTransform_NotOverwritten()
+    {
+        Sta.Run(() =>
+        {
+            var e = new Border();
+            var rotate = new RotateTransform(30);
+            e.RenderTransform = rotate;
+            var window = new Window { Content = e };
+            Fixture.ShowOffScreen(window);
+            try
+            {
+                PillMotion.Enter(e, scale: true, "smooth", animationsOn: true);
+                Assert.Same(rotate, e.RenderTransform);  // the element's own transform is kept: it enters by opacity only
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    [Fact]
+    public void Chips_InPlaceUpdateMidEnter_StaysBelowFull()
+    {
+        Sta.Run(() =>
+        {
+            var (left, right, host) = ChipHost();
+            var window = new Window { Content = host };
+            Fixture.ShowOffScreen(window);
+            try
+            {
+                var chip = new Chip(ChipKind.Timer, "timer", "a");
+                Fill(left, right, new[] { chip });
+                PumpFor(TimeSpan.FromMilliseconds(100));  // 100 ms into the 350 ms enter
+
+                Fill(left, right, new[] { chip });  // the same chip, updated in place by the next publish
+
+                var panels = ChipPanels(left, right);
+                Assert.NotEmpty(panels);
+                Assert.All(panels, p => Assert.True(p.Opacity < 1.0, $"opacity was {p.Opacity}: the enter restarted or was dropped"));
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
     /// A ScaleY animation the loop tests run: a pulse on the transform, over a second, repeated by Loops.Run.
     private static DoubleAnimation Pulse(ScaleTransform transform)
     {

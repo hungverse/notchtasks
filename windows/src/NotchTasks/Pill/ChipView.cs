@@ -270,42 +270,99 @@ public static class ChipView
         }
     }
 
-    /// Puts a wing's chip panels in place. The chips it held before and still holds are replaced with their new panels, with no
-    /// motion. A chip it no longer holds fades out where it is, and is removed when the fade ends. A new chip enters with scale.
-    /// A left wing's chips go after its badges; a right wing's chips go before its badges, after the chips already there.
+    /// Puts a wing's chip panels in place. A chip held before and still held keeps its element, so an enter in progress carries on
+    /// (its new content is moved into it, with no motion). A chip it no longer holds fades out where it is, and is removed when the
+    /// fade ends. A new chip enters with scale. A left wing's chips go after its badges; a right wing's chips go before its badges,
+    /// after the chips already there, in the order given.
     private static void Reconcile(StackPanel wing, List<(string Key, FrameworkElement Panel)> desired, bool rightWing,
         string motion, bool animationsOn)
     {
         var wanted = desired.Select(d => d.Key).ToHashSet(StringComparer.Ordinal);
         var previous = wing.Children.OfType<FrameworkElement>().Where(e => e.Tag is ChipTag).ToList();
-        var held = previous.Where(e => !PillMotion.IsExiting(e)).Select(KeyOf).OfType<string>().ToHashSet(StringComparer.Ordinal);
+        var held = new Dictionary<string, FrameworkElement>(StringComparer.Ordinal);
         foreach (var element in previous)
         {
             var key = KeyOf(element);
-            if (key is not null && wanted.Contains(key))
+            var wantedNow = key is not null && wanted.Contains(key);
+            if (PillMotion.IsExiting(element))
             {
-                wing.Children.Remove(element);  // replaced by its panel below
+                if (wantedNow)
+                {
+                    wing.Children.Remove(element);  // the chip is back: the new panel enters in its place
+                }
             }
-            else if (!PillMotion.IsExiting(element))
+            else if (!wantedNow)
             {
                 PillMotion.Exit(wing, element, motion, animationsOn);
             }
-        }
-        foreach (var (key, panel) in desired)
-        {
-            panel.SetValue(KeyProperty, key);
-            if (rightWing)
+            else if (held.ContainsKey(key!))
             {
-                wing.Children.Insert(ChipCount(wing), panel);
+                wing.Children.Remove(element);  // a duplicate of a chip already held
             }
             else
             {
-                wing.Children.Add(panel);
+                held[key!] = element;
             }
-            if (!held.Contains(key))
+        }
+
+        var placed = new List<(FrameworkElement Element, bool IsNew)>();
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var (key, panel) in desired)
+        {
+            if (!seen.Add(key))
             {
-                PillMotion.Enter(panel, scale: true, motion, animationsOn);
+                continue;
             }
+            if (held.TryGetValue(key, out var old) && old is System.Windows.Controls.Panel oldPanel && panel is System.Windows.Controls.Panel newPanel)
+            {
+                MoveContent(newPanel, oldPanel);
+                placed.Add((old, false));
+                continue;
+            }
+            if (held.TryGetValue(key, out var stale))
+            {
+                wing.Children.Remove(stale);
+            }
+            panel.SetValue(KeyProperty, key);
+            placed.Add((panel, true));
+        }
+
+        foreach (var (element, _) in placed)
+        {
+            if (wing.Children.Contains(element))
+            {
+                wing.Children.Remove(element);  // put back below, in order
+            }
+        }
+        foreach (var (element, isNew) in placed)
+        {
+            if (rightWing)
+            {
+                wing.Children.Insert(ChipCount(wing), element);
+            }
+            else
+            {
+                wing.Children.Add(element);
+            }
+            if (isNew)
+            {
+                PillMotion.Enter(element, scale: true, motion, animationsOn);
+            }
+        }
+    }
+
+    /// Moves a new panel's content into an old panel, which stays on screen (with its motion) and shows the new content.
+    private static void MoveContent(System.Windows.Controls.Panel from, System.Windows.Controls.Panel to)
+    {
+        var content = from.Children.OfType<UIElement>().ToList();
+        foreach (var child in content)
+        {
+            from.Children.Remove(child);
+        }
+        to.Children.Clear();
+        foreach (var child in content)
+        {
+            to.Children.Add(child);
         }
     }
 

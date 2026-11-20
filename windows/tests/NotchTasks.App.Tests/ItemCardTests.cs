@@ -50,6 +50,40 @@ public sealed class ItemCardTests
     private static IReadOnlyList<string> Texts(DependencyObject root) =>
         Descendants<TextBlock>(root).Select(t => t.Text).ToList();
 
+    /// A card's state with one dot-led job (no symbol, so the row shows the status dot), working or not.
+    private static ItemState DotJob(bool working) =>
+        new(new WatchItem("dot", "Dot agent", WatchKind.Process), new List<Job> { new("1001", "Task 1", "3%", working) });
+
+    [Fact]
+    public void ItemCard_WorkingDotRow_HasOneRipple()
+    {
+        Sta.Run(() =>
+        {
+            var card = new ItemCard();
+            card.Update(DotJob(working: true), Array.Empty<LimitWindow>(), Tint, null, Now);
+            Assert.Equal(1, card.RowRippleCounts[0]);
+
+            card.Update(DotJob(working: true), Array.Empty<LimitWindow>(), Tint, null, Now);
+            card.Update(DotJob(working: true), Array.Empty<LimitWindow>(), Tint, null, Now);
+            Assert.Equal(1, card.RowRippleCounts[0]);  // repeated updates do not stack ripples
+        });
+    }
+
+    [Fact]
+    public void ItemCard_IdleDotRow_HasNoRipple()
+    {
+        Sta.Run(() =>
+        {
+            var card = new ItemCard();
+            card.Update(DotJob(working: false), Array.Empty<LimitWindow>(), Tint, null, Now);
+            Assert.Equal(0, card.RowRippleCounts[0]);
+
+            card.Update(DotJob(working: true), Array.Empty<LimitWindow>(), Tint, null, Now);
+            card.Update(DotJob(working: false), Array.Empty<LimitWindow>(), Tint, null, Now);
+            Assert.Equal(0, card.RowRippleCounts[0]);  // the ripple goes when the job stops
+        });
+    }
+
     [Fact]
     public void ItemCard_ShowsFourRows_ThenMore()
     {

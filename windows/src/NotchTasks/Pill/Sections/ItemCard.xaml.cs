@@ -57,6 +57,9 @@ public partial class ItemCard : UserControl
     /// The job rows showing a progress line now.
     public int ProgressLines => _rows.Count(r => r.ProgressShown);
 
+    /// Each job row's status-dot ripples (for tests): one for a working dot-led row, else none.
+    public IReadOnlyList<int> RowRippleCounts => _rows.Select(r => r.RippleCount).ToList();
+
     /// The limit badges in the header now.
     public int LimitBadgeCount => Badges.Children.OfType<FrameworkElement>().Count(e => e.Tag is string tag && tag == LimitBadge.Tag);
 
@@ -390,6 +393,17 @@ public partial class ItemCard : UserControl
             ToolTip = L10n.L("Open log"),
             Focusable = false,
         };
+        // the status dot's ripple (Mac StatusDot): behind the lead, centred on the 7 px dot, while a dot-led job works
+        private readonly Grid _ripple = new()
+        {
+            Width = 20,
+            Height = 20,
+            HorizontalAlignment = HorizontalAlignment.Left,
+            VerticalAlignment = VerticalAlignment.Center,
+            Focusable = false,
+            IsHitTestVisible = false,
+        };
+        private Color? _rippleTint;
         private readonly Grid _progress = new() { Height = 2, Margin = new Thickness(28, 3, 0, 0), Visibility = Visibility.Collapsed, Focusable = false };
         private readonly Border _progressFill = new() { HorizontalAlignment = HorizontalAlignment.Left, Focusable = false };
         private double _fraction;
@@ -406,10 +420,12 @@ public partial class ItemCard : UserControl
             _line.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             _line.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
             _line.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            Grid.SetColumn(_ripple, 0);
             Grid.SetColumn(_lead, 0);
             Grid.SetColumn(_title, 1);
             Grid.SetColumn(_detail, 2);
             Grid.SetColumn(_log, 3);
+            _line.Children.Add(_ripple);  // first, so the ripple is behind the lead
             _line.Children.Add(_lead);
             _line.Children.Add(_title);
             _line.Children.Add(_detail);
@@ -437,6 +453,9 @@ public partial class ItemCard : UserControl
         /// True when the row is shown with its progress line.
         public bool ProgressShown => Root.Visibility == Visibility.Visible && _progress.Visibility == Visibility.Visible;
 
+        /// The ripples on the row's status dot now: one while a dot-led job works, else none (for tests).
+        public int RippleCount => _ripple.Children.Count;
+
         /// Shows a job in this row, in the tint while it works and grey when it has stopped. toolIcons gives the badge of the job's
         /// tool, which leads the row when it has one.
         public void Set(Job job, Color tint, IReadOnlyDictionary<string, JsonObject>? toolIcons)
@@ -454,6 +473,7 @@ public partial class ItemCard : UserControl
 
             var badge = ToolBadge(job, toolIcons);
             var kind = badge is not null ? "badge" : LeadKind(job.Symbol);
+            UpdateRipple(job.Working && kind == "dot", tint);
             if (kind != _leadKind || _lead.Content is null || (badge is not null && (!JsonNode.DeepEquals(badge, _leadBadge) || _leadTint != tint)))
             {
                 _lead.Content = badge is not null ? BadgeGlyph.Create(badge, RowBadgeSize, tint) : BuildLead(job.Symbol, brush);
@@ -468,6 +488,24 @@ public partial class ItemCard : UserControl
             _url = job.Url;
             _log.Visibility = job.Url is null ? Visibility.Collapsed : Visibility.Visible;
             SetProgress(job.Progress, tint);
+        }
+
+        /// One ripple on the dot while it is on, none otherwise. An update that keeps it on keeps the same ripple (no stacking).
+        private void UpdateRipple(bool on, Color tint)
+        {
+            if (!on)
+            {
+                _ripple.Children.Clear();  // the ripple's loop stops on its Unloaded
+                _rippleTint = null;
+                return;
+            }
+            if (_ripple.Children.Count == 1 && _rippleTint == tint)
+            {
+                return;
+            }
+            _ripple.Children.Clear();
+            _ripple.Children.Add(Loops.Ripple(TintBrushes.Of(tint), 7));
+            _rippleTint = tint;
         }
 
         /// The fill brush of the progress line (tests read its colour).

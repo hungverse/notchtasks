@@ -432,6 +432,7 @@ public sealed class PillWindowTests
                 var right = Fixture.Named<StackPanel>(pill, "RightWing");
                 var chipsBefore = Chips(left, right);
                 var clockBefore = Clocks(left, right);
+                var contentBefore = chipsBefore.OfType<Panel>().SelectMany(p => p.Children.OfType<UIElement>()).ToList();  // before the switch
                 Assert.NotEmpty(chipsBefore);
                 Assert.NotEmpty(clockBefore);
 
@@ -441,7 +442,10 @@ public sealed class PillWindowTests
                 Assert.NotNull(state.Timer.State);
                 var chipsAfter = Chips(left, right);
                 Assert.NotEmpty(chipsAfter);
-                Assert.All(chipsAfter, chip => Assert.DoesNotContain(chip, chipsBefore));
+                // A chip that is kept keeps its panel (and any enter in progress), but its content is drawn again.
+                var contentAfter = chipsAfter.OfType<Panel>().SelectMany(p => p.Children.OfType<UIElement>()).ToList();
+                Assert.NotEmpty(contentAfter);
+                Assert.All(contentAfter, content => Assert.DoesNotContain(content, contentBefore));
                 Assert.NotEmpty(Clocks(left, right));
                 Assert.All(Clocks(left, right), text => Assert.Matches(@"^\d+:\d\d$", text));
             }
