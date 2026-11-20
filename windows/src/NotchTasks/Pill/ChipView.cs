@@ -397,9 +397,22 @@ public static class ChipView
             var (element, isNew) = placed[i];
             if (!wing.Children.Contains(element))
             {
-                var index = i > 0 && wing.Children.Contains(order[i - 1])
-                    ? wing.Children.IndexOf(order[i - 1]) + 1
-                    : rightWing ? ChipCount(wing) : wing.Children.Count;
+                // before the first kept element after it that is already in the wing (so a new chip ahead of a kept one lands
+                // ahead of it, and the kept one does not move); else after the element before it; else at the wing's end
+                var index = -1;
+                for (var j = i + 1; j < order.Count && index < 0; j++)
+                {
+                    if (wing.Children.Contains(order[j]))
+                    {
+                        index = wing.Children.IndexOf(order[j]);
+                    }
+                }
+                if (index < 0)
+                {
+                    index = i > 0 && wing.Children.Contains(order[i - 1])
+                        ? wing.Children.IndexOf(order[i - 1]) + 1
+                        : rightWing ? ChipCount(wing) : wing.Children.Count;
+                }
                 wing.Children.Insert(index, element);
             }
             if (isNew)
