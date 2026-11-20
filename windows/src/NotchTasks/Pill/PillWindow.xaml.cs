@@ -1174,8 +1174,9 @@ public partial class PillWindow : Window
         return _accentBrush;
     }
 
+    /// The shadow falls down, as on the Mac: WPF's Direction runs counter-clockwise with Y up, so 270 is down.
     private static DropShadowEffect Shadow(double opacity, double blur, double depth) =>
-        new() { Color = Colors.Black, Opacity = opacity, BlurRadius = blur, ShadowDepth = depth, Direction = 90 };
+        new() { Color = Colors.Black, Opacity = opacity, BlurRadius = blur, ShadowDepth = depth, Direction = 270 };
 
     private static T Frozen<T>(T freezable) where T : Freezable
     {
