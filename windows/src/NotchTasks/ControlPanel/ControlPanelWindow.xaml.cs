@@ -98,6 +98,8 @@ public partial class ControlPanelWindow : Window
         }
         _pane = item.Pane;
         PaneHost.Content = PaneFor(item.Pane);
+        // Every pane opens at its title, not wherever the previous pane was scrolled.
+        PaneScroll.ScrollToTop();
     }
 
     private UserControl PaneFor(PaneId pane)

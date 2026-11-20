@@ -60,8 +60,9 @@
     </Border>
 
     <!-- The detail area: the selected pane, scrolling when it is taller than the window. -->
-    <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-      <ContentControl x:Name="PaneHost" Padding="24" HorizontalContentAlignment="Stretch" />
+    <!-- The margin is on the host: ContentControl's template ignores Padding, so panes would touch the edges. -->
+    <ScrollViewer x:Name="PaneScroll" Grid.Column="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+      <ContentControl x:Name="PaneHost" Margin="32,24,32,32" HorizontalContentAlignment="Stretch" />
     </ScrollViewer>
   </Grid>
 </Window>
