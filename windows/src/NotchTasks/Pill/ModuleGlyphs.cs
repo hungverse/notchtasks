@@ -40,6 +40,19 @@ public static class ModuleGlyphs
         ["next"] = "\uE893",         // next track (Segoe Fluent Icons E893)
         ["play"] = "\uE768",         // play (Segoe Fluent Icons E768)
         ["pause"] = "\uE769",        // pause (Segoe Fluent Icons E769)
+        // Devices (the Mac's device symbols): the Segoe glyphs where one exists. The AirPods use the headphones glyph, as the font has
+        // no AirPods. The codepoints are not rendered-checked on this PC; the controller's run shows them.
+        ["headphones"] = "\uE7F6",   // headphones (Segoe Fluent Icons E7F6, the devices module's own glyph)
+        ["airpods"] = "\uE7F6",
+        ["airpodspro"] = "\uE7F6",
+        ["airpodsmax"] = "\uE7F6",
+        ["keyboard"] = "\uE765",     // keyboard (Segoe Fluent Icons E765)
+        ["computermouse"] = "\uE962", // mouse (Segoe Fluent Icons E962)
+        ["rectangle.and.hand.point.up.left"] = "\uE7C9",  // touch pointer (Segoe Fluent Icons E7C9)
+        ["hifispeaker"] = "\uE7F5",  // speakers (Segoe Fluent Icons E7F5)
+        ["gamecontroller"] = "\uE7FC",  // game controller (Segoe Fluent Icons E7FC)
+        ["iphone"] = "\uE697",       // phone: the same glyph as "phone" (Segoe Fluent)
+        ["externaldrive"] = "\uE6A2",  // drive: the same glyph as "drive"
     };
 
     /// Vector stand-ins for the names the font does not draw here: a gauge and an hourglass, the Mac's gauge and hourglass
@@ -73,6 +86,10 @@ public static class ModuleGlyphs
         ["waveform"] = "M2,7.5 V8.5 M4,6 V10 M6,3.5 V12.5 M8,6.5 V9.5 M10,2.5 V13.5 M12,5 V11 M14,7 V9",
         ["cube.transparent.fill"] = "M8,1.5 L14,4.5 V11.5 L8,14.5 L2,11.5 V4.5 Z M2,4.5 L8,7.5 L14,4.5 M8,7.5 V14.5",
         ["airplane"] = "M8,1.5 L9.2,6 L14.5,9 V10.5 L9.2,9.3 L9,12.5 L10.5,13.8 V14.8 L8,14.1 L5.5,14.8 V13.8 L7,12.5 L6.8,9.3 L1.5,10.5 V9 L6.8,6 Z",
+        // the Devices module's symbols the font lacks: a watch (Mac applewatch), a radio dot with its waves, and a USB plug (Mac cable.connector)
+        ["applewatch"] = "M5,4.5 H11 V11.5 H5 Z M6.5,4.5 L7,2 H9 L9.5,4.5 M6.5,11.5 L7,14 H9 L9.5,11.5",
+        ["dot.radiowaves.left.and.right"] = "M6.9,8 A1.1,1.1 0 1 0 9.1,8 A1.1,1.1 0 1 0 6.9,8 Z M4.2,5.2 A4,4 0 0 0 4.2,10.8 M11.8,5.2 A4,4 0 0 1 11.8,10.8 M2.2,2.8 A7,7 0 0 0 2.2,13.2 M13.8,2.8 A7,7 0 0 1 13.8,13.2",
+        ["cable.connector"] = "M6,1.5 V5 M10,1.5 V5 M4.5,5 H11.5 V8 A3.5,3.5 0 0 1 4.5,8 Z M8,11.5 V14.5",
     };
 
     /// The glyph for a name, or the fallback when the name is not in the map.

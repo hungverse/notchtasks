@@ -3,6 +3,7 @@ using NotchTasks.Core.Agents;
 using NotchTasks.Core.Limits;
 using NotchTasks.Core.Modules;
 using NotchTasks.Services;
+using NotchTasks.Services.Devices;
 using NotchTasks.Services.Media;
 using NotchTasks.Services.Modules;
 
@@ -18,6 +19,7 @@ namespace NotchTasks;
 /// Ci are the Build & CI feed's readers: the process table, GitHub, the ProgramData and runner folders and the clock (null: this PC's;
 /// a test passes inert ones, so no test reads a runner folder or the network).
 /// Media is the Windows media sessions reader (null: SmtcReader; a test passes a fake, so no test touches SMTC).
+/// Devices is the device container reader (null: ContainerReader; a test passes a fake, so no test touches device enumeration).
 public sealed record AppStateOptions(
     string? DownloadsFolder = null,
     NetworkReaders? Network = null,
@@ -34,7 +36,8 @@ public sealed record AppStateOptions(
     Func<string, string?>? LmsPsJson = null,
     ICodexCli? Codex = null,
     CiReaders? Ci = null,
-    IMediaReader? Media = null)
+    IMediaReader? Media = null,
+    IDeviceReader? Devices = null)
 {
     /// This PC's readers: the options the app runs with (the same as passing none).
     public static AppStateOptions Production { get; } = new();

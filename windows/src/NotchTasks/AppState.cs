@@ -6,12 +6,14 @@ using NotchTasks.Core;
 using NotchTasks.Core.Agents;
 using NotchTasks.Core.Asks;
 using NotchTasks.Core.Ci;
+using NotchTasks.Core.Devices;
 using NotchTasks.Core.Limits;
 using NotchTasks.Core.Media;
 using NotchTasks.Core.Modules;
 using NotchTasks.Core.Notch;
 using NotchTasks.Core.Settings;
 using NotchTasks.Services;
+using NotchTasks.Services.Devices;
 using NotchTasks.Services.Media;
 using NotchTasks.Services.Modules;
 
@@ -37,6 +39,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
     private readonly LimitsSource _limitsSource;
     private readonly CiSource _ciSource;
     private readonly MediaSource _mediaSource;
+    private readonly DevicesSource _devicesSource;
     private readonly RecentCache<System.Windows.Media.ImageSource> _mediaArt = new(8);  // the artwork of the last eight keys
     private const int WorkerLogTail = 2_000_000;   // the bytes of a GitHub worker's log the module reads
     private AskWatcher? _watcher;
@@ -80,6 +83,8 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
             path => RunnerLogs.ReadTail(path, WorkerLogTail));
         _ciSource = new CiSource(Ci, BuildAgents, settings, o.Ci ?? CiReaders.Production(Processes, HomeOf(o)), Publish);
         _mediaSource = new MediaSource(Media, o.Media ?? new SmtcReader(), Publish, _mediaArt);
+        Devices = new DevicesModule(this, DevicesTint);
+        _devicesSource = new DevicesSource(Devices, o.Devices ?? new ContainerReader(), Publish);
         Sensors = new SensorsModule(this,
             () => ActiveModules(settings).Contains("privacy"),
             () => ActiveModules(settings).Contains("calls"));
@@ -104,6 +109,10 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
 
     /// The Now Playing session the card shows (the snapshot's Media). Its source (MediaSource) runs while media is on.
     public MediaModule Media { get; }
+
+    /// The devices the pill lists and their toasts (the snapshot does not carry them: the devices card reads this). Its source
+    /// (DevicesSource) runs while devices is on.
+    public DevicesModule Devices { get; }
 
     /// The AI limits (the snapshot's Limits). Its source runs while Claude, Codex or Antigravity is enabled and limits is on.
     public LimitsModule LimitsModule { get; }
@@ -409,6 +418,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
             ["limits"] = _limitsSource,
             ["ci"] = _ciSource,
             ["media"] = _mediaSource,
+            ["devices"] = _devicesSource,
         };
 
     /// The snapshot's ask count: the asks belong to the agents module, so none count while it is off.
@@ -448,6 +458,9 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         rows.AddRange(BuildAgents.Running);
         return rows;
     }
+
+    /// The devices module's tint: the devices colour when it is set (null: the module's default blue).
+    private string? DevicesTint() => Settings.ModuleColors.TryGetValue("devices", out var hex) ? hex : null;
 
     /// The artwork image of a media key, or null when it is not cached (the last eight keys are).
     public System.Windows.Media.ImageSource? MediaArt(string key) => _mediaArt.Get(key);

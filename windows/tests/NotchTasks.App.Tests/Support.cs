@@ -8,12 +8,14 @@ using NotchTasks.Core;
 using NotchTasks.Core.Agents;
 using NotchTasks.Core.Asks;
 using NotchTasks.Core.Ci;
+using NotchTasks.Core.Devices;
 using NotchTasks.Core.Limits;
 using NotchTasks.Core.Media;
 using NotchTasks.Core.Modules;
 using NotchTasks.Core.Notch;
 using NotchTasks.Core.Settings;
 using NotchTasks.Services;
+using NotchTasks.Services.Devices;
 using NotchTasks.Services.Media;
 using NotchTasks.Services.Modules;
 
@@ -159,7 +161,8 @@ internal static class Fixture
             Path.Combine(AppPaths.Root, "NoGitLab"),
             Path.Combine(AppPaths.Root, "NoRunner"),
             () => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()),
-        Media: new NoMedia());
+        Media: new NoMedia(),
+        Devices: new NoDevices());
 
     /// The media seam with no SMTC: no session is listed, nothing is sent, and there is no artwork.
     public sealed class NoMedia : IMediaReader
@@ -188,6 +191,30 @@ internal static class Fixture
         public Task Seek(string source, double seconds) => Task.CompletedTask;
 
         public Task<byte[]?> Artwork(string source) => Task.FromResult<byte[]?>(null);
+    }
+
+    /// The device seam with no enumeration: no container is listed, and nothing is watched.
+    public sealed class NoDevices : IDeviceReader
+    {
+        public event Action Changed
+        {
+            add
+            {
+            }
+            remove
+            {
+            }
+        }
+
+        public void Start()
+        {
+        }
+
+        public void Stop()
+        {
+        }
+
+        public Task<IReadOnlyList<DeviceFact>> Read() => Task.FromResult<IReadOnlyList<DeviceFact>>(Array.Empty<DeviceFact>());
     }
 
     /// The GitHub seam with no network: every request is unanswered and there is no gh token.

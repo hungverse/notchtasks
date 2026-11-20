@@ -131,19 +131,28 @@ public partial class ToastView : UserControl
             CompactRight.Width = new GridLength(side);
             CompactGlyph.Content = GlyphOf(t.Glyph, tint, CompactGlyph.FontSize);
             var art = t.Art as ChargeArt;
-            CompactArt.Content = art is null ? null : new ChargeArtView(art, motion);
-            CompactArt.Visibility = VisibleIf(art is not null);
-            CompactGlyph.Visibility = VisibleIf(art is null);
+            var device = t.Art as DeviceArt;
+            CompactArt.Content = art is not null ? new ChargeArtView(art, motion)
+                : device is not null ? new DeviceArtView(device, tint, motion, CompactGlyph.FontSize)
+                : null;
+            CompactArt.Visibility = VisibleIf(art is not null || device is not null);
+            CompactGlyph.Visibility = VisibleIf(art is null && device is null);
             CompactText.Text = t.Compact ? t.Subtitle : t.Title;
             CompactText.Foreground = t.Compact ? tint : Brushes.White;
         }
 
+        // A device's art takes the lead glyph's slot in each look, at that slot's size (the top row does not grow).
+        var deviceArt = t.Art as DeviceArt;
         TopRow.Visibility = VisibleIf(look is ToastLook.Island or ToastLook.Banner);
-        TopGlyph.Content = GlyphOf(t.Glyph, tint, TopGlyph.FontSize);
+        TopGlyph.Content = deviceArt is not null && look is ToastLook.Island or ToastLook.Banner
+            ? new DeviceArtView(deviceArt, tint, motion, TopGlyph.FontSize)
+            : GlyphOf(t.Glyph, tint, TopGlyph.FontSize);
         BannerBar.Visibility = VisibleIf(banner);
         BannerBar.Background = tint;
         CardGlyph.Visibility = VisibleIf(look == ToastLook.Card);
-        CardGlyph.Content = GlyphOf(t.Glyph, tint, CardGlyph.FontSize);
+        CardGlyph.Content = deviceArt is not null && look == ToastLook.Card
+            ? new DeviceArtView(deviceArt, tint, motion, CardGlyph.FontSize)
+            : GlyphOf(t.Glyph, tint, CardGlyph.FontSize);
         TextRow.Margin = look == ToastLook.Card ? new Thickness(12) : new Thickness(18, 2, 18, banner ? 12 : 10);
         TitleText.Text = t.Title;
         TitleText.FontSize = banner ? 15 : 13;
