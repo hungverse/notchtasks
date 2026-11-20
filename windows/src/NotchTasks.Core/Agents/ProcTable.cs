@@ -65,6 +65,10 @@ public interface IProcessReader
 
     /// The full path of a process's program, or null when it cannot be read.
     string? ImagePath(ProcInfo p);
+
+    /// The working folder of a process (read from its PEB), or null when it cannot be read (access denied, a 32-bit process,
+    /// or the process has gone). A trailing separator is kept only at a drive root.
+    string? Cwd(ProcInfo p);
 }
 
 /// Pure helpers over the process table (proc.js normName, splitArgs, childrenOf) and the decoder for the system's

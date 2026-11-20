@@ -22,6 +22,7 @@ public sealed class ItemIconTests
         public string? CommandLine(ProcInfo p) => null;
 
         public string? ImagePath(ProcInfo p) => null;
+        public string? Cwd(ProcInfo p) => null;
     }
 
     [Fact]
@@ -55,6 +56,7 @@ public sealed class ItemIconTests
         public string? CommandLine(ProcInfo p) => null;
 
         public string? ImagePath(ProcInfo p) => Path;
+        public string? Cwd(ProcInfo p) => null;
     }
 
     [Fact]

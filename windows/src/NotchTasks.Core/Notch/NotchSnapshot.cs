@@ -1,4 +1,5 @@
 using NotchTasks.Core.Agents;
+using NotchTasks.Core.Ci;
 using NotchTasks.Core.Limits;
 
 namespace NotchTasks.Core.Notch;
@@ -17,6 +18,12 @@ public sealed record NotchSnapshot(
 {
     /// The agents that are working now, in the watch list's order (none unless the agents module is on).
     public IReadOnlyList<ItemState> Running { get; init; } = Array.Empty<ItemState>();
+
+    /// The Build & CI rows that are working now: the build row first, then the build watch items (none unless ci is on).
+    public IReadOnlyList<ItemState> BuildRunning { get; init; } = Array.Empty<ItemState>();
+
+    /// The Build & CI failure alerts, GitHub's first (none unless ci is on).
+    public IReadOnlyList<JobAlert> Alerts { get; init; } = Array.Empty<JobAlert>();
 
     public IReadOnlyList<ProviderLimits> Limits { get; init; } = Array.Empty<ProviderLimits>();
 

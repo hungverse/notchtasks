@@ -18,4 +18,16 @@ public sealed class ProcessReaderTests
         Assert.NotNull(commandLine);
         Assert.Contains("testhost", commandLine, StringComparison.OrdinalIgnoreCase);
     }
+
+    [Fact]
+    public void ProcessReader_CwdOfItself()
+    {
+        var reader = new ProcessReader();
+        var me = reader.Snapshot().ById[Environment.ProcessId];
+
+        var cwd = reader.Cwd(me);
+
+        Assert.NotNull(cwd);
+        Assert.Equal(Environment.CurrentDirectory.TrimEnd('\\'), cwd.TrimEnd('\\'), StringComparer.OrdinalIgnoreCase);
+    }
 }

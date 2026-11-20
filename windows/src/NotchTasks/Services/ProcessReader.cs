@@ -20,11 +20,20 @@ public sealed class ProcessReader : IProcessReader
     // The longest command line is 32767 UTF-16 characters, behind a UNICODE_STRING header (16 bytes on x64).
     private const int CommandLineBufferSize = 32767 * 2 + 64;
     private const int ImagePathChars = 1024;
+    private const uint ProcessVmRead = 0x0010;
+    private const int ProcessBasicInformation = 0;
+    private const int ProcessWow64Information = 26;
+    private const int BasicInformationSize = 48;     // PROCESS_BASIC_INFORMATION on x64
+    private const int PebBaseOffset = 8;             // PebBaseAddress in PROCESS_BASIC_INFORMATION
+    private const int PebProcessParametersOffset = 0x20;
+    private const int ParamsCurrentDirectoryOffset = 0x38;  // CURDIR: DosPath (UNICODE_STRING), then the handle
+    private const int MaxCwdBytes = 32767 * 2;
 
     private readonly object gate = new();
     private readonly object tableGate = new();
     private readonly Dictionary<(int Pid, long Start), string?> commandLines = new();
     private readonly Dictionary<(int Pid, long Start), string?> imagePaths = new();
+    private readonly Dictionary<(int Pid, long Start), string?> workingFolders = new();
 
     // One buffer for every poll, kept between polls so the table does not allocate on the large object heap every 2 s.
     // Only Snapshot uses it, under tableGate.
@@ -46,6 +55,8 @@ public sealed class ProcessReader : IProcessReader
     public string? CommandLine(ProcInfo p) => Cached(commandLines, p, ReadCommandLine);
 
     public string? ImagePath(ProcInfo p) => Cached(imagePaths, p, ReadImagePath);
+
+    public string? Cwd(ProcInfo p) => Cached(workingFolders, p, ReadWorkingFolder);
 
     /// Call with tableGate held.
     private ProcSnapshot? ReadProcessTable()
@@ -151,6 +162,105 @@ public sealed class ProcessReader : IProcessReader
         }
     }
 
+    /// The working folder from the process's PEB: RTL_USER_PROCESS_PARAMETERS.CurrentDirectory.DosPath, read with
+    /// ReadProcessMemory. A 32-bit (WOW64) process has another PEB layout and gives null, as does any failed read.
+    private static string? ReadWorkingFolder(ProcInfo p)
+    {
+        if (p.Pid <= 0 || !Environment.Is64BitProcess)
+        {
+            return null;
+        }
+        var handle = ProcessNative.OpenProcess(ProcessQueryLimitedInformation | ProcessVmRead, false, (uint)p.Pid);
+        if (handle == 0)
+        {
+            return null;
+        }
+        try
+        {
+            var wow64 = QueryBlock(handle, ProcessWow64Information, nint.Size);
+            if (wow64 is null || BitConverter.ToInt64(wow64, 0) != 0)
+            {
+                return null;
+            }
+            var basic = QueryBlock(handle, ProcessBasicInformation, BasicInformationSize);
+            if (basic is null)
+            {
+                return null;
+            }
+            var peb = BitConverter.ToInt64(basic, PebBaseOffset);
+            var paramsPointer = ReadMemory(handle, peb + PebProcessParametersOffset, nint.Size);
+            if (paramsPointer is null)
+            {
+                return null;
+            }
+            var parameters = BitConverter.ToInt64(paramsPointer, 0);
+            var curDir = ReadMemory(handle, parameters + ParamsCurrentDirectoryOffset, 16);
+            if (curDir is null)
+            {
+                return null;
+            }
+            var length = BitConverter.ToUInt16(curDir, 0);
+            var buffer = BitConverter.ToInt64(curDir, 8);
+            if (length == 0 || length > MaxCwdBytes || (length & 1) != 0)
+            {
+                return null;
+            }
+            var text = ReadMemory(handle, buffer, length);
+            return text is null ? null : TrimFolder(Encoding.Unicode.GetString(text));
+        }
+        finally
+        {
+            ProcessNative.CloseHandle(handle);
+        }
+    }
+
+    /// One NtQueryInformationProcess class, as its raw bytes, or null when the call fails.
+    private static byte[]? QueryBlock(nint handle, int infoClass, int size)
+    {
+        var buffer = new byte[size];
+        var pinned = GCHandle.Alloc(buffer, GCHandleType.Pinned);
+        try
+        {
+            var status = ProcessNative.NtQueryInformationProcess(handle, infoClass, pinned.AddrOfPinnedObject(), size, out _);
+            return status == StatusSuccess ? buffer : null;
+        }
+        finally
+        {
+            pinned.Free();
+        }
+    }
+
+    /// count bytes at address in the process, or null when the read fails or is short.
+    private static byte[]? ReadMemory(nint handle, long address, int count)
+    {
+        if (address <= 0 || count <= 0)
+        {
+            return null;
+        }
+        var buffer = new byte[count];
+        var pinned = GCHandle.Alloc(buffer, GCHandleType.Pinned);
+        try
+        {
+            var ok = ProcessNative.ReadProcessMemory(handle, (nint)address, pinned.AddrOfPinnedObject(), count, out var read);
+            return ok && read == count ? buffer : null;
+        }
+        finally
+        {
+            pinned.Free();
+        }
+    }
+
+    /// Drops trailing separators, except the one of a drive root ("C:\").
+    private static string TrimFolder(string path)
+    {
+        var end = path.Length;
+        while (end > 3 && path[end - 1] == '\\')
+        {
+            end--;
+        }
+        return path[..end];
+    }
+
     /// The cached value for p, read once with read. The OS call runs outside the lock.
     private string? Cached(Dictionary<(int Pid, long Start), string?> cache, ProcInfo p, Func<ProcInfo, string?> read)
     {
@@ -188,6 +298,10 @@ public sealed class ProcessReader : IProcessReader
             {
                 imagePaths.Remove(key);
             }
+            foreach (var key in workingFolders.Keys.Where(k => !live.Contains(k)).ToList())
+            {
+                workingFolders.Remove(key);
+            }
         }
     }
 }
@@ -200,6 +314,10 @@ internal static partial class ProcessNative
 
     [LibraryImport("ntdll.dll")]
     public static partial int NtQueryInformationProcess(nint process, int informationClass, nint buffer, int length, out int returnLength);
+
+    [LibraryImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool ReadProcessMemory(nint process, nint baseAddress, nint buffer, nint size, out nint bytesRead);
 
     [LibraryImport("kernel32.dll", SetLastError = true)]
     public static partial nint OpenProcess(uint desiredAccess, [MarshalAs(UnmanagedType.Bool)] bool inheritHandle, uint processId);

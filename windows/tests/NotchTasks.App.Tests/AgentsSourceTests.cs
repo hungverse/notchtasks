@@ -167,6 +167,7 @@ public sealed class AgentsSourceTests
         }
 
         public string? ImagePath(ProcInfo p) => null;
+        public string? Cwd(ProcInfo p) => null;
     }
 
     [Fact]

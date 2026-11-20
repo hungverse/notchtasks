@@ -28,6 +28,7 @@ public sealed class WatchingPaneTests
         public string? CommandLine(ProcInfo p) => null;
 
         public string? ImagePath(ProcInfo p) => null;
+        public string? Cwd(ProcInfo p) => null;
     }
 
     /// Writes the settings file with this items array, then loads the store over it.

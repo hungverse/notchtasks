@@ -5,6 +5,7 @@ using System.Windows.Threading;
 using NotchTasks.Core;
 using NotchTasks.Core.Agents;
 using NotchTasks.Core.Asks;
+using NotchTasks.Core.Ci;
 using NotchTasks.Core.Limits;
 using NotchTasks.Core.Modules;
 using NotchTasks.Core.Notch;
@@ -32,6 +33,8 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
     private readonly ThermalSource _thermalSource;
     private readonly AgentsSource _agentsSource;
     private readonly LimitsSource _limitsSource;
+    private readonly CiSource _ciSource;
+    private const int WorkerLogTail = 2_000_000;   // the bytes of a GitHub worker's log the module reads
     private AskWatcher? _watcher;
     /// The last list the watcher gave (SyncAsks), and Codex's questions from the agents source (SetCodexAsks).
     private IReadOnlyList<AgentAsk> _watched = Array.Empty<AgentAsk>();
@@ -67,6 +70,10 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         _codex = o.Codex ?? new CodexCli(HomeOf(o));
         _agentsSource = new AgentsSource(Agents, settings, agentReaders, Publish, SetCodexAsks);
         _limitsSource = new LimitsSource(LimitsModule, settings, limitReaders, _agentsSource, Publish);
+        BuildAgents = new AgentsModule(this, build: true);
+        Ci = new CiModule(this, CiState.Get, CiState.Set, settings.AddSeenTools,
+            path => RunnerLogs.ReadTail(path, WorkerLogTail));
+        _ciSource = new CiSource(Ci, BuildAgents, settings, o.Ci ?? CiReaders.Production(Processes, HomeOf(o)), Publish);
         Sensors = new SensorsModule(this,
             () => ActiveModules(settings).Contains("privacy"),
             () => ActiveModules(settings).Contains("calls"));
@@ -91,6 +98,13 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
 
     /// The AI limits (the snapshot's Limits). Its source runs while Claude, Codex or Antigravity is enabled and limits is on.
     public LimitsModule LimitsModule { get; }
+
+    /// The Build & CI module: its dev, file, runner and GitHub rows (the build row), its failure alerts and its toasts. Its source
+    /// (CiSource) runs while ci is on.
+    public CiModule Ci { get; }
+
+    /// The build watch items (the enabled items marked Build & CI, and the dev tools): their states, fed by the Build & CI source.
+    public AgentsModule BuildAgents { get; }
 
     /// The process table reader the agent icons use (this PC's, or the options' fake in a test).
     public IProcessReader Processes { get; }
@@ -384,6 +398,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
             ["calls"] = _sensorsSource,
             ["agents"] = _agentsSource,
             ["limits"] = _limitsSource,
+            ["ci"] = _ciSource,
         };
 
     /// The snapshot's ask count: the asks belong to the agents module, so none count while it is off.
@@ -400,9 +415,27 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         Health.Load)
         {
             Running = modules.Contains("agents") ? Agents.Running : Array.Empty<ItemState>(),
+            BuildRunning = modules.Contains("ci") ? BuildRunningRows() : Array.Empty<ItemState>(),
+            Alerts = modules.Contains("ci") ? Ci.Alerts : Array.Empty<JobAlert>(),
             Limits = modules.Contains("limits") ? LimitsModule.Limits : Array.Empty<ProviderLimits>(),
             LimitWarn = Settings.LimitWarn,
         };
+    }
+
+    /// The Build & CI rows that are working: the build row's working jobs first, then the build watch items' working rows.
+    private IReadOnlyList<ItemState> BuildRunningRows()
+    {
+        var rows = new List<ItemState>();
+        if (Ci.BuildState is { } build)
+        {
+            var working = build.Jobs.Where(j => j.Working).ToList();
+            if (working.Count > 0)
+            {
+                rows.Add(new ItemState(build.Item, working));
+            }
+        }
+        rows.AddRange(BuildAgents.Running);
+        return rows;
     }
 
     /// The call card's mute button: sets the default mic's mute, and publishes the new reading.

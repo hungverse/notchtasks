@@ -7,6 +7,7 @@ using System.Windows.Threading;
 using NotchTasks.Core;
 using NotchTasks.Core.Agents;
 using NotchTasks.Core.Asks;
+using NotchTasks.Core.Ci;
 using NotchTasks.Core.Limits;
 using NotchTasks.Core.Modules;
 using NotchTasks.Core.Notch;
@@ -147,7 +148,24 @@ internal static class Fixture
         ClaudeCli: new NoClaudeCli(),
         Home: Path.Combine(AppPaths.Root, "Home"),
         LmsPsJson: _ => null,
-        Codex: new NoCodex());
+        Codex: new NoCodex(),
+        Ci: new CiReaders(
+            new NoProcesses(),
+            new NoGitHub(),
+            Path.Combine(AppPaths.Root, "Home"),
+            string.Empty,
+            Path.Combine(AppPaths.Root, "NoGitLab"),
+            Path.Combine(AppPaths.Root, "NoRunner"),
+            () => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()));
+
+    /// The GitHub seam with no network: every request is unanswered and there is no gh token.
+    public sealed class NoGitHub : IGitHubApi
+    {
+        public Task<System.Text.Json.JsonDocument?> Get(string route, string? token) =>
+            Task.FromResult<System.Text.Json.JsonDocument?>(null);
+
+        public Task<string?> Token() => Task.FromResult<string?>(null);
+    }
 
     /// The Codex seam with no codex: nothing is queued, and the window is never found.
     public sealed class NoCodex : ICodexCli
@@ -194,6 +212,7 @@ internal static class Fixture
         public string? CommandLine(ProcInfo p) => null;
 
         public string? ImagePath(ProcInfo p) => null;
+        public string? Cwd(ProcInfo p) => null;
     }
 
     /// A process table with no processes: nothing is matched and no command line is read.
@@ -204,6 +223,7 @@ internal static class Fixture
         public string? CommandLine(ProcInfo p) => null;
 
         public string? ImagePath(ProcInfo p) => null;
+        public string? Cwd(ProcInfo p) => null;
     }
 
     /// A sqlite that answers nothing: no Antigravity conversations.
