@@ -360,6 +360,41 @@ public class AgentsModuleTests
     }
 
     [Fact]
+    public void BuildMode_TakesOnlyBuildItems_AndAnnouncesThemByName()
+    {
+        var announcer = new RecordingAnnouncer();
+        var module = new AgentsModule(announcer, build: true);
+        var cpu = new CpuMeter();
+        var msbuild = new WatchItem("msb-1", "MSBuild", WatchKind.Process, Process: "msbuild", Build: true, Threshold: 20);
+        var disabled = msbuild with { Id = "msb-2", Enabled = false };
+        IReadOnlyList<WatchItem> items = new[] { msbuild, disabled, Claude, WatchItems.BuildItem };
+
+        module.Update(Inputs(items, Snap(P(500, 1, "msbuild")), cpu, doneAfter: 1), 0);
+        module.Update(Inputs(items, Snap(P(500, 1, "msbuild", Ticks(50, 1000))), cpu, doneAfter: 1), 1000);
+        module.Update(Inputs(items, Snap(P(500, 1, "msbuild", Ticks(50, 1000) * 2)), cpu, doneAfter: 1), 2000);
+        module.Update(Inputs(items, Snap(P(500, 1, "msbuild", Ticks(50, 1000) * 2)), cpu, doneAfter: 1), 4000);
+        // last busy at 2 s, still counted as working until 4 s; gone for 20 s after its last working sample (4 s)
+        module.Update(Inputs(items, Snap(P(500, 1, "msbuild", Ticks(50, 1000) * 2)), cpu, doneAfter: 1), 25_000);
+
+        // only the enabled build item is a state; the Claude item and the disabled copy are left out
+        Assert.Equal("msb-1", Assert.Single(module.States).Item.Id);
+        Assert.Equal("MSBuild done", Assert.Single(announcer.Toasts).Title);
+    }
+
+    [Fact]
+    public void AgentsMode_StillSkipsBuildItems()
+    {
+        var module = new AgentsModule(new RecordingAnnouncer());
+        var cpu = new CpuMeter();
+        var msbuild = new WatchItem("msb-1", "MSBuild", WatchKind.Process, Process: "msbuild", Build: true);
+
+        module.Update(Inputs(new[] { msbuild, Claude }, Snap(P(500, 1, "msbuild")), cpu,
+            claude: new[] { new Job("s1", "proj", "Waiting", false) }), 0);
+
+        Assert.Equal(new[] { "claude-1" }, module.States.Select(s => s.Item.Id).ToArray());
+    }
+
+    [Fact]
     public void ItemState_ValueEquality_ComparesJobs()
     {
         var job = new Job("s1", "proj", "Waiting", false);

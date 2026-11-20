@@ -284,6 +284,45 @@ public sealed class SettingsStoreTests : IDisposable
         }
     }
 
+    [Fact]
+    public void AddSeenTools_NewestFirstUniqueCap200_WritesOnlyWhenNew()
+    {
+        using var store = SettingsStore.Load(_file);
+        store.AddSeenTools(new[] { "Gradle", "Gradle", "MSBuild" });
+        Assert.Equal(new[] { "Gradle", "MSBuild" }, store.SeenTools);
+
+        store.AddSeenTools(new[] { "Gradle" });
+        Assert.Equal(new[] { "Gradle", "MSBuild" }, store.SeenTools);
+
+        store.AddSeenTools(new[] { "Docker" });
+        Assert.Equal(new[] { "Docker", "Gradle", "MSBuild" }, store.SeenTools);
+
+        var many = Enumerable.Range(0, 250).Select(i => $"tool{i}");
+        store.AddSeenTools(many);
+        Assert.Equal(200, store.SeenTools.Count);
+        Assert.Equal("tool0", store.SeenTools[0]);
+    }
+
+    [Fact]
+    public void SetToolIcon_ValidatesAndRemoves()
+    {
+        using var store = SettingsStore.Load(_file);
+        var symbol = new JsonObject { ["symbol"] = "hammer", ["color"] = "#30d158", ["right"] = true, ["fg"] = null };
+
+        Assert.Null(store.SetToolIcon("Gradle", symbol));
+        Assert.True(store.ToolIcons.ContainsKey("Gradle"));
+        Assert.Equal("hammer", (string?)store.ToolIcons["Gradle"]["symbol"]);
+        Assert.Equal("#30D158", (string?)store.ToolIcons["Gradle"]["color"]);
+        Assert.True((bool?)store.ToolIcons["Gradle"]["right"]);
+
+        // a bad shape is refused and nothing is saved
+        Assert.NotNull(store.SetToolIcon("MSBuild", new JsonObject { ["color"] = "red" }));
+        Assert.False(store.ToolIcons.ContainsKey("MSBuild"));
+
+        Assert.Null(store.SetToolIcon("Gradle", null));
+        Assert.Empty(store.ToolIcons);
+    }
+
     [Theory]
     [InlineData("auto", "#00F5D4", "#123456", "#123456")]
     [InlineData("auto", "#00F5D4", null, "#0A84FF")]

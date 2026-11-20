@@ -40,15 +40,19 @@ public sealed class AgentsModule
     private const string LmStudioBundleId = "ai.elementlabs.lmstudio";
 
     private readonly IAnnouncer _announce;
+    private readonly bool _build;
     private readonly Dictionary<string, long> _busyAt = new(StringComparer.Ordinal);
     private readonly Dictionary<string, Tracked> _workingSince = new(StringComparer.Ordinal);
     private IReadOnlyList<ItemState> _states = Array.Empty<ItemState>();
     private IReadOnlyList<ItemState> _running = Array.Empty<ItemState>();
 
-    /// The toasts for finished jobs go to the announcer.
-    public AgentsModule(IAnnouncer announce)
+    /// The toasts for finished jobs go to the announcer. With build, the module takes only the enabled build items
+    /// (InBuild: Build & CI rows and items marked as build tools), which the Build & CI module shows through this instance.
+    /// Without it, those items are left out (they are the Build & CI module's).
+    public AgentsModule(IAnnouncer announce, bool build = false)
     {
         _announce = announce;
+        _build = build;
     }
 
     /// The items with their jobs, in the order of the watch list. Empty while agents are off.
@@ -84,8 +88,8 @@ public sealed class AgentsModule
         var result = new List<ItemState>();
         foreach (var item in input.Items)
         {
-            // Build items wait for the Build & CI module (3c)
-            if (!item.Enabled || WatchItems.InBuild(item))
+            // Build items belong to the build instance (CiSource, 3c) and the others to the agents instance
+            if (!item.Enabled || WatchItems.InBuild(item) != _build)
             {
                 continue;
             }

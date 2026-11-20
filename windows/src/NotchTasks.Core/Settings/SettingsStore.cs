@@ -23,6 +23,14 @@ public sealed class SettingsStore : INotifyPropertyChanged, IDisposable
     };
 
     private static readonly Regex LanguagePattern = new(@"^([a-zA-Z]{2,3}(-[A-Za-z]{2,4})?)?$");
+    private static readonly Regex BadgeIdPattern = new(@"^[\w-]{1,64}$");
+
+    /// Longest tool name in toolIcons and seenTools, and how many seen tools are kept (settings.js).
+    private const int ToolNameMax = 60;
+    private const int SeenToolsMax = 200;
+    private const int BadgeSymbolMax = 80;
+    private const int BadgeTextMax = 8;
+    private static readonly string[] BadgeShapes = { "circle", "rounded" };
 
     private static readonly string[] ExpandModes = { "hover", "click" };
     private static readonly string[] Sizes = { "compact", "regular" };
@@ -318,6 +326,257 @@ public sealed class SettingsStore : INotifyPropertyChanged, IDisposable
             }
         }
     }
+
+    /// The tool icons (settings "toolIcons"): tool name to its badge. An entry that fails the badge check is left out.
+    public IReadOnlyDictionary<string, JsonObject> ToolIcons
+    {
+        get
+        {
+            var map = new Dictionary<string, JsonObject>(StringComparer.Ordinal);
+            lock (_gate)
+            {
+                if (_root["toolIcons"] is JsonObject saved)
+                {
+                    foreach (var (tool, node) in saved)
+                    {
+                        if (TextOf(tool, ToolNameMax) && node is JsonObject badge && CheckBadge(badge, out var clean) is null)
+                        {
+                            map[tool] = clean;
+                        }
+                    }
+                }
+            }
+            return map;
+        }
+    }
+
+    /// The tools the Build & CI module has seen, newest first (settings "seenTools"): unique, at most 200.
+    public IReadOnlyList<string> SeenTools
+    {
+        get
+        {
+            lock (_gate)
+            {
+                var seen = new List<string>();
+                if (_root["seenTools"] is JsonArray array)
+                {
+                    foreach (var node in array)
+                    {
+                        if (TryText(node, out var tool) && TextOf(tool, ToolNameMax) && !seen.Contains(tool))
+                        {
+                            seen.Add(tool);
+                        }
+                    }
+                }
+                return seen.Take(SeenToolsMax).ToList();
+            }
+        }
+    }
+
+    /// Adds tools the Build & CI module saw. New ones go first, in the order given, unique, at most 200 in all. Writes
+    /// only when something is new.
+    public void AddSeenTools(IEnumerable<string> tools)
+    {
+        var current = SeenTools;
+        var fresh = tools
+            .Where(tool => TextOf(tool, ToolNameMax) && !current.Contains(tool))
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+        if (fresh.Count == 0)
+        {
+            return;
+        }
+
+        var array = new JsonArray();
+        foreach (var tool in fresh.Concat(current).Distinct(StringComparer.Ordinal).Take(SeenToolsMax))
+        {
+            array.Add((JsonNode?)JsonValue.Create(tool));
+        }
+        Set("seenTools", array);
+    }
+
+    /// Saves the badge of a tool, or removes the tool's badge when badge is null. Returns null when saved; otherwise the
+    /// reason the badge was refused, and nothing is saved.
+    public string? SetToolIcon(string tool, JsonObject? badge)
+    {
+        if (!TextOf(tool, ToolNameMax))
+        {
+            return L10n.L("A tool name is up to 60 characters.");
+        }
+
+        JsonObject icons;
+        lock (_gate)
+        {
+            icons = _root["toolIcons"] is JsonObject saved ? (JsonObject)saved.DeepClone() : new JsonObject();
+        }
+
+        if (badge is null)
+        {
+            icons.Remove(tool);
+        }
+        else
+        {
+            var refusal = CheckBadge(badge, out var clean);
+            if (refusal is not null)
+            {
+                return refusal;
+            }
+            icons[tool] = clean;
+        }
+        Set("toolIcons", icons);
+        return null;
+    }
+
+    /// The badge check of electron/src/core/settings.js (badge): every field is kept with its default. Returns null when the
+    /// badge passes, else the field that does not; clean is the checked badge.
+    private static string? CheckBadge(JsonObject badge, out JsonObject clean)
+    {
+        clean = new JsonObject();
+
+        clean["id"] = TryText(badge["id"], out var id) && BadgeIdPattern.IsMatch(id) ? id : Guid.NewGuid().ToString();
+
+        if (badge["symbol"] is null)
+        {
+            clean["symbol"] = "star";
+        }
+        else if (TryText(badge["symbol"], out var symbol) && TextOf(symbol, BadgeSymbolMax))
+        {
+            clean["symbol"] = symbol;
+        }
+        else
+        {
+            return BadRefusal("symbol");
+        }
+
+        clean["image"] = null;
+        if (badge["image"] is not null)
+        {
+            if (!TryText(badge["image"], out var image) || image.Length > 500 || !Path.IsPathFullyQualified(image))
+            {
+                return BadRefusal("image");
+            }
+            clean["image"] = image;
+        }
+
+        string? refusedField = null;
+        clean["text"] = OptionalText(badge, "text", BadgeTextMax, ref refusedField);
+        clean["color"] = OptionalHex(badge, "color", ref refusedField);
+        clean["fg"] = OptionalHex(badge, "fg", ref refusedField);
+        clean["sprite"] = OptionalText(badge, "sprite", BadgeSymbolMax, ref refusedField);
+        if (refusedField is not null)
+        {
+            return BadRefusal(refusedField);
+        }
+
+        foreach (var flag in new[] { "plain", "border", "right" })
+        {
+            if (badge[flag] is not null && !TryFlag(badge[flag], out _))
+            {
+                return BadRefusal(flag);
+            }
+        }
+        clean["plain"] = badge["plain"] is null ? null : JsonValue.Create(TryFlag(badge["plain"], out var plain) && plain);
+        clean["border"] = JsonValue.Create(TryFlag(badge["border"], out var border) && border);
+        clean["right"] = JsonValue.Create(TryFlag(badge["right"], out var right) && right);
+
+        if (badge["shape"] is null)
+        {
+            clean["shape"] = "circle";
+        }
+        else if (TryText(badge["shape"], out var shape) && BadgeShapes.Contains(shape))
+        {
+            clean["shape"] = shape;
+        }
+        else
+        {
+            return BadRefusal("shape");
+        }
+
+        clean["frames"] = null;
+        if (badge["frames"] is not null)
+        {
+            if (!TryNumber(badge["frames"], 1, 120, out var frames))
+            {
+                return BadRefusal("frames");
+            }
+            clean["frames"] = JsonValue.Create(Math.Round(frames));
+        }
+
+        clean["fps"] = null;
+        if (badge["fps"] is not null)
+        {
+            if (!TryNumber(badge["fps"], 1, 30, out var fps))
+            {
+                return BadRefusal("fps");
+            }
+            clean["fps"] = JsonValue.Create(fps);
+        }
+        return null;
+    }
+
+    private static string BadRefusal(string field) => L10n.L("A badge field is not valid: {0}", field);
+
+    /// A text field that may be absent or null. A text that is present but too long, or not a string, sets refusedField
+    /// (the first refused field is kept).
+    private static string? OptionalText(JsonObject badge, string key, int max, ref string? refusedField)
+    {
+        if (badge[key] is null)
+        {
+            return null;
+        }
+        if (TryText(badge[key], out var text) && TextOf(text, max))
+        {
+            return text;
+        }
+        refusedField ??= key;
+        return null;
+    }
+
+    /// A #RRGGBB colour field that may be absent or null, kept upper case. A bad value sets refusedField.
+    private static string? OptionalHex(JsonObject badge, string key, ref string? refusedField)
+    {
+        if (badge[key] is null)
+        {
+            return null;
+        }
+        if (TryText(badge[key], out var hex) && hex.Length == 7 && hex[0] == '#' && hex.Skip(1).All(Uri.IsHexDigit))
+        {
+            return hex.ToUpperInvariant();
+        }
+        refusedField ??= key;
+        return null;
+    }
+
+    private static bool TryFlag(JsonNode? node, out bool flag)
+    {
+        flag = false;
+        return node is JsonValue v && v.TryGetValue(out flag);
+    }
+
+    private static bool TryText(JsonNode? node, out string text)
+    {
+        if (node is JsonValue v && v.TryGetValue(out string? s) && s is not null)
+        {
+            text = s;
+            return true;
+        }
+        text = string.Empty;
+        return false;
+    }
+
+    private static bool TryNumber(JsonNode? node, double min, double max, out double number)
+    {
+        if (node is JsonValue v && v.TryGetValue(out double n) && double.IsFinite(n) && n >= min && n <= max)
+        {
+            number = n;
+            return true;
+        }
+        number = 0;
+        return false;
+    }
+
+    /// Length in characters, counted as code points (an emoji is one), as electron's text check does.
+    private static bool TextOf(string text, int max) => text.EnumerateRunes().Count() <= max;
 
     private string Choice(string key, string fallback, IReadOnlyCollection<string> allowed) =>
         TryGet(key, out string? value) && value is not null && allowed.Contains(value) ? value : fallback;
