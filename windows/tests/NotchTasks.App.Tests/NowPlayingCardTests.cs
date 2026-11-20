@@ -42,6 +42,23 @@ public sealed class NowPlayingCardTests
     }
 
     [Fact]
+    public void Controls_AreTheMacsFilledGlyphs()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            var (state, card) = CardFor(Session(status: MediaStatus.Playing));
+
+            // Playing shows the filled pause; previous and next are the filled double triangles, drawn as paths.
+            Assert.Equal("", Assert.IsType<string>(card.PlayPauseButton.Content));
+            Assert.IsType<System.Windows.Shapes.Path>(card.PreviousButton.Content);
+            Assert.IsType<System.Windows.Shapes.Path>(card.NextButton.Content);
+            Assert.Equal(30, card.PlayPauseButton.Width);
+            state.Dispose();
+        });
+    }
+
+    [Fact]
     public void Card_DisabledButtons_FollowCan()
     {
         Sta.Run(() =>

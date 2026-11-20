@@ -21,8 +21,8 @@ public sealed class NowPlayingCard : Border
     private const double ArtSize = 46;
     private const double ArtCorner = 0.22;   // the art's corner radius, as a share of its size (Mac)
     private const double AppIconSize = 12;
-    private const double ControlSize = 24;
-    private const double PlayPauseGlyphSize = 16;
+    private const double ControlSize = 30;
+    private const double PlayPauseGlyphSize = 18;
     private const double SkipGlyphSize = 12;
     private const double DisabledOpacity = 0.35;
 
@@ -129,9 +129,9 @@ public sealed class NowPlayingCard : Border
         Grid.SetColumn(text, 1);
         top.Children.Add(text);
 
-        PreviousButton = ControlButton("previous", SkipGlyphSize, new Thickness(0, 0, 6, 0));
+        PreviousButton = ControlButton("previous", SkipGlyphSize, new Thickness(0, 0, 4, 0));
         PreviousButton.Click += (_, _) => _state?.MediaControl(MediaCommand.Previous);
-        PlayPauseButton = ControlButton("play", PlayPauseGlyphSize, new Thickness(0, 0, 6, 0));
+        PlayPauseButton = ControlButton("play", PlayPauseGlyphSize, new Thickness(0, 0, 4, 0));
         PlayPauseButton.Click += (_, _) => _state?.MediaControl(MediaCommand.Toggle);
         NextButton = ControlButton("next", SkipGlyphSize, new Thickness(0));
         NextButton.Click += (_, _) => _state?.MediaControl(MediaCommand.Next);
@@ -205,6 +205,18 @@ public sealed class NowPlayingCard : Border
     private static string Caption(NowPlaying shown) =>
         string.Join(" · ", new[] { shown.Artist, shown.AppName }.Where(s => !string.IsNullOrWhiteSpace(s)));
 
+    /// The Mac's filled double triangle for previous and next: 16 by 11 DIP, a pair of triangles pointing one way.
+    private static readonly Geometry NextSkip = Freeze(Geometry.Parse("M0,0 L8,5.5 L0,11 Z M8,0 L16,5.5 L8,11 Z"));
+    private static readonly Geometry PreviousSkip = Freeze(Geometry.Parse("M16,0 L8,5.5 L16,11 Z M8,0 L0,5.5 L8,11 Z"));
+
+    /// A control's content: the filled triangles for previous and next (vector, as the Mac's), the Segoe glyph for play and pause.
+    private static object ControlContent(string name) => name switch
+    {
+        "previous" => new System.Windows.Shapes.Path { Data = PreviousSkip, Fill = Brushes.White },
+        "next" => new System.Windows.Shapes.Path { Data = NextSkip, Fill = Brushes.White },
+        _ => ModuleGlyphs.Get(name),
+    };
+
     private static Button ControlButton(string glyph, double size, Thickness margin) => new()
     {
         Width = ControlSize,
@@ -217,7 +229,7 @@ public sealed class NowPlayingCard : Border
         FontFamily = SegoeFamily,
         FontSize = size,
         FontWeight = FontWeights.Bold,
-        Content = ModuleGlyphs.Get(glyph),
+        Content = ControlContent(glyph),
         Cursor = Cursors.Hand,
         Focusable = false,
         FocusVisualStyle = null,
@@ -228,7 +240,7 @@ public sealed class NowPlayingCard : Border
     {
         button.IsEnabled = can;
         button.Opacity = can ? 1 : DisabledOpacity;
-        button.Content = ModuleGlyphs.Get(glyph);
+        button.Content = ControlContent(glyph);
         button.FontSize = size;
     }
 

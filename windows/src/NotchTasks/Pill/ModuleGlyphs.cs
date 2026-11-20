@@ -38,8 +38,8 @@ public static class ModuleGlyphs
         ["media"] = "\uE8D6",        // music note: Now Playing's chip and art when there is no app icon (Segoe Fluent Icons E8D6)
         ["previous"] = "\uE892",     // previous track (Segoe Fluent Icons E892)
         ["next"] = "\uE893",         // next track (Segoe Fluent Icons E893)
-        ["play"] = "\uE768",         // play (Segoe Fluent Icons E768)
-        ["pause"] = "\uE769",        // pause (Segoe Fluent Icons E769)
+        ["play"] = "\uF5B0",         // play, filled (Segoe Fluent Icons F5B0): the Mac's play.fill
+        ["pause"] = "\uF8AE",        // pause, filled (Segoe Fluent Icons F8AE): the Mac's pause.fill
         // Devices (the Mac's device symbols): the Segoe glyphs where one exists. The AirPods use the headphones glyph, as the font has
         // no AirPods. The codepoints are not rendered-checked on this PC; the controller's run shows them.
         ["headphones"] = "\uE7F6",   // headphones (Segoe Fluent Icons E7F6, the devices module's own glyph)
