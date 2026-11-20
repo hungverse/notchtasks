@@ -1,6 +1,7 @@
 using System.Windows.Threading;
 using NotchTasks.Core.Devices;
 using NotchTasks.Core.Modules;
+using NotchTasks.Services;
 using NotchTasks.Services.Devices;
 
 namespace NotchTasks.Services.Modules;
@@ -76,13 +77,17 @@ public sealed class DevicesSource : IModuleSource
     }
 
     /// Any thread: the coalescing timer starts on the dispatcher if it is not running. A burst of events is one read.
-    private void OnReaderChanged() => _dispatcher.BeginInvoke(new Action(() =>
+    private void OnReaderChanged()
     {
-        if (_started && !_coalesce.IsEnabled)
+        UsageCounters.DeviceChanged();
+        _dispatcher.BeginInvoke(new Action(() =>
         {
-            _coalesce.Start();
-        }
-    }));
+            if (_started && !_coalesce.IsEnabled)
+            {
+                _coalesce.Start();
+            }
+        }));
+    }
 
     /// Asks for a read: a full one (the containers and their kinds) or a battery-only one. A full request covers a battery one.
     private void Request(bool full)
@@ -117,6 +122,7 @@ public sealed class DevicesSource : IModuleSource
                 _wantedFull = false;
                 _wantedBattery = false;
                 var generation = _generation;
+                UsageCounters.DeviceRead();
                 var found = await Task.Run(() => full ? _reader.Read() : _reader.ReadBatteries()).ConfigureAwait(true);
                 if (!_started || generation != _generation || found is null)
                 {

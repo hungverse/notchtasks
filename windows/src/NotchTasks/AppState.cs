@@ -91,6 +91,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         _ciSource = new CiSource(Ci, BuildAgents, settings, o.Ci ?? CiReaders.Production(Processes, HomeOf(o)), Publish);
         _mediaSource = new MediaSource(Media, o.Media ?? new SmtcReader(), Publish, _mediaArt);
         Devices = new DevicesModule(this, DevicesTint);
+        UsageCounters.Start();  // the once-a-minute counts, when NOTCHTASKS_FRAMELOG is set (nothing runs otherwise)
         _devicesSource = new DevicesSource(Devices, o.Devices ?? new ContainerReader(), Publish);
         Shelf = new ShelfStore(
             key => StateJson.Get(AppPaths.StateFile, key),
@@ -258,6 +259,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
     /// Rebuilds Snapshot from the modules and the asks, and raises NotchChanged.
     public void Publish()
     {
+        UsageCounters.Publish();
         Snapshot = BuildSnapshot();
         NotchChanged?.Invoke();
     }
@@ -532,7 +534,8 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
     }
 
     /// The devices module's tint: the devices colour when it is set (null: the module's default blue).
-    private string? DevicesTint() => Settings.ModuleColors.TryGetValue("devices", out var hex) ? hex : null;
+    private string? DevicesTint() =>
+        Settings.ModuleColors.TryGetValue("devices", out var hex) && !string.IsNullOrWhiteSpace(hex) ? hex : null;
 
     /// The artwork image of a media key, or null when it is not cached (the last eight keys are).
     public System.Windows.Media.ImageSource? MediaArt(string key) => _mediaArt.Get(key);
@@ -781,6 +784,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         }
         _disposed = true;
         Settings.Changed -= OnSettingsChanged;
+        UsageCounters.Stop();
         _watcher?.Dispose();
         StopMirror();  // the camera is released, and no frame is delivered after this
         _host.StopAll();

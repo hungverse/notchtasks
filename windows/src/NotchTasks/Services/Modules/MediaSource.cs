@@ -5,6 +5,7 @@ using System.Windows.Threading;
 using NotchTasks.Core.Media;
 using NotchTasks.Core.Modules;
 using NotchTasks.Pill;
+using NotchTasks.Services;
 using NotchTasks.Services.Media;
 
 namespace NotchTasks.Services.Modules;
@@ -228,6 +229,7 @@ public sealed class MediaSource : IModuleSource
             {
                 _wanted = false;
                 var generation = _generation;
+                UsageCounters.MediaRead();
                 var sessions = await Task.Run(() => _reader.Read()).ConfigureAwait(true);
                 if (!_started || generation != _generation)
                 {

@@ -11,6 +11,7 @@ using NotchTasks.Core.Limits;
 using NotchTasks.Core.Media;
 using NotchTasks.Core.Notch;
 using NotchTasks.Pill.Sections;
+using NotchTasks.Services;
 
 namespace NotchTasks.Pill;
 
@@ -421,6 +422,7 @@ public static class ChipView
             {
                 MoveContent(newPanel, oldPanel);
                 oldPanel.SetValue(SignatureProperty, signature);
+                UsageCounters.ChipRebuild();
                 placed.Add((old2, false));
                 continue;
             }
@@ -430,6 +432,7 @@ public static class ChipView
             }
             panel.SetValue(KeyProperty, key);
             panel.SetValue(SignatureProperty, signature);
+            UsageCounters.ChipRebuild();
             placed.Add((panel, true));
         }
 

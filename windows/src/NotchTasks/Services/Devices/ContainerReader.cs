@@ -50,6 +50,7 @@ public sealed class ContainerReader : IDeviceReader
     private bool _enumerated;
     private Action? _changed;
     private IReadOnlyList<DeviceFact> _known = Array.Empty<DeviceFact>();  // the last full read's facts, in its order
+    private readonly Dictionary<string, DateTimeOffset> _addedAt = new(StringComparer.Ordinal);  // when each container's Added came
     private int _epoch;  // every Stop: a read that started under an older one stores nothing
 
     public event Action Changed
@@ -85,9 +86,24 @@ public sealed class ContainerReader : IDeviceReader
         {
             var watcher = DeviceInformation.CreateWatcher(ContainerQuery, ContainerProperties, DeviceInformationKind.DeviceContainer);
             // Each closure holds its own watcher: an event from a watcher that Stop has already dropped is ignored.
-            watcher.Added += (_, _) => Notify(watcher);
-            watcher.Updated += (_, _) => Notify(watcher);
-            watcher.Removed += (_, _) => Notify(watcher);
+            watcher.Added += (_, info) =>
+            {
+                Remember(info.Id);
+                Notify(watcher);
+            };
+            watcher.Updated += (_, update) =>
+            {
+                // Only a container's connection or name changes what the list shows; other property updates are not a change.
+                if (ListChanged(update.Properties))
+                {
+                    Notify(watcher);
+                }
+            };
+            watcher.Removed += (_, info) =>
+            {
+                Forget(info.Id);
+                Notify(watcher);
+            };
             watcher.EnumerationCompleted += (_, _) =>
             {
                 lock (_gate)
@@ -125,6 +141,7 @@ public sealed class ContainerReader : IDeviceReader
             _watcher = null;
             _enumerated = false;
             _known = Array.Empty<DeviceFact>();
+            _addedAt.Clear();
             _epoch++;
         }
         if (watcher is null)
@@ -168,7 +185,7 @@ public sealed class ContainerReader : IDeviceReader
                 }
                 var name = container.Name;
                 var old = known.FirstOrDefault(f => f.Id == container.Id && f.Name == name);
-                if (old is null || DeviceCache.NeedsClassify(old))
+                if (old is null || DeviceCache.NeedsClassify(old, AddedRecently(container.Id)))
                 {
                     // A new container, or one that was not an accessory last time: its nodes may have appeared since (a device
                     // plugged in), so they are read again. A known non-accessory whose nodes still fail keeps its last fact.
@@ -240,7 +257,40 @@ public sealed class ContainerReader : IDeviceReader
     {
         var nodes = await NodesOf(container.Id);
         var classes = nodes.Select(n => (n.Id, ClassOf(n))).ToList();
-        return new DeviceFact(container.Id, container.Name, DeviceKinds.Categories(container.Name, classes), LevelOf(nodes));
+        return new DeviceFact(container.Id, container.Name, DeviceKinds.Categories(container.Name, classes), LevelOf(nodes))
+        {
+            HasClassNode = classes.Any(c => c.Item2 is not null),
+        };
+    }
+
+    /// Whether a watcher update changes what the list shows: a container's connection or its name. Other updates are not a change.
+    public static bool ListChanged(IReadOnlyDictionary<string, object> updated) =>
+        updated.ContainsKey(ConnectedKey) || updated.ContainsKey(NameKey);
+
+    /// Remembers when a container was added, for the hot-plug window (DeviceCache.HotPlugWindow).
+    private void Remember(string id)
+    {
+        lock (_gate)
+        {
+            _addedAt[id] = DateTimeOffset.UtcNow;
+        }
+    }
+
+    private void Forget(string id)
+    {
+        lock (_gate)
+        {
+            _addedAt.Remove(id);
+        }
+    }
+
+    /// Whether a container's Added event came within the hot-plug window.
+    private bool AddedRecently(string id)
+    {
+        lock (_gate)
+        {
+            return _addedAt.TryGetValue(id, out var at) && DateTimeOffset.UtcNow - at < DeviceCache.HotPlugWindow;
+        }
     }
 
     /// A container's battery from its device nodes (the only query a battery re-read makes).

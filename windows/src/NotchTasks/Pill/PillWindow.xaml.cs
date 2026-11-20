@@ -332,8 +332,9 @@ public partial class PillWindow : Window
             return;
         }
         SetPollRate(IsNearShape(point));  // a change to near warms the card; leaving the near zone cools it again
-        // Safety net: a drop prompt whose DragLeave never came clears once the pointer is off the pill with no button down.
-        if (ShelfCard.ClearsTarget(_state.ShelfTargeted, IsOverShape(point), Win32.GetAsyncKeyState(Win32.VK_LBUTTON) < 0))
+        // Safety net: a drop prompt whose DragLeave never came clears once the pointer is off the pill with no button down. Only a
+        // prompt that is up needs the check, so the hit test and the button read are skipped the rest of the time.
+        if (_state.ShelfTargeted && ShelfCard.ClearsTarget(true, IsOverShape(point), Win32.GetAsyncKeyState(Win32.VK_LBUTTON) < 0))
         {
             _state.ShelfTargeted = false;
         }
