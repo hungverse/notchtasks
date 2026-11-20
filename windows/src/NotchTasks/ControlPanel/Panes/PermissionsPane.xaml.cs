@@ -99,21 +99,28 @@ public partial class PermissionsPane : SettingsPane
                 continue;
             }
 
-            Groups.Children.Add(new TextBlock
+            // The title is the card's first child, inside it, as the Mac's group; the rows are divided by hairlines.
+            var rowsPanel = new StackPanel();
+            rowsPanel.Children.Add(new TextBlock
             {
-                Style = (Style)FindResource("SectionHeader"),
+                Style = (Style)FindResource("GroupTitle"),
                 Text = GroupTitle(group),
             });
-            var rowsPanel = new StackPanel();
             for (var i = 0; i < rows.Count; i++)
             {
                 if (i > 0)
                 {
-                    rowsPanel.Children.Add(new Separator { Margin = new Thickness(16, 0, 16, 0) });
+                    rowsPanel.Children.Add(new Separator { Margin = new Thickness(10, 0, 10, 0) });
                 }
                 rowsPanel.Children.Add(rows[i].Id == PermissionItems.TemperaturesId ? BuildTemperatureRow(rows[i]) : BuildRow(rows[i]));
             }
-            Groups.Children.Add(new Border { Style = (Style)FindResource("Card"), Child = rowsPanel });
+            Groups.Children.Add(new Border
+            {
+                Style = (Style)FindResource("Card"),
+                Padding = new Thickness(6),
+                Margin = new Thickness(0, 0, 0, 12),
+                Child = rowsPanel,
+            });
         }
     }
 
@@ -136,7 +143,8 @@ public partial class PermissionsPane : SettingsPane
             _ => null,
         }));
 
-        var line = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(40, 0, 16, 12) };
+        // Under the row's text: the tile (30) and its gap (12) and the row's padding (10) are the indent.
+        var line = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(52, 0, 10, 10) };
         string? message = _helper.State switch
         {
             HelperState.Declined => L10n.L("Not turned on: administrator was not allowed"),
@@ -161,22 +169,22 @@ public partial class PermissionsPane : SettingsPane
         {
             case HelperState.Off:
                 line.Children.Add(signIn);
-                line.Children.Add(ActionButton(L10n.L("Turn on"), () => TurnOnFromClick(signIn.IsChecked == true)));
+                line.Children.Add(ActionButton(L10n.L("Turn on"), primary: true, () => TurnOnFromClick(signIn.IsChecked == true)));
                 break;
             case HelperState.Declined:
             case HelperState.Paused:
                 line.Children.Add(signIn);
-                line.Children.Add(ActionButton(L10n.L("Try again"), () => TurnOnFromClick(signIn.IsChecked == true)));
+                line.Children.Add(ActionButton(L10n.L("Try again"), primary: false, () => TurnOnFromClick(signIn.IsChecked == true)));
                 break;
             case HelperState.On:
-                line.Children.Add(ActionButton(L10n.L("Turn off"), TurnOffFromClick));
+                line.Children.Add(ActionButton(L10n.L("Turn off"), primary: false, TurnOffFromClick));
                 break;
         }
 
         // The sign-in helper is installed (its marker is there) in any state: Turn off is offered, so an orphaned task can be removed.
         if (_helper.HasSignInTask && _helper.State != HelperState.On)
         {
-            line.Children.Add(ActionButton(L10n.L("Turn off"), TurnOffFromClick));
+            line.Children.Add(ActionButton(L10n.L("Turn off"), primary: false, TurnOffFromClick));
         }
 
         if (text.Children.Count > 0)
@@ -222,50 +230,47 @@ public partial class PermissionsPane : SettingsPane
     /// stateText replaces the state's label (the Temperatures row shows On).
     private UIElement BuildRow(PermItem item, string? stateText = null)
     {
+        // The tile is the Mac's 30 DIP square in the state's colour, with the glyph in white.
         var tile = new Border
         {
-            Width = 28,
-            Height = 28,
-            CornerRadius = new CornerRadius(7),
+            Style = (Style)FindResource("IconTileLarge"),
+            Background = new SolidColorBrush(StateColor(item.State)),
             Margin = new Thickness(0, 0, 12, 0),
             VerticalAlignment = VerticalAlignment.Center,
             Child = new TextBlock
             {
                 Text = item.Glyph,
-                FontFamily = new FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets"),
-                FontSize = 14,
-                Foreground = Brushes.White,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center,
+                Style = (Style)FindResource("IconGlyphLarge"),
             },
         };
-        tile.SetResourceReference(Border.BackgroundProperty, StateBrush(item.State, filled: true));
 
+        // The title and the detail (at most two lines, as the Mac's).
         var text = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
         text.Children.Add(new TextBlock
         {
             Text = item.Title,
-            FontWeight = FontWeights.Medium,
+            FontSize = 14,
+            FontWeight = FontWeights.SemiBold,
             TextWrapping = TextWrapping.Wrap,
         });
-        text.Children.Add(new TextBlock
+        var detail = new TextBlock
         {
-            Style = (Style)FindResource("CardNote"),
-            Margin = new Thickness(0, 2, 0, 0),
             Text = item.Detail,
-        });
-
-        var state = new TextBlock
-        {
-            Text = stateText ?? PermissionItems.Label(item.State),
             FontSize = 12,
-            FontWeight = FontWeights.SemiBold,
-            Margin = new Thickness(12, 0, 12, 0),
-            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(0, 2, 0, 0),
+            TextWrapping = TextWrapping.Wrap,
+            TextTrimming = TextTrimming.CharacterEllipsis,
+            MaxHeight = 34,
         };
-        state.SetResourceReference(TextBlock.ForegroundProperty, StateBrush(item.State, filled: false));
+        detail.SetResourceReference(TextBlock.ForegroundProperty, "TextFillColorSecondaryBrush");
+        text.Children.Add(detail);
 
-        var grid = new Grid { Margin = new Thickness(16, 10, 16, 10) };
+        // The state, as a status badge in the state's colour.
+        var state = ControlPanelLook.Badge(stateText ?? PermissionItems.Label(item.State), StateColor(item.State));
+        state.Margin = new Thickness(12, 0, 12, 0);
+        state.VerticalAlignment = VerticalAlignment.Center;
+
+        var grid = new Grid { Margin = new Thickness(10, 8, 10, 8) };
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
@@ -304,19 +309,20 @@ public partial class PermissionsPane : SettingsPane
         }
 
         var settings = SettingsUri(item.Id);
+        // The one that grants is prominent; the one that takes back (Revoke, Turn off, Try again) is quiet, as the Mac's.
         if (settings is not null && item.State is PermState.Denied or PermState.NotAsked)
         {
-            return ActionButton(L10n.L("Open Settings"), () => SystemActions.OpenSettings(settings));
+            return ActionButton(L10n.L("Open Settings"), primary: true, () => SystemActions.OpenSettings(settings));
         }
         if (item.Id == "firewall" && item.State == PermState.NotAsked)
         {
-            return ActionButton(L10n.L("Allow"), button => AllowFirewall(button));
+            return ActionButton(L10n.L("Allow"), primary: true, button => AllowFirewall(button));
         }
         if (AgentKinds.Parse(item.Id.StartsWith("hook.", StringComparison.Ordinal) ? item.Id[5..] : null) is { } kind)
         {
             return item.State == PermState.Granted
-                ? ActionButton(L10n.L("Revoke"), () => ChangeHook(kind, on: false))
-                : ActionButton(L10n.L("Allow"), () => ChangeHook(kind, on: true));
+                ? ActionButton(L10n.L("Revoke"), primary: false, () => ChangeHook(kind, on: false))
+                : ActionButton(L10n.L("Allow"), primary: true, () => ChangeHook(kind, on: true));
         }
         return null;
     }
@@ -330,11 +336,13 @@ public partial class PermissionsPane : SettingsPane
         _ => null,
     };
 
-    private static Button ActionButton(string text, Action<Button> click)
+    /// A row's button: the Mac's prominent style when it grants (primary), else the quiet one.
+    private static Button ActionButton(string text, bool primary, Action<Button> click)
     {
         var button = new Button
         {
             Content = text,
+            Style = (Style)Application.Current.FindResource(primary ? "PrimaryButton" : "SecondaryButton"),
             Margin = new Thickness(12, 0, 0, 0),
             VerticalAlignment = VerticalAlignment.Center,
         };
@@ -342,8 +350,8 @@ public partial class PermissionsPane : SettingsPane
         return button;
     }
 
-    private static Button ActionButton(string text, Action click) =>
-        ActionButton(text, _ => click());
+    private static Button ActionButton(string text, bool primary, Action click) =>
+        ActionButton(text, primary, _ => click());
 
     /// Saves start at login, as the switch says. A failure is shown and the switch takes the real state back.
     private void ChangeLogin(bool on)
@@ -426,13 +434,13 @@ public partial class PermissionsPane : SettingsPane
         _ => L10n.L("Not in use"),
     };
 
-    /// The theme brush of a state: green when allowed, red when denied, amber when not granted. While checking, the tile is
-    /// grey and the state text is secondary. Filled is the tile's background; otherwise the state text's foreground.
-    private static string StateBrush(PermState state, bool filled) => state switch
+    /// The Mac's colour of a state: green when granted, red when denied, orange when not asked, grey while checking or
+    /// not checked. The row's tile and its badge use it.
+    private static Color StateColor(PermState state) => state switch
     {
-        PermState.Granted => "SystemFillColorSuccessBrush",
-        PermState.Denied => "SystemFillColorCriticalBrush",
-        PermState.NotAsked => "SystemFillColorCautionBrush",
-        _ => filled ? "ControlStrongFillColorDefaultBrush" : "TextFillColorSecondaryBrush",
+        PermState.Granted => ControlPanelLook.Green,
+        PermState.Denied => ControlPanelLook.Red,
+        PermState.NotAsked => ControlPanelLook.Orange,
+        _ => ControlPanelLook.Grey,
     };
 }

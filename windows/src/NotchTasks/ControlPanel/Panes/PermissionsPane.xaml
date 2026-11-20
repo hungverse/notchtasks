@@ -6,12 +6,15 @@
   <StackPanel>
     <TextBlock Style="{StaticResource PaneTitle}" Text="{l:L Permissions}" />
     <TextBlock Style="{StaticResource PaneNote}" Text="{l:L Only grant permissions for features you use. Turn a feature off completely on the Modules page.}" />
-    <Button x:Name="RefreshButton" HorizontalAlignment="Left" Margin="0,12,0,0" Content="{l:L Refresh}" />
 
-    <!-- The groups (Needed, Allowed, Not used), each a section header over its card; built by the pane. -->
-    <StackPanel x:Name="Groups" />
+    <!-- The groups (Needed now, Granted, Not in use): each is one card, its title first; built by the pane. -->
+    <StackPanel x:Name="Groups" Margin="0,16,0,0" />
 
-    <TextBlock x:Name="ErrorText" Style="{StaticResource CardNote}" Margin="0,12,0,0"
+    <TextBlock x:Name="ErrorText" Style="{StaticResource CardNote}" Margin="0,4,0,0"
                Foreground="{DynamicResource SystemFillColorCriticalBrush}" Visibility="Collapsed" />
+
+    <!-- Refresh sits at the foot, as the Mac's. -->
+    <Button x:Name="RefreshButton" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Left" Margin="0,16,0,0"
+            Content="{l:L Refresh}" />
   </StackPanel>
 </local:SettingsPane>
