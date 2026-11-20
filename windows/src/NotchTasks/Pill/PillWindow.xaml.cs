@@ -711,10 +711,29 @@ public partial class PillWindow : Window
         if (!SameChildren(sections))
         {
             _sectionRebuilds++;
-            SectionList.Children.Clear();
-            foreach (var section in sections)
+            // A section that is gone is removed at once: the shape's spring already moves. A section that is new fades in (no scale).
+            var wanted = new HashSet<object>(sections, ReferenceEqualityComparer.Instance);
+            for (var i = SectionList.Children.Count - 1; i >= 0; i--)
             {
-                SectionList.Children.Add(section);
+                if (!wanted.Contains(SectionList.Children[i]))
+                {
+                    SectionList.Children.RemoveAt(i);
+                }
+            }
+            for (var i = 0; i < sections.Count; i++)
+            {
+                var section = sections[i];
+                if (SectionList.Children.Contains(section))
+                {
+                    if (SectionList.Children.IndexOf(section) != i)
+                    {
+                        SectionList.Children.Remove(section);
+                        SectionList.Children.Insert(i, section);
+                    }
+                    continue;
+                }
+                SectionList.Children.Insert(i, section);
+                PillMotion.Enter(section, scale: false, _state.Settings.Motion, SystemParameters.ClientAreaAnimation);
             }
         }
         for (var i = 0; i < sections.Count; i++)

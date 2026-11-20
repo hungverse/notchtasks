@@ -21,6 +21,9 @@ public static class ChipView
     private const string SegoeFont = "Segoe Fluent Icons, Segoe MDL2 Assets";
     private static readonly FontFamily SegoeFamily = new(SegoeFont);  // made once: a FontFamily per glyph was a cost each rebuild
     private const string ChipTag = "chip";  // the Tag of a chip's panel in a wing: what a rebuild removes
+    /// The chip and side a panel was made for (its key): a fill replaces a panel of the same key in place, with no motion.
+    private static readonly DependencyProperty KeyProperty = DependencyProperty.RegisterAttached(
+        "ChipKey", typeof(string), typeof(ChipView), new PropertyMetadata(null));
     private static readonly Color AskOrange = Color.FromRgb(0xFF, 0x9F, 0x0A);
     private static readonly Color CallGreen = Color.FromRgb(0x30, 0xD1, 0x58);  // the Mac's green: a call's time
     private static readonly Color CallRed = Color.FromRgb(0xFF, 0x45, 0x3A);    // the Mac's red: a call's time while muted
@@ -225,41 +228,72 @@ public static class ChipView
     /// left and its trail on the right; the others sit whole in the wing ChipBoard.Sides puts them in. Returns how many chips there are.
     public static int FillWings(StackPanel left, StackPanel right, AppState state, Color? accent) =>
         Fill(left, right, ChipBoard.Chips(state.Snapshot), state.Settings.Placements, state.Settings.ModuleColors, accent,
-            DateTimeOffset.Now, state.Processes, state.Settings.ToolIcons);
+            DateTimeOffset.Now, state.Processes, state.Settings.ToolIcons, state.Settings.Motion, SystemParameters.ClientAreaAnimation);
 
-    /// FillWings with its inputs given: the same placement, order and badge rule. Returns how many chips there are.
+    /// FillWings with its inputs given: the same placement, order and badge rule. Returns how many chips there are. A chip that
+    /// is new enters (PillMotion.Enter); a chip that is gone exits after its fade; a chip updated in place is replaced without
+    /// motion. The badges are never touched.
     public static int Fill(StackPanel left, StackPanel right, IReadOnlyList<Chip> chips, IReadOnlyDictionary<string, string> placements,
         IReadOnlyDictionary<string, string> colors, Color? accent, DateTimeOffset now, IProcessReader? processes,
-        IReadOnlyDictionary<string, JsonObject>? toolIcons = null)
+        IReadOnlyDictionary<string, JsonObject>? toolIcons = null, string motion = "smooth", bool animationsOn = true)
     {
-        RemoveChips(left);
-        RemoveChips(right);
         var (leftChips, rightChips, single) = ChipBoard.Sides(chips, placements);
+        var leftPanels = new List<(string Key, FrameworkElement Panel)>();
+        var rightPanels = new List<(string Key, FrameworkElement Panel)>();
         if (single is { } lone)
         {
-            AddTo(left, lone, accent, colors, now, lead: true, trail: false, rightWing: false, processes, toolIcons);
-            AddTo(right, lone, accent, colors, now, lead: false, trail: true, rightWing: true, processes, toolIcons);
+            Collect(leftPanels, lone, accent, colors, now, lead: true, trail: false, side: "L", processes, toolIcons);
+            Collect(rightPanels, lone, accent, colors, now, lead: false, trail: true, side: "R", processes, toolIcons);
         }
         foreach (var chip in leftChips)
         {
-            AddTo(left, chip, accent, colors, now, lead: true, trail: true, rightWing: false, processes, toolIcons);
+            Collect(leftPanels, chip, accent, colors, now, lead: true, trail: true, side: "L", processes, toolIcons);
         }
         foreach (var chip in rightChips)
         {
-            AddTo(right, chip, accent, colors, now, lead: true, trail: true, rightWing: true, processes, toolIcons);
+            Collect(rightPanels, chip, accent, colors, now, lead: true, trail: true, side: "R", processes, toolIcons);
         }
+        Reconcile(left, leftPanels, rightWing: false, motion, animationsOn);
+        Reconcile(right, rightPanels, rightWing: true, motion, animationsOn);
         return chips.Count;
     }
 
-    /// Adds a chip's panel to a wing. A left wing's chips go after its badges; a right wing's chips go before its badges, after
-    /// the chips already there, so their order holds.
-    private static void AddTo(StackPanel wing, Chip chip, Color? accent, IReadOnlyDictionary<string, string> colors,
-        DateTimeOffset now, bool lead, bool trail, bool rightWing, IProcessReader? processes,
-        IReadOnlyDictionary<string, JsonObject>? toolIcons)
+    /// Makes a chip's panel for one wing and keys it by chip and side, so the next fill can tell it is the same chip.
+    private static void Collect(List<(string Key, FrameworkElement Panel)> panels, Chip chip, Color? accent,
+        IReadOnlyDictionary<string, string> colors, DateTimeOffset now, bool lead, bool trail, string side,
+        IProcessReader? processes, IReadOnlyDictionary<string, JsonObject>? toolIcons)
     {
         if (Panel(chip, accent, colors, now, lead, trail, processes, toolIcons) is { } panel)
         {
             panel.Tag = ChipTag;
+            panels.Add(($"{chip.Kind}|{chip.Module}|{chip.Id}|{side}", panel));
+        }
+    }
+
+    /// Puts a wing's chip panels in place. The chips it held before and still holds are replaced with their new panels, with no
+    /// motion. A chip it no longer holds fades out where it is, and is removed when the fade ends. A new chip enters with scale.
+    /// A left wing's chips go after its badges; a right wing's chips go before its badges, after the chips already there.
+    private static void Reconcile(StackPanel wing, List<(string Key, FrameworkElement Panel)> desired, bool rightWing,
+        string motion, bool animationsOn)
+    {
+        var wanted = desired.Select(d => d.Key).ToHashSet(StringComparer.Ordinal);
+        var previous = wing.Children.OfType<FrameworkElement>().Where(e => e.Tag is ChipTag).ToList();
+        var held = previous.Where(e => !PillMotion.IsExiting(e)).Select(KeyOf).OfType<string>().ToHashSet(StringComparer.Ordinal);
+        foreach (var element in previous)
+        {
+            var key = KeyOf(element);
+            if (key is not null && wanted.Contains(key))
+            {
+                wing.Children.Remove(element);  // replaced by its panel below
+            }
+            else if (!PillMotion.IsExiting(element))
+            {
+                PillMotion.Exit(wing, element, motion, animationsOn);
+            }
+        }
+        foreach (var (key, panel) in desired)
+        {
+            panel.SetValue(KeyProperty, key);
             if (rightWing)
             {
                 wing.Children.Insert(ChipCount(wing), panel);
@@ -268,22 +302,17 @@ public static class ChipView
             {
                 wing.Children.Add(panel);
             }
-        }
-    }
-
-    /// How many chip panels a wing holds. In a right wing they are its first children, so this is where the next one goes.
-    private static int ChipCount(StackPanel wing) => wing.Children.OfType<FrameworkElement>().Count(e => e.Tag is ChipTag);
-
-    private static void RemoveChips(StackPanel wing)
-    {
-        for (var i = wing.Children.Count - 1; i >= 0; i--)
-        {
-            if (wing.Children[i] is FrameworkElement { Tag: ChipTag })
+            if (!held.Contains(key))
             {
-                wing.Children.RemoveAt(i);
+                PillMotion.Enter(panel, scale: true, motion, animationsOn);
             }
         }
     }
+
+    private static string? KeyOf(FrameworkElement element) => element.GetValue(KeyProperty) as string;
+
+    /// How many chip panels a wing holds. In a right wing they are its first children, so this is where the next one goes.
+    private static int ChipCount(StackPanel wing) => wing.Children.OfType<FrameworkElement>().Count(e => e.Tag is ChipTag);
 
     /// The chip's colour: its module's colour when it has one, else the chosen accent (null for "auto", as the Mac's accentColor
     /// is nil then), else the chip's own default (the timer's is orange). The ask chip is always orange, as the Mac's.
