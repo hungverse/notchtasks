@@ -9,8 +9,14 @@
         Background="{DynamicResource ApplicationBackgroundBrush}"
         Foreground="{DynamicResource TextFillColorPrimaryBrush}">
   <Window.Resources>
-    <!-- Every CheckBox in the Control Panel is the Mac's switch (Controls.xaml). Other windows keep the Fluent box. -->
-    <Style TargetType="CheckBox" BasedOn="{StaticResource Switch}" />
+    <ResourceDictionary>
+      <!-- The Mac's blue accent for every accent-filled control (MacAccent.xaml). -->
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="MacAccent.xaml" />
+      </ResourceDictionary.MergedDictionaries>
+      <!-- Every CheckBox in the Control Panel is the Mac's switch (Controls.xaml). Other windows keep the Fluent box. -->
+      <Style TargetType="CheckBox" BasedOn="{StaticResource Switch}" />
+    </ResourceDictionary>
   </Window.Resources>
   <Grid>
     <Grid.ColumnDefinitions>

@@ -6,6 +6,14 @@
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
         Background="{DynamicResource ApplicationBackgroundBrush}"
         Foreground="{DynamicResource TextFillColorPrimaryBrush}">
+  <!-- The Mac's blue accent for the switches and buttons of this dialog (MacAccent.xaml). -->
+  <Window.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="MacAccent.xaml" />
+      </ResourceDictionary.MergedDictionaries>
+    </ResourceDictionary>
+  </Window.Resources>
   <StackPanel Margin="20">
     <TextBlock x:Name="TitleText" Style="{StaticResource SectionHeader}" Margin="0,0,0,12" FontSize="18" />
 

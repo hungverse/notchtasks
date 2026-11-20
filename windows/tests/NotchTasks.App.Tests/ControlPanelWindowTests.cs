@@ -10,6 +10,29 @@ public sealed class ControlPanelWindowTests
 {
     public static IEnumerable<object[]> Panes() => Enum.GetValues<PaneId>().Select(pane => new object[] { pane });
 
+    [Fact]
+    public void Accent_IsTheMacsSystemBlue()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            var window = Fixture.Create<ControlPanelWindow>(state, PaneId.Overview);
+            try
+            {
+                Fixture.ShowOffScreen(window);
+
+                // The Mac's blue, not the Windows accent: the window's own MacAccent.xaml wins over the theme's brush.
+                var brush = Assert.IsType<System.Windows.Media.SolidColorBrush>(window.FindResource("AccentFillColorDefaultBrush"));
+                Assert.Equal(System.Windows.Media.Color.FromRgb(0x0A, 0x84, 0xFF), brush.Color);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
     [Theory]
     [MemberData(nameof(Panes))]
     public void EveryPaneBuildsOnSelection(PaneId pane)
