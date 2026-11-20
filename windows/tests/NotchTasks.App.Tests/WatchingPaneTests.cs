@@ -114,6 +114,27 @@ public sealed class WatchingPaneTests
     }
 
     [Fact]
+    public void BuildBox_IsAfterTheAgentBlock() => Sta.Run(() =>
+    {
+        using var root = new TempRoot();
+        var store = StoreWith("[]");
+        var pane = NewPane(store, new FakeProcesses(), root);
+        var window = Show(pane);
+        try
+        {
+            // the AI agent card and the Build & CI box share the pane's stack; the box comes after the agent card (Mac)
+            var agentCard = (FrameworkElement)Fixture.Named<StackPanel>(pane, "Rows").Parent;
+            var stack = Assert.IsType<StackPanel>(agentCard.Parent);
+            var build = Fixture.Named<ContentControl>(pane, "BuildHost");
+            Assert.True(stack.Children.IndexOf(build) > stack.Children.IndexOf(agentCard));
+        }
+        finally
+        {
+            window.Close();
+        }
+    });
+
+    [Fact]
     public void AddPreset_AddsOnce_MarksAdded()
     {
         Sta.Run(() =>

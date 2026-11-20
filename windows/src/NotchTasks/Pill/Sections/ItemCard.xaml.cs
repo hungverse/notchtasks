@@ -310,11 +310,15 @@ public partial class ItemCard : UserControl
     /// Opens a job's link in its program. Only web links open: a job's text must not start a program or a file.
     internal static void OpenUrl(string url)
     {
-        if (Uri.TryCreate(url, UriKind.Absolute, out var uri) && uri.Scheme is "http" or "https")
+        if (IsWebLink(url) && Uri.TryCreate(url, UriKind.Absolute, out var uri))
         {
             Launch(new ProcessStartInfo(uri.AbsoluteUri) { UseShellExecute = true });
         }
     }
+
+    /// True for an absolute http or https link: the only kind a job or a toast may open in its program.
+    internal static bool IsWebLink(string url) =>
+        Uri.TryCreate(url, UriKind.Absolute, out var uri) && uri.Scheme is "http" or "https";
 
     private static void Launch(ProcessStartInfo start)
     {
@@ -450,7 +454,7 @@ public partial class ItemCard : UserControl
 
             var badge = ToolBadge(job, toolIcons);
             var kind = badge is not null ? "badge" : LeadKind(job.Symbol);
-            if (kind != _leadKind || _lead.Content is null || (badge is not null && (!ReferenceEquals(badge, _leadBadge) || _leadTint != tint)))
+            if (kind != _leadKind || _lead.Content is null || (badge is not null && (!JsonNode.DeepEquals(badge, _leadBadge) || _leadTint != tint)))
             {
                 _lead.Content = badge is not null ? BadgeGlyph.Create(badge, RowBadgeSize, tint) : BuildLead(job.Symbol, brush);
                 _leadKind = kind;

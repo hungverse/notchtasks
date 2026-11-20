@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using NotchTasks.ControlPanel;
 using NotchTasks.Core.Notch;
+using NotchTasks.Pill.Sections;
 using NotchTasks.Services;
 
 namespace NotchTasks.Pill;
@@ -29,7 +30,7 @@ public static class ToastActions
             {
                 Launch(new ProcessStartInfo("explorer.exe", $"/select,\"{path}\"") { UseShellExecute = true });
             }
-            else
+            else if (ItemCard.IsWebLink(url))
             {
                 Launch(new ProcessStartInfo(url) { UseShellExecute = true });
             }
@@ -39,6 +40,10 @@ public static class ToastActions
             ErrorLog.Write(e);
         }
     }
+
+    /// True when a toast's link may be opened: a file on this PC (shown in its folder) or an http(s) link. Anything else, such as
+    /// a program or another scheme, is not opened from a toast (P3c M7).
+    public static bool IsOpenable(string url) => IsFile(url, out _) || ItemCard.IsWebLink(url);
 
     /// True when the url is a file on this PC; path is its local path. A full local path (C:\..., or a UNC path) is a file, as
     /// the downloads toast's url is; a file:// URI is one too. Anything else is a link.

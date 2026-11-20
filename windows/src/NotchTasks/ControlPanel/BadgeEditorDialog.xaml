@@ -24,7 +24,7 @@
                Foreground="{DynamicResource SystemFillColorCriticalBrush}" Visibility="Collapsed" />
 
     <DockPanel Margin="0,16,0,0">
-      <Button x:Name="DoneButton" DockPanel.Dock="Right" MinWidth="90" IsDefault="True" Content="{l:L Done}" />
+      <Button x:Name="DoneButton" DockPanel.Dock="Right" MinWidth="90" IsDefault="True" IsCancel="True" Content="{l:L Done}" />
       <Button x:Name="ResetButton" MinWidth="90" Content="{l:L Reset}" />
     </DockPanel>
   </StackPanel>

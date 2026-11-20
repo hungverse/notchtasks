@@ -153,6 +153,24 @@ public sealed class CiCardsTests
     }
 
     [Fact]
+    public void ItemCard_ToolIconLead_KeptWhenThePublishCarriesAnEqualBadge()
+    {
+        Sta.Run(() =>
+        {
+            var card = new ItemCard();
+            card.Update(Build("b1", tool: "Gradle"), Array.Empty<LimitWindow>(), Tint, null, Now,
+                new Dictionary<string, JsonObject> { ["Gradle"] = Badge() });
+            var lead = card.RowLeads[0];
+
+            // the next publish has the same badge content in a new object (settings are read again): the lead stays
+            card.Update(Build("b1", tool: "Gradle"), Array.Empty<LimitWindow>(), Tint, null, Now,
+                new Dictionary<string, JsonObject> { ["Gradle"] = Badge() });
+
+            Assert.Same(lead, card.RowLeads[0]);
+        });
+    }
+
+    [Fact]
     public void ItemCard_SymbolLead_WhenNoToolIcon()
     {
         Sta.Run(() =>

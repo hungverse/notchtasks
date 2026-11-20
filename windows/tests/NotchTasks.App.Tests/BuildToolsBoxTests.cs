@@ -201,6 +201,25 @@ public sealed class BuildToolsBoxTests
     });
 
     [Fact]
+    public void Dialog_EscapeCloses_ThroughTheDoneButton() => Sta.Run(() =>
+    {
+        using var root = new TempRoot();
+        var store = StoreWith("{}");
+        store.SetToolIcon("Docker", new JsonObject { ["symbol"] = DevRules.DefaultSymbol("Docker"), ["shape"] = "rounded" });
+        var dialog = new BadgeEditorDialog(store, "Docker", store.ToolIcons["Docker"]);
+        Fixture.ShowOffScreen(dialog);
+        try
+        {
+            // Esc presses the window's cancel button; Done closes the dialog
+            Assert.True(Fixture.Named<Button>(dialog, "DoneButton").IsCancel);
+        }
+        finally
+        {
+            dialog.Close();
+        }
+    });
+
+    [Fact]
     public void Dialog_EditAndResetWriteToolIcon() => Sta.Run(() =>
     {
         using var root = new TempRoot();
