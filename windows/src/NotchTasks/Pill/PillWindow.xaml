@@ -16,7 +16,6 @@
         FontFamily="Segoe UI Variable Text, Segoe UI"
         Foreground="White">
   <Window.Resources>
-    <pill:RadiusConverter x:Key="RadiusConverter" />
     <!-- The pill keeps its own look: ThemeMode None above stops the Windows theme from restyling it, so its scrollbars and
          tooltips are styled here, in the Mac's dark pill colours, for both light and dark Windows. -->
     <Style TargetType="ScrollBar">
@@ -64,37 +63,39 @@
     </Style>
   </Window.Resources>
   <Grid Background="Transparent">
-    <!-- The shadow and the glow sit behind the pill as siblings, so a sprite frame never redraws their effects. -->
-    <Border x:Name="ShadowShape"
-            Width="{Binding Width, ElementName=PillShape}" Height="{Binding Height, ElementName=PillShape}"
-            HorizontalAlignment="Center" VerticalAlignment="Top"
-            Background="Black" Opacity="0" IsHitTestVisible="False"
-            CornerRadius="{Binding Radius, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource RadiusConverter}}">
-    </Border>
-    <Border x:Name="GlowBacking" Visibility="Collapsed" BorderThickness="1.2" IsHitTestVisible="False"
-            Width="{Binding Width, ElementName=PillShape}" Height="{Binding Height, ElementName=PillShape}"
-            HorizontalAlignment="Center" VerticalAlignment="Top"
-            CornerRadius="{Binding Radius, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource RadiusConverter}}">
-    </Border>
-    <!-- The pill: its Width, Height and CornerRadius animate. Its rectangle is the hover area, even when it is invisible. -->
-    <Border x:Name="PillShape"
-            Width="200" Height="32"
-            HorizontalAlignment="Center" VerticalAlignment="Top"
-            Background="Black"
-            CornerRadius="{Binding Radius, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource RadiusConverter}}">
+    <!-- The shadow and the glow sit behind the pill as siblings, so a sprite frame never redraws their effects. They are
+         paths on the pill's one shared shape (Data set in code), in the layout's size, so they never re-measure while it moves. -->
+    <Path x:Name="ShadowShape" Fill="Black" Opacity="0" IsHitTestVisible="False"
+          HorizontalAlignment="Center" VerticalAlignment="Top" Stretch="None" />
+    <Path x:Name="GlowBacking" Visibility="Collapsed" StrokeThickness="1.2" IsHitTestVisible="False"
+          HorizontalAlignment="Center" VerticalAlignment="Top" Stretch="None" />
+    <!-- The pill: a grid of the layout's size, never animated. Its black is ShapeFill, drawn on the shared shape; the content is
+         clipped to that shape. Its rectangle is the hover area, even when it is invisible. -->
+    <Grid x:Name="PillShape"
+          HorizontalAlignment="Center" VerticalAlignment="Top" Background="Transparent">
+      <Path x:Name="ShapeFill" Fill="Black" HorizontalAlignment="Left" VerticalAlignment="Top" Stretch="None" />
       <Grid x:Name="PillContent">
-        <Border x:Name="Tint" Opacity="0" IsHitTestVisible="False" Background="Black"
-                CornerRadius="{Binding Radius, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource RadiusConverter}}" />
+        <Path x:Name="Tint" Opacity="0" IsHitTestVisible="False" Fill="Black"
+              HorizontalAlignment="Left" VerticalAlignment="Top" Stretch="None" />
         <Grid>
           <Grid x:Name="TopRow" Height="32" VerticalAlignment="Top">
             <StackPanel x:Name="LeftWing" Orientation="Horizontal" HorizontalAlignment="Left"
-                        VerticalAlignment="Center" Margin="12,0,0,0" />
+                        VerticalAlignment="Center" Margin="12,0,0,0">
+              <StackPanel.RenderTransform>
+                <TranslateTransform x:Name="LeftWingShift" />
+              </StackPanel.RenderTransform>
+            </StackPanel>
             <StackPanel x:Name="RightWing" Orientation="Horizontal" HorizontalAlignment="Right"
-                        VerticalAlignment="Center" Margin="0,0,12,0" />
+                        VerticalAlignment="Center" Margin="0,0,12,0">
+              <StackPanel.RenderTransform>
+                <TranslateTransform x:Name="RightWingShift" />
+              </StackPanel.RenderTransform>
+            </StackPanel>
           </Grid>
           <!-- The open pill: the sections (the agents' cards, and the others), or the placeholder when none has anything.
                Hit-testable only while open. -->
-          <Grid x:Name="CardLayer" Margin="0,32,0,0" Opacity="0" IsHitTestVisible="False">
+          <!-- Its height is set per open (Animate), and it sits at the top below the top row, so the quick bar at its bottom is the shape's. -->
+          <Grid x:Name="CardLayer" Margin="0,32,0,0" VerticalAlignment="Top" Opacity="0" Visibility="Hidden" IsHitTestVisible="False">
             <!-- The header: the summary at the left, in grey (Mac expandedView). -->
             <TextBlock x:Name="HeaderSummary" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="16,8,0,0"
                        FontSize="11" FontWeight="SemiBold" Foreground="Gray" />
@@ -126,10 +127,11 @@
           </Grid>
         </Grid>
         <!-- The toast: the pill's top shape while a toast shows. Hit-testable only while it shows. -->
-        <pill:ToastView x:Name="ToastBox" Opacity="0" IsHitTestVisible="False" />
-        <Border x:Name="GlowRing" Visibility="Collapsed" IsHitTestVisible="False" BorderThickness="1.2"
-                CornerRadius="{Binding Radius, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource RadiusConverter}}" />
+        <!-- Hidden until a toast shows: it is measured while hidden, so the toast's height is still known. -->
+        <pill:ToastView x:Name="ToastBox" Opacity="0" Visibility="Hidden" IsHitTestVisible="False" />
+        <Path x:Name="GlowRing" Visibility="Collapsed" IsHitTestVisible="False" StrokeThickness="1.2"
+              HorizontalAlignment="Left" VerticalAlignment="Top" Stretch="None" />
       </Grid>
-    </Border>
+    </Grid>
   </Grid>
 </Window>

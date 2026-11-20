@@ -40,17 +40,20 @@ public partial class PillWindow : Window
     private const double NearMargin = 40;  // DIP from the pill's shape
     private static readonly TimeSpan MaxFadeDuration = TimeSpan.FromMilliseconds(350);
 
-    /// The corner radius of the pill; animated by the spring, bound to every shape through RadiusConverter.
-    public static readonly DependencyProperty RadiusProperty = DependencyProperty.Register(
-        nameof(Radius), typeof(double), typeof(PillWindow),
-        new PropertyMetadata(PillGeometry.ClosedRadius, (d, _) => ((PillWindow)d).UpdateClip()));
-
     private readonly AppState _state;
     private readonly DispatcherTimer _pollTimer = new() { Interval = SlowPollInterval };
     private bool _fastPoll;  // the poll interval in use: fast near the pill, slow otherwise
     private readonly DispatcherTimer _closeTimer = new() { Interval = TimeSpan.FromMilliseconds(100) };
     private readonly DispatcherTimer _toastTimer = new() { Interval = ToastTick };
     private readonly BlurEffect _cardBlur = new() { Radius = 6 };
+    // The pill's one shape: the black, the clip, the shadow, the tint and the glow all draw this rectangle. Its Rect (in the
+    // layout, see PillGeometry.ShapeRect) and its radii animate; the layout itself never does.
+    private readonly RectangleGeometry _shape = new()
+    {
+        Rect = ToRect(PillGeometry.ShapeRect(PillGeometry.ClosedWidth, PillGeometry.ClosedHeight)),
+        RadiusX = PillGeometry.ClosedRadius,
+        RadiusY = PillGeometry.ClosedRadius,
+    };
     // The shadows are made once: ApplyAppearance runs on every publish, so it only picks one of these (never makes a new one).
     private readonly DropShadowEffect _openShadow = Shadow(opacity: 0.45, blur: 14, depth: 6);
     private readonly DropShadowEffect _closedShadow = Shadow(opacity: 0.3, blur: 6, depth: 2);
@@ -104,12 +107,33 @@ public partial class PillWindow : Window
         _state = state;
         InitializeComponent();
 
+        // The layout is sized once: the shape's paths and the clip draw the shared rectangle inside it.
+        PillShape.Width = PillGeometry.LayoutWidth;
+        PillShape.Height = PillGeometry.MaxOpenHeight;
+        foreach (var layer in new[] { ShapeFill, Tint, GlowRing })
+        {
+            layer.Width = PillGeometry.LayoutWidth;
+            layer.Height = PillGeometry.MaxOpenHeight;
+        }
+        foreach (var layer in new[] { ShadowShape, GlowBacking })
+        {
+            layer.Width = PillGeometry.LayoutWidth;
+            layer.Height = PillGeometry.MaxOpenHeight;
+            layer.Data = _shape;
+        }
+        ShapeFill.Data = _shape;
+        Tint.Data = _shape;
+        GlowRing.Data = _shape;
+        PillContent.Clip = _shape;
+        // The wings start where the closed pill's edges are; they spring to the open shape's from there.
+        LeftWingShift.X = PillGeometry.WingOffset(PillGeometry.ClosedWidth);
+        RightWingShift.X = -PillGeometry.WingOffset(PillGeometry.ClosedWidth);
+
         LoadMeters.Children.Add(_cpuMeter);
         LoadMeters.Children.Add(_ramMeter);
         _cpuMeter.Clicked += OpenTaskManager;
         _ramMeter.Clicked += OpenTaskManager;
         SyncHeader();
-        CardLayer.Effect = _cardBlur;
         // The gear opens the Control Panel and closes the pill; the power button quits (as the tray's Quit does).
         Bar.ControlPanelRequested += () =>
         {
@@ -124,7 +148,6 @@ public partial class PillWindow : Window
         _waitTimer.Tick += (_, _) => TickWaiting();
         _toastTimer.Tick += (_, _) => TickToast();
         PillShape.MouseLeftButtonUp += OnPillClick;
-        PillShape.SizeChanged += (_, _) => UpdateClip();
         ToastBox.Answered += (ask, reply) => _state.Answer(ask.Id, reply);
         ToastBox.Opened += OnToastOpened;
         ToastBox.Dismissed += () => _state.Toasts.Dismiss(DateTimeOffset.Now);
@@ -168,13 +191,6 @@ public partial class PillWindow : Window
         _asks.Sync(_state.Asks, _state.Answer);
         SyncSections();
         SyncToast();
-    }
-
-    /// The corner radius of the pill, animated.
-    public double Radius
-    {
-        get => (double)GetValue(RadiusProperty);
-        set => SetValue(RadiusProperty, value);
     }
 
     private double Scale => _hwnd == nint.Zero ? 1 : Win32.GetDpiForWindow(_hwnd) / 96.0;
@@ -515,9 +531,27 @@ public partial class PillWindow : Window
         _animating = true;
         _targetMode = mode;
         (_targetWidth, _targetHeight, _targetRadius) = (width, height, radius);
-        var widthAnimation = Spring(PillShape, FrameworkElement.WidthProperty, width, curve);
-        Spring(PillShape, FrameworkElement.HeightProperty, height, curve);
-        Spring(this, RadiusProperty, radius, curve);
+        var spring = new Duration(TimeSpan.FromSeconds(curve.Settle));
+        // The card's height is set once per animation, to the open shape's height below the top row: the quick bar sits at the
+        // bottom of the shape. The card shows only for an open, and the toast only for a toast.
+        if (mode == Mode.Open)
+        {
+            CardLayer.Height = height - PillGeometry.ClosedHeight;
+            CardLayer.Visibility = Visibility.Visible;
+        }
+        if (mode == Mode.Toast)
+        {
+            ToastBox.Visibility = Visibility.Visible;
+        }
+
+        // The shape, its corners and the wings all spring with the same curve from their current values (no From), so a
+        // mid-flight retarget carries on from where the shape is. Nothing here changes the layout.
+        var rect = new RectAnimation(ToRect(PillGeometry.ShapeRect(width, height)), spring) { EasingFunction = new SpringEase(curve) };
+        Spring(_shape, RectangleGeometry.RadiusXProperty, radius, curve, spring);
+        Spring(_shape, RectangleGeometry.RadiusYProperty, radius, curve, spring);
+        var offset = PillGeometry.WingOffset(width);
+        Spring(LeftWingShift, TranslateTransform.XProperty, offset, curve, spring);
+        Spring(RightWingShift, TranslateTransform.XProperty, -offset, curve, spring);
 
         var fadeSeconds = Math.Min(curve.Settle, MaxFadeDuration.TotalSeconds);
         var fade = new SpringCurve(fadeSeconds, 1) { EaseInOut = true };
@@ -525,20 +559,34 @@ public partial class PillWindow : Window
         Fade(CardLayer, OpacityProperty, mode == Mode.Open ? 1 : 0, duration, fade);
         Fade(ToastBox, OpacityProperty, mode == Mode.Toast ? 1 : 0, duration, fade);
         Fade(TopRow, OpacityProperty, mode == Mode.Toast ? 0 : 1, duration, fade);
+        // The card's blur is attached only while it moves, so a settled card costs no effect pass.
         var blur = mode == Mode.Open || reduced ? 0 : 6;
+        CardLayer.Effect = _cardBlur;
         Fade(_cardBlur, BlurEffect.RadiusProperty, blur, duration, fade);
 
-        widthAnimation.Completed += (_, _) =>
+        // The shape's spring is the longest of these, so its completion is the end of the animation. The handler is attached
+        // before the animation starts: WPF does not raise Completed for a handler added after BeginAnimation.
+        rect.Completed += (_, _) =>
         {
             if (token == _animation)
             {
                 _closing = false;
                 _animating = false;
                 FrameLog.End();
+                CardLayer.Effect = null;
+                if (mode != Mode.Open)
+                {
+                    CardLayer.Visibility = Visibility.Hidden;
+                }
+                if (mode != Mode.Toast)
+                {
+                    ToastBox.Visibility = Visibility.Hidden;
+                }
                 ApplyAppearance();
                 ReevaluateClickThrough();
             }
         };
+        _shape.BeginAnimation(RectangleGeometry.RectProperty, rect);
         // The pointer may already be over the target shape: the window must take its clicks from this frame on.
         ReevaluateClickThrough();
     }
@@ -583,24 +631,11 @@ public partial class PillWindow : Window
     private static void Fade(IAnimatable target, DependencyProperty property, double to, Duration duration, SpringCurve fade) =>
         target.BeginAnimation(property, new DoubleAnimation(to, duration) { EasingFunction = new SpringEase(fade) });
 
-    private static DoubleAnimation Spring(IAnimatable target, DependencyProperty property, double to, SpringCurve curve)
-    {
-        var animation = new DoubleAnimation(to, new Duration(TimeSpan.FromSeconds(curve.Settle)))
-        {
-            EasingFunction = new SpringEase(curve),
-        };
-        target.BeginAnimation(property, animation);
-        return animation;
-    }
+    /// Springs a property to a value from its current value. The duration is given (the shape's, for the shape's spring).
+    private static void Spring(IAnimatable target, DependencyProperty property, double to, SpringCurve curve, Duration duration) =>
+        target.BeginAnimation(property, new DoubleAnimation(to, duration) { EasingFunction = new SpringEase(curve) });
 
-    /// Clips the card and the pill's layers to the animated rounded rectangle, so nothing shows past the shape mid-bounce.
-    private void UpdateClip()
-    {
-        var w = PillShape.Width;
-        var h = PillShape.Height;
-        var r = Math.Min(Radius, Math.Min(w, h) / 2);
-        PillContent.Clip = new RectangleGeometry(new Rect(0, 0, w, h), r, r);
-    }
+    private static Rect ToRect((double X, double Y, double W, double H) r) => new(r.X, r.Y, r.W, r.H);
 
     private bool IsOverPointer(nint lParam)
     {
@@ -616,24 +651,32 @@ public partial class PillWindow : Window
     private bool IsOverShape(NativePoint screenPoint) =>
         IsInsidePill(screenPoint) || (_animating && IsInsideShape(screenPoint, _targetWidth, _targetHeight, _targetRadius));
 
-    /// Hit test in the animated geometry: the pill is centred at the top of the window, with the current size and radius.
-    private bool IsInsidePill(NativePoint screenPoint) => IsInsideShape(screenPoint, PillShape.Width, PillShape.Height, Radius);
+    /// Hit test in the animated geometry: the shape's current rectangle and corner radius.
+    private bool IsInsidePill(NativePoint screenPoint) => IsInsideRect(screenPoint, _shape.Rect, _shape.RadiusX);
 
-    private bool IsInsideShape(NativePoint screenPoint, double width, double height, double radius)
+    private bool IsInsideShape(NativePoint screenPoint, double width, double height, double radius) =>
+        IsInsideRect(screenPoint, ToRect(PillGeometry.ShapeRect(width, height)), radius);
+
+    private bool IsInsideRect(NativePoint screenPoint, Rect layoutRect, double radius)
     {
-        var x = (PillGeometry.WindowWidth - width) / 2;
-        return PillHitTest.InRoundedRect(ToShapePoint(screenPoint), x, 0, width, height, radius);
+        var r = OnWindow(layoutRect);
+        return PillHitTest.InRoundedRect(ToShapePoint(screenPoint), r.X, r.Y, r.Width, r.Height, radius);
     }
+
+    /// The shape's rectangle in the window: the layout is centred in the window, and the shape sits in the layout.
+    private static Rect OnWindow(Rect layoutRect) =>
+        new(layoutRect.X + (PillGeometry.WindowWidth - PillGeometry.LayoutWidth) / 2, layoutRect.Y, layoutRect.Width, layoutRect.Height);
 
     /// True within NearMargin of the pill's current shape, or of the shape it springs to while an animation runs.
     private bool IsNearShape(NativePoint screenPoint)
     {
         var p = ToShapePoint(screenPoint);
-        if (PillHitTest.DistanceToShape(p, PillShape.Width, PillShape.Height, Radius) <= NearMargin)
+        if (PillHitTest.DistanceToShape(p, OnWindow(_shape.Rect), _shape.RadiusX) <= NearMargin)
         {
             return true;
         }
-        return _animating && PillHitTest.DistanceToShape(p, _targetWidth, _targetHeight, _targetRadius) <= NearMargin;
+        return _animating
+            && PillHitTest.DistanceToShape(p, OnWindow(ToRect(PillGeometry.ShapeRect(_targetWidth, _targetHeight))), _targetRadius) <= NearMargin;
     }
 
     /// The screen point in the pill's DIP space (the window's client area, unscaled).
@@ -789,7 +832,7 @@ public partial class PillWindow : Window
 
         // The background setting shows only while open; closed, the pill is black (Mac: opened ? background : .black).
         var background = _open ? settings.Background : "black";
-        PillShape.Background = background switch
+        ShapeFill.Fill = background switch
         {
             "glass" => Frozen(new SolidColorBrush(Color.FromArgb(0xD9, 0x1C, 0x1C, 0x1E))),
             "gradient" => Frozen(new LinearGradientBrush(
@@ -813,14 +856,14 @@ public partial class PillWindow : Window
         var glow = settings.Background == "glow" && (_open || _hasCollapsed);
         var accentBrush = Frozen(new SolidColorBrush(_accent) { Opacity = 0.9 });
         GlowBacking.Visibility = glow ? Visibility.Visible : Visibility.Collapsed;
-        GlowBacking.BorderBrush = accentBrush;
+        GlowBacking.Stroke = accentBrush;
         if (_glow is null || _glow.Color != _accent)
         {
             _glow = new DropShadowEffect { Color = _accent, BlurRadius = 6, ShadowDepth = 0, Opacity = 1 };
         }
         GlowBacking.Effect = _glow;
         GlowRing.Visibility = glow ? Visibility.Visible : Visibility.Collapsed;
-        GlowRing.BorderBrush = accentBrush;
+        GlowRing.Stroke = accentBrush;
     }
 
     private static DropShadowEffect Shadow(double opacity, double blur, double depth) =>
@@ -878,14 +921,4 @@ public partial class PillWindow : Window
         SyncEmptyNote(SectionList.Children.Count == 0);
         ApplyAppearance();
     }
-}
-
-/// Turns the animated double Radius into the CornerRadius of a shape.
-public sealed class RadiusConverter : IValueConverter
-{
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) =>
-        new CornerRadius(System.Convert.ToDouble(value, CultureInfo.InvariantCulture));
-
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
-        throw new NotSupportedException();
 }

@@ -15,8 +15,17 @@ public static class PillGeometry
     /// The ask toast width: max(200 + 300, 520).
     public static double AskToastWidth { get; } = Math.Max(ClosedWidth + 300, OpenWidth);
 
+    /// The width of the pill's layout: every shape is centred in it, and it never changes while the pill moves.
+    public static double LayoutWidth { get; } = Math.Max(OpenWidth, AskToastWidth);
+
     /// The corner radius of the ask toast.
     public const double AskToastRadius = 24;
+
+    /// The shape's rectangle inside the layout (x, y, w, h): a shape `w` wide sits centred in LayoutWidth, at the top.
+    public static (double X, double Y, double W, double H) ShapeRect(double w, double h) => ((LayoutWidth - w) / 2, 0, w, h);
+
+    /// How far the wings move in from the layout's edges for a shape `w` wide: the left wing by +offset, the right by -offset.
+    public static double WingOffset(double w) => (LayoutWidth - w) / 2;
 
     /// The window: big enough for the open card and the glow, never resized.
     public const double WindowWidth = 560;

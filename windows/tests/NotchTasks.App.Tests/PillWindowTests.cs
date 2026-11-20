@@ -318,14 +318,16 @@ public sealed class PillWindowTests
         });
     }
 
-    /// Lays the open pill out as it settles: the shape at its target size, and the content measured and arranged.
+    /// Lays the open pill out as it settles: the shape's rectangle at its target size, and the content measured and arranged.
     private static void SettleOpen(PillWindow pill)
     {
-        var shape = Fixture.Named<FrameworkElement>(pill, "PillShape");
-        shape.BeginAnimation(FrameworkElement.WidthProperty, null);
-        shape.BeginAnimation(FrameworkElement.HeightProperty, null);
-        shape.Width = PillGeometry.OpenWidth;
-        shape.Height = Fixture.Field<double>(pill, "_targetHeight");
+        var shape = Fixture.Field<System.Windows.Media.RectangleGeometry>(pill, "_shape");
+        shape.BeginAnimation(System.Windows.Media.RectangleGeometry.RectProperty, null);
+        shape.BeginAnimation(System.Windows.Media.RectangleGeometry.RadiusXProperty, null);
+        shape.BeginAnimation(System.Windows.Media.RectangleGeometry.RadiusYProperty, null);
+        var height = Fixture.Field<double>(pill, "_targetHeight");
+        shape.Rect = new Rect((PillGeometry.LayoutWidth - PillGeometry.OpenWidth) / 2, 0, PillGeometry.OpenWidth, height);
+        shape.RadiusX = shape.RadiusY = PillGeometry.OpenRadius;
         var content = Assert.IsAssignableFrom<UIElement>(pill.Content);
         content.Measure(new Size(1200, 600));
         content.Arrange(new Rect(0, 0, 1200, 600));

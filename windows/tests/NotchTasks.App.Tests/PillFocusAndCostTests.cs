@@ -76,7 +76,7 @@ public sealed class PillFocusAndCostTests
             var pill = new PillWindow(state);
             try
             {
-                var shadow = Fixture.Named<Border>(pill, "ShadowShape");
+                var shadow = Fixture.Named<System.Windows.Shapes.Path>(pill, "ShadowShape");  // the shadow is a path on the shape
                 Fixture.Call(pill, "ApplyAppearance");
                 var first = shadow.Effect;
                 Assert.IsType<DropShadowEffect>(first);

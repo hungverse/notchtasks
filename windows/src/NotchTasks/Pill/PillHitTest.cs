@@ -1,21 +1,22 @@
 using System.Windows;
-using NotchTasks.Core.Motion;
 
 namespace NotchTasks.Pill;
 
 /// The pill's hit geometry: its rounded rectangles in the pill's DIP space (the window's client area, unscaled).
 internal static class PillHitTest
 {
-    /// Signed distance from p to the rounded rectangle the pill's shape makes: negative or zero inside it.
-    public static double DistanceToShape(Point p, double width, double height, double radius)
+    /// Signed distance from p to the rounded rectangle r with the given corner radius: negative or zero inside it.
+    public static double DistanceToShape(Point p, Rect r, double radius)
     {
-        var x = (PillGeometry.WindowWidth - width) / 2;
-        var r = Math.Min(radius, Math.Min(width, height) / 2);
-        var cx = Math.Clamp(p.X, x + r, x + width - r);
-        var cy = Math.Clamp(p.Y, r, height - r);
+        var x = r.X;
+        var width = r.Width;
+        var height = r.Height;
+        var cr = Math.Min(radius, Math.Min(width, height) / 2);
+        var cx = Math.Clamp(p.X, x + cr, x + width - cr);
+        var cy = Math.Clamp(p.Y, r.Y + cr, r.Y + height - cr);
         var dx = p.X - cx;
         var dy = p.Y - cy;
-        return Math.Sqrt(dx * dx + dy * dy) - r;
+        return Math.Sqrt(dx * dx + dy * dy) - cr;
     }
 
     /// True when p lies in the rounded rectangle (x, y, w, h) with the given corner radius.
