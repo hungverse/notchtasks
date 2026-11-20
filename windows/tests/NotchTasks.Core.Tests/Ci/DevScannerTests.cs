@@ -29,8 +29,14 @@ public sealed class DevScannerTests
     {
         public Dictionary<int, string> ByPid { get; } = new();
 
-        public IReadOnlyList<string> Argv(ProcInfo p) =>
-            ByPid.TryGetValue(p.Pid, out var cmd) ? ProcTable.SplitArgs(cmd) : Array.Empty<string>();
+        /// How many times argv was asked for each pid.
+        public Dictionary<int, int> Calls { get; } = new();
+
+        public IReadOnlyList<string> Argv(ProcInfo p)
+        {
+            Calls[p.Pid] = Calls.GetValueOrDefault(p.Pid) + 1;
+            return ByPid.TryGetValue(p.Pid, out var cmd) ? ProcTable.SplitArgs(cmd) : Array.Empty<string>();
+        }
     }
 
     private static Func<ProcInfo, string?> NoCwd => _ => null;
@@ -220,13 +226,82 @@ public sealed class DevScannerTests
         var lines = new Lines();
         lines.ByPid[50] = "cargo build";
         long t0 = 1_731_500_000_000;
-        var cargo = Snap(Proc(50, 1, "cargo.exe", t0 - 10_000));
-        Assert.NotNull(Find(scanner.Scan(cargo, lines.Argv, NoCwd, t0), "dev:50"));
+        // cargo started 20 s before t0: shown at t0, so a stale match would show again later
+        Assert.NotNull(Find(scanner.Scan(Snap(Proc(50, 1, "cargo.exe", t0 - 20_000)), lines.Argv, NoCwd, t0), "dev:50"));
 
-        // the pid now belongs to notepad: the cached cargo match must not survive
+        // the pid now belongs to notepad, started 10 s before this scan: 14 s old, so a stale match would show
         lines.ByPid[50] = "notepad";
-        var notepad = Snap(Proc(50, 1, "notepad.exe", t0 + 4000));
+        var notepad = Snap(Proc(50, 1, "notepad.exe", t0 - 10_000));
         Assert.Empty(scanner.Scan(notepad, lines.Argv, NoCwd, t0 + 4000));
+    }
+
+    [Fact]
+    public void Scan_PidReusedBySameName_ArgvAskedAgain()
+    {
+        var scanner = new DevScanner(new TaskHistory(null, _ => { }));
+        var lines = new Lines();
+        lines.ByPid[50] = "cargo build";
+        long t0 = 1_731_500_000_000;
+        Assert.NotNull(Find(scanner.Scan(Snap(Proc(50, 1, "cargo.exe", t0 - 20_000)), lines.Argv, NoCwd, t0), "dev:50"));
+        var callsBefore = lines.Calls[50];
+
+        // same exe name, new process (new start time): the arguments are read again and are not a finite task
+        lines.ByPid[50] = "cargo run";
+        Assert.Empty(scanner.Scan(Snap(Proc(50, 1, "cargo.exe", t0 - 10_000)), lines.Argv, NoCwd, t0 + 4000));
+        Assert.True(lines.Calls[50] > callsBefore, "argv asked again for the reused pid");
+    }
+
+    [Fact]
+    public void Scan_GradleClientPresent_HidesDaemonRow()
+    {
+        var scanner = new DevScanner(new TaskHistory(null, _ => { }));
+        var lines = new Lines();
+        lines.ByPid[60] = "java -cp gradle-wrapper.jar org.gradle.wrapper.GradleWrapperMain assembleDebug";
+        lines.ByPid[61] = "java -cp gradle-launcher.jar org.gradle.launcher.daemon.bootstrap.GradleDaemon 8.5";
+        long t0 = 1_731_500_000_000;
+        Func<ProcInfo, string?> cwd = _ => @"C:\src\mobile-app\android";
+        // the daemon works at 100 % (10 000 ticks per ms) from t0 on
+        ProcSnapshot At(long t) => Snap(
+            Proc(60, 1, "java.exe", t0 - 60_000, 0),
+            Proc(61, 1, "java.exe", t0 - 60_000, (t - t0) * 10_000));
+
+        scanner.Scan(At(t0), lines.Argv, cwd, t0);
+        var jobs = scanner.Scan(At(t0 + 2000), lines.Argv, cwd, t0 + 2000);
+        Assert.NotNull(Find(jobs, "dev:60"));
+        Assert.Null(Find(jobs, "dev:61"));
+    }
+
+    [Fact]
+    public void Scan_BusyDaemonAlone_ShowsWhileBusy_AndEightSecondsAfter()
+    {
+        var scanner = new DevScanner(new TaskHistory(null, _ => { }));
+        var lines = new Lines();
+        lines.ByPid[61] = "java -cp gradle-launcher.jar org.gradle.launcher.daemon.bootstrap.GradleDaemon 8.5";
+        long t0 = 1_731_500_000_000;
+        Func<ProcInfo, string?> cwd = _ => @"C:\src\mobile-app\android";
+        // busy from t0 to t0 + 2 s at 100 %, then idle (CPU stops growing)
+        ProcSnapshot At(long t) => Snap(Proc(61, 1, "java.exe", t0 - 60_000, Math.Min(t - t0, 2000) * 10_000));
+
+        scanner.Scan(At(t0), lines.Argv, cwd, t0);
+        Assert.NotNull(Find(scanner.Scan(At(t0 + 2000), lines.Argv, cwd, t0 + 2000), "dev:61"));
+        Assert.NotNull(Find(scanner.Scan(At(t0 + 9000), lines.Argv, cwd, t0 + 9000), "dev:61"));   // 7 s after the last busy sample
+        Assert.Null(Find(scanner.Scan(At(t0 + 10_000), lines.Argv, cwd, t0 + 10_000), "dev:61"));  // 8 s after: gone
+    }
+
+    [Fact]
+    public void Scan_GitFetch_RaisesNoPushed()
+    {
+        var pushed = new List<string>();
+        var scanner = new DevScanner(new TaskHistory(null, _ => { }));
+        scanner.Pushed += pushed.Add;
+        var lines = new Lines();
+        lines.ByPid[70] = "git fetch origin";
+        long t0 = 1_731_500_000_000;
+        Func<ProcInfo, string?> cwd = _ => @"C:\src\repo";
+        var procs = Snap(Proc(70, 1, "git.exe", t0 - 60_000));
+        scanner.Scan(procs, lines.Argv, cwd, t0);
+        scanner.Scan(procs, lines.Argv, cwd, t0 + 2000);
+        Assert.Empty(pushed);
     }
 
     [Fact]

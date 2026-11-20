@@ -15,8 +15,9 @@ public sealed class DevScanner
 
     private readonly TaskHistory history;
     private readonly CpuMeter meter = new();
-    private readonly Dictionary<int, (string Name, DevMatch? Match)> argvCache = new();
-    private readonly HashSet<int> seenGit = new();
+    // Keyed by (pid, start time): a reused pid is a new process, so its arguments and git state are read again.
+    private readonly Dictionary<(int Pid, long Start), DevMatch?> argvCache = new();
+    private readonly HashSet<(int Pid, long Start)> seenGit = new();
     private Dictionary<string, Running> running = new(StringComparer.Ordinal);
 
     public DevScanner(TaskHistory history)
@@ -31,14 +32,15 @@ public sealed class DevScanner
     public IReadOnlyList<Job> Scan(ProcSnapshot snapshot, Func<ProcInfo, IReadOnlyList<string>> argv, Func<ProcInfo, string?> cwd, long nowMs)
     {
         meter.Sample(snapshot, nowMs);
-        foreach (var pid in argvCache.Keys.ToList())
+        var live = snapshot.All.Select(p => (p.Pid, p.StartTicks)).ToHashSet();
+        foreach (var key in argvCache.Keys.ToList())
         {
-            if (!snapshot.ById.ContainsKey(pid))
+            if (!live.Contains(key))
             {
-                argvCache.Remove(pid);
+                argvCache.Remove(key);
             }
         }
-        seenGit.RemoveWhere(pid => !snapshot.ById.ContainsKey(pid));
+        seenGit.RemoveWhere(key => !live.Contains(key));
 
         var found = new Dictionary<string, Running>(StringComparer.Ordinal);
 
@@ -59,12 +61,13 @@ public sealed class DevScanner
         // Matched by the normalized name; the arguments are read once per pid and name.
         DevMatch? Match(ProcInfo p, string name)
         {
-            if (argvCache.TryGetValue(p.Pid, out var cached) && cached.Name == name)
+            var key = (p.Pid, p.StartTicks);
+            if (argvCache.TryGetValue(key, out var cached))
             {
-                return cached.Match;
+                return cached;
             }
             var m = DevRules.Names.Contains(name) || DevRules.IsPython(name) ? DevRules.Classify(name, argv(p)) : null;
-            argvCache[p.Pid] = (name, m);
+            argvCache[key] = m;
             return m;
         }
 
@@ -113,7 +116,7 @@ public sealed class DevScanner
         foreach (var p in snapshot.All)
         {
             var name = ProcTable.NormName(p.Name);
-            if (name == "git" && seenGit.Add(p.Pid))
+            if (name == "git" && seenGit.Add((p.Pid, p.StartTicks)))
             {
                 var args = argv(p);
                 if (args.Count > 1 && args[1] == "push")
