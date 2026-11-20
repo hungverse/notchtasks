@@ -1,0 +1,5 @@
+Runtime platform arch=amd64 os=windows pid=4312 revision=abc123 version=17.5.0
+Feb 10 10:00:01 received job=101 job_name="unit tests" repo_url="https://gitlab.com/shop/api.git" runner=ab12cd
+Feb 10 10:00:01 received job=102 job_name="lint" repo_url="https://gitlab.com/shop/web.git" runner=ab12cd
+Feb 10 10:02:30 job=101 Job succeeded duration=2m29s
+Feb 10 10:03:00 job=102 Job failed failure_reason="script_failure" exit_code=1 project_full_path="shop/web" runner=ab12cd
