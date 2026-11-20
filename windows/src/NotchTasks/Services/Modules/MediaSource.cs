@@ -93,6 +93,7 @@ public sealed class MediaSource : IModuleSource
     private readonly Dispatcher _dispatcher;
     private readonly DispatcherTimer _timer = new() { Interval = CoalesceFor };
     private readonly HashSet<string> _artInFlight = new(StringComparer.Ordinal);
+    private readonly HashSet<string> _artFailed = new(StringComparer.Ordinal);  // keys with no usable artwork: not fetched again
     private readonly HashSet<string> _iconInFlight = new(StringComparer.OrdinalIgnoreCase);
     private bool _started;
     private bool _busy;
@@ -262,7 +263,7 @@ public sealed class MediaSource : IModuleSource
 
     private void FetchArtwork(NowPlaying current)
     {
-        if (current.ArtworkKey is not { } key || _art.Get(key) is not null || !_artInFlight.Add(key))
+        if (current.ArtworkKey is not { } key || _art.Get(key) is not null || _artFailed.Contains(key) || !_artInFlight.Add(key))
         {
             return;
         }
@@ -282,9 +283,14 @@ public sealed class MediaSource : IModuleSource
                     _publish();
                 }
             }
+            else
+            {
+                _artFailed.Add(key);  // no thumbnail, too big, or not an image: the same key is not read again on every event
+            }
         }
         catch (Exception e)
         {
+            _artFailed.Add(key);
             ErrorLog.Write(e);
         }
         finally

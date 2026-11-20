@@ -378,22 +378,29 @@ public static class ChipView
             placed.Add((panel, true));
         }
 
-        foreach (var (element, _) in placed)
+        // A kept element stays where it is while the kept elements keep their order: only the new panels are inserted, each after the
+        // one before it. Removing and re-adding a kept element would fire its Unloaded and Loaded, and a loop in it (the media bars)
+        // would restart at its first frame on every publish.
+        var order = placed.Select(p => p.Element).ToList();
+        var inWing = order.Where(e => wing.Children.Contains(e)).ToList();
+        var currentOrder = wing.Children.OfType<FrameworkElement>().Where(e => inWing.Contains(e)).ToList();
+        if (!currentOrder.SequenceEqual(inWing))
         {
-            if (wing.Children.Contains(element))
+            // the kept elements are out of order: they are taken out, and put back in order below
+            foreach (var element in inWing)
             {
-                wing.Children.Remove(element);  // put back below, in order
+                wing.Children.Remove(element);
             }
         }
-        foreach (var (element, isNew) in placed)
+        for (var i = 0; i < placed.Count; i++)
         {
-            if (rightWing)
+            var (element, isNew) = placed[i];
+            if (!wing.Children.Contains(element))
             {
-                wing.Children.Insert(ChipCount(wing), element);
-            }
-            else
-            {
-                wing.Children.Add(element);
+                var index = i > 0 && wing.Children.Contains(order[i - 1])
+                    ? wing.Children.IndexOf(order[i - 1]) + 1
+                    : rightWing ? ChipCount(wing) : wing.Children.Count;
+                wing.Children.Insert(index, element);
             }
             if (isNew)
             {

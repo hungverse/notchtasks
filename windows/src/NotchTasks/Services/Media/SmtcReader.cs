@@ -32,27 +32,27 @@ public interface IMediaReader
 }
 
 /// The Windows media session reader (P3d-R2): GlobalSystemMediaTransportControlsSessionManager, the list the Windows media flyout
-/// shows. Start subscribes to the manager's session list and, for each session, to its media properties, playback info and
-/// timeline events; a change of any raises Changed, and the source reads once after it. Every failure is logged once per kind and
-/// reads as empty or as a no-op.
+/// shows. Start asks for the manager and subscribes to the session list and, for each session, to its media properties, playback
+/// info and timeline events (the bookkeeping is MediaSessionBook). A change of any raises Changed, and the source reads once after it.
+/// A session that fails to read is skipped for that read; every failure is logged once per kind.
 public sealed class SmtcReader : IMediaReader
 {
     /// The largest artwork read, in bytes.
     private const long MaxArtworkBytes = 1_048_576;
 
-    /// One session the reader is subscribed to, with the handlers to take off again.
-    private sealed record Subscription(
-        GlobalSystemMediaTransportControlsSession Session,
-        TypedEventHandler<GlobalSystemMediaTransportControlsSession, MediaPropertiesChangedEventArgs> Properties,
-        TypedEventHandler<GlobalSystemMediaTransportControlsSession, PlaybackInfoChangedEventArgs> Playback,
-        TypedEventHandler<GlobalSystemMediaTransportControlsSession, TimelinePropertiesChangedEventArgs> Timeline);
-
-    private readonly object _gate = new();
     private readonly HashSet<string> _logged = new(StringComparer.Ordinal);
-    private readonly Dictionary<string, Subscription> _subscriptions = new(StringComparer.Ordinal);
+    private readonly object _logGate = new();
+    private readonly MediaSessionBook<GlobalSystemMediaTransportControlsSessionManager, GlobalSystemMediaTransportControlsSession> _book;
     private Action? _changed;
-    private GlobalSystemMediaTransportControlsSessionManager? _manager;
-    private bool _running;
+
+    public SmtcReader()
+    {
+        _book = new(
+            list: manager => manager.GetSessions().ToList(),
+            idOf: session => session.SourceAppUserModelId,
+            subscribe: SubscribeSession,
+            watch: WatchManager);
+    }
 
     public event Action Changed
     {
@@ -63,21 +63,19 @@ public sealed class SmtcReader : IMediaReader
     /// Tells the subscribers that a session changed (on whatever thread SMTC raised it).
     private void Raise() => _changed?.Invoke();
 
-    /// Asks Windows for the session manager, then subscribes to the sessions it lists. A failure is logged and leaves the reader empty.
+    /// Asks Windows for the session manager, then subscribes to the sessions it lists. A Start overtaken by a Stop, or by a later
+    /// Start, while the request is pending does nothing when it lands.
     public async Task Start()
     {
-        _running = true;
+        var generation = _book.BeginStart();
         try
         {
             var manager = await GlobalSystemMediaTransportControlsSessionManager.RequestAsync();
-            if (!_running)
+            if (!_book.Attach(generation, manager))
             {
                 return;
             }
-            _manager = manager;
-            manager.SessionsChanged += OnSessionsChanged;
-            manager.CurrentSessionChanged += OnCurrentSessionChanged;
-            SyncSessions(manager);
+            _book.Sync(manager);
             Raise();
         }
         catch (Exception e)
@@ -86,29 +84,15 @@ public sealed class SmtcReader : IMediaReader
         }
     }
 
-    /// Takes the handlers off the manager and every session. A Start still in progress does nothing when it lands.
-    public void Stop()
-    {
-        _running = false;
-        var manager = _manager;
-        _manager = null;
-        if (manager is not null)
-        {
-            manager.SessionsChanged -= OnSessionsChanged;
-            manager.CurrentSessionChanged -= OnCurrentSessionChanged;
-        }
-        foreach (var subscription in _subscriptions.Values)
-        {
-            Unsubscribe(subscription);
-        }
-        _subscriptions.Clear();
-    }
+    /// Takes the handlers off the manager and every session.
+    public void Stop() => _book.Stop();
 
-    /// Reads every listed session: its title and artist, its playback state and controls, and its timeline.
+    /// Reads every listed session: its title and artist, its playback state and controls, and its timeline. A session that fails is
+    /// left out of this read; the others still come.
     public async Task<IReadOnlyList<MediaSessionFact>> Read()
     {
         var facts = new List<MediaSessionFact>();
-        var manager = _manager;
+        var manager = _book.Manager;
         if (manager is null)
         {
             return facts;
@@ -118,7 +102,14 @@ public sealed class SmtcReader : IMediaReader
             var currentId = manager.GetCurrentSession()?.SourceAppUserModelId;
             foreach (var session in manager.GetSessions())
             {
-                facts.Add(await ReadSession(session, session.SourceAppUserModelId == currentId));
+                try
+                {
+                    facts.Add(await ReadSession(session, session.SourceAppUserModelId == currentId));
+                }
+                catch (Exception e)
+                {
+                    Log("session", e);
+                }
             }
         }
         catch (Exception e)
@@ -131,7 +122,7 @@ public sealed class SmtcReader : IMediaReader
     /// Sends a media key to a session. Windows may refuse (the session cannot do it); that is not an error here.
     public async Task Send(string source, MediaCommand command)
     {
-        var session = Find(source);
+        var session = _book.Find(source);
         if (session is null)
         {
             return;
@@ -155,7 +146,7 @@ public sealed class SmtcReader : IMediaReader
     /// Moves a session to a position. The position is in 100 ns ticks, as SMTC takes it.
     public async Task Seek(string source, double seconds)
     {
-        var session = Find(source);
+        var session = _book.Find(source);
         if (session is null)
         {
             return;
@@ -173,7 +164,7 @@ public sealed class SmtcReader : IMediaReader
     /// The thumbnail's bytes, read up to 1 MB. Over that, or with no thumbnail, there are no bytes.
     public async Task<byte[]?> Artwork(string source)
     {
-        var session = Find(source);
+        var session = _book.Find(source);
         if (session is null)
         {
             return null;
@@ -260,38 +251,29 @@ public sealed class SmtcReader : IMediaReader
         }
     }
 
-    private void OnSessionsChanged(GlobalSystemMediaTransportControlsSessionManager sender, SessionsChangedEventArgs args)
+    /// Hooks the manager's session-list events: a list change brings the subscriptions in line and raises Changed; a current-session
+    /// change raises Changed. The handle takes both off.
+    private IDisposable WatchManager(GlobalSystemMediaTransportControlsSessionManager manager)
     {
-        SyncSessions(sender);
-        Raise();
-    }
-
-    private void OnCurrentSessionChanged(GlobalSystemMediaTransportControlsSessionManager sender, CurrentSessionChangedEventArgs args) =>
-        Raise();
-
-    /// Subscribes to the sessions that came and unsubscribes from the ones that went, by their app id.
-    private void SyncSessions(GlobalSystemMediaTransportControlsSessionManager manager)
-    {
-        var listed = new Dictionary<string, GlobalSystemMediaTransportControlsSession>(StringComparer.Ordinal);
-        foreach (var session in manager.GetSessions())
+        TypedEventHandler<GlobalSystemMediaTransportControlsSessionManager, SessionsChangedEventArgs> sessions = (sender, _) =>
         {
-            listed[session.SourceAppUserModelId] = session;
-        }
-        foreach (var id in _subscriptions.Keys.Where(id => !listed.ContainsKey(id)).ToList())
-        {
-            Unsubscribe(_subscriptions[id]);
-            _subscriptions.Remove(id);
-        }
-        foreach (var (id, session) in listed)
-        {
-            if (!_subscriptions.ContainsKey(id))
+            if (_book.Sync(sender))
             {
-                _subscriptions[id] = Subscribe(session);
+                Raise();
             }
-        }
+        };
+        TypedEventHandler<GlobalSystemMediaTransportControlsSessionManager, CurrentSessionChangedEventArgs> current = (_, _) => Raise();
+        manager.SessionsChanged += sessions;
+        manager.CurrentSessionChanged += current;
+        return new ActionDisposable(() =>
+        {
+            manager.SessionsChanged -= sessions;
+            manager.CurrentSessionChanged -= current;
+        });
     }
 
-    private Subscription Subscribe(GlobalSystemMediaTransportControlsSession session)
+    /// Hooks a session's media properties, playback info and timeline events, each raising Changed. The handle takes them off.
+    private IDisposable SubscribeSession(GlobalSystemMediaTransportControlsSession session)
     {
         var properties = new TypedEventHandler<GlobalSystemMediaTransportControlsSession, MediaPropertiesChangedEventArgs>(
             (_, _) => Raise());
@@ -302,26 +284,20 @@ public sealed class SmtcReader : IMediaReader
         session.MediaPropertiesChanged += properties;
         session.PlaybackInfoChanged += playback;
         session.TimelinePropertiesChanged += timeline;
-        return new Subscription(session, properties, playback, timeline);
-    }
-
-    private void Unsubscribe(Subscription subscription)
-    {
-        try
+        return new ActionDisposable(() =>
         {
-            subscription.Session.MediaPropertiesChanged -= subscription.Properties;
-            subscription.Session.PlaybackInfoChanged -= subscription.Playback;
-            subscription.Session.TimelinePropertiesChanged -= subscription.Timeline;
-        }
-        catch (Exception e)
-        {
-            Log("unsubscribe", e);
-        }
+            try
+            {
+                session.MediaPropertiesChanged -= properties;
+                session.PlaybackInfoChanged -= playback;
+                session.TimelinePropertiesChanged -= timeline;
+            }
+            catch (Exception e)
+            {
+                Log("unsubscribe", e);
+            }
+        });
     }
-
-    /// The session a source id names, from the subscriptions, or null when it is not listed.
-    private GlobalSystemMediaTransportControlsSession? Find(string source) =>
-        _subscriptions.TryGetValue(source, out var subscription) ? subscription.Session : null;
 
     /// Unix milliseconds of a time. A time before 1970 (SMTC's unset timeline) reads as now.
     private static long UnixMs(DateTimeOffset time) =>
@@ -330,7 +306,7 @@ public sealed class SmtcReader : IMediaReader
     /// Logs a failure of one kind the first time it happens, and never again (a session that fails every second would flood the log).
     private void Log(string kind, Exception e)
     {
-        lock (_gate)
+        lock (_logGate)
         {
             if (!_logged.Add(kind))
             {

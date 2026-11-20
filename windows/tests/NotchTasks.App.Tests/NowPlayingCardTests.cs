@@ -88,6 +88,34 @@ public sealed class NowPlayingCardTests
     }
 
     [Fact]
+    public void SeekBar_AnimatesOnlyWhileOnScreen()
+    {
+        Sta.Run(() =>
+        {
+            var playing = new NowPlaying("spotify.exe", "Spotify", "spotify.exe", "Song", "Artist", true, 30,
+                200, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), true, true, true, true, null);
+            var bar = new SeekBar(_ => { });
+            var window = new Window { Content = bar, Width = 200, Height = 40 };
+
+            // not on screen (the pill is closed): the clock does not run
+            bar.Update(playing, Colors.Cyan);
+            Assert.False(bar.IsAnimating);
+
+            // shown: the fill animates from the position to the end
+            Fixture.ShowOffScreen(window);
+            bar.Update(playing, Colors.Cyan);
+            Assert.True(bar.IsAnimating);
+
+            // hidden again: the animation stops, and an update does not start it
+            window.Hide();
+            Assert.False(bar.IsAnimating);
+            bar.Update(playing, Colors.Cyan);
+            Assert.False(bar.IsAnimating);
+            window.Close();
+        });
+    }
+
+    [Fact]
     public void Chip_LeadFallsBackToAppIcon()
     {
         Sta.Run(() =>

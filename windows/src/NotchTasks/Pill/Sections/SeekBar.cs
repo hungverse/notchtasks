@@ -38,6 +38,7 @@ public sealed class SeekBar : Grid
     private readonly Ellipse _knob;
     private readonly TextBlock _elapsed;
     private readonly TextBlock _remaining;
+    private readonly Grid _labelRow;
     private readonly DispatcherTimer _labels = new() { Interval = TimeSpan.FromSeconds(1) };
     private double _duration;     // seconds; the shown session's
     private double _width;        // the bar's width in DIP, at the last layout
@@ -94,7 +95,9 @@ public sealed class SeekBar : Grid
         Children.Add(_fill);
         Children.Add(_knob);
 
-        var labels = new Grid { Margin = new Thickness(0, 2, 0, 0), IsHitTestVisible = false, Focusable = false };
+        // collapsed until the pointer is over the bar or a drag is on: a collapsed row reserves no height
+        var labels = new Grid { Margin = new Thickness(0, 2, 0, 0), IsHitTestVisible = false, Focusable = false, Visibility = Visibility.Collapsed };
+        _labelRow = labels;
         labels.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         labels.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         _elapsed = Label(HorizontalAlignment.Left);
@@ -131,6 +134,9 @@ public sealed class SeekBar : Grid
         };
         ApplyHover();
     }
+
+    /// True while the fill's animation runs (the bar is on screen, playing, and laid out).
+    public bool IsAnimating => _animating;
 
     /// Shows the session's position: it sets the fill and knob, the tint and the labels, and starts or stops the animation. Nothing
     /// is shown when the session has no duration or no position (the card hides the bar then).
@@ -182,6 +188,7 @@ public sealed class SeekBar : Grid
         _dragging = true;
         CaptureMouse();
         StopAnimation();
+        ApplyHover();
         Drag(e);
         e.Handled = true;
     }
@@ -204,6 +211,7 @@ public sealed class SeekBar : Grid
         }
         _dragging = false;
         ReleaseMouseCapture();
+        ApplyHover();
         _seek(_dragFraction * _duration);
         e.Handled = true;
     }
@@ -224,14 +232,14 @@ public sealed class SeekBar : Grid
         }
     }
 
+    /// The thick bar, the knob and the time labels show while the pointer is over a seekable bar, or while a drag is on.
     private void ApplyHover()
     {
-        var thick = _hovered && _canSeek;
-        _track.Height = thick ? ThickTrack : ThinTrack;
-        _fill.Height = thick ? ThickTrack : ThinTrack;
-        _knob.Visibility = thick ? Visibility.Visible : Visibility.Collapsed;
-        _elapsed.Opacity = thick ? 1 : 0;
-        _remaining.Opacity = thick ? 1 : 0;
+        var active = _canSeek && (_hovered || _dragging);
+        _track.Height = active ? ThickTrack : ThinTrack;
+        _fill.Height = active ? ThickTrack : ThinTrack;
+        _knob.Visibility = active ? Visibility.Visible : Visibility.Collapsed;
+        _labelRow.Visibility = active ? Visibility.Visible : Visibility.Collapsed;
     }
 
     /// The bar was laid out at a new width: the knob and the fill follow it (the animation restarts at the new width).
@@ -288,7 +296,8 @@ public sealed class SeekBar : Grid
         SetFraction(start);
         SetLabels(at);
         var remaining = _duration - at;
-        if (remaining <= 0 || _width <= 0)
+        // off screen (the pill is closed) nothing animates: the bar parks at the position, and OnShown starts it again
+        if (remaining <= 0 || _width <= 0 || !IsVisible)
         {
             return;
         }
@@ -344,7 +353,6 @@ public sealed class SeekBar : Grid
         FontSize = 10,
         Foreground = TimeBrush,
         HorizontalAlignment = alignment,
-        Opacity = 0,
         IsHitTestVisible = false,
         Focusable = false,
     };

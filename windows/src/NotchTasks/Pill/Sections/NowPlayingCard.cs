@@ -113,46 +113,40 @@ public sealed class NowPlayingCard : Border
         var line = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 2, 0, 0), Focusable = false };
         line.Children.Add(_appIcon);
         line.Children.Add(_caption);
-        var text = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(12, 0, 0, 0), Focusable = false };
+        // the Mac's VStack(title, subline, seek bar): 12 DIP after the art, and a 4 DIP minimum gap before the buttons
+        var text = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(12, 0, 4, 0), Focusable = false };
         text.Children.Add(_title);
         text.Children.Add(line);
+        Seek = new SeekBar(seconds => _state?.MediaSeek(seconds)) { Margin = new Thickness(0, 6, 0, 0), Focusable = false };
+        text.Children.Add(Seek);
 
+        // one row, as the Mac: art | text | previous, play or pause, next (6 DIP apart), centred vertically
         var top = new Grid { Focusable = false };
         top.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         top.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        top.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         top.Children.Add(_artFrame);
         Grid.SetColumn(text, 1);
         top.Children.Add(text);
 
-        Seek = new SeekBar(seconds => _state?.MediaSeek(seconds)) { Margin = new Thickness(0, 10, 0, 0), Focusable = false };
-        Grid.SetRow(Seek, 1);
-
-        PreviousButton = ControlButton("previous", SkipGlyphSize, new Thickness(0, 0, 14, 0));
+        PreviousButton = ControlButton("previous", SkipGlyphSize, new Thickness(0, 0, 6, 0));
         PreviousButton.Click += (_, _) => _state?.MediaControl(MediaCommand.Previous);
-        PlayPauseButton = ControlButton("play", PlayPauseGlyphSize, new Thickness(0, 0, 14, 0));
+        PlayPauseButton = ControlButton("play", PlayPauseGlyphSize, new Thickness(0, 0, 6, 0));
         PlayPauseButton.Click += (_, _) => _state?.MediaControl(MediaCommand.Toggle);
         NextButton = ControlButton("next", SkipGlyphSize, new Thickness(0));
         NextButton.Click += (_, _) => _state?.MediaControl(MediaCommand.Next);
         var controls = new StackPanel
         {
             Orientation = Orientation.Horizontal,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            Margin = new Thickness(0, 6, 0, 0),
+            VerticalAlignment = VerticalAlignment.Center,
             Focusable = false,
         };
         controls.Children.Add(PreviousButton);
         controls.Children.Add(PlayPauseButton);
         controls.Children.Add(NextButton);
-        Grid.SetRow(controls, 2);
-
-        var body = new Grid { Focusable = false };
-        body.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-        body.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-        body.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-        body.Children.Add(top);
-        body.Children.Add(Seek);
-        body.Children.Add(controls);
-        Child = body;
+        Grid.SetColumn(controls, 2);
+        top.Children.Add(controls);
+        Child = top;
     }
 
     /// The seek bar (its Visibility is set by Update: it shows when the session has a duration and a position).
@@ -262,7 +256,11 @@ public sealed class NowPlayingCard : Border
                 {
                     continue;
                 }
-                Win32.ShowWindow(window, Win32.SW_RESTORE);
+                // restore only a minimised window: a maximised one keeps its size
+                if (Win32.IsIconic(window))
+                {
+                    Win32.ShowWindow(window, Win32.SW_RESTORE);
+                }
                 Win32.SetForegroundWindow(window);
                 return;
             }

@@ -224,6 +224,27 @@ public sealed class MediaSourceTests
     }
 
     [Fact]
+    public void Artwork_FailedKey_NotFetchedAgain()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            var reader = new FakeMediaReader { Art = null };  // no thumbnail, or too big
+            reader.Sessions.Add(Session("spotify.exe", MediaStatus.Playing, art: "spotify.exe|Song|Artist"));
+            var (source, _, _) = Make(reader);
+
+            source.Start();
+            Fixture.PumpUntil(() => reader.ArtReads.Count >= 1);
+            reader.Raise();
+            Fixture.PumpUntil(() => reader.Reads >= 3);
+            Fixture.PumpUntil(() => false, 200);
+
+            Assert.Single(reader.ArtReads);
+            source.Stop();
+        });
+    }
+
+    [Fact]
     public void RecentCache_KeepsTheLastEight()
     {
         var cache = new RecentCache<string>(8);
