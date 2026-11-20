@@ -4,6 +4,7 @@ using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using NotchTasks.Core;
 using NotchTasks.Core.Modules;
@@ -59,6 +60,7 @@ public partial class ModulesPane : SettingsPane
             AutomationProperties.SetName(row.On, title);
             Select(row.Placement, ChoiceItems.Placements, placements.TryGetValue(id, out var placement) ? placement : "auto");
             row.Color.Hex = colors.TryGetValue(id, out var hex) ? hex : DefaultColor;
+            row.Swatch.Background = HexColor.Brush(row.Color.Hex);
             row.ResetColor.Header = L10n.L("Back to default color");
 
             if (i > 0)
@@ -72,8 +74,8 @@ public partial class ModulesPane : SettingsPane
     /// Whether a module's row is shown: the battery row only on a PC with a battery.
     private bool Shown(string id) => id != "battery" || _hasBattery;
 
-    /// One module's controls: the arrows, the icon, the name and the note, the position and the switch on the first line,
-    /// and the colour on a second line under the name.
+    /// One module's controls on one line, as on the Mac: the arrows, the icon, the name and the note, the position, a colour
+    /// swatch and the switch. The colour's hex field opens in a popup from the swatch, so the row never gets cut.
     private ModuleRow BuildRow(string id)
     {
         var title = new TextBlock
@@ -120,7 +122,7 @@ public partial class ModulesPane : SettingsPane
 
         var placement = new ComboBox
         {
-            Width = 170,
+            Width = 140,
             VerticalAlignment = VerticalAlignment.Center,
             ItemsSource = ChoiceItems.Placements,
             DisplayMemberPath = nameof(Choice.Title),
@@ -136,37 +138,51 @@ public partial class ModulesPane : SettingsPane
         };
         on.Click += (_, _) => ChangeOn(id, on.IsChecked == true);
 
+        // The swatch shows the colour; a click opens the hex field and the palette in a popup beside it.
         var color = new ColorField();
-        color.ValueChanged += (_, _) => ChangeColor(id, color.Hex);
         var resetColor = new MenuItem { Header = L10n.L("Back to default color") };
         resetColor.Click += (_, _) => ResetColor(id);
-        color.ContextMenu = new ContextMenu { Items = { resetColor } };
-
-        var colorLine = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 8, 0, 0) };
-        colorLine.Children.Add(new TextBlock
+        var swatch = new Button
         {
-            Style = (Style)FindResource("RowLabel"),
-            Margin = new Thickness(0, 0, 12, 0),
-            Text = L10n.L("Color"),
-        });
-        colorLine.Children.Add(color);
+            Style = (Style)FindResource("ColorSwatch"),
+            Margin = new Thickness(0),
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            ToolTip = L10n.L("Color"),
+            ContextMenu = new ContextMenu { Items = { resetColor } },
+        };
+        AutomationProperties.SetName(swatch, L10n.L("Color"));
+        color.ValueChanged += (_, _) =>
+        {
+            swatch.Background = HexColor.Brush(color.Hex);
+            ChangeColor(id, color.Hex);
+        };
+        var popup = new Popup
+        {
+            StaysOpen = false,
+            Placement = PlacementMode.Bottom,
+            PlacementTarget = swatch,
+            AllowsTransparency = true,
+            Child = new Border { Style = (Style)FindResource("Card"), Padding = new Thickness(10), Child = color },
+        };
+        swatch.Click += (_, _) => popup.IsOpen = true;
 
         var element = new Grid { Margin = new Thickness(16, 10, 16, 10) };
         element.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(60) });
         element.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         element.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-        element.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(170) });
+        element.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(140) });
+        element.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(44) });
         element.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(60) });
-        element.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
         element.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
         Place(arrows, element, 0, 0);
         Place(tile, element, 0, 1);
         Place(text, element, 0, 2);
         Place(placement, element, 0, 3);
-        Place(on, element, 0, 4);
-        Place(colorLine, element, 1, 2);
+        Place(swatch, element, 0, 4);
+        Place(on, element, 0, 5);
 
-        return new ModuleRow(element, up, down, tile, title, caption, placement, on, color, resetColor);
+        return new ModuleRow(element, up, down, tile, title, caption, placement, swatch, on, color, resetColor);
     }
 
     private static Button Arrow(string glyph, string tip, Action click)
@@ -288,6 +304,7 @@ public partial class ModulesPane : SettingsPane
         TextBlock Title,
         TextBlock Caption,
         ComboBox Placement,
+        Button Swatch,
         CheckBox On,
         ColorField Color,
         MenuItem ResetColor);
