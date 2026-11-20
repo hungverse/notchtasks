@@ -23,12 +23,200 @@
     <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
   </Style>
 
-  <!-- A rounded card that holds the rows of a section. -->
+  <!-- A rounded card that holds the rows of a section. The Mac's cards are 12 DIP rounded (SettingsView.swift). -->
   <Style x:Key="Card" TargetType="Border">
     <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}" />
     <Setter Property="BorderBrush" Value="{DynamicResource CardStrokeColorDefaultBrush}" />
     <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="12" />
+  </Style>
+
+  <!-- A card's title, inside the card (the Mac's "Needed now"): 15 semibold. -->
+  <Style x:Key="GroupTitle" TargetType="TextBlock">
+    <Setter Property="FontSize" Value="15" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Margin" Value="6,4,6,6" />
+    <Setter Property="TextWrapping" Value="Wrap" />
+    <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+  </Style>
+
+  <!-- A small caps heading over a group of cells (the Mac's "WORK"). The caller uppercases the text. -->
+  <Style x:Key="GroupCaps" TargetType="TextBlock">
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Margin" Value="0,12,0,6" />
+    <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+  </Style>
+  <!-- The Mac's switch: a 40x22 track (off = the Mac's grey, on = the accent) with a white knob that slides 150 ms.
+       As the implicit CheckBox style of the Control Panel (ControlPanelWindow.xaml), the CheckBox keeps its IsChecked
+       and Click behaviour; its Content, when it has one, sits 8 DIP to the right of the track. -->
+  <Style x:Key="Switch" TargetType="CheckBox">
+    <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="CheckBox">
+          <Grid x:Name="Root" VerticalAlignment="Center" Background="Transparent">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <!-- The focus ring sits 2 DIP around the track, drawn only for keyboard focus. -->
+            <Grid Width="44" Height="26" VerticalAlignment="Center">
+              <Border x:Name="FocusRing" CornerRadius="13" BorderThickness="0"
+                      BorderBrush="{DynamicResource AccentFillColorDefaultBrush}" />
+              <Border x:Name="Track" Width="40" Height="22" CornerRadius="11" Background="#59787880">
+                <!-- The knob's position is the Margin: the Checked and Unchecked animations (Style.Triggers) slide it
+                     in 150 ms; the template trigger sets the same end position for a state set in code. -->
+                <Ellipse x:Name="Knob" Width="18" Height="18" Margin="2,0,0,0"
+                         HorizontalAlignment="Left" VerticalAlignment="Center" Fill="White">
+                  <Ellipse.Effect>
+                    <DropShadowEffect Opacity="0.25" BlurRadius="3" ShadowDepth="1" Direction="270" />
+                  </Ellipse.Effect>
+                </Ellipse>
+              </Border>
+            </Grid>
+            <ContentPresenter x:Name="Label" Grid.Column="1" Margin="8,0,0,0" VerticalAlignment="Center"
+                              RecognizesAccessKey="True" />
+          </Grid>
+          <ControlTemplate.Triggers>
+            <!-- The knob slides 150 ms when the switch is changed. The animations have no From, so one that runs
+                 while the switch is first built starts at the knob's place and does not slide in. -->
+            <Trigger Property="IsChecked" Value="True">
+              <Setter TargetName="Track" Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+              <Setter TargetName="Knob" Property="Margin" Value="20,0,0,0" />
+              <Trigger.EnterActions>
+                <BeginStoryboard>
+                  <Storyboard>
+                    <ThicknessAnimation Storyboard.TargetName="Knob" Storyboard.TargetProperty="Margin"
+                                        To="20,0,0,0" Duration="0:0:0.15" />
+                  </Storyboard>
+                </BeginStoryboard>
+              </Trigger.EnterActions>
+              <Trigger.ExitActions>
+                <BeginStoryboard>
+                  <Storyboard>
+                    <ThicknessAnimation Storyboard.TargetName="Knob" Storyboard.TargetProperty="Margin"
+                                        To="2,0,0,0" Duration="0:0:0.15" />
+                  </Storyboard>
+                </BeginStoryboard>
+              </Trigger.ExitActions>
+            </Trigger>
+            <Trigger Property="IsKeyboardFocused" Value="True">
+              <Setter TargetName="FocusRing" Property="BorderThickness" Value="2" />
+            </Trigger>
+            <Trigger Property="Content" Value="{x:Null}">
+              <Setter TargetName="Label" Property="Visibility" Value="Collapsed" />
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+              <Setter TargetName="Root" Property="Opacity" Value="0.4" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- An icon tile: the Mac's accent-filled square that holds a white glyph (28 DIP; the glyph is IconGlyph). -->
+  <Style x:Key="IconTile" TargetType="Border">
+    <Setter Property="Width" Value="28" />
+    <Setter Property="Height" Value="28" />
+    <Setter Property="CornerRadius" Value="7" />
+    <Setter Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+  </Style>
+
+  <!-- The larger tile of a permission row (30 DIP, radius 8; the glyph is IconGlyphLarge). -->
+  <Style x:Key="IconTileLarge" TargetType="Border">
+    <Setter Property="Width" Value="30" />
+    <Setter Property="Height" Value="30" />
     <Setter Property="CornerRadius" Value="8" />
+    <Setter Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+  </Style>
+
+  <!-- The white glyph of an IconTile. -->
+  <Style x:Key="IconGlyph" TargetType="TextBlock">
+    <Setter Property="FontFamily" Value="Segoe Fluent Icons, Segoe MDL2 Assets" />
+    <Setter Property="FontSize" Value="14" />
+    <Setter Property="Foreground" Value="White" />
+    <Setter Property="HorizontalAlignment" Value="Center" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+
+  <!-- The white glyph of an IconTileLarge. -->
+  <Style x:Key="IconGlyphLarge" TargetType="TextBlock" BasedOn="{StaticResource IconGlyph}">
+    <Setter Property="FontSize" Value="15" />
+  </Style>
+
+  <!-- A status pill: the text is the status colour, the fill is that colour at 15% (ControlPanelLook.Badge sets both). -->
+  <Style x:Key="StatusBadge" TargetType="Border">
+    <Setter Property="CornerRadius" Value="10" />
+    <Setter Property="Padding" Value="8,3" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+
+  <!-- The text of a StatusBadge. -->
+  <Style x:Key="BadgeText" TargetType="TextBlock">
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+
+  <!-- The Mac's prominent button: accent fill, white text. -->
+  <Style x:Key="PrimaryButton" TargetType="Button">
+    <Setter Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+    <Setter Property="Foreground" Value="{DynamicResource TextOnAccentFillColorPrimaryBrush}" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="12,4" />
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Button">
+          <Border x:Name="Body" CornerRadius="6" Background="{TemplateBinding Background}"
+                  Padding="{TemplateBinding Padding}" SnapsToDevicePixels="True">
+            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                              TextElement.Foreground="{TemplateBinding Foreground}" />
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Body" Property="Opacity" Value="0.9" />
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+              <Setter TargetName="Body" Property="Opacity" Value="0.4" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- The Mac's plain bordered button: a quiet fill, primary text. -->
+  <Style x:Key="SecondaryButton" TargetType="Button">
+    <Setter Property="Background" Value="{DynamicResource ControlFillColorDefaultBrush}" />
+    <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="12,4" />
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Button">
+          <Border x:Name="Body" CornerRadius="6" Background="{TemplateBinding Background}"
+                  Padding="{TemplateBinding Padding}" SnapsToDevicePixels="True">
+            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                              TextElement.Foreground="{TemplateBinding Foreground}" />
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Body" Property="Opacity" Value="0.9" />
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+              <Setter TargetName="Body" Property="Opacity" Value="0.4" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
   </Style>
 
   <!-- One row of a card: a DockPanel whose control is docked right (Dock="Right") and whose label fills the rest. -->
