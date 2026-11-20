@@ -316,4 +316,32 @@ public sealed class L10nTests
                 .ToDictionary(p => p.Name, p => p.Value.GetString() ?? string.Empty)
             : new Dictionary<string, string>();
     }
+
+    [Fact]
+    public void WindowsOverlay_TranslatesTheBuildToolMessages_InEveryLanguage()
+    {
+        // The two messages of the Build & CI tool icons (SettingsStore.SetToolIcon) that the Mac tables lack.
+        var folder = Path.Combine(Path.GetTempPath(), "nt-l10n-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(folder);
+        try
+        {
+            foreach (var file in Directory.GetFiles(MacSources(), "l10n-*.json"))
+            {
+                File.Copy(file, Path.Combine(folder, Path.GetFileName(file)));
+            }
+            File.Copy(Path.Combine(RepoRoot(), "electron", "l10n", "windows.json"), Path.Combine(folder, "windows.json"));
+
+            foreach (var (code, _) in L10n.Languages.Where(language => language.Code != "en"))
+            {
+                L10n.Init(folder, code);
+
+                Assert.NotEqual("A badge field is not valid: {0}", L10n.L("A badge field is not valid: {0}", "symbol"));
+                Assert.NotEqual("A tool name is up to 60 characters.", L10n.L("A tool name is up to 60 characters."));
+            }
+        }
+        finally
+        {
+            Directory.Delete(folder, recursive: true);
+        }
+    }
 }

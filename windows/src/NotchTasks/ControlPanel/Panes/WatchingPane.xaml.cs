@@ -23,6 +23,7 @@ public partial class WatchingPane : SettingsPane
     private const int RunningAppLimit = 80;
 
     private readonly IProcessReader _processes;
+    private readonly BuildToolsBox _buildTools;
     private readonly string _home;
     private readonly string? _path;
     private readonly string? _appData;
@@ -43,6 +44,8 @@ public partial class WatchingPane : SettingsPane
         _path = path;
         _appData = appData;
         InitializeComponent();
+        _buildTools = new BuildToolsBox(store);
+        BuildHost.Content = _buildTools;
         AddButton.Click += (_, _) =>
         {
             RebuildAddMenu();
@@ -56,6 +59,7 @@ public partial class WatchingPane : SettingsPane
         WatchCaption.Text = L10n.L("What the notch watches. Only what's working shows on the notch.");
         AddHint.Text = L10n.L("Choose an agent, an open app, or type a process name.");
         RenderWatchList();
+        _buildTools.Render();
         Render();
     }
 

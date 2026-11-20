@@ -1,0 +1,31 @@
+<Window x:Class="NotchTasks.ControlPanel.BadgeEditorDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:l="clr-namespace:NotchTasks.ControlPanel"
+        Width="520" SizeToContent="Height" ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
+        Background="{DynamicResource ApplicationBackgroundBrush}"
+        Foreground="{DynamicResource TextFillColorPrimaryBrush}">
+  <!-- The icon editor of one detected build tool (the Mac's BadgeEditor opened from BuildToolsBox): a live preview and the
+       subtitle, the shared editor body, and Reset (back to the tool's default) and Done. -->
+  <StackPanel Margin="20">
+    <DockPanel>
+      <Border x:Name="Preview" DockPanel.Dock="Left" Width="56" Height="56" CornerRadius="12"
+              Background="Black" Margin="0,0,14,0" />
+      <StackPanel VerticalAlignment="Center">
+        <TextBlock Style="{StaticResource SectionHeader}" Text="{l:L Symbol}" FontSize="18" />
+        <TextBlock x:Name="SubtitleText" Style="{StaticResource CardNote}" Margin="0,2,0,0" />
+      </StackPanel>
+    </DockPanel>
+
+    <local:BadgeEditorBody x:Name="Body" Margin="0,12,0,0" xmlns:local="clr-namespace:NotchTasks.ControlPanel" />
+
+    <TextBlock x:Name="ErrorText" Style="{StaticResource CardNote}" Margin="0,12,0,0" TextWrapping="Wrap"
+               Foreground="{DynamicResource SystemFillColorCriticalBrush}" Visibility="Collapsed" />
+
+    <DockPanel Margin="0,16,0,0">
+      <Button x:Name="DoneButton" DockPanel.Dock="Right" MinWidth="90" IsDefault="True" Content="{l:L Done}" />
+      <Button x:Name="ResetButton" MinWidth="90" Content="{l:L Reset}" />
+    </DockPanel>
+  </StackPanel>
+</Window>

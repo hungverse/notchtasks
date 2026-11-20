@@ -2,6 +2,14 @@
 
 Native Windows app (C#, WPF, .NET 10) that shows AI agents' questions in a floating pill at the top of the screen. It replaces the Electron app on Windows. The Mac app in `mac/` is the reference for behaviour and look; `electron/` is kept for Linux and is read only for Windows-specific details.
 
+What Phase 3c adds:
+
+- **Build & CI**: a module, on by default, that watches what this PC builds and tests: builds, tests, installs, containers and renders. Each running job shows as a card on the pill.
+- **CI runs**: GitHub Actions runs of the repositories you watch (with `gh`'s sign-in when `gh` is installed, public repositories otherwise), and GitLab Runner jobs on this PC. A failed run shows a red alert with **View log** until you hide it with its close button, and a toast; a passed run shows a toast.
+- **Tool icons**: the Watching pane's **Build & CI** box lists the tools seen so far, and **Show all tools** lists every known tool, so an icon can be set before the first build. Click a tool to edit its icon in the same editor as the Icons pane; **Reset** returns it to the default.
+- **File transfers**: copies, downloads and extractions in Downloads, Desktop, Documents, Videos, Pictures and Music show as a card while they run.
+- **Watch list**: the Add menu offers Build & CI presets. A watch item with **Build & CI** ticked shows its jobs as Build & CI cards.
+
 What Phase 3b adds:
 
 - **Running agents**: Claude and Codex sessions, and any app or process you watch, show as cards on the pill. A card reads **Working** while the process uses CPU, and a **done** toast appears when it has finished (after the time set in Behavior, 30 s by default).

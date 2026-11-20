@@ -17,6 +17,9 @@
       <TextBlock x:Name="AddHint" Style="{StaticResource CardNote}" Margin="12,0,0,0" VerticalAlignment="Center" />
     </DockPanel>
 
+    <!-- The Build & CI box: the tools this PC builds with, each with its icon (set in code, with the settings store). -->
+    <ContentControl x:Name="BuildHost" Margin="0,16,0,0" />
+
     <TextBlock Style="{StaticResource SectionHeader}" Text="{l:L AI agent}" />
     <Border Style="{StaticResource Card}">
       <StackPanel x:Name="Rows" />

@@ -83,9 +83,28 @@ public static class BadgeGlyph
             };
         }
 
+        // A Mac symbol name that has a drawn mark (the Build & CI tools' defaults: hammer.fill, server.rack, ...) draws that mark,
+        // as the Build & CI rows draw it, rather than the star.
+        var symbol = ReadString(badge, "symbol");
+        if (symbol is not null && !symbol.StartsWith("seg:", StringComparison.Ordinal) && ModuleGlyphs.Vector(symbol) is { } data)
+        {
+            var box = size * (plain ? 0.75 : 0.55);
+            return new System.Windows.Shapes.Path
+            {
+                Data = Geometry.Parse(data),
+                Stroke = Frozen(new SolidColorBrush(ink)),
+                StrokeThickness = 1.4,
+                Stretch = Stretch.Uniform,
+                Width = box,
+                Height = box,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+        }
+
         return new TextBlock
         {
-            Text = GlyphText(ReadString(badge, "symbol")),
+            Text = GlyphText(symbol),
             FontFamily = new FontFamily(SegoeFont),
             FontSize = size * (plain ? 0.75 : 0.55),
             Foreground = Frozen(new SolidColorBrush(ink)),

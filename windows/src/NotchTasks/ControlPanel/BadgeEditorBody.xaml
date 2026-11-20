@@ -1,0 +1,36 @@
+<UserControl x:Class="NotchTasks.ControlPanel.BadgeEditorBody"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:l="clr-namespace:NotchTasks.ControlPanel"
+             xmlns:local="clr-namespace:NotchTasks.ControlPanel">
+  <!-- The editor of one badge: its symbol, and its style (shape, border, fill, symbol colour). It holds no preview and no
+       buttons of its own; the host (the Icons pane's editor, or the tool dialog) shows those around it. -->
+  <StackPanel>
+    <TextBlock Style="{StaticResource CardNote}" Margin="4,16,0,6" Text="{l:L Symbol}" />
+    <WrapPanel x:Name="SymbolGrid" />
+    <Button x:Name="LibraryButton" HorizontalAlignment="Left" Margin="0,10,0,0" Visibility="Collapsed"
+            Content="{l:L Choose an animated icon…}" />
+
+    <TextBlock Style="{StaticResource CardNote}" Margin="4,16,0,0" Text="{l:L Style}" />
+    <DockPanel Style="{StaticResource SettingRow}" Margin="0,6,0,0">
+      <ComboBox x:Name="ShapeBox" DockPanel.Dock="Right" MinWidth="220" DisplayMemberPath="Title" />
+      <TextBlock Style="{StaticResource RowLabel}" Text="{l:L Shape}" />
+    </DockPanel>
+    <DockPanel Style="{StaticResource SettingRow}" Margin="0">
+      <CheckBox x:Name="BorderBox" DockPanel.Dock="Right" />
+      <TextBlock Style="{StaticResource RowLabel}" Text="{l:L Border}" />
+    </DockPanel>
+    <DockPanel Style="{StaticResource SettingRow}" Margin="0">
+      <CheckBox x:Name="NoFillBox" DockPanel.Dock="Right" />
+      <TextBlock Style="{StaticResource RowLabel}" Text="{l:L No background}" />
+    </DockPanel>
+    <DockPanel Style="{StaticResource SettingRow}" Margin="0">
+      <local:ColorField x:Name="FillColor" DockPanel.Dock="Right" />
+      <TextBlock Style="{StaticResource RowLabel}" Text="{l:L Background color}" />
+    </DockPanel>
+    <DockPanel Style="{StaticResource SettingRow}" Margin="0">
+      <local:ColorField x:Name="SymbolColor" DockPanel.Dock="Right" />
+      <TextBlock Style="{StaticResource RowLabel}" Text="{l:L Symbol color}" />
+    </DockPanel>
+  </StackPanel>
+</UserControl>
