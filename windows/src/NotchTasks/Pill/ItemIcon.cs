@@ -294,15 +294,16 @@ public static class ItemIcon
         }
     }
 
-    /// The small icon of a file through SHGetFileInfo, as an image. Null when Windows gives none.
-    private static ImageSource? ShellIcon(string path)
+    /// The small icon of a file through SHGetFileInfo, as an image. Null when Windows gives none. attributes and flags are
+    /// SHGetFileInfo's (the shelf asks for a file type's icon by name, with SHGFI_USEFILEATTRIBUTES, and no file is read).
+    internal static ImageSource? ShellIcon(string path, uint attributes = 0, uint flags = ShgfiIcon | ShgfiSmallIcon)
     {
         var info = new byte[ShellInfoSize];
         var pinned = GCHandle.Alloc(info, GCHandleType.Pinned);
         try
         {
             var address = pinned.AddrOfPinnedObject();
-            if (ShellNative.SHGetFileInfo(path, 0, address, (uint)info.Length, ShgfiIcon | ShgfiSmallIcon) == 0)
+            if (ShellNative.SHGetFileInfo(path, attributes, address, (uint)info.Length, flags) == 0)
             {
                 return null;
             }

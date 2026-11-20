@@ -19,7 +19,11 @@ public partial class QuickBar : UserControl
         {
             pill.Click += OnTimerPill;
         }
+        ShelfLink.Click += (_, _) => _state?.PickShelfFiles();
     }
+
+    /// The shelf's tray glyph (Segoe Fluent Icons E8B7, the folder the shelf uses).
+    private const string ShelfGlyphText = "";
 
     /// The gear: open the Control Panel.
     public event Action? ControlPanelRequested;
@@ -35,6 +39,12 @@ public partial class QuickBar : UserControl
         TimerGlyph.Text = ModuleGlyphs.Get("timer");
         var show = state.Snapshot.ActiveModules.Contains("timer") && state.Timer.State is null;
         TimerBar.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+        // The shelf's link: while the shelf is on, empty and no file is dragged over the pill (the card shows then).
+        var shelfLink = state.Snapshot.ActiveModules.Contains("shelf") && state.Shelf.Items.Count == 0 && !state.ShelfTargeted;
+        ShelfGlyph.Text = ShelfGlyphText;
+        ShelfLabel.Text = L10n.L("Drag and drop or choose files");
+        ShelfLink.ToolTip = L10n.L("Drag files onto the notch, or click to choose files for the shelf");
+        ShelfLink.Visibility = shelfLink ? Visibility.Visible : Visibility.Collapsed;
     }
 
     /// A quick-start pill: starts a timer of its minutes (the pill's Tag), then publishes the change.

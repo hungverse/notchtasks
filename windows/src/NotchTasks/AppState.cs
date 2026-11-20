@@ -12,6 +12,7 @@ using NotchTasks.Core.Media;
 using NotchTasks.Core.Modules;
 using NotchTasks.Core.Notch;
 using NotchTasks.Core.Settings;
+using NotchTasks.Core.Shelf;
 using NotchTasks.Services;
 using NotchTasks.Services.Devices;
 using NotchTasks.Services.Media;
@@ -40,6 +41,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
     private readonly CiSource _ciSource;
     private readonly MediaSource _mediaSource;
     private readonly DevicesSource _devicesSource;
+    private bool _shelfTargeted;  // a file is dragged over the pill: the shelf card shows its drop prompt
     private readonly RecentCache<System.Windows.Media.ImageSource> _mediaArt = new(8);  // the artwork of the last eight keys
     private const int WorkerLogTail = 2_000_000;   // the bytes of a GitHub worker's log the module reads
     private AskWatcher? _watcher;
@@ -85,6 +87,11 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         _mediaSource = new MediaSource(Media, o.Media ?? new SmtcReader(), Publish, _mediaArt);
         Devices = new DevicesModule(this, DevicesTint);
         _devicesSource = new DevicesSource(Devices, o.Devices ?? new ContainerReader(), Publish);
+        Shelf = new ShelfStore(
+            key => StateJson.Get(AppPaths.StateFile, key),
+            (key, value) => StateJson.Set(AppPaths.StateFile, key, value),
+            path => File.Exists(path) || Directory.Exists(path));
+        Shelf.Changed += OnShelfChanged;
         Sensors = new SensorsModule(this,
             () => ActiveModules(settings).Contains("privacy"),
             () => ActiveModules(settings).Contains("calls"));
@@ -123,6 +130,66 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
 
     /// The build watch items (the enabled items marked Build & CI, and the dev tools): their states, fed by the Build & CI source.
     public AgentsModule BuildAgents { get; }
+
+    /// The file shelf: the files and folders kept from drops on the pill (state.json "shelf"). Its changes publish, so the card follows.
+    public ShelfStore Shelf { get; }
+
+    /// True while a file is dragged over the pill (the shelf's drop prompt). Setting it publishes, so the shelf card follows.
+    public bool ShelfTargeted
+    {
+        get => _shelfTargeted;
+        set
+        {
+            if (_shelfTargeted == value)
+            {
+                return;
+            }
+            _shelfTargeted = value;
+            if (!_disposed)
+            {
+                Publish();
+            }
+        }
+    }
+
+    /// Raised when the shelf's file dialog is about to open: the pill closes first, so the dialog is not under it.
+    public event Action? ShelfPickStarting;
+
+    /// The shelf's "+": closes the pill, then shows the multi-select file dialog once the close has begun, and adds the chosen files.
+    public void PickShelfFiles()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+        ShelfPickStarting?.Invoke();
+        _dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(ShowShelfPicker));
+    }
+
+    private void ShowShelfPicker()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Multiselect = true,
+            Title = L10n.L("Add to shelf"),
+        };
+        if (dialog.ShowDialog() == true)
+        {
+            Shelf.Add(dialog.FileNames);
+        }
+    }
+
+    private void OnShelfChanged()
+    {
+        if (!_disposed)
+        {
+            Publish();
+        }
+    }
 
     /// The process table reader the agent icons use (this PC's, or the options' fake in a test).
     public IProcessReader Processes { get; }

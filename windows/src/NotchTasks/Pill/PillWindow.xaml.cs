@@ -97,6 +97,9 @@ public partial class PillWindow : Window
     private readonly Func<AppState, FrameworkElement?> _mediaSection;  // the builder this pill registered for "media"
     private readonly DevicesCard _devicesCard = new();  // the Devices row: one element kept for the pill's life, refreshed by its builder
     private readonly Func<AppState, FrameworkElement?> _devicesSection;  // the builder this pill registered for "devices"
+    private readonly ShelfCard _shelfCard = new();  // the File shelf card: one element kept for the pill's life, refreshed by its builder
+    private readonly Func<AppState, FrameworkElement?> _shelfSection;  // the builder this pill registered for "shelf"
+    private readonly DispatcherTimer _shelfLeaveTimer = new() { Interval = TimeSpan.FromMilliseconds(100) };  // a drag that left clears the drop prompt after this
     private readonly LoadMeter _cpuMeter = new("CPU", LoadMeterKind.Cpu, 0);  // the header's CPU meter, shown while SystemLoad is on
     private readonly LoadMeter _ramMeter = new("RAM", LoadMeterKind.Memory, 0) { Margin = new Thickness(10, 0, 0, 0) };  // 10 DIP after the CPU
     private Toast? _shownToast;  // the toast the pill shows now; null when none
@@ -155,6 +158,19 @@ public partial class PillWindow : Window
         ToastBox.Answered += (ask, reply) => _state.Answer(ask.Id, reply);
         ToastBox.Opened += OnToastOpened;
         ToastBox.Dismissed += () => _state.Toasts.Dismiss(DateTimeOffset.Now);
+        // The file shelf takes drops on the pill (Mac receiveDrop): a drag over the shape opens the pill with the drop prompt, and a
+        // drop adds its files. The picker closes the pill before its dialog shows.
+        PillShape.AllowDrop = true;
+        PillShape.DragEnter += OnShelfDragEnter;
+        PillShape.DragOver += OnShelfDragOver;
+        PillShape.DragLeave += OnShelfDragLeave;
+        PillShape.Drop += OnShelfDrop;
+        _shelfLeaveTimer.Tick += (_, _) =>
+        {
+            _shelfLeaveTimer.Stop();
+            _state.ShelfTargeted = false;
+        };
+        _state.ShelfPickStarting += ClosePill;
 
         // The agents' section: the ask cards first, then one card per running agent (not a build). Other modules register the same way.
         _agentsSection = state => _agentCards.Sync(state.Asks.Count > 0 ? _asks.Panel : null, state.Snapshot.Running,
@@ -185,6 +201,9 @@ public partial class PillWindow : Window
         // The Devices row while a device is listed: its capsules, refreshed by the state (the devices module's own list).
         _devicesSection = state => _devicesCard.Update(state) ? _devicesCard : null;
         SectionRegistry.Register("devices", _devicesSection);
+        // The File shelf while it holds files or one is dragged over the pill: its tiles, refreshed by the state.
+        _shelfSection = state => _shelfCard.Update(state, _accent) ? _shelfCard : null;
+        SectionRegistry.Register("shelf", _shelfSection);
 
         SourceInitialized += OnSourceInitialized;
         Closed += OnClosed;
@@ -352,7 +371,62 @@ public partial class PillWindow : Window
         }
     }
 
-    /// Closes after the pointer has been outside the open shape for CloseDelay. Runs only while open.
+    /// True when a drag carries files and the shelf module is on: the shelf takes the drop (its effect is Copy, else None).
+    private bool ShelfAccepts(DragEventArgs e) =>
+        _state.Snapshot.ActiveModules.Contains("shelf") && e.Data.GetDataPresent(DataFormats.FileDrop);
+
+    /// A drag enters the pill: with files and the shelf on, the pill opens and the shelf shows its drop prompt.
+    private void OnShelfDragEnter(object sender, DragEventArgs e)
+    {
+        _shelfLeaveTimer.Stop();
+        if (!ShelfAccepts(e))
+        {
+            e.Effects = DragDropEffects.None;
+            e.Handled = true;
+            return;
+        }
+        e.Effects = DragDropEffects.Copy;
+        _state.ShelfTargeted = true;
+        if (!_open)
+        {
+            OpenPill();
+        }
+        e.Handled = true;
+    }
+
+    private void OnShelfDragOver(object sender, DragEventArgs e)
+    {
+        e.Effects = ShelfAccepts(e) ? DragDropEffects.Copy : DragDropEffects.None;
+        e.Handled = true;
+    }
+
+    /// A drag left the pill: the prompt clears after 100 ms, unless the drag came back in (DragEnter stops the timer).
+    private void OnShelfDragLeave(object sender, DragEventArgs e)
+    {
+        _shelfLeaveTimer.Stop();
+        _shelfLeaveTimer.Start();
+        e.Handled = true;
+    }
+
+    /// Files dropped on the pill are added to the shelf; the prompt clears at once.
+    private void OnShelfDrop(object sender, DragEventArgs e)
+    {
+        _shelfLeaveTimer.Stop();
+        _state.ShelfTargeted = false;
+        if (ShelfAccepts(e) && e.Data.GetData(DataFormats.FileDrop) is string[] paths)
+        {
+            _state.Shelf.Add(paths);
+            e.Effects = DragDropEffects.Copy;
+        }
+        else
+        {
+            e.Effects = DragDropEffects.None;
+        }
+        e.Handled = true;
+    }
+
+    /// Closes after the pointer has been outside the open shape for CloseDelay. Runs only while open. The pill also stays open while
+    /// a file is dragged over it, while a shelf file is dragged out, and while a shelf tile's menu is open.
     private void OnCloseTick(object? sender, EventArgs e)
     {
         if (!_open)
@@ -360,7 +434,8 @@ public partial class PillWindow : Window
             _closeTimer.Stop();
             return;
         }
-        if (Win32.GetCursorPos(out var point) && IsOverShape(point))
+        var over = Win32.GetCursorPos(out var point) && IsOverShape(point);
+        if (over || _state.ShelfTargeted || _shelfCard.Busy)
         {
             _outsideSince = null;
             return;
@@ -941,6 +1016,9 @@ public partial class PillWindow : Window
         SectionRegistry.Unregister("ci", _ciSection);
         SectionRegistry.Unregister("media", _mediaSection);
         SectionRegistry.Unregister("devices", _devicesSection);
+        SectionRegistry.Unregister("shelf", _shelfSection);
+        _state.ShelfPickStarting -= ClosePill;
+        _shelfLeaveTimer.Stop();
     }
 
     /// Re-reads the pill's own texts after a language change. The ask cards and the toast keep the text they were made

@@ -28,8 +28,16 @@
         <Button Focusable="False" x:Name="Timer45" Tag="45" Style="{StaticResource ChoiceButton}" Padding="9,0" Content="45&#x2032;" />
       </StackPanel>
     </StackPanel>
-    <!-- The Control Panel (gear) and Quit (power), at the right, as on the Mac. -->
+    <!-- The Control Panel (gear) and Quit (power), at the right, as on the Mac. The shelf's link comes before them, shown only
+         while the shelf is on, empty and no file is dragged over the pill. -->
     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+      <Button Focusable="False" x:Name="ShelfLink" Style="{StaticResource LinkChoice}" Margin="0,0,10,0" Visibility="Collapsed">
+        <StackPanel Orientation="Horizontal">
+          <TextBlock x:Name="ShelfGlyph" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="11"
+                     VerticalAlignment="Center" Margin="0,0,5,0" />
+          <TextBlock x:Name="ShelfLabel" VerticalAlignment="Center" />
+        </StackPanel>
+      </Button>
       <Button Focusable="False" x:Name="ControlPanelButton" Style="{StaticResource FooterButton}" Margin="0,0,6,0"
               Content="&#xE713;" ToolTip="{l:L Control Panel}" />
       <Button Focusable="False" x:Name="QuitButton" Style="{StaticResource FooterButton}"
