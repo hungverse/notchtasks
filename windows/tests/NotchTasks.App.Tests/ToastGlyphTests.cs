@@ -63,6 +63,17 @@ public sealed class ToastGlyphTests
         Assert.True(names.Length >= 19, $"only {names.Length} glyph names were found");
     }
 
+    [Theory]
+    [InlineData("seal")]    // CI passed (Mac checkmark.seal.fill)
+    [InlineData("octagon")] // CI failed (Mac xmark.octagon.fill)
+    public void CiGlyphs_ResolveToVectors(string name)
+    {
+        var data = ModuleGlyphs.Vector(name);
+        Assert.NotNull(data);
+        Assert.StartsWith("M", data);
+        Assert.Equal(ModuleGlyphs.Fallback, ModuleGlyphs.Get(name));
+    }
+
     [Fact]
     public void EveryCoreToastGlyph_ResolvesToAFontGlyphOrAVector_NeverTheFallback()
     {

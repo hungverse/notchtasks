@@ -7,15 +7,16 @@ namespace NotchTasks.Core.Ci;
 
 /// Everything the Build & CI module reads on one tick. The caller reads the OS; the module does not.
 /// GitLabLogs is null on the ticks that do not read the runner logs: the last parse is kept (Mac: every 3rd tick).
-/// Each log is (path, mtime in ms, tail of its text). Workers are the live Runner.Worker processes with the tail of their
-/// log. ChildJob gives the CPU row of a gitlab-runner child (threshold 0.5, idle "Waiting"). Cwd gives a process's working
-/// folder, or null. GitHubJobs are the open runs (GitHubWatcher.Jobs); GitHubFinished are the runs that ended since the last tick.
+/// Each log is (path, mtime in ms, tail of its text). Workers are the live Runner.Worker processes with their log file;
+/// the module reads a worker's log itself, through the readTail it was given (see CiModule). ChildJob gives the CPU row
+/// of a gitlab-runner child (threshold 0.5, idle "Waiting"). Cwd gives a process's working folder, or null. GitHubJobs are
+/// the open runs (GitHubWatcher.Jobs); GitHubFinished are the runs that ended since the last tick.
 public sealed record CiInputs(
     ProcSnapshot Snapshot,
     IReadOnlyList<Job> DevJobs,
     IReadOnlyList<Job> FileJobs,
     IReadOnlyList<(string File, long MtimeMs, string Tail)>? GitLabLogs,
-    IReadOnlyList<(int Pid, string? Exe, string? LogTail, string? LogFile)> Workers,
+    IReadOnlyList<(int Pid, string? Exe, string? LogFile)> Workers,
     IReadOnlyList<Job> GitHubJobs,
     IReadOnlyList<GhRun> GitHubFinished,
     Func<ProcInfo, string?> Cwd,
@@ -25,13 +26,15 @@ public sealed record CiInputs(
 /// The Build & CI module: local tasks, file transfers, GitLab runner jobs, GitHub self-hosted workers and GitHub runs, with
 /// their toasts and failure alerts. Port of electron/src/main/main.js (scanWorkers, announceFinished, computeAll,
 /// pollRunners, githubFinished) and the Mac's scanRunnerLog, githubFinished and build jobs (Model.swift). Update takes a
-/// manual clock and makes no OS calls: state.json is read and written through the injected delegates.
+/// manual clock and makes no OS calls: state.json is read and written through the injected delegates, and a worker's log
+/// through readTail.
 public sealed class CiModule
 {
     private const string DismissedKey = "dismissedJobs";
     private const int DismissedKeep = 1000;
     private const long RunningWindowMs = 5 * 60_000;   // a GitLab log silent for longer means the runner died mid-job
     private const long GoneMs = 20_000;                 // a job missing for one poll is still running
+    private const int WorkerNameEvery = 10;             // Mac: a worker whose job name is unknown is read every 10th tick
     private const string GreenTint = "#30D158";
     private const string RedTint = "#FF453A";
     private const string ModuleId = "ci";
@@ -43,35 +46,60 @@ public sealed class CiModule
     private readonly Func<string, JsonNode?> _stateGet;
     private readonly Action<string, JsonNode> _stateSet;
     private readonly Action<IEnumerable<string>> _seenTools;
+    private readonly Func<string, string?> _readTail;
 
     private Dictionary<string, LogParse> _logs = new(StringComparer.Ordinal);
     private IReadOnlyList<RunnerJob> _runnerJobs = Array.Empty<RunnerJob>();
     private readonly List<JobAlert> _runnerAlerts = new();
     private readonly List<JobAlert> _githubAlerts = new();
-    private readonly Dictionary<int, string> _workerTails = new();
+    private readonly Dictionary<int, WorkerTrack> _workers = new();
     private readonly Dictionary<string, Tracked> _working = new(StringComparer.Ordinal);
+    private HashSet<string> _lastTools = new(StringComparer.Ordinal);
     private ItemState? _buildState;
+    private List<JobAlert> _alerts = new();   // the union of the two alert lists, rebuilt only when one of them changed
+    private bool _alertsDirty;
+    private long _updates;
 
     /// stateGet and stateSet read and write one key of state.json (StateJson). seenTools receives the tools of the build
-    /// jobs (the app adds them to settings' seenTools).
-    public CiModule(IAnnouncer announce, Func<string, JsonNode?> stateGet, Action<string, JsonNode> stateSet, Action<IEnumerable<string>> seenTools)
+    /// jobs when that set changes (the app adds them to settings' seenTools). readTail reads the last 2 000 000 bytes of a
+    /// worker's log file (the app passes RunnerLogs.ReadTail).
+    public CiModule(
+        IAnnouncer announce,
+        Func<string, JsonNode?> stateGet,
+        Action<string, JsonNode> stateSet,
+        Action<IEnumerable<string>> seenTools,
+        Func<string, string?> readTail)
     {
         _announce = announce;
         _stateGet = stateGet;
         _stateSet = stateSet;
         _seenTools = seenTools;
+        _readTail = readTail;
     }
 
     /// The build jobs as one row (WatchItems.BuildItem), in the order dev, files, GitLab, GitHub, workers. Null when there are none.
     public ItemState? BuildState => _buildState;
 
-    /// The failure alerts: GitHub's first (newest first), then the GitLab ones (newest first).
-    public IReadOnlyList<JobAlert> Alerts => _githubAlerts.Concat(_runnerAlerts).ToList();
+    /// The failure alerts: GitHub's first (newest first), then the GitLab ones (newest first). The same list object is
+    /// returned until an alert changes.
+    public IReadOnlyList<JobAlert> Alerts
+    {
+        get
+        {
+            if (_alertsDirty)
+            {
+                _alerts = _githubAlerts.Concat(_runnerAlerts).ToList();
+                _alertsDirty = false;
+            }
+            return _alerts;
+        }
+    }
 
     /// Samples one tick: scans the logs when given, announces what finished, and rebuilds BuildState. Returns whether
     /// BuildState or Alerts changed.
     public bool Update(CiInputs input, long nowMs)
     {
+        _updates++;
         var beforeState = _buildState;
         var beforeAlerts = Alerts;
 
@@ -91,10 +119,16 @@ public sealed class CiModule
         _buildState = jobs.Count == 0 ? null : new ItemState(WatchItems.BuildItem, jobs);
         AnnounceFinished(jobs, input.DoneAfterSeconds, nowMs);
 
-        var tools = jobs.Select(j => j.Tool).OfType<string>().Where(t => t.Length > 0).Distinct(StringComparer.Ordinal).ToList();
-        if (tools.Count > 0)
+        var tools = new HashSet<string>(
+            jobs.Select(j => j.Tool).OfType<string>().Where(t => t.Length > 0),
+            StringComparer.Ordinal);
+        if (!tools.SetEquals(_lastTools))
         {
-            _seenTools(tools);
+            _lastTools = tools;
+            if (tools.Count > 0)
+            {
+                _seenTools(tools.ToList());
+            }
         }
 
         return !SameState(beforeState, _buildState) || !beforeAlerts.SequenceEqual(Alerts);
@@ -103,8 +137,11 @@ public sealed class CiModule
     /// Hides a failure alert for good: its id joins dismissedJobs in state.json (the last 1000 are kept).
     public void Dismiss(string id)
     {
-        _githubAlerts.RemoveAll(a => a.Id == id);
-        _runnerAlerts.RemoveAll(a => a.Id == id);
+        var removed = _githubAlerts.RemoveAll(a => a.Id == id) + _runnerAlerts.RemoveAll(a => a.Id == id);
+        if (removed > 0)
+        {
+            _alertsDirty = true;
+        }
 
         var ids = IdsOf(_stateGet(DismissedKey));
         ids.Add(id);
@@ -124,8 +161,10 @@ public sealed class CiModule
         _runnerJobs = Array.Empty<RunnerJob>();
         _runnerAlerts.Clear();
         _githubAlerts.Clear();
-        _workerTails.Clear();
+        _alertsDirty = true;
+        _workers.Clear();
         _working.Clear();
+        _lastTools.Clear();
         _buildState = null;
     }
 
@@ -162,7 +201,7 @@ public sealed class CiModule
             if (failed.Any(f => f.Id == gone.Id))
             {
                 _announce.Announce(new Toast(
-                    Glyph: "warning",
+                    Glyph: "octagon",
                     Tint: RedTint,
                     Title: L10n.L("CI failed: {0}", gone.Name),
                     Subtitle: gone.Project,
@@ -174,7 +213,7 @@ public sealed class CiModule
             else if (succeeded.Contains(gone.Id))
             {
                 _announce.Announce(new Toast(
-                    Glyph: "check",
+                    Glyph: "seal",
                     Tint: GreenTint,
                     Title: L10n.L("CI passed: {0}", gone.Name),
                     Subtitle: gone.Project,
@@ -194,7 +233,7 @@ public sealed class CiModule
                 array.Add((JsonNode?)JsonValue.Create(f.Id));
             }
             _stateSet(DismissedKey, array);
-            _runnerAlerts.Clear();
+            SetRunnerAlerts(new List<JobAlert>());
             return;
         }
 
@@ -207,8 +246,19 @@ public sealed class CiModule
                 alerts.Add(f);
             }
         }
+        SetRunnerAlerts(alerts);
+    }
+
+    /// Replaces the GitLab alerts, marking the alert list dirty only when they differ.
+    private void SetRunnerAlerts(List<JobAlert> alerts)
+    {
+        if (alerts.SequenceEqual(_runnerAlerts))
+        {
+            return;
+        }
         _runnerAlerts.Clear();
         _runnerAlerts.AddRange(alerts);
+        _alertsDirty = true;
     }
 
     private static LogParse ParseLog(long mtimeMs, string tail)
@@ -217,7 +267,8 @@ public sealed class CiModule
         return new LogParse(mtimeMs, running, failed, succeeded);
     }
 
-    /// The GitHub runs that ended: a toast either way; a failure is an alert until dismissed (newest first).
+    /// The GitHub runs that ended: a toast either way; a failure is an alert until dismissed (newest first). A run already
+    /// dismissed still toasts, but gives no alert.
     private void AnnounceGitHub(IReadOnlyList<GhRun> finished)
     {
         if (finished.Count == 0)
@@ -231,7 +282,7 @@ public sealed class CiModule
             if (r.Conclusion == "success")
             {
                 _announce.Announce(new Toast(
-                    Glyph: "check",
+                    Glyph: "seal",
                     Tint: GreenTint,
                     Title: L10n.L("CI passed: {0}", r.Workflow),
                     Subtitle: r.Repo,
@@ -242,7 +293,7 @@ public sealed class CiModule
             else if (r.Conclusion is "failure" or "timed_out" or "startup_failure")
             {
                 _announce.Announce(new Toast(
-                    Glyph: "warning",
+                    Glyph: "octagon",
                     Tint: RedTint,
                     Title: L10n.L("CI failed: {0}", r.Workflow),
                     Subtitle: r.Repo,
@@ -255,6 +306,7 @@ public sealed class CiModule
                 if (!dismissed.Contains(id) && _githubAlerts.All(a => a.Id != id))
                 {
                     _githubAlerts.Insert(0, new JobAlert(id, r.Workflow, r.Repo, string.IsNullOrEmpty(r.Title) ? "failure" : r.Title, r.Url));
+                    _alertsDirty = true;
                 }
             }
         }
@@ -299,27 +351,31 @@ public sealed class CiModule
         return rows;
     }
 
-    /// The GitHub self-hosted worker rows, sorted by id. A worker that is gone toasts its result from its last log (P3c-R7).
-    private IReadOnlyList<Job> WorkerRows(IReadOnlyList<(int Pid, string? Exe, string? LogTail, string? LogFile)> workers)
+    /// The GitHub self-hosted worker rows, sorted by id. The log is read when a worker is first seen, every 10th update
+    /// while its job name is still unknown, and once more when it is gone, for its result (P3c-R7 toast, no URL).
+    private IReadOnlyList<Job> WorkerRows(IReadOnlyList<(int Pid, string? Exe, string? LogFile)> workers)
     {
         var live = new HashSet<int>();
         foreach (var w in workers)
         {
             live.Add(w.Pid);
-            if (w.LogTail is not null)
+            if (!_workers.TryGetValue(w.Pid, out var track))
             {
-                _workerTails[w.Pid] = w.LogTail;
+                _workers[w.Pid] = new WorkerTrack(w.LogFile, ReadTail(w.LogFile));
+                continue;
             }
-            else
+            track.LogFile = w.LogFile ?? track.LogFile;
+            if (_updates % WorkerNameEvery == 0 && !HasJobName(track.Tail))
             {
-                _workerTails.TryAdd(w.Pid, string.Empty);
+                track.Tail = ReadTail(track.LogFile);
             }
         }
 
-        foreach (var pid in _workerTails.Keys.Where(pid => !live.Contains(pid)).ToList())
+        foreach (var pid in _workers.Keys.Where(p => !live.Contains(p)).ToList())
         {
-            var tail = _workerTails[pid];
-            _workerTails.Remove(pid);
+            var track = _workers[pid];
+            _workers.Remove(pid);
+            var tail = track.LogFile is null ? track.Tail : ReadTail(track.LogFile);
             var result = RunnerLogs.WorkerResult(tail);
             if (result is null)
             {
@@ -328,7 +384,7 @@ public sealed class CiModule
             var job = WorkerJob(pid, tail);
             var ok = result == "Succeeded";
             _announce.Announce(new Toast(
-                Glyph: ok ? "check" : "warning",
+                Glyph: ok ? "seal" : "octagon",
                 Tint: ok ? GreenTint : RedTint,
                 Title: (ok ? L10n.L("CI passed: ") : L10n.L("CI failed: ")) + job.Detail,
                 Subtitle: job.Title,
@@ -337,10 +393,15 @@ public sealed class CiModule
         }
 
         return live
-            .Select(pid => WorkerJob(pid, _workerTails[pid]))
+            .Select(pid => WorkerJob(pid, _workers[pid].Tail))
             .OrderBy(j => j.Id, StringComparer.Ordinal)
             .ToList();
     }
+
+    /// The log text of a worker's file, or "" when there is no file or the read gives nothing.
+    private string ReadTail(string? file) => file is null ? string.Empty : _readTail(file) ?? string.Empty;
+
+    private static bool HasJobName(string tail) => !string.IsNullOrEmpty(RunnerLogs.WorkerJobName(tail));
 
     private static Job WorkerJob(int pid, string tail)
     {
@@ -420,4 +481,18 @@ public sealed class CiModule
 
     /// A build job seen working: its title, when it started, and when it was last seen working (ms).
     private sealed record Tracked(string Title, long Since, long LastSeen);
+
+    /// A live or just-gone worker: its log file and the last log text read from it.
+    private sealed class WorkerTrack
+    {
+        public WorkerTrack(string? logFile, string tail)
+        {
+            LogFile = logFile;
+            Tail = tail;
+        }
+
+        public string? LogFile { get; set; }
+
+        public string Tail { get; set; }
+    }
 }
