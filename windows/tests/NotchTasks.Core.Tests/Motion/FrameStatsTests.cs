@@ -35,6 +35,6 @@ public sealed class FrameStatsTests
         Assert.Equal(12, summary.Frames);
         Assert.Equal(2, summary.Long);
         Assert.Equal(50, summary.Max, precision: 6);
-        Assert.Equal(40, summary.P95, precision: 6);
+        Assert.Equal(50, summary.P95, precision: 6);  // nearest-rank: ceil(0.95 * 12) = 12
     }
 }

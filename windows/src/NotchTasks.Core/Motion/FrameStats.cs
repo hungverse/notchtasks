@@ -2,12 +2,13 @@ namespace NotchTasks.Core.Motion;
 
 /// Frame interval statistics: the frame count, the 50th and 95th percentile and the largest interval (ms), and how many
 /// intervals were over 1.5 frame periods (dropped frames).
+/// Frames counts the frame intervals measured (one fewer than the frames drawn), not the frames themselves.
 public sealed record FrameSummary(int Frames, double P50, double P95, double Max, int Long);
 
 public static class FrameStats
 {
-    /// Summarises the frame intervals (ms) against the display's frame period (ms). Percentiles are nearest-rank: the
-    /// rank is p * n rounded to the nearest whole rank. An empty list gives all zeros.
+    /// Summarises the frame intervals (ms) against the display's frame period (ms). Percentiles are textbook
+    /// nearest-rank: the rank is ceil(p * n), 1-based. An empty list gives all zeros.
     public static FrameSummary Summarize(IReadOnlyList<double> intervalsMs, double periodMs)
     {
         if (intervalsMs.Count == 0)
@@ -37,7 +38,7 @@ public static class FrameStats
     /// The value at nearest rank for p in (0, 1] over a sorted, non-empty array.
     private static double Percentile(double[] sorted, double p)
     {
-        var rank = (int)Math.Round(p * sorted.Length, MidpointRounding.AwayFromZero);
+        var rank = (int)Math.Ceiling(p * sorted.Length);
         rank = Math.Clamp(rank, 1, sorted.Length);
         return sorted[rank - 1];
     }

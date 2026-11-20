@@ -852,6 +852,7 @@ public partial class PillWindow : Window
         _closeTimer.Stop();
         _waitTimer.Stop();
         _toastTimer.Stop();
+        FrameLog.End();  // an animation cut short by the close still writes its line, and no Rendering handler outlives the window
         SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
         _state.PropertyChanged -= OnStateChanged;
         _state.Asks.CollectionChanged -= OnAsksChanged;
