@@ -67,7 +67,15 @@ public sealed class PillMotionShapeTests
                 state.Publish();
                 var shape = Fixture.Field<RectangleGeometry>(pill, "_shape");
                 OpenHeld(pill);
-                PumpFor(TimeSpan.FromMilliseconds(100));
+
+                // Pump until a frame shows the open in flight (strictly between the closed and open widths). The pump stops there, so
+                // the close starts from that value: no timing guess, and no race with the spring's end.
+                var end = DateTime.UtcNow.AddSeconds(5);
+                while (!InFlight(shape) && Fixture.Field<bool>(pill, "_animating") && DateTime.UtcNow < end)
+                {
+                    PumpFor(TimeSpan.FromMilliseconds(5));
+                }
+                Assert.True(InFlight(shape), $"the open was never in flight: width {shape.Rect.Width}");
 
                 // The close starts from where the open had got to, not from the open's start or end.
                 Fixture.Call(pill, "ClosePill");
@@ -173,6 +181,10 @@ public sealed class PillMotionShapeTests
         pill.Left = -10000;
         pill.Top = -10000;
     }
+
+    /// Whether the shape's width is strictly between the closed and the open width.
+    private static bool InFlight(RectangleGeometry shape) =>
+        shape.Rect.Width > PillGeometry.ClosedWidth && shape.Rect.Width < PillGeometry.OpenWidth;
 
     /// Opens the pill and holds it open. A test's pointer is never over the pill, so the close timer would close it 350 ms
     /// after the open; the timer is stopped here, as a pointer on the pill would.
