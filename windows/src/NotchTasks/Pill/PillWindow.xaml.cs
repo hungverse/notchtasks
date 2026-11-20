@@ -876,7 +876,9 @@ public partial class PillWindow : Window
     private bool IsInsideRect(NativePoint screenPoint, Rect layoutRect, double radius)
     {
         var r = OnWindow(layoutRect);
-        return PillHitTest.InRoundedRect(ToShapePoint(screenPoint), r.X, r.Y, r.Width, r.Height, radius);
+        var p = ToShapePoint(screenPoint);
+        return PillHitTest.InRoundedRect(p, r.X, r.Y, r.Width, r.Height, radius)
+            || PillHitTest.InGapAbove(p, r.X, r.Y, r.Width, PillGeometry.IslandTop);
     }
 
     /// The shape's rectangle in the window: the layout is centred in the window, and the shape sits in the layout.

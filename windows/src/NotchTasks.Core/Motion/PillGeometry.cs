@@ -27,16 +27,21 @@ public static class PillGeometry
     /// How far the wings move in from the layout's edges for a shape `w` wide: the left wing by +offset, the right by -offset.
     public static double WingOffset(double w) => (LayoutWidth - w) / 2;
 
+    /// How far the pill floats below the top of the work area (DIP), as the Mac's islandTop does. The gap above it still
+    /// counts for hover: the screen's top edge opens the pill.
+    public const double IslandTop = 4;
+
     /// The window: big enough for the open card and the glow, never resized.
     public const double WindowWidth = 560;
     public const double WindowHeight = 420;
 
-    /// Top centre of the work area, in whole device pixels. The size is the window's DIP size times the DPI scale.
+    /// Top centre of the work area, in whole device pixels, IslandTop below its top. The size is the window's DIP size times the DPI scale.
     public static (int X, int Y, int W, int H) Place((int X, int Y, int W, int H) workAreaPx, double windowWidthDip, double windowHeightDip, double scale)
     {
         var w = (int)Math.Round(windowWidthDip * scale, MidpointRounding.AwayFromZero);
         var h = (int)Math.Round(windowHeightDip * scale, MidpointRounding.AwayFromZero);
         var x = workAreaPx.X + (workAreaPx.W - w) / 2;
-        return (x, workAreaPx.Y, w, h);
+        var y = workAreaPx.Y + (int)Math.Round(IslandTop * scale, MidpointRounding.AwayFromZero);
+        return (x, y, w, h);
     }
 }
