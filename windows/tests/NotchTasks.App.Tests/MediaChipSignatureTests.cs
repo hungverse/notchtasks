@@ -88,3 +88,47 @@ public sealed class MediaChipSignatureTests
         ChipView.Fill(left, right, chips, new Dictionary<string, string>(StringComparer.Ordinal),
             new Dictionary<string, string>(StringComparer.Ordinal), null, now, null, animationsOn: false, art: _ => null);
 }
+
+/// A media chip keeps its content per playing app: a switch to another app with no artwork rebuilds the chip (its icon changes).
+public sealed class MediaChipAppSwitchTests
+{
+    private static Chip Media(string source) => new(ChipKind.Media, "media", "media")
+    {
+        Media = new NowPlaying(source, "App", null, "Song", "Artist", true, 10, 200, 0, true, true, true, true, null),
+    };
+
+    [Fact]
+    public void AppSwitch_WithoutArtwork_RebuildsTheChip()
+    {
+        Sta.Run(() =>
+        {
+            var left = new StackPanel { Orientation = Orientation.Horizontal };
+            var right = new StackPanel { Orientation = Orientation.Horizontal };
+            var host = new StackPanel { Orientation = Orientation.Horizontal };
+            host.Children.Add(left);
+            host.Children.Add(right);
+            var window = new Window { Content = host, Width = 400, Height = 60 };
+            Fixture.ShowOffScreen(window);
+            try
+            {
+                var now = DateTimeOffset.Now;
+                Fill(left, right, [Media("a.exe")], now);
+                var first = Assert.Single(right.Children.OfType<FrameworkElement>(), e => e.Tag is "chip");
+                var barsBefore = ((StackPanel)first).Children[0];
+
+                Fill(left, right, [Media("b.exe")], now);
+                var second = Assert.Single(right.Children.OfType<FrameworkElement>(), e => e.Tag is "chip");
+
+                Assert.NotSame(barsBefore, ((StackPanel)second).Children[0]);  // the content was rebuilt for the other app
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    private static void Fill(StackPanel left, StackPanel right, Chip[] chips, DateTimeOffset now) =>
+        ChipView.Fill(left, right, chips, new Dictionary<string, string>(StringComparer.Ordinal),
+            new Dictionary<string, string>(StringComparer.Ordinal), null, now, null, animationsOn: false, art: _ => null);
+}

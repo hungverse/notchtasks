@@ -117,6 +117,9 @@ public partial class PillWindow : Window
     private bool _openRefreshPending;  // a publish came during an open: it is applied once when the open finishes
     private double _openHeight;  // the open pill's height, as last measured
     private bool _openHeightValid;  // false once the sections changed size or were changed: OpenHeight measures again
+    private int _openHeightMeasures;  // how often OpenHeight measured (a test reads it)
+    private int _openToken;  // one per open: a deferred FinishOpen runs only for the open that queued it
+    private bool _bodyRefreshQueued;  // a body size change is applied once, after the layout pass
 
     /// Creates the pill for the app state. Call Show next (the window is placed when its handle exists).
     public PillWindow(AppState state)
@@ -124,8 +127,8 @@ public partial class PillWindow : Window
         _state = state;
         InitializeComponent();
         // A section that changed size (its content changed) makes the open height measure again; nothing else does.
-        SectionList.SizeChanged += (_, _) => _openHeightValid = false;
-        EmptyNote.SizeChanged += (_, _) => _openHeightValid = false;
+        SectionList.SizeChanged += (_, _) => OnBodySizeChanged();
+        EmptyNote.SizeChanged += (_, _) => OnBodySizeChanged();
 
         // The layout is sized once: the shape's paths and the clip draw the shared rectangle inside it.
         PillShape.Width = PillGeometry.LayoutWidth;
@@ -383,8 +386,8 @@ public partial class PillWindow : Window
         }
     }
 
-    /// The pointer came near the pill: the card layer is laid out now, at zero opacity, so the first frames of an open do not carry
-    /// the layout. Nothing is drawn while it is at zero opacity.
+    /// The pointer came near the pill: the open height is measured now and the card layer takes it, so the first frames of an open do
+    /// not carry the measure. The card layer stays hidden (it is laid out while hidden), so nothing on it runs while the pill is closed.
     private void WarmCard()
     {
         if (_open || _closing || _animating || _warm)
@@ -393,8 +396,6 @@ public partial class PillWindow : Window
         }
         _warm = true;
         CardLayer.Height = OpenHeight() - PillGeometry.ClosedHeight;
-        CardLayer.Opacity = 0;
-        CardLayer.Visibility = Visibility.Visible;
     }
 
     /// The pointer left the near zone without opening: the warmed card layer goes back to hidden.
@@ -527,13 +528,15 @@ public partial class PillWindow : Window
         ApplyAppearance();
         _closeTimer.Start();
         // The work that is not drawn (the shelf's files, the wait ticks, the sensors and the load) comes after the open's first frame.
-        Dispatcher.BeginInvoke(new Action(FinishOpen), DispatcherPriority.ContextIdle);
+        var token = ++_openToken;
+        Dispatcher.BeginInvoke(new Action(() => FinishOpen(token)), DispatcherPriority.ContextIdle);
     }
 
-    /// The open's deferred work, once its first frame is drawn. A pill closed again before this ran has nothing to finish.
-    private void FinishOpen()
+    /// The open's deferred work, once its first frame is drawn. It runs only for the open that queued it: a pill closed again, or
+    /// reopened, before this ran has its own step queued (and this one does nothing), so the work runs once per open.
+    private void FinishOpen(int token)
     {
-        if (!_open)
+        if (!_open || token != _openToken)
         {
             return;
         }
@@ -806,6 +809,7 @@ public partial class PillWindow : Window
         body.Measure(new Size(PillGeometry.OpenWidth, double.PositiveInfinity));
         _openHeight = Math.Min(PillGeometry.MaxOpenHeight, PillGeometry.ClosedHeight + body.DesiredSize.Height);
         _openHeightValid = true;
+        _openHeightMeasures++;
         return _openHeight;
     }
 
@@ -842,7 +846,7 @@ public partial class PillWindow : Window
         {
             if (node is RowScroller row)
             {
-                row.ScrollNotches(delta);
+                row.ScrollNotches(RowScroller.FromHorizontalWheel(delta));
                 return true;
             }
         }
@@ -917,6 +921,26 @@ public partial class PillWindow : Window
     /// no section has anything.
     /// The children are replaced only when the sections differ: a publish that changes nothing (the timer's tick) leaves them in
     /// place, so a press on one of them is not lost to a removal. Only the margins are set again.
+    /// A section or the note changed size (its content changed): the open height measures again, and an open pill follows it. The follow
+    /// is queued after the layout pass, so it never runs inside a layout, and one queued follow covers every size change in a pass.
+    private void OnBodySizeChanged()
+    {
+        _openHeightValid = false;
+        if (!_open || _bodyRefreshQueued)
+        {
+            return;
+        }
+        _bodyRefreshQueued = true;
+        Dispatcher.BeginInvoke(new Action(() =>
+        {
+            _bodyRefreshQueued = false;
+            if (_open)
+            {
+                RefreshOpen();  // during an open this is applied once when the open finishes (no lost update)
+            }
+        }), DispatcherPriority.Background);
+    }
+
     private void SyncSections()
     {
         var sections = SectionRegistry.For(_state);
@@ -964,7 +988,6 @@ public partial class PillWindow : Window
     /// chip (the Mac's hasCollapsed). The note keeps its margins even without text, so the open height still counts them.
     private void SyncEmptyNote(bool noSections)
     {
-        _openHeightValid = false;  // the body (the note or the sections) may have changed
         var showText = noSections && !_hasCollapsed;
         EmptyNote.Visibility = noSections ? Visibility.Visible : Visibility.Collapsed;
         EmptyText.Text = L10n.L("Nothing running");

@@ -31,9 +31,11 @@ public static class ChipView
     private static readonly DependencyProperty SignatureProperty = DependencyProperty.RegisterAttached(
         "ChipSignature", typeof(object), typeof(ChipView), new PropertyMetadata(null));
 
-    /// A media chip's content signature: the artwork key, whether its artwork and its app icon are cached, the tint and the sides.
-    /// Its position is not in it, so the chip is not rebuilt as the position moves.
-    private sealed record MediaSignature(string ArtKey, bool Art, bool Icon, Color Tint, bool Lead, bool Trail, string Side);
+    /// A media chip's content signature: the playing app (its source and exe, whose icon is the lead when there is no artwork), the
+    /// artwork key, whether its artwork and its app icon are cached, the tint and the sides. Its position is not in it, so the chip is
+    /// not rebuilt as the position moves.
+    private sealed record MediaSignature(string Source, string? AppExe, string ArtKey, bool Art, bool Icon, Color Tint, bool Lead, bool Trail,
+        string Side);
 
     /// Any other chip's content signature: the chip record (its values, as the publish carries them), its tint, the sides, the language
     /// (its words are drawn again on a switch) and the second: a timer, a call or a limit shows the time, so the panel is rebuilt once a
@@ -358,7 +360,7 @@ public static class ChipView
             var artKey = playing.ArtworkKey ?? string.Empty;
             var artCached = playing.ArtworkKey is { } key && art?.Invoke(key) is not null;
             var iconCached = playing.AppExe is { } exe && ItemIcon.HasExeIcon(exe);
-            return new MediaSignature(artKey, artCached, iconCached, tint, lead, trail, side);
+            return new MediaSignature(playing.Source, playing.AppExe, artKey, artCached, iconCached, tint, lead, trail, side);
         }
         if (chip.Kind == ChipKind.Agent)
         {

@@ -17,6 +17,8 @@ public sealed class RowScroller : ScrollViewer
     /// One wheel notch in WHEEL_DELTA units.
     public const int NotchDelta = 120;
 
+    private int _wheelRemainder;  // the wheel delta not yet a whole notch
+
     public RowScroller()
     {
         HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden;
@@ -34,17 +36,26 @@ public sealed class RowScroller : ScrollViewer
         }
     }
 
-    /// Scrolls the row sideways by a wheel delta: a positive delta (wheel away) moves left, as Shift+wheel does on Windows.
+    /// The row's delta for a horizontal wheel turn. WM_MOUSEHWHEEL is positive to the right, while ScrollNotches is positive to the
+    /// left (as Shift+wheel is), so the sign is flipped.
+    public static int FromHorizontalWheel(int delta) => -delta;
+
+    /// Scrolls the row sideways by a wheel delta: a positive delta (wheel away) moves left, as Shift+wheel does on Windows. Deltas add
+    /// up: a touchpad sends many small ones, and the row moves three lines per whole notch (120) accumulated, the rest waiting for the
+    /// next turn.
     public void ScrollNotches(int delta)
     {
-        if (delta == 0)
+        _wheelRemainder += delta;
+        var notches = _wheelRemainder / NotchDelta;
+        _wheelRemainder %= NotchDelta;
+        if (notches == 0)
         {
             return;
         }
-        var steps = Math.Max(1, Math.Abs(delta) / NotchDelta) * LinesPerNotch;
-        for (var i = 0; i < steps; i++)
+        var lines = Math.Abs(notches) * LinesPerNotch;
+        for (var i = 0; i < lines; i++)
         {
-            if (delta > 0)
+            if (notches > 0)
             {
                 LineLeft();
             }

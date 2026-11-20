@@ -12,7 +12,7 @@ public sealed class RowScrollerTests
 {
     /// A row of 10 tiles, 80 DIP each (800 DIP of content in a 200 DIP row), inside an outer border that records the wheel. The
     /// row is shown in a window of its own (off screen, not activated) so that its scroll host is laid out.
-    private static (Window Window, RowScroller Row, Border Tile, Func<bool> Reached) Build()
+    internal static (Window Window, RowScroller Row, Border Tile, Func<bool> Reached) Build()
     {
         var tiles = new StackPanel { Orientation = Orientation.Horizontal };
         for (var i = 0; i < 10; i++)
@@ -90,4 +90,56 @@ public sealed class RowScrollerTests
             }
         });
     }
+}
+
+/// The wheel: small deltas add up (a touchpad sends many small ones), and a horizontal wheel turn to the right scrolls right.
+public sealed class RowScrollerWheelTests
+{
+    [Fact]
+    public void SmallDeltas_AccumulateToThreeLinesPerNotch()
+    {
+        Sta.Run(() =>
+        {
+            var (window, row, _, _) = BuildRow();
+            try
+            {
+                for (var i = 0; i < 3; i++)
+                {
+                    row.ScrollNotches(-30);  // a quarter notch each
+                }
+                window.UpdateLayout();
+                Assert.Equal(0, row.HorizontalOffset);  // 90 accumulated: not yet a notch
+
+                row.ScrollNotches(-30);  // 120 accumulated: one notch, three lines
+                window.UpdateLayout();
+                Assert.Equal(3 * 16, row.HorizontalOffset);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    [Fact]
+    public void HorizontalWheelToTheRight_ScrollsRight()
+    {
+        Sta.Run(() =>
+        {
+            var (window, row, _, _) = BuildRow();
+            try
+            {
+                // A horizontal wheel turn to the right is a positive delta; RowScroller maps it to scrolling right.
+                row.ScrollNotches(RowScroller.FromHorizontalWheel(120));
+                window.UpdateLayout();
+                Assert.True(row.HorizontalOffset > 0);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    private static (Window Window, RowScroller Row, Border Tile, Func<bool> Reached) BuildRow() => RowScrollerTests.Build();
 }
