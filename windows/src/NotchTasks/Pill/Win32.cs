@@ -88,6 +88,14 @@ internal static partial class Win32
     [return: MarshalAs(UnmanagedType.Bool)]
     public static partial bool PlaySound(byte[] data, nint module, uint flags);
 
+    /// ENUM_CURRENT_SETTINGS: the display's current mode (the iModeNum DWORD -1).
+    public const uint EnumCurrentSettings = unchecked((uint)-1);
+
+    /// Reads a display mode into a DEVMODEW buffer (dmSize set by the caller). A null device name is the primary display.
+    [LibraryImport("user32.dll", EntryPoint = "EnumDisplaySettingsW")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool EnumDisplaySettings(nint deviceName, uint modeNumber, nint devMode);
+
     [LibraryImport("user32.dll", EntryPoint = "SystemParametersInfoW", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static partial bool SystemParametersInfo(uint action, uint param, out NativeRect area, uint winIni);

@@ -508,6 +508,7 @@ public partial class PillWindow : Window
             return;
         }
         var curve = SpringCurve.For(settings.Motion, mode != Mode.Closed, animationsOn);
+        FrameLog.Begin(mode.ToString());
 
         var token = ++_animation;
         _closing = mode == Mode.Closed;
@@ -533,6 +534,7 @@ public partial class PillWindow : Window
             {
                 _closing = false;
                 _animating = false;
+                FrameLog.End();
                 ApplyAppearance();
                 ReevaluateClickThrough();
             }
