@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -284,8 +283,8 @@ public sealed class CodexScanner
 
     private readonly string _root;
     private readonly Dictionary<string, Entry> _cache = new(StringComparer.Ordinal);
-    /// The raw limits of each rollout, keyed by path, for the mtime it had when it was read. An unchanged file is not read again.
-    private readonly Dictionary<string, (DateTimeOffset Mtime, CodexLimitsRaw? Raw)> _limitsCache = new(StringComparer.Ordinal);
+    /// The raw limits of each rollout, keyed by path, for the mtime and size it had when it was read. An unchanged file is not read again.
+    private readonly Dictionary<string, (DateTimeOffset Mtime, long Size, CodexLimitsRaw? Raw)> _limitsCache = new(StringComparer.Ordinal);
 
     private sealed class Entry
     {
@@ -306,7 +305,7 @@ public sealed class CodexScanner
 
     /// The folder to scan (for the app, <home>\.codex\sessions). Nothing is read until a method is called.
     /// onRead, when given, is told the size of every chunk read (the tests use it to check the reads stay bounded).
-    /// onFolder, when given, is told the path of every folder the scan lists (the tests use it to check old date folders are skipped).
+    /// onFolder, when given, is told the path of every folder the scan lists (the tests use it to check every folder is walked).
     public CodexScanner(string root, Action<int>? onRead = null, Action<string>? onFolder = null)
     {
         _root = root;
@@ -318,7 +317,7 @@ public sealed class CodexScanner
     public IReadOnlyList<Job> Jobs(DateTimeOffset now)
     {
         var jobs = new List<Job>();
-        foreach (var (path, mtime, _) in WalkJsonl(now, JobWindow))
+        foreach (var (path, mtime, _) in WalkJsonl())
         {
             if (now - mtime >= JobWindow)
             {
@@ -351,14 +350,14 @@ public sealed class CodexScanner
     {
         CodexLimitsFound? best = null;
         var listed = new HashSet<string>(StringComparer.Ordinal);
-        foreach (var (path, mtime, size) in WalkJsonl(now, LimitsWindow))
+        foreach (var (path, mtime, size) in WalkJsonl())
         {
             if (now - mtime >= LimitsWindow)
             {
                 continue;
             }
             listed.Add(path);
-            if (!_limitsCache.TryGetValue(path, out var cached) || cached.Mtime != mtime)
+            if (!_limitsCache.TryGetValue(path, out var cached) || cached.Mtime != mtime || cached.Size != size)
             {
                 // a rollout older than the newest reading found so far cannot change the answer: it is not read
                 if (best is not null && !(mtime > best.At))
@@ -367,7 +366,7 @@ public sealed class CodexScanner
                 }
                 var text = Providers.ReadTail(path);
                 _onRead?.Invoke((int)Math.Min(size, Providers.TailBytes));
-                cached = (mtime, CodexRollout.ParseRawLimits(text));
+                cached = (mtime, size, CodexRollout.ParseRawLimits(text));
                 _limitsCache[path] = cached;
             }
             var found = cached.Raw is null ? null : CodexRollout.ApplyLimits(cached.Raw, now);
@@ -482,12 +481,11 @@ public sealed class CodexScanner
     }
 
     /// Every .jsonl file under the root with its last write time and size, from the listing itself (no second stat per file).
-    /// A YYYY/MM/DD folder whose day is more than a day before the window's start is not entered: a rollout is written in the
-    /// folder of the day it started, and the day's margin keeps a session that runs past midnight. Folders that cannot be
-    /// read are skipped.
-    private List<(string Path, DateTimeOffset Mtime, long Size)> WalkJsonl(DateTimeOffset now, TimeSpan window)
+    /// Every folder is entered, whatever its date: a rollout is written in the folder of the day its thread started, so a
+    /// thread resumed days later keeps writing there (the Mac walks every folder too). Callers filter by each file's mtime.
+    /// Folders that cannot be read are skipped.
+    private List<(string Path, DateTimeOffset Mtime, long Size)> WalkJsonl()
     {
-        var cutoff = (now - window).UtcDateTime.Date;
         var found = new List<(string Path, DateTimeOffset Mtime, long Size)>();
         var pending = new Stack<string>();
         pending.Push(_root);
@@ -501,10 +499,7 @@ public sealed class CodexScanner
                 {
                     if (info is DirectoryInfo sub)
                     {
-                        if (!IsBefore(sub.FullName, cutoff))
-                        {
-                            pending.Push(sub.FullName);
-                        }
+                        pending.Push(sub.FullName);
                     }
                     else if (info is FileInfo file && file.Name.EndsWith(".jsonl", StringComparison.Ordinal))
                     {
@@ -525,24 +520,5 @@ public sealed class CodexScanner
             }
         }
         return found;
-    }
-
-    /// True for a YYYY/MM/DD folder whose day, plus one day of margin, is before cutoff. Any other folder is never skipped.
-    private bool IsBefore(string dir, DateTime cutoff)
-    {
-        var parts = Path.GetRelativePath(_root, dir).Split(Path.DirectorySeparatorChar);
-        if (parts.Length != 3 || parts.Any(p => p.Length == 0 || !p.All(char.IsAsciiDigit)))
-        {
-            return false;
-        }
-        try
-        {
-            var day = new DateTime(int.Parse(parts[0], CultureInfo.InvariantCulture), int.Parse(parts[1], CultureInfo.InvariantCulture), int.Parse(parts[2], CultureInfo.InvariantCulture));
-            return day.AddDays(1) < cutoff;
-        }
-        catch (ArgumentOutOfRangeException)
-        {
-            return false;
-        }
     }
 }
