@@ -17,24 +17,32 @@ public sealed class GitHubApi : IGitHubApi
     private static readonly Uri ApiBase = new("https://api.github.com/");
     private static readonly TimeSpan RequestLimit = TimeSpan.FromSeconds(10);
     private static readonly TimeSpan TokenLimit = TimeSpan.FromSeconds(5);
-    private static readonly HttpClient Shared = new(new SocketsHttpHandler { AllowAutoRedirect = false })
+    private static readonly HttpClient Shared = new(new SocketsHttpHandler
+    {
+        AllowAutoRedirect = false,
+        PooledConnectionLifetime = TimeSpan.FromMinutes(5),
+    })
     {
         Timeout = RequestLimit,
     };
 
     private readonly HttpClient _http;
     private readonly string _home;
+    private readonly TimeSpan _limit;
 
-    /// home is the user's profile folder (where gh is looked for). handler replaces the network, for tests; null uses the shared client.
-    public GitHubApi(string home, HttpMessageHandler? handler = null)
+    /// home is the user's profile folder (where gh is looked for). handler replaces the network, for tests; null uses the shared
+    /// client. limit is the whole-request limit (the request and its body), 10 s when null.
+    public GitHubApi(string home, HttpMessageHandler? handler = null, TimeSpan? limit = null)
     {
         _home = home;
-        _http = handler is null ? Shared : new HttpClient(handler) { Timeout = RequestLimit };
+        _limit = limit ?? RequestLimit;
+        _http = handler is null ? Shared : new HttpClient(handler) { Timeout = _limit };
     }
 
     public async Task<JsonDocument?> Get(string route, string? token)
     {
-        if (!Uri.TryCreate(ApiBase, route, out var uri) || uri.Scheme != Uri.UriSchemeHttps || uri.Host != ApiBase.Host)
+        // the authority comparison refuses a port too: only https://api.github.com is ever asked
+        if (!Uri.TryCreate(ApiBase, route, out var uri) || uri.Scheme != Uri.UriSchemeHttps || uri.Authority != ApiBase.Authority)
         {
             return null;
         }
@@ -48,18 +56,20 @@ public sealed class GitHubApi : IGitHubApi
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
 
+        // one limit for the whole request: the answer's headers and its body
+        using var limit = new CancellationTokenSource(_limit);
         try
         {
-            using var response = await _http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+            using var response = await _http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, limit.Token);
             if (response.StatusCode != HttpStatusCode.OK || response.Content.Headers.ContentLength > MaxBytes)
             {
                 return null;
             }
-            await using var stream = await response.Content.ReadAsStreamAsync();
-            var body = await ReadCapped(stream);
+            await using var stream = await response.Content.ReadAsStreamAsync(limit.Token);
+            var body = await ReadCapped(stream, limit.Token);
             return body is null ? null : JsonDocument.Parse(body);
         }
-        catch (Exception e) when (e is HttpRequestException or TaskCanceledException or IOException or JsonException or InvalidOperationException)
+        catch (Exception e) when (e is HttpRequestException or OperationCanceledException or IOException or JsonException or InvalidOperationException)
         {
             return null;
         }
@@ -79,12 +89,12 @@ public sealed class GitHubApi : IGitHubApi
     });
 
     /// The body of a response, or null when it is over MaxBytes.
-    private static async Task<byte[]?> ReadCapped(Stream stream)
+    private static async Task<byte[]?> ReadCapped(Stream stream, CancellationToken ct)
     {
         using var buffer = new MemoryStream();
         var chunk = new byte[16 * 1024];
         int read;
-        while ((read = await stream.ReadAsync(chunk.AsMemory())) > 0)
+        while ((read = await stream.ReadAsync(chunk.AsMemory(), ct)) > 0)
         {
             if (buffer.Length + read > MaxBytes)
             {

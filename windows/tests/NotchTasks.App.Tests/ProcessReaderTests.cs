@@ -19,6 +19,14 @@ public sealed class ProcessReaderTests
         Assert.Contains("testhost", commandLine, StringComparison.OrdinalIgnoreCase);
     }
 
+    [Theory]
+    [InlineData(@"C:\", @"C:\")]
+    [InlineData(@"C:\dir\", @"C:\dir")]
+    [InlineData(@"\\server\share\dir\", @"\\server\share\dir")]
+    [InlineData(@"\\server\share\", @"\\server\share")]
+    public void ProcessReader_TrimFolder_KeepsTheDriveRootOnly(string path, string expected) =>
+        Assert.Equal(expected, ProcessReader.TrimFolder(path));
+
     [Fact]
     public void ProcessReader_CwdOfItself()
     {

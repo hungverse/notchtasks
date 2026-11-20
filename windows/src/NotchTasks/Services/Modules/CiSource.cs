@@ -1,5 +1,7 @@
+using System.Collections.Concurrent;
 using System.Globalization;
 using System.IO;
+using System.Threading;
 using System.Text.Json.Nodes;
 using System.Windows.Threading;
 using NotchTasks.Core;
@@ -86,7 +88,7 @@ public sealed class CiSource : IModuleSource
     private int _tick;
     private DevScanner? _dev;
     private FileProgressWatcher? _files;
-    private GitHubWatcher? _github;
+    private GitHubFeed? _feed;
     private Dictionary<string, long> _logMtimes = new(StringComparer.Ordinal);
 
     /// module gets the rows, alerts and toasts; buildAgents gets the build watch items; publish is called when either changed.
@@ -105,11 +107,11 @@ public sealed class CiSource : IModuleSource
         _generation++;
         _started = true;
         _tick = 0;
-        var github = new GitHubWatcher(_reads.GitHub, _reads.Clock);
+        var feed = new GitHubFeed(new GitHubWatcher(_reads.GitHub, _reads.Clock));
         var dev = new DevScanner(new TaskHistory(LoadHistory(), SaveHistory));
-        dev.Pushed += dir => github.Pushed(dir);
+        dev.Pushed += dir => feed.Pushes.Enqueue(dir);   // the poll hands pushes to the watcher, off the tick
         _dev = dev;
-        _github = github;
+        _feed = feed;
         _files = new FileProgressWatcher(FileProgressWatcher.DefaultFolders(_reads.Home), _reads.Clock);
         _logMtimes = new Dictionary<string, long>(StringComparer.Ordinal);
         if (!_timer.IsEnabled)
@@ -130,7 +132,7 @@ public sealed class CiSource : IModuleSource
         }
         _files = null;
         _dev = null;
-        _github = null;
+        _feed = null;
         _module.Clear();
         ClearBuild();
     }
@@ -163,12 +165,30 @@ public sealed class CiSource : IModuleSource
         }
     }
 
+    /// The GitHub side of one start: the watcher, the pushes the scan saw (queued, and handed to the watcher by the poll), one
+    /// poll in flight at a time (Busy, 1 while it runs), the runs a poll finished (drained on the UI thread), and whether the
+    /// watcher watches a repo as of the last poll.
+    private sealed class GitHubFeed
+    {
+        public GitHubFeed(GitHubWatcher watcher) => Watcher = watcher;
+
+        public GitHubWatcher Watcher { get; }
+
+        public ConcurrentQueue<string> Pushes { get; } = new();
+
+        public ConcurrentQueue<GhRun> Finished { get; } = new();
+
+        public int Busy;
+
+        public volatile bool Watching;
+    }
+
     /// What one tick reads, decided on the UI thread.
     private sealed record Request(
         int Number,
         DevScanner Dev,
         FileProgressWatcher Files,
-        GitHubWatcher GitHub,
+        GitHubFeed GitHub,
         Dictionary<string, long> LogMtimes,
         bool GitLabShown,
         IReadOnlyList<WatchItem> Items,
@@ -177,7 +197,7 @@ public sealed class CiSource : IModuleSource
     private Request MakeRequest()
     {
         var gitLabShown = _module.BuildState?.Jobs.Any(j => j.Tool == GitLabTool) ?? false;
-        return new Request(_tick++, _dev!, _files!, _github!, _logMtimes, gitLabShown, _settings.Items, _settings.DoneAfter);
+        return new Request(_tick++, _dev!, _files!, _feed!, _logMtimes, gitLabShown, _settings.Items, _settings.DoneAfter);
     }
 
     /// The reads of one tick, made on a background thread.
@@ -189,12 +209,11 @@ public sealed class CiSource : IModuleSource
         IReadOnlyList<(string File, long MtimeMs, string Tail)>? GitLabLogs,
         IReadOnlyList<(int Pid, string? Exe, string? LogFile)> Workers,
         IReadOnlyList<Job> GitHubJobs,
-        IReadOnlyList<GhRun> GitHubFinished,
         IReadOnlyDictionary<int, Job> ChildRows,
         IReadOnlyDictionary<int, string?> ChildFolders,
         Func<ProcInfo, IReadOnlyList<string>> BuildArgv);
 
-    private async Task<Reading> Gather(Request r)
+    private Reading Gather(Request r)
     {
         var processes = _reads.Processes;
         var nowMs = _reads.Clock();
@@ -233,10 +252,12 @@ public sealed class CiSource : IModuleSource
             workers.Add((worker.Pid, exe, log));
         }
 
-        var finished = new List<GhRun>();
-        if (r.Number % GitHubEvery == 0 && r.GitHub.Watching)
+        // the poll runs on its own task: this tick never waits for GitHub
+        var feed = r.GitHub;
+        if (r.Number % GitHubEvery == 0 && (feed.Watching || !feed.Pushes.IsEmpty)
+            && Interlocked.CompareExchange(ref feed.Busy, 1, 0) == 0)
         {
-            await r.GitHub.Poll(list => finished.AddRange(list));
+            StartPoll(feed);
         }
 
         return new Reading(
@@ -246,11 +267,47 @@ public sealed class CiSource : IModuleSource
             fileJobs,
             logs,
             workers,
-            r.GitHub.Jobs,
-            finished,
+            feed.Watcher.Jobs,
             childRows,
             childFolders,
             PrefetchArgv(processes, snapshot, r.Items));
+    }
+
+    /// One GitHub poll on a task of its own. The pushes the scan saw go to the watcher first; then, while it watches a repo, the
+    /// runs are polled, and the runs that finished queue for the UI thread. Busy is cleared when the poll ends, so a poll that never
+    /// answers holds only itself: the ticks go on.
+    private static void StartPoll(GitHubFeed feed)
+    {
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                while (feed.Pushes.TryDequeue(out var dir))
+                {
+                    feed.Watcher.Pushed(dir);
+                }
+                feed.Watching = feed.Watcher.Watching;
+                if (feed.Watching)
+                {
+                    await feed.Watcher.Poll(list =>
+                    {
+                        foreach (var run in list)
+                        {
+                            feed.Finished.Enqueue(run);
+                        }
+                    });
+                }
+                feed.Watching = feed.Watcher.Watching;
+            }
+            catch (Exception e)
+            {
+                ErrorLog.Write(e);
+            }
+            finally
+            {
+                Interlocked.Exchange(ref feed.Busy, 0);
+            }
+        });
     }
 
     /// Hands a reading to the module and to the build agents, on the UI thread. Publishes when either changed.
@@ -258,6 +315,11 @@ public sealed class CiSource : IModuleSource
     {
         var rows = g.ChildRows;
         var folders = g.ChildFolders;
+        var finished = new List<GhRun>();
+        while (r.GitHub.Finished.TryDequeue(out var run))
+        {
+            finished.Add(run);
+        }
         var changed = _module.Update(
             new CiInputs(
                 g.Snapshot,
@@ -266,7 +328,7 @@ public sealed class CiSource : IModuleSource
                 g.GitLabLogs,
                 g.Workers,
                 g.GitHubJobs,
-                g.GitHubFinished,
+                finished,
                 p => folders.TryGetValue(p.Pid, out var folder) ? folder : null,
                 p => rows.TryGetValue(p.Pid, out var row) ? row : new Job($"gl:{p.Pid}", string.Empty, L10n.L(WaitingWord), false),
                 r.DoneAfter),

@@ -56,7 +56,27 @@ public sealed class ProcessReader : IProcessReader
 
     public string? ImagePath(ProcInfo p) => Cached(imagePaths, p, ReadImagePath);
 
-    public string? Cwd(ProcInfo p) => Cached(workingFolders, p, ReadWorkingFolder);
+    /// The working folder, cached by (pid, start) once it is read. A null is not cached: a transient failure is read again next time.
+    public string? Cwd(ProcInfo p)
+    {
+        var key = (p.Pid, p.StartTicks);
+        lock (gate)
+        {
+            if (workingFolders.TryGetValue(key, out var hit) && hit is not null)
+            {
+                return hit;
+            }
+        }
+        var value = ReadWorkingFolder(p);
+        if (value is not null)
+        {
+            lock (gate)
+            {
+                workingFolders[key] = value;
+            }
+        }
+        return value;
+    }
 
     /// Call with tableGate held.
     private ProcSnapshot? ReadProcessTable()
@@ -251,7 +271,7 @@ public sealed class ProcessReader : IProcessReader
     }
 
     /// Drops trailing separators, except the one of a drive root ("C:\").
-    private static string TrimFolder(string path)
+    public static string TrimFolder(string path)
     {
         var end = path.Length;
         while (end > 3 && path[end - 1] == '\\')

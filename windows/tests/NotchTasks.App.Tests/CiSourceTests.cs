@@ -40,8 +40,12 @@ public sealed class CiSourceTests
 
         public ManualResetEventSlim? Hold { get; set; }
 
+        /// The thread each snapshot was read on (the scan must not read on the UI thread).
+        public List<int> SnapshotThreads { get; } = new();
+
         public ProcSnapshot Snapshot()
         {
+            SnapshotThreads.Add(Environment.CurrentManagedThreadId);
             Hold?.Wait();
             return new ProcSnapshot(Procs.ToArray());
         }
@@ -58,9 +62,16 @@ public sealed class CiSourceTests
     {
         public List<string> Routes { get; } = new();
 
+        /// When set, a request is sent but never answered (a poll that never ends).
+        public bool Hang { get; set; }
+
         public Task<JsonDocument?> Get(string route, string? token)
         {
             Routes.Add(route);
+            if (Hang)
+            {
+                return new TaskCompletionSource<JsonDocument?>().Task;
+            }
             return Task.FromResult<JsonDocument?>(JsonDocument.Parse("{\"workflow_runs\":[]}"));
         }
 
@@ -128,6 +139,18 @@ public sealed class CiSourceTests
 
     private static void WithNoItems(SettingsStore settings) => settings.SetItems(Array.Empty<WatchItem>());
 
+    /// A field of the source's GitHub feed (the per-start state the poll and the tick share).
+    private static T FeedField<T>(CiSource source, string name) =>
+        Fixture.Field<T>(Fixture.Field<object>(source, "_feed"), name);
+
+    /// Adds a git process that pushes the checkout folder (its push is seen by the next tick's scan).
+    private static void AddPush(TempRoot root, FakeProcesses processes, int pid)
+    {
+        processes.Procs.Add(new ProcInfo(pid, 1, "git.exe", pid, 0));
+        processes.Lines[pid] = "git push origin main";
+        processes.Folders[pid] = Checkout(root);
+    }
+
     [Fact]
     public void Start_TimerOnlyWhileCiActive()
     {
@@ -159,8 +182,10 @@ public sealed class CiSourceTests
             var processes = new FakeProcesses();
             AddWorker(root, processes);
             var clock = new Clock();
-            var published = 0;
-            var (source, module, _) = Make(root, settings, Readers(root, processes, new FakeGitHub(), clock), () => published++);
+            var uiThread = Environment.CurrentManagedThreadId;
+            var publishOnUi = new List<bool>();
+            var (source, module, _) = Make(root, settings, Readers(root, processes, new FakeGitHub(), clock),
+                () => publishOnUi.Add(Dispatcher.CurrentDispatcher.CheckAccess()));
 
             source.Start();
             Tick(source);
@@ -169,7 +194,11 @@ public sealed class CiSourceTests
             Assert.Equal("myrepo", job.Title);
             Assert.Equal("build", job.Detail);
             Assert.Equal("GitHub Actions", job.Tool);
-            Assert.True(published > 0);
+            Assert.NotEmpty(publishOnUi);
+            Assert.All(publishOnUi, onUi => Assert.True(onUi));
+            // the scan itself runs off the UI thread
+            Assert.NotEmpty(processes.SnapshotThreads);
+            Assert.All(processes.SnapshotThreads, thread => Assert.NotEqual(uiThread, thread));
             source.Stop();
         });
     }
@@ -231,7 +260,8 @@ public sealed class CiSourceTests
             WithNoItems(settings);
             var github = new FakeGitHub();
             var clock = new Clock();
-            var (source, _, _) = Make(root, settings, Readers(root, new FakeProcesses(), github, clock), () => { });
+            var processes = new FakeProcesses();
+            var (source, _, _) = Make(root, settings, Readers(root, processes, github, clock), () => { });
 
             source.Start();
             // nothing watched: ticks 0 to 10 ask GitHub nothing, not even on the 10th tick
@@ -241,14 +271,15 @@ public sealed class CiSourceTests
             }
             Assert.Equal(0, github.RunListings());
 
-            // a push starts watching the repo; ticks 11 to 19 do not poll, tick 20 does
-            Fixture.Field<GitHubWatcher>(source, "_github").Pushed(Checkout(root));
+            // a push seen on tick 11 starts watching; ticks 11 to 19 do not poll, tick 20 does, off the tick
+            AddPush(root, processes, 400);
             for (var i = 0; i < 9; i++)
             {
                 Tick(source);
             }
             Assert.Equal(0, github.RunListings());
             Tick(source);
+            Fixture.PumpUntil(() => FeedField<int>(source, "Busy") == 0);
             Assert.Equal(1, github.RunListings());
             source.Stop();
         });
@@ -307,10 +338,51 @@ public sealed class CiSourceTests
             var (source, _, _) = Make(root, settings, Readers(root, processes, new FakeGitHub(), clock), () => { });
 
             source.Start();
-            Assert.False(Fixture.Field<GitHubWatcher>(source, "_github").Watching);
+            Assert.False(FeedField<bool>(source, "Watching"));
             Tick(source);
 
-            Assert.True(Fixture.Field<GitHubWatcher>(source, "_github").Watching);
+            // the push is handed to the watcher by the poll, which runs off the tick
+            Fixture.PumpUntil(() => FeedField<int>(source, "Busy") == 0 && FeedField<bool>(source, "Watching"));
+            Assert.True(FeedField<bool>(source, "Watching"));
+            source.Stop();
+        });
+    }
+
+    [Fact]
+    public void PollThatNeverEnds_DoesNotStopLaterTicks()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            var settings = SettingsStore.Load(AppPaths.SettingsFile);
+            WithNoItems(settings);
+            var github = new FakeGitHub { Hang = true };
+            var processes = new FakeProcesses();
+            var clock = new Clock();
+            var (source, module, _) = Make(root, settings, Readers(root, processes, github, clock), () => { });
+
+            AddPush(root, processes, 400);
+            source.Start();
+            Tick(source);   // tick 0: the push is watched, and the poll starts (its request never answers)
+            Fixture.PumpUntil(() => github.RunListings() == 1);
+            Assert.Equal(1, FeedField<int>(source, "Busy"));
+
+            // ticks 1 to 4 go on; a worker appears on tick 5 and its row shows at once
+            for (var i = 1; i < 5; i++)
+            {
+                Tick(source);
+            }
+            AddWorker(root, processes);
+            Tick(source);
+            Assert.NotNull(module.BuildState);
+
+            // tick 10 does not start a second poll while the first is still in flight
+            for (var i = 6; i <= 10; i++)
+            {
+                Tick(source);
+            }
+            Assert.Equal(1, github.RunListings());
+            Assert.Equal(1, FeedField<int>(source, "Busy"));
             source.Stop();
         });
     }

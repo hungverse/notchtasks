@@ -93,4 +93,97 @@ public sealed class GitHubApiTests
         Assert.Null(await api.Get("https://example.com/repos/o/r", "tok"));
         Assert.Empty(handler.Requests);
     }
+
+    [Fact]
+    public async Task Get_PortInTheHost_IsNullAndNothingIsSent()
+    {
+        var handler = new FakeHandler(_ => Json("{}"));
+        var api = new GitHubApi(Path.GetTempPath(), handler);
+
+        Assert.Null(await api.Get("https://api.github.com:8443/repos/o/r", "tok"));
+        Assert.Empty(handler.Requests);
+    }
+
+    [Fact]
+    public async Task Get_Redirect_IsNullAndNotFollowed()
+    {
+        var redirect = new HttpResponseMessage(HttpStatusCode.Redirect);
+        redirect.Headers.Location = new Uri("https://example.com/elsewhere");
+        var handler = new FakeHandler(_ => redirect);
+        var api = new GitHubApi(Path.GetTempPath(), handler);
+
+        Assert.Null(await api.Get("repos/o/r/actions/runs", null));
+        Assert.Single(handler.Requests);
+    }
+
+    [Fact]
+    public async Task Get_StreamedBodyOverTwoMegabytesWithoutLength_IsNull()
+    {
+        var response = new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StreamContent(new EndlessStream(2_000_001)),   // no Content-Length: the cap is counted as it streams
+        };
+        var api = new GitHubApi(Path.GetTempPath(), new FakeHandler(_ => response));
+
+        Assert.Null(await api.Get("repos/o/r/actions/runs", null));
+    }
+
+    [Fact]
+    public async Task Get_BodyThatStalls_IsNullWithinTheLimit()
+    {
+        var response = new HttpResponseMessage(HttpStatusCode.OK) { Content = new StreamContent(new StalledStream()) };
+        var api = new GitHubApi(Path.GetTempPath(), new FakeHandler(_ => response), TimeSpan.FromMilliseconds(300));
+
+        var started = DateTime.UtcNow;
+        var result = await api.Get("repos/o/r/actions/runs", null);
+
+        Assert.Null(result);
+        Assert.True(DateTime.UtcNow - started < TimeSpan.FromSeconds(5));
+    }
+
+    /// A body of length bytes with no end marker (the length is known only when it has been read).
+    private sealed class EndlessStream : Stream
+    {
+        private readonly long length;
+        private long sent;
+
+        public EndlessStream(long length) => this.length = length;
+
+        public override bool CanRead => true;
+        public override bool CanSeek => false;
+        public override bool CanWrite => false;
+        public override long Length => throw new NotSupportedException();
+        public override long Position { get => sent; set => throw new NotSupportedException(); }
+        public override void Flush() { }
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            var n = (int)Math.Min(count, length - sent);
+            Array.Fill(buffer, (byte)'a', offset, n);
+            sent += n;
+            return n;
+        }
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+        public override void SetLength(long value) => throw new NotSupportedException();
+        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+    }
+
+    /// A body that never sends a byte: a read waits until it is cancelled.
+    private sealed class StalledStream : Stream
+    {
+        public override bool CanRead => true;
+        public override bool CanSeek => false;
+        public override bool CanWrite => false;
+        public override long Length => throw new NotSupportedException();
+        public override long Position { get => 0; set => throw new NotSupportedException(); }
+        public override void Flush() { }
+        public override int Read(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+        public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+        {
+            await Task.Delay(Timeout.Infinite, cancellationToken);
+            return 0;
+        }
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+        public override void SetLength(long value) => throw new NotSupportedException();
+        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+    }
 }
