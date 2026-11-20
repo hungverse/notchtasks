@@ -217,6 +217,31 @@ public sealed class MirrorCardTests
     }
 
     [Fact]
+    public void CloseThenOpen_StartsNewCameraOnlyAfterOldStops()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            var stopGate = new TaskCompletionSource();
+            var cameras = new List<FakeCamera>();
+            using var state = NewState(cameras, () => cameras.Count == 0 ? new FakeCamera { StopGate = stopGate } : new FakeCamera());
+            state.OpenMirror();
+            var old = cameras[0];
+            state.CloseMirror();  // the old camera is still releasing
+
+            state.OpenMirror();
+            Fixture.Flush();
+            Assert.Equal(2, cameras.Count);
+            Assert.Equal(0, cameras[1].Starts);  // the new camera waits for the old release
+
+            stopGate.SetResult();
+            Fixture.Flush();
+            Assert.Equal(1, cameras[1].Starts);
+            Assert.Equal(1, old.Disposes);
+        });
+    }
+
+    [Fact]
     public void Frames_OnlyOnePending()
     {
         Sta.Run(() =>
@@ -249,6 +274,9 @@ public sealed class MirrorCardTests
 
         public TaskCompletionSource<CameraStart>? Pending { get; init; }
 
+        /// When set, Stop completes only when the test completes this (the camera is still releasing).
+        public TaskCompletionSource? StopGate { get; init; }
+
         public int Starts { get; private set; }
 
         public int Stops { get; private set; }
@@ -267,7 +295,7 @@ public sealed class MirrorCardTests
         public Task Stop()
         {
             Stops++;
-            return Task.CompletedTask;
+            return StopGate?.Task ?? Task.CompletedTask;
         }
 
         public void Dispose() => Disposes++;

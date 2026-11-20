@@ -53,7 +53,8 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
     private readonly ICodexCli _codex;
     private readonly Func<ICameraSession> _cameraFactory;  // the mirror's camera (AppStateOptions.Camera; this PC's camera by default)
     private readonly MirrorFrames _mirrorFrames = new();
-    private ICameraSession? _camera;  // the running mirror's camera: null while the mirror is closed
+    private ICameraSession? _camera;  // the running mirror's camera: null while the mirror is closed (written with Volatile.Write)
+    private Task _cameraReleased = Task.CompletedTask;  // the last closed camera's release: the next camera starts after it
     private bool _disposed;
 
     /// Creates the state on the UI thread. Call StartWatching next. The modules that are on start here. options holds the OS
@@ -589,8 +590,11 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         MirrorOn = true;
         MirrorStatus = null;
         var camera = _cameraFactory();
-        _camera = camera;
-        _ = StartMirrorAsync(camera);
+        // A camera closed a moment ago may still be releasing: this one starts only after that release, so our own old
+        // session never holds the camera and forces the shared fallback.
+        var previous = _cameraReleased;
+        Volatile.Write(ref _camera, camera);
+        _ = StartMirrorAsync(camera, previous);
         Publish();
     }
 
@@ -606,11 +610,26 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
     }
 
     /// Starts the camera and keeps its result, unless the mirror was closed (or the camera replaced) while it started.
-    private async Task StartMirrorAsync(ICameraSession camera)
+    private async Task StartMirrorAsync(ICameraSession camera, Task previous)
     {
         CameraStart result;
         try
         {
+            if (!previous.IsCompleted)
+            {
+                try
+                {
+                    await previous;
+                }
+                catch (Exception)
+                {
+                    // the old camera's release logs its own errors; this camera starts anyway
+                }
+            }
+            if (!ReferenceEquals(Volatile.Read(ref _camera), camera))
+            {
+                return;  // closed while the old camera was releasing: this one is stopped and never started
+            }
             result = await camera.Start((width, height, bgra) => OnMirrorFrame(camera, width, height, bgra));
         }
         catch (Exception e)
@@ -618,7 +637,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
             ErrorLog.Write(e);
             result = CameraStart.Failed;
         }
-        if (ReferenceEquals(_camera, camera) && MirrorOn)
+        if (ReferenceEquals(Volatile.Read(ref _camera), camera) && MirrorOn)
         {
             MirrorStatus = result;
             Publish();
@@ -631,11 +650,11 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         MirrorOn = false;
         MirrorStatus = null;
         _mirrorFrames.Clear();
-        var camera = _camera;
-        _camera = null;
+        var camera = Volatile.Read(ref _camera);
+        Volatile.Write(ref _camera, null);
         if (camera is not null)
         {
-            _ = StopCameraAsync(camera);
+            _cameraReleased = StopCameraAsync(camera);
         }
     }
 

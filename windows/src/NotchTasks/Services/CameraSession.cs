@@ -43,6 +43,7 @@ public sealed class CameraSession : ICameraSession
     private readonly object _pixelsGate = new();
     private bool _started;
     private bool _stopped;
+    private bool _frameErrorLogged;  // a frame error is logged once, not on every frame
     private MediaCapture? _capture;
     private MediaFrameReader? _reader;
     private Action<int, int, byte[]>? _frame;
@@ -67,13 +68,32 @@ public sealed class CameraSession : ICameraSession
         MediaFrameReader? reader = null;
         try
         {
+            // Windows' own answer first: when the desktop apps may not use the camera, there is no point in opening it.
+            if (IsDeniedByWindows())
+            {
+                return CameraStart.Denied;
+            }
             var device = (await DeviceInformation.FindAllAsync(DeviceClass.VideoCapture)).FirstOrDefault();
+            if (IsStopped())
+            {
+                return CameraStart.Failed;
+            }
             if (device is null)
             {
                 return CameraStart.NoCamera;
             }
-            (capture, var exclusive) = await InitializeAsync(device.Id);
-            var source = capture.FrameSources.Values.FirstOrDefault(s => s.Info.SourceKind == MediaFrameSourceKind.Color);
+            var (opened, exclusive, refused) = await InitializeAsync(device.Id);
+            capture = opened;
+            if (refused is not null)
+            {
+                return refused.Value;
+            }
+            if (IsStopped())
+            {
+                await ReleaseAsync(capture, null);
+                return CameraStart.Failed;
+            }
+            var source = capture!.FrameSources.Values.FirstOrDefault(s => s.Info.SourceKind == MediaFrameSourceKind.Color);
             if (source is null)
             {
                 await ReleaseAsync(capture, null);
@@ -136,9 +156,26 @@ public sealed class CameraSession : ICameraSession
 
     public void Dispose() => _ = Stop();
 
-    /// Opens the device with exclusive control. A failure (the camera is in use, typically) retries once with shared read-only access.
-    /// The UnauthorizedAccessException of a denied camera is not retried. The bool says whether the capture is exclusive.
-    private static async Task<(MediaCapture Capture, bool Exclusive)> InitializeAsync(string deviceId)
+    private bool IsStopped()
+    {
+        lock (_gate)
+        {
+            return _stopped;
+        }
+    }
+
+    /// True when the desktop apps' camera access is off for this user (the privacy setting) or for the PC (the policy).
+    private static bool IsDeniedByWindows()
+    {
+        var status = DeviceAccessInformation.CreateFromDeviceClass(DeviceClass.VideoCapture).CurrentStatus;
+        return status is DeviceAccessStatus.DeniedByUser or DeviceAccessStatus.DeniedBySystem;
+    }
+
+    /// Opens the device with exclusive control. When that fails with access denied, Windows' own status decides: a denied status
+    /// reports Denied; any other status (another app holds the camera, which can surface as access denied) retries once with
+    /// shared read-only access, and only that retry's access denied reports Denied. Any other failure is thrown.
+    /// The returned capture is null exactly when refused is set; exclusive says whether the capture is exclusive.
+    private static async Task<(MediaCapture? Capture, bool Exclusive, CameraStart? Refused)> InitializeAsync(string deviceId)
     {
         var settings = new MediaCaptureInitializationSettings
         {
@@ -151,12 +188,15 @@ public sealed class CameraSession : ICameraSession
         try
         {
             await exclusive.InitializeAsync(settings);
-            return (exclusive, true);
+            return (exclusive, true, null);
         }
         catch (UnauthorizedAccessException)
         {
             exclusive.Dispose();
-            throw;
+            if (IsDeniedByWindows())
+            {
+                return (null, false, CameraStart.Denied);
+            }
         }
         catch (Exception)
         {
@@ -168,7 +208,12 @@ public sealed class CameraSession : ICameraSession
         try
         {
             await shared.InitializeAsync(settings);
-            return (shared, false);
+            return (shared, false, null);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            shared.Dispose();
+            return (null, false, CameraStart.Denied);
         }
         catch
         {
@@ -194,36 +239,53 @@ public sealed class CameraSession : ICameraSession
     private static double FrameRate(MediaFrameFormat format) =>
         format.FrameRate.Denominator == 0 ? 0 : format.FrameRate.Numerator / (double)format.FrameRate.Denominator;
 
-    /// Copies each frame's pixels into the reused buffer and hands it to the frame callback.
+    /// Copies each frame's pixels into the reused buffer and hands it to the frame callback. This runs on a WinRT thread-pool
+    /// thread, and a frame can race Stop (the objects may be disposed): any error is logged once and the frame is dropped.
     private void OnFrameArrived(MediaFrameReader sender, MediaFrameArrivedEventArgs args)
     {
-        Action<int, int, byte[]>? frame;
-        lock (_gate)
+        try
         {
-            frame = _frame;
-        }
-        if (frame is null)
-        {
-            return;
-        }
-        using var mediaFrame = sender.TryAcquireLatestFrame();
-        var bitmap = mediaFrame?.VideoMediaFrame?.SoftwareBitmap;
-        if (bitmap is null)
-        {
-            return;
-        }
-        using var bgra = SoftwareBitmap.Convert(bitmap, BitmapPixelFormat.Bgra8, BitmapAlphaMode.Premultiplied);
-        var width = bgra.PixelWidth;
-        var height = bgra.PixelHeight;
-        var length = checked(width * height * 4);
-        lock (_pixelsGate)
-        {
-            if (_pixels is null || _pixels.Length != length)
+            Action<int, int, byte[]>? frame;
+            lock (_gate)
             {
-                _pixels = new byte[length];
+                frame = _frame;
             }
-            bgra.CopyToBuffer(_pixels.AsBuffer());
-            frame(width, height, _pixels);
+            if (frame is null)
+            {
+                return;
+            }
+            using var mediaFrame = sender.TryAcquireLatestFrame();
+            var bitmap = mediaFrame?.VideoMediaFrame?.SoftwareBitmap;
+            if (bitmap is null)
+            {
+                return;
+            }
+            using var bgra = SoftwareBitmap.Convert(bitmap, BitmapPixelFormat.Bgra8, BitmapAlphaMode.Premultiplied);
+            var width = bgra.PixelWidth;
+            var height = bgra.PixelHeight;
+            var length = checked(width * height * 4);
+            lock (_pixelsGate)
+            {
+                if (_pixels is null || _pixels.Length != length)
+                {
+                    _pixels = new byte[length];
+                }
+                bgra.CopyToBuffer(_pixels.AsBuffer());
+                frame(width, height, _pixels);
+            }
+        }
+        catch (Exception e)
+        {
+            bool first;
+            lock (_gate)
+            {
+                first = !_frameErrorLogged;
+                _frameErrorLogged = true;
+            }
+            if (first)
+            {
+                ErrorLog.Write(e);
+            }
         }
     }
 
@@ -235,8 +297,14 @@ public sealed class CameraSession : ICameraSession
             if (reader is not null)
             {
                 reader.FrameArrived -= OnFrameArrived;
-                await reader.StopAsync();
-                reader.Dispose();
+                try
+                {
+                    await reader.StopAsync();
+                }
+                finally
+                {
+                    reader.Dispose();
+                }
             }
         }
         catch (Exception e)
