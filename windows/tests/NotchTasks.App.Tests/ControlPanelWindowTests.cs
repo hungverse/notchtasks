@@ -38,6 +38,29 @@ public sealed class ControlPanelWindowTests
     }
 
     [Fact]
+    public void Sidebar_ShowsTheAppVersion()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            var window = Fixture.Create<ControlPanelWindow>(state, PaneId.Overview);
+            try
+            {
+                Fixture.ShowOffScreen(window);
+                var version = Fixture.Named<TextBlock>(window, "VersionText");
+
+                Assert.False(string.IsNullOrWhiteSpace(version.Text));
+                Assert.DoesNotContain('+', version.Text);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    [Fact]
     public void PaneHost_HasTheContentMargin()
     {
         Sta.Run(() =>

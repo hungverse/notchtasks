@@ -35,6 +35,7 @@ public partial class ControlPanelWindow : Window
 
         Sidebar.ItemsSource = PaneItem.All;
         Sidebar.SelectionChanged += OnSelectionChanged;
+        VersionText.Text = AppVersion();
         Closing += (_, _) =>
         {
             SaveSize();
@@ -68,6 +69,22 @@ public partial class ControlPanelWindow : Window
             _window.WindowState = WindowState.Normal;
         }
         _window.Activate();
+    }
+
+    /// The version shown at the foot of the sidebar: the informational version up to its build hash ("1.0.0+abc" shows
+    /// "1.0.0"), or major.minor when the build has none.
+    private static string AppVersion()
+    {
+        var assembly = System.Reflection.Assembly.GetEntryAssembly() ?? typeof(ControlPanelWindow).Assembly;
+        var informational = assembly.GetCustomAttributes(typeof(System.Reflection.AssemblyInformationalVersionAttribute), false)
+            .OfType<System.Reflection.AssemblyInformationalVersionAttribute>()
+            .FirstOrDefault()?.InformationalVersion;
+        if (!string.IsNullOrWhiteSpace(informational))
+        {
+            return informational.Split('+')[0];
+        }
+        var version = assembly.GetName().Version;
+        return version is null ? string.Empty : $"{version.Major}.{version.Minor}";
     }
 
     /// The sprites the pill's badges name (settings "badges"): the ones that stay cached when the Control Panel closes.

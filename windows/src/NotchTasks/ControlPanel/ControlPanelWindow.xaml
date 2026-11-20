@@ -14,59 +14,77 @@
   </Window.Resources>
   <Grid>
     <Grid.ColumnDefinitions>
-      <ColumnDefinition Width="200" />
+      <ColumnDefinition Width="220" />
       <ColumnDefinition Width="*" />
     </Grid.ColumnDefinitions>
 
-    <!-- The sidebar: one row per pane, with its icon and title. The selected row takes the accent. The layer and the
-         text colours are the Windows theme's own brushes, so the window follows light and dark mode. -->
-    <Border Grid.Column="0" Background="{DynamicResource LayerFillColorAltBrush}">
-    <ListBox x:Name="Sidebar" BorderThickness="0" Background="Transparent"
-             Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-             Padding="8,12" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-      <ListBox.ItemContainerStyle>
-        <Style TargetType="ListBoxItem">
-          <Setter Property="Padding" Value="10,6" />
-          <Setter Property="Margin" Value="0,1" />
-          <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-          <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-          <Setter Property="Template">
-            <Setter.Value>
-              <ControlTemplate TargetType="ListBoxItem">
-                <Border x:Name="Body" CornerRadius="6" Background="{TemplateBinding Background}"
-                        Padding="{TemplateBinding Padding}">
-                  <ContentPresenter VerticalAlignment="Center" />
-                </Border>
-                <ControlTemplate.Triggers>
-                  <Trigger Property="IsSelected" Value="True">
-                    <Setter TargetName="Body" Property="Background" Value="{x:Static SystemColors.HighlightBrush}" />
-                    <Setter Property="Foreground" Value="{DynamicResource TextOnAccentFillColorPrimaryBrush}" />
-                  </Trigger>
-                  <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Opacity" Value="0.85" />
-                  </Trigger>
-                </ControlTemplate.Triggers>
-              </ControlTemplate>
-            </Setter.Value>
-          </Setter>
-        </Style>
-      </ListBox.ItemContainerStyle>
-      <ListBox.ItemTemplate>
-        <DataTemplate>
-          <StackPanel Orientation="Horizontal">
-            <TextBlock Text="{Binding Glyph}" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-                       FontSize="16" Width="26" VerticalAlignment="Center" />
-            <TextBlock Text="{Binding Title}" FontSize="14" VerticalAlignment="Center" />
-          </StackPanel>
-        </DataTemplate>
-      </ListBox.ItemTemplate>
-    </ListBox>
+    <!-- The sidebar is an inset panel, as the Mac's: a rounded layer with the panes and the app version at its foot.
+         The layer and the text colours are the Windows theme's own brushes, so the window follows light and dark mode. -->
+    <Border Grid.Column="0" Margin="10" CornerRadius="12" Background="{DynamicResource LayerFillColorAltBrush}"
+            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+      <Grid>
+        <Grid.RowDefinitions>
+          <RowDefinition Height="*" />
+          <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- One row per pane, with its icon and title. The selected row takes the accent. -->
+        <ListBox x:Name="Sidebar" BorderThickness="0" Background="Transparent"
+                 Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                 Padding="8,12" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+          <ListBox.ItemContainerStyle>
+            <Style TargetType="ListBoxItem">
+              <Setter Property="Padding" Value="12,8" />
+              <Setter Property="Margin" Value="0,2" />
+              <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+              <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+              <Setter Property="Template">
+                <Setter.Value>
+                  <ControlTemplate TargetType="ListBoxItem">
+                    <Border x:Name="Body" CornerRadius="8" Background="{TemplateBinding Background}"
+                            Padding="{TemplateBinding Padding}">
+                      <ContentPresenter VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                      <!-- The hover tint is listed before the selection, so a selected row keeps the accent under the mouse. -->
+                      <Trigger Property="IsMouseOver" Value="True">
+                        <Setter TargetName="Body" Property="Background" Value="#0FFFFFFF" />
+                      </Trigger>
+                      <Trigger Property="IsSelected" Value="True">
+                        <Setter TargetName="Body" Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+                        <Setter Property="Foreground" Value="{DynamicResource TextOnAccentFillColorPrimaryBrush}" />
+                      </Trigger>
+                    </ControlTemplate.Triggers>
+                  </ControlTemplate>
+                </Setter.Value>
+              </Setter>
+            </Style>
+          </ListBox.ItemContainerStyle>
+          <ListBox.ItemTemplate>
+            <DataTemplate>
+              <StackPanel Orientation="Horizontal">
+                <TextBlock Text="{Binding Glyph}" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                           FontSize="16" Width="28" VerticalAlignment="Center" />
+                <TextBlock Text="{Binding Title}" FontSize="14" VerticalAlignment="Center" />
+              </StackPanel>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+
+        <!-- The app version, at the foot of the sidebar, under a hairline. -->
+        <Border Grid.Row="1" BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="0,1,0,0">
+          <TextBlock x:Name="VersionText" FontSize="12" Padding="16,10"
+                     Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+        </Border>
+      </Grid>
     </Border>
 
     <!-- The detail area: the selected pane, scrolling when it is taller than the window. -->
-    <!-- The margin is on the host: ContentControl's template ignores Padding, so panes would touch the edges. -->
+    <!-- The margin is on the host: ContentControl's template ignores Padding, so panes would touch the edges. The width is
+         capped so a pane reads as a column on a wide window, as the Mac's 640 DIP detail column. -->
     <ScrollViewer x:Name="PaneScroll" Grid.Column="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-      <ContentControl x:Name="PaneHost" Margin="32,24,32,32" HorizontalContentAlignment="Stretch" />
+      <ContentControl x:Name="PaneHost" Margin="32,24,32,32" MaxWidth="760" HorizontalAlignment="Left"
+                      HorizontalContentAlignment="Stretch" />
     </ScrollViewer>
   </Grid>
 </Window>
