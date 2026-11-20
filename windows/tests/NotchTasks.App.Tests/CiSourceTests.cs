@@ -252,6 +252,87 @@ public sealed class CiSourceTests
     }
 
     [Fact]
+    public void RunnerLogs_KeepBeingReadWhileAGitLabJobRuns_EvenWithoutTheRunnerProcess()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            var settings = SettingsStore.Load(AppPaths.SettingsFile);
+            WithNoItems(settings);
+            var processes = new FakeProcesses();
+            var clock = new Clock();
+            var (source, module, announcer) = Make(root, settings, Readers(root, processes, new FakeGitHub(), clock), () => { });
+            var logs = Path.Combine(root.Folder, "programdata", "gitlab-runner");
+            Directory.CreateDirectory(logs);
+            var log = Path.Combine(logs, "runner.log");
+            File.WriteAllText(log, "Running job received job=101 job_name=compile repo_url=https://gitlab.com/grp/proj.git\n");
+
+            source.Start();
+            Tick(source);
+            Tick(source);
+            Tick(source);
+            processes.Procs.Add(new ProcInfo(300, 1, "gitlab-runner.exe", 1, 0));
+            Tick(source);
+            Assert.Contains(module.BuildState!.Jobs, j => j.Id == "gl:101");
+
+            // the runner process is gone, but the job is still running in the log: tick 6 still reads the log
+            processes.Procs.Clear();
+            File.WriteAllText(log, "Running job received job=101 job_name=compile repo_url=https://gitlab.com/grp/proj.git\n"
+                + "Job succeeded job=101\n");
+            File.SetLastWriteTimeUtc(log, DateTime.UtcNow.AddMinutes(1));
+            Tick(source);
+            Tick(source);
+            Tick(source);
+
+            Assert.Contains(announcer.Toasts, t => t.Event == "ciPassed" && t.Title == "CI passed: compile");
+            source.Stop();
+        });
+    }
+
+    [Fact]
+    public void Worker_LogLookedUpAtFirstSightThenEveryTenthTickWhileUnnamed()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            var settings = SettingsStore.Load(AppPaths.SettingsFile);
+            WithNoItems(settings);
+            var processes = new FakeProcesses();
+            var clock = new Clock();
+            var (source, _, _) = Make(root, settings, Readers(root, processes, new FakeGitHub(), clock), () => { });
+            var exe = Path.Combine(root.Folder, "runner", "bin", "Runner.Worker.exe");
+            var diag = Path.Combine(root.Folder, "runner", "_diag");
+            Directory.CreateDirectory(diag);
+            var first = Path.Combine(diag, "Worker_1.log");
+            File.WriteAllText(first, "Starting\n");  // no job name yet
+            processes.Procs.Add(new ProcInfo(500, 1, "Runner.Worker.exe", 1, 0));
+            processes.Lines[500] = $"\"{exe}\" spawnclient 1 2";
+
+            source.Start();
+            var logs = () => Fixture.Field<System.Collections.IDictionary>(source, "_workerLogs");
+            Func<string?> logOf = () => (string?)logs()[500]!.GetType().GetProperty("Log")!.GetValue(logs()[500]);
+
+            Tick(source);
+            Assert.Equal(first, logOf());
+
+            // a newer log appears: it is not looked for on the next ticks
+            var second = Path.Combine(diag, "Worker_2.log");
+            File.WriteAllText(second, "Starting\n\"jobDisplayName\": \"deploy\"\n");
+            File.SetLastWriteTimeUtc(second, DateTime.UtcNow.AddMinutes(1));
+            for (var i = 0; i < 9; i++)
+            {
+                Tick(source);
+            }
+            Assert.Equal(first, logOf());
+
+            // the tenth tick looks again
+            Tick(source);
+            Assert.Equal(second, logOf());
+            source.Stop();
+        });
+    }
+
+    [Fact]
     public void GitHub_PolledEvery10thTickOnlyWhileWatching()
     {
         Sta.Run(() =>

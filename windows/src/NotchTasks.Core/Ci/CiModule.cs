@@ -59,6 +59,8 @@ public sealed class CiModule
     private List<JobAlert> _alerts = new();   // the union of the two alert lists, rebuilt only when one of them changed
     private bool _alertsDirty;
     private long _updates;
+    private List<string>? _dismissed;   // dismissedJobs: read from state.json once, then kept here and written through on change
+    private bool _dismissedInFile;      // the key was in state.json when it was read; an absent key means a first run
 
     /// stateGet and stateSet read and write one key of state.json (StateJson). seenTools receives the tools of the build
     /// jobs when that set changes (the app adds them to settings' seenTools). readTail reads the last 2 000 000 bytes of a
@@ -79,6 +81,14 @@ public sealed class CiModule
 
     /// The build jobs as one row (WatchItems.BuildItem), in the order dev, files, GitLab, GitHub, workers. Null when there are none.
     public ItemState? BuildState => _buildState;
+
+    /// True while a GitLab job is shown from the runner logs (its log lines are what keeps the logs being read, P3c M1).
+    public bool HasRunnerJobs => _runnerJobs.Count > 0;
+
+    /// The live GitHub workers whose job name is still unknown (their log has no job name yet): CiSource looks their log up
+    /// again only every 10th tick while they are in this list (P3c M4).
+    public IReadOnlyList<int> UnnamedWorkerPids =>
+        _workers.Where(kv => !HasJobName(kv.Value.Tail)).Select(kv => kv.Key).ToList();
 
     /// The failure alerts: GitHub's first (newest first), then the GitLab ones (newest first). The same list object is
     /// returned until an alert changes.
@@ -143,12 +153,34 @@ public sealed class CiModule
             _alertsDirty = true;
         }
 
-        var ids = IdsOf(_stateGet(DismissedKey));
-        ids.Add(id);
-        var array = new JsonArray();
-        foreach (var kept in ids.Skip(Math.Max(0, ids.Count - DismissedKeep)))
+        Dismissed().Add(id);
+        WriteDismissed();
+    }
+
+    /// The dismissed ids, read from state.json the first time they are needed.
+    private List<string> Dismissed()
+    {
+        if (_dismissed is null)
         {
-            array.Add((JsonNode?)JsonValue.Create(kept));
+            var node = _stateGet(DismissedKey);
+            _dismissedInFile = node is JsonArray;
+            _dismissed = IdsOf(node);
+        }
+        return _dismissed;
+    }
+
+    /// Writes the dismissed ids to state.json, keeping the last 1000.
+    private void WriteDismissed()
+    {
+        var ids = Dismissed();
+        if (ids.Count > DismissedKeep)
+        {
+            ids.RemoveRange(0, ids.Count - DismissedKeep);
+        }
+        var array = new JsonArray();
+        foreach (var id in ids)
+        {
+            array.Add((JsonNode?)JsonValue.Create(id));
         }
         _stateSet(DismissedKey, array);
     }
@@ -224,20 +256,18 @@ public sealed class CiModule
         }
         _runnerJobs = running;
 
-        // failures already in the log when the app first looks are history, not news
-        if (_stateGet(DismissedKey) is not JsonArray)
+        var dismissed = Dismissed();
+        if (!_dismissedInFile)
         {
-            var array = new JsonArray();
-            foreach (var f in failed)
-            {
-                array.Add((JsonNode?)JsonValue.Create(f.Id));
-            }
-            _stateSet(DismissedKey, array);
+            // failures already in the log when the app first looks are history, not news
+            _dismissedInFile = true;
+            dismissed.Clear();
+            dismissed.AddRange(failed.Select(f => f.Id));
+            WriteDismissed();
             SetRunnerAlerts(new List<JobAlert>());
             return;
         }
 
-        var dismissed = IdsOf(_stateGet(DismissedKey)).ToHashSet(StringComparer.Ordinal);
         var alerts = new List<JobAlert>();
         foreach (var f in failed.AsEnumerable().Reverse())
         {
@@ -276,7 +306,7 @@ public sealed class CiModule
             return;
         }
 
-        var dismissed = IdsOf(_stateGet(DismissedKey)).ToHashSet(StringComparer.Ordinal);
+        var dismissed = Dismissed();
         foreach (var r in finished)
         {
             if (r.Conclusion == "success")

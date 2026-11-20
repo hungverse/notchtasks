@@ -178,6 +178,7 @@ public sealed class RunnerLogsTests : IDisposable
 
         var logs = RunnerLogs.GitLabLogs(programData, fallback);
 
-        Assert.Equal(new[] { "a.log", "b.log", "c.log" }, logs.Select(Path.GetFileName).ToArray());
+        Assert.Equal(new[] { "a.log", "b.log", "c.log" }, logs.Select(l => Path.GetFileName(l.File)).ToArray());
+        Assert.Equal(new DateTimeOffset(File.GetLastWriteTimeUtc(logs[0].File)).ToUnixTimeMilliseconds(), logs[0].MtimeMs);
     }
 }

@@ -378,7 +378,9 @@ public class AgentsModuleTests
 
         // only the enabled build item is a state; the Claude item and the disabled copy are left out
         Assert.Equal("msb-1", Assert.Single(module.States).Item.Id);
-        Assert.Equal("MSBuild done", Assert.Single(announcer.Toasts).Title);
+        var toast = Assert.Single(announcer.Toasts);
+        Assert.Equal("MSBuild done", toast.Title);
+        Assert.Equal("ci", toast.Module);  // the build instance belongs to Build & CI
     }
 
     [Fact]

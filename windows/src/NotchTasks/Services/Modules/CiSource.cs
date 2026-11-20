@@ -35,27 +35,13 @@ public sealed record CiReaders(
         () => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
 }
 
-/// The state.json keys of Build & CI (taskHistory, dismissedJobs), behind one lock: the scan writes the task history on the
-/// background, and the module writes the dismissed ids on the UI thread.
+/// The state.json keys of Build & CI (taskHistory, dismissedJobs). StateJson holds the lock, so the scan's history writes on
+/// the background and the module's dismissed ids on the UI thread are safe without a lock here.
 public static class CiState
 {
-    private static readonly object Gate = new();
+    public static JsonNode? Get(string key) => StateJson.Get(AppPaths.StateFile, key);
 
-    public static JsonNode? Get(string key)
-    {
-        lock (Gate)
-        {
-            return StateJson.Get(AppPaths.StateFile, key);
-        }
-    }
-
-    public static void Set(string key, JsonNode? value)
-    {
-        lock (Gate)
-        {
-            StateJson.Set(AppPaths.StateFile, key, value);
-        }
-    }
+    public static void Set(string key, JsonNode? value) => StateJson.Set(AppPaths.StateFile, key, value);
 }
 
 /// The Build & CI feed (module "ci"). While it is started, a 2 s DispatcherTimer reads the process table, the dev tasks, the
@@ -68,6 +54,7 @@ public sealed class CiSource : IModuleSource
 {
     private static readonly TimeSpan TickEvery = TimeSpan.FromSeconds(2);
     private const int GitLabEvery = 3;
+    private const int WorkerNameEvery = 10;
     private const int GitHubEvery = 10;
     private const int GitLabTail = 512_000;
     private const double ChildThreshold = 0.5;   // % CPU of a gitlab-runner child's tree that counts as working
@@ -90,6 +77,7 @@ public sealed class CiSource : IModuleSource
     private FileProgressWatcher? _files;
     private GitHubFeed? _feed;
     private Dictionary<string, long> _logMtimes = new(StringComparer.Ordinal);
+    private Dictionary<int, WorkerLog> _workerLogs = new();
 
     /// module gets the rows, alerts and toasts; buildAgents gets the build watch items; publish is called when either changed.
     public CiSource(CiModule module, AgentsModule buildAgents, SettingsStore settings, CiReaders reads, Action publish)
@@ -108,12 +96,13 @@ public sealed class CiSource : IModuleSource
         _started = true;
         _tick = 0;
         var feed = new GitHubFeed(new GitHubWatcher(_reads.GitHub, _reads.Clock));
-        var dev = new DevScanner(new TaskHistory(LoadHistory(), SaveHistory));
+        var dev = new DevScanner(new TaskHistory(LoadHistory(), SaveHistory, ErrorLog.Write));
         dev.Pushed += dir => feed.EnqueuePush(dir);   // the poll hands pushes to the watcher, off the tick
         _dev = dev;
         _feed = feed;
         _files = new FileProgressWatcher(FileProgressWatcher.DefaultFolders(_reads.Home), _reads.Clock);
         _logMtimes = new Dictionary<string, long>(StringComparer.Ordinal);
+        _workerLogs = new Dictionary<int, WorkerLog>();
         if (!_timer.IsEnabled)
         {
             _timer.Start();
@@ -195,21 +184,28 @@ public sealed class CiSource : IModuleSource
         public volatile bool Watching;
     }
 
-    /// What one tick reads, decided on the UI thread.
+    /// What one tick reads, decided on the UI thread. RunnerJobs: CiModule has GitLab jobs from the logs (keeps the logs read).
+    /// WorkerLogs and UnnamedWorkers: the worker log lookups so far, and the workers whose job name is still unknown.
     private sealed record Request(
         int Number,
         DevScanner Dev,
         FileProgressWatcher Files,
         GitHubFeed GitHub,
         Dictionary<string, long> LogMtimes,
-        bool GitLabShown,
+        bool RunnerJobs,
+        Dictionary<int, WorkerLog> WorkerLogs,
+        IReadOnlySet<int> UnnamedWorkers,
         IReadOnlyList<WatchItem> Items,
         double DoneAfter);
 
+    /// A GitHub worker's executable and its newest Runner.Worker log (null when none yet).
+    private sealed record WorkerLog(string? Exe, string? Log);
+
     private Request MakeRequest()
     {
-        var gitLabShown = _module.BuildState?.Jobs.Any(j => j.Tool == GitLabTool) ?? false;
-        return new Request(_tick++, _dev!, _files!, _feed!, _logMtimes, gitLabShown, _settings.Items, _settings.DoneAfter);
+        var unnamed = _module.UnnamedWorkerPids.ToHashSet();
+        return new Request(_tick++, _dev!, _files!, _feed!, _logMtimes, _module.HasRunnerJobs, _workerLogs, unnamed,
+            _settings.Items, _settings.DoneAfter);
     }
 
     /// The reads of one tick, made on a background thread.
@@ -240,7 +236,7 @@ public sealed class CiSource : IModuleSource
 
         var runners = snapshot.ByNormName("gitlab-runner");
         IReadOnlyList<(string File, long MtimeMs, string Tail)>? logs = null;
-        if (r.Number % GitLabEvery == 0 && (runners.Count > 0 || r.GitLabShown))
+        if (r.Number % GitLabEvery == 0 && (runners.Count > 0 || r.RunnerJobs))
         {
             logs = ReadGitLabLogs(r.LogMtimes);
         }
@@ -253,15 +249,34 @@ public sealed class CiSource : IModuleSource
             childFolders[child.Pid] = Cwd(child);
         }
 
+        // A worker's log is looked up at first sight, then every 10th tick only while its job name is unknown (P3c M4).
         var workers = new List<(int Pid, string? Exe, string? LogFile)>();
+        var liveWorkers = new HashSet<int>();
         foreach (var worker in snapshot.ByNormName("runner.worker"))
         {
-            var words = Argv(worker);
-            var exe = words.Count > 0 && words[0].Length > 0 ? words[0] : null;
-            var log = exe is null
-                ? RunnerLogs.NewestWorkerLog(Path.Combine(_reads.RunnerDir, "_diag"))
-                : RunnerLogs.NewestWorkerLog(RunnerLogs.DiagFromWorkerExe(exe));
-            workers.Add((worker.Pid, exe, log));
+            liveWorkers.Add(worker.Pid);
+            var seen = r.WorkerLogs.TryGetValue(worker.Pid, out var cached);
+            var look = !seen || (r.UnnamedWorkers.Contains(worker.Pid) && r.Number % WorkerNameEvery == 0);
+            WorkerLog entry;
+            if (look)
+            {
+                var words = Argv(worker);
+                var exe = words.Count > 0 && words[0].Length > 0 ? words[0] : null;
+                var log = exe is null
+                    ? RunnerLogs.NewestWorkerLog(Path.Combine(_reads.RunnerDir, "_diag"))
+                    : RunnerLogs.NewestWorkerLog(RunnerLogs.DiagFromWorkerExe(exe));
+                entry = new WorkerLog(exe, log);
+                r.WorkerLogs[worker.Pid] = entry;
+            }
+            else
+            {
+                entry = cached!;
+            }
+            workers.Add((worker.Pid, entry.Exe, entry.Log));
+        }
+        foreach (var gone in r.WorkerLogs.Keys.Where(p => !liveWorkers.Contains(p)).ToList())
+        {
+            r.WorkerLogs.Remove(gone);
         }
 
         // the poll runs on its own task: this tick never waits for GitHub
@@ -391,9 +406,8 @@ public sealed class CiSource : IModuleSource
         var previous = new Dictionary<string, long>(mtimes, StringComparer.Ordinal);
         mtimes.Clear();
         var logs = new List<(string File, long MtimeMs, string Tail)>();
-        foreach (var file in RunnerLogs.GitLabLogs(_reads.ProgramData, _reads.GitLabFallbackDir))
+        foreach (var (file, mtime) in RunnerLogs.GitLabLogs(_reads.ProgramData, _reads.GitLabFallbackDir))
         {
-            var mtime = new DateTimeOffset(File.GetLastWriteTimeUtc(file)).ToUnixTimeMilliseconds();
             var unchanged = previous.TryGetValue(file, out var last) && last == mtime;
             mtimes[file] = mtime;
             logs.Add((file, mtime, unchanged ? string.Empty : RunnerLogs.ReadTail(file, GitLabTail)));

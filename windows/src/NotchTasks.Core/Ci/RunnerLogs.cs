@@ -187,8 +187,9 @@ public static class RunnerLogs
         return $"{parts[i + 3]}/{parts[i + 4]}".Replace(".tmp", "", StringComparison.Ordinal);
     }
 
-    /// The .log files of `<programData>\gitlab-runner` and the fallback folder, newest first, at most 3.
-    public static IReadOnlyList<string> GitLabLogs(string programData, string fallbackDir = FallbackGitLabDir)
+    /// The .log files of `<programData>\gitlab-runner` and the fallback folder, newest first, at most 3, each with its mtime in
+    /// ms (taken from the same listing, no second stat). A file whose mtime cannot be read is skipped.
+    public static IReadOnlyList<(string File, long MtimeMs)> GitLabLogs(string programData, string fallbackDir = FallbackGitLabDir)
     {
         var dirs = new List<string>();
         if (!string.IsNullOrEmpty(programData))
@@ -196,7 +197,7 @@ public static class RunnerLogs
             dirs.Add(Path.Combine(programData, "gitlab-runner"));
         }
         dirs.Add(fallbackDir);
-        var files = new List<FileInfo>();
+        var files = new List<(string File, DateTime Written)>();
         foreach (var dir in dirs)
         {
             try
@@ -205,8 +206,23 @@ public static class RunnerLogs
                 {
                     continue;
                 }
-                files.AddRange(new DirectoryInfo(dir).GetFiles("*.log")
-                    .Where(f => f.Extension.Equals(".log", StringComparison.OrdinalIgnoreCase)));
+                foreach (var f in new DirectoryInfo(dir).GetFiles("*.log"))
+                {
+                    if (!f.Extension.Equals(".log", StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+                    try
+                    {
+                        files.Add((f.FullName, f.LastWriteTimeUtc));
+                    }
+                    catch (IOException)
+                    {
+                    }
+                    catch (UnauthorizedAccessException)
+                    {
+                    }
+                }
             }
             catch (IOException)
             {
@@ -215,7 +231,11 @@ public static class RunnerLogs
             {
             }
         }
-        return files.OrderByDescending(f => f.LastWriteTimeUtc).Take(3).Select(f => f.FullName).ToList();
+        return files
+            .OrderByDescending(f => f.Written)
+            .Take(3)
+            .Select(f => (f.File, new DateTimeOffset(f.Written).ToUnixTimeMilliseconds()))
+            .ToList();
     }
 
     /// "https://gitlab.com/group/project.git" -> "group/project". Null when the URL does not parse.

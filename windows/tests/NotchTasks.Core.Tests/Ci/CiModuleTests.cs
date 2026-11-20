@@ -506,6 +506,26 @@ public class CiModuleTests
     }
 
     [Fact]
+    public void DismissedJobs_ReadFromStateOnce_NotPerScan()
+    {
+        var state = new State();
+        state.Set("dismissedJobs", new JsonArray());
+        var reads = 0;
+        var module = new CiModule(new Recorder(), key => { reads++; return state.Get(key); }, state.Set, _ => { }, _ => string.Empty);
+
+        module.Update(Input(RunnerProcs, logs: new[] { ("a.log", 1000L, Failed8) }), 1000);
+        var afterFirst = reads;
+        module.Update(Input(RunnerProcs, logs: new[] { ("a.log", 2000L, Failed8 + "\n" + Failed9) }), 2000);
+        module.Update(Input(finished: new[] { Run(42, "failure") }), 3000);
+        module.Update(Input(RunnerProcs, logs: new[] { ("a.log", 4000L, Failed9) }), 4000);
+        Assert.Equal(afterFirst, reads);
+
+        module.Dismiss("9");
+        Assert.Equal(afterFirst, reads);
+        Assert.Equal(new[] { "9" }, state.Array("dismissedJobs").Select(n => n!.GetValue<string>()).ToArray());
+    }
+
+    [Fact]
     public void Clear_ForgetsAlertsAndRows()
     {
         var module = Make(out _, out _, out _);
