@@ -7,9 +7,10 @@ using Windows.Storage.FileProperties;
 
 namespace NotchTasks.Services;
 
-/// The pictures of the shelf's tiles. Get returns the Windows icon at once: the large icon of a file type (cached by extension) or of
-/// a folder. Then the WinRT thumbnail of a file or a folder is read in the background and handed to ready on the UI thread. Thumbnails
-/// are cached by path and modified time, the last 64. Everything runs on the UI thread.
+/// The pictures of the shelf's tiles. Get returns the large icon of the path's type at once (cached by extension), with no disk access on
+/// the UI thread. In the background the path is checked (a file or a folder, its modified time), and the picture that fits is handed to
+/// ready on the UI thread: the cached thumbnail when it is current, else the folder's icon for a folder, else the WinRT thumbnail when
+/// Windows makes one. Thumbnails are cached by path and modified time, the last 64. An offline share therefore cannot freeze the pill.
 public static class FileThumbs
 {
     private const int ThumbSize = 80;
@@ -29,25 +30,55 @@ public static class FileThumbs
     /// Reads the WinRT thumbnail of a path (the bool is true for a folder). The default reads it from Windows; a test replaces it.
     public static Func<string, bool, Task<ImageSource?>> ReadThumbnail { get; set; } = ReadThumbAsync;
 
-    /// The picture of a path now: a cached thumbnail when it is current, else the large icon. For a file or a folder that has no
-    /// current thumbnail, ready is called later, on the UI thread, with the thumbnail (when Windows makes one). Null when Windows gives no icon.
+    /// What the disk says about a path: whether it is a folder, and its modified time in ticks (0 when it is not there now). Read in the
+    /// background. A test replaces it, to show that no disk read runs on the UI thread.
+    public static Func<string, (bool Folder, long Modified)> Probe { get; set; } = DiskProbe;
+
+    /// The picture of a path now: the large icon of its type, with no disk access. Then, in the background, the path is checked and
+    /// ready is called on the UI thread with the picture that fits (see the class comment). Null when Windows gives no icon.
     public static ImageSource? Get(string path, Action<ImageSource> ready)
+    {
+        var icon = IconFor(Path.GetExtension(path).ToLowerInvariant(), "file" + Path.GetExtension(path).ToLowerInvariant(), FileAttributeNormal);
+        _ = Resolve(path, ready);
+        return icon;
+    }
+
+    /// The background part of Get: the disk check, then the cached thumbnail, the folder's icon, or the WinRT thumbnail. Runs its
+    /// continuations on the UI thread, where ready is called.
+    private static async Task Resolve(string path, Action<ImageSource> ready)
+    {
+        (bool Folder, long Modified) probe;
+        try
+        {
+            probe = await Task.Run(() => Probe(path)).ConfigureAwait(true);
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+        {
+            return;  // the disk cannot say: the tile keeps the type icon
+        }
+        if (probe.Modified == 0)
+        {
+            return;  // not there now: the tile keeps the type icon
+        }
+        if (Thumb(path, probe.Modified) is { } cached)
+        {
+            ready(cached);
+            return;
+        }
+        if (probe.Folder && IconFor(FolderKey, "dir", FileAttributeDirectory) is { } folderIcon)
+        {
+            ready(folderIcon);
+        }
+        await LoadThumbAsync(path, probe.Folder, probe.Modified, ready).ConfigureAwait(true);
+    }
+
+    /// The default probe: a folder or a file, and its modified time. Missing paths read as 0.
+    private static (bool Folder, long Modified) DiskProbe(string path)
     {
         var folder = Directory.Exists(path);
         var present = folder || File.Exists(path);
         var modified = !present ? 0 : (folder ? Directory.GetLastWriteTimeUtc(path) : File.GetLastWriteTimeUtc(path)).Ticks;
-        if (modified != 0 && Thumb(path, modified) is { } cached)
-        {
-            return cached;
-        }
-        var icon = folder
-            ? IconFor(FolderKey, "dir", FileAttributeDirectory)
-            : IconFor(Path.GetExtension(path).ToLowerInvariant(), "file" + Path.GetExtension(path).ToLowerInvariant(), FileAttributeNormal);
-        if (modified != 0)
-        {
-            LoadThumbAsync(path, folder, modified, ready);
-        }
-        return icon;
+        return (folder, modified);
     }
 
     /// The large icon of a file type or a folder, read through its name alone (SHGFI_USEFILEATTRIBUTES), once per key.
@@ -77,7 +108,7 @@ public static class FileThumbs
 
     /// Reads the thumbnail and hands it to ready. The await resumes on the UI thread, where ready runs. A path Windows cannot make a
     /// thumbnail of keeps its icon.
-    private static async void LoadThumbAsync(string path, bool folder, long modified, Action<ImageSource> ready)
+    private static async Task LoadThumbAsync(string path, bool folder, long modified, Action<ImageSource> ready)
     {
         var image = await ReadThumbnail(path, folder);
         if (image is null)

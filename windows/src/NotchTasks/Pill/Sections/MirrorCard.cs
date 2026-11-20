@@ -127,6 +127,7 @@ public sealed class MirrorCard : Border
             HorizontalAlignment = HorizontalAlignment.Right,
             VerticalAlignment = VerticalAlignment.Top,
             Margin = new Thickness(0, 8, 8, 0),
+            Focusable = false,  // a click closes the mirror; the button never takes the keyboard focus from the app the user works in
         };
         _close.Click += (_, _) => _state?.CloseMirror();
         body.Children.Add(_close);
