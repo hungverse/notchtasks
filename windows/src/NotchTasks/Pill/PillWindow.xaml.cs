@@ -58,6 +58,10 @@ public partial class PillWindow : Window
     private readonly DropShadowEffect _openShadow = Shadow(opacity: 0.45, blur: 14, depth: 6);
     private readonly DropShadowEffect _closedShadow = Shadow(opacity: 0.3, blur: 6, depth: 2);
     private DropShadowEffect? _glow;  // made again only when the accent changes
+    private SolidColorBrush? _accentBrush;  // the glow's stroke, made again only when the accent changes
+    private SolidColorBrush? _glassBrush;  // the glass surface: one frozen brush
+    private LinearGradientBrush? _gradientBrush;  // the gradient surface, made again when its colours change
+    private string _gradientKey = string.Empty;
     private nint _hwnd;
     private bool _open;
     private bool _closing;
@@ -109,12 +113,19 @@ public partial class PillWindow : Window
     private bool _animating;  // a shape animation runs: the poll evaluates click-through on every tick
     private double _targetWidth, _targetHeight, _targetRadius;  // the shape the running animation springs to
     private Mode _targetMode = Mode.Closed;  // the mode of that shape
+    private bool _warm;  // the card layer is laid out at zero opacity while the pointer is near (WarmCard)
+    private bool _openRefreshPending;  // a publish came during an open: it is applied once when the open finishes
+    private double _openHeight;  // the open pill's height, as last measured
+    private bool _openHeightValid;  // false once the sections changed size or were changed: OpenHeight measures again
 
     /// Creates the pill for the app state. Call Show next (the window is placed when its handle exists).
     public PillWindow(AppState state)
     {
         _state = state;
         InitializeComponent();
+        // A section that changed size (its content changed) makes the open height measure again; nothing else does.
+        SectionList.SizeChanged += (_, _) => _openHeightValid = false;
+        EmptyNote.SizeChanged += (_, _) => _openHeightValid = false;
 
         // The layout is sized once: the shape's paths and the clip draw the shared rectangle inside it.
         PillShape.Width = PillGeometry.LayoutWidth;
@@ -320,7 +331,7 @@ public partial class PillWindow : Window
         {
             return;
         }
-        SetPollRate(IsNearShape(point));
+        SetPollRate(IsNearShape(point));  // a change to near warms the card; leaving the near zone cools it again
         // Safety net: a drop prompt whose DragLeave never came clears once the pointer is off the pill with no button down.
         if (ShelfCard.ClearsTarget(_state.ShelfTargeted, IsOverShape(point), Win32.GetAsyncKeyState(Win32.VK_LBUTTON) < 0))
         {
@@ -361,6 +372,42 @@ public partial class PillWindow : Window
         }
         _fastPoll = near;
         _pollTimer.Interval = near ? FastPollInterval : SlowPollInterval;
+        if (near)
+        {
+            WarmCard();
+        }
+        else
+        {
+            CoolCard();
+        }
+    }
+
+    /// The pointer came near the pill: the card layer is laid out now, at zero opacity, so the first frames of an open do not carry
+    /// the layout. Nothing is drawn while it is at zero opacity.
+    private void WarmCard()
+    {
+        if (_open || _closing || _animating || _warm)
+        {
+            return;
+        }
+        _warm = true;
+        CardLayer.Height = OpenHeight() - PillGeometry.ClosedHeight;
+        CardLayer.Opacity = 0;
+        CardLayer.Visibility = Visibility.Visible;
+    }
+
+    /// The pointer left the near zone without opening: the warmed card layer goes back to hidden.
+    private void CoolCard()
+    {
+        if (!_warm)
+        {
+            return;
+        }
+        _warm = false;
+        if (!_open && !_animating)
+        {
+            CardLayer.Visibility = Visibility.Hidden;
+        }
     }
 
     /// Toggles WS_EX_TRANSPARENT. The window is already layered (AllowsTransparency), so the bit alone makes the
@@ -469,8 +516,8 @@ public partial class PillWindow : Window
             return;
         }
         _open = true;
+        _warm = false;
         _outsideSince = null;
-        _shelfCard.InvalidateExistence();  // a file may have gone while the pill was closed
         // Topmost is asserted again on every open; the window itself never activates.
         Win32.SetWindowPos(_hwnd, Win32.HwndTopmost, 0, 0, 0, 0, Win32.SWP_NOMOVE | Win32.SWP_NOSIZE | Win32.SWP_NOACTIVATE);
         // Opening the pill takes over the toast; its ask stays in the sections.
@@ -478,6 +525,19 @@ public partial class PillWindow : Window
         Animate(Mode.Open);
         ApplyAppearance();
         _closeTimer.Start();
+        // The work that is not drawn (the shelf's files, the wait ticks, the sensors and the load) comes after the open's first frame.
+        Dispatcher.BeginInvoke(new Action(FinishOpen), DispatcherPriority.ContextIdle);
+    }
+
+    /// The open's deferred work, once its first frame is drawn. A pill closed again before this ran has nothing to finish.
+    private void FinishOpen()
+    {
+        if (!_open)
+        {
+            return;
+        }
+        _shelfCard.InvalidateExistence();  // a file may have gone while the pill was closed
+        Animate(Mode.Open);  // a file that went or came changes the height: the open follows it (a no-op when it did not)
         SyncWaitTimer();
         _state.PillOpened(true);  // the load is sampled while the pill is open
     }
@@ -506,6 +566,7 @@ public partial class PillWindow : Window
             return;
         }
         _open = false;
+        _openRefreshPending = false;
         _outsideSince = null;
         _closeTimer.Stop();
         _waitTimer.Stop();
@@ -660,10 +721,19 @@ public partial class PillWindow : Window
         Fade(CardLayer, OpacityProperty, mode == Mode.Open ? 1 : 0, duration, fade);
         Fade(ToastBox, OpacityProperty, mode == Mode.Toast ? 1 : 0, duration, fade);
         Fade(TopRow, OpacityProperty, mode == Mode.Toast ? 0 : 1, duration, fade);
-        // The card's blur is attached only while it moves, so a settled card costs no effect pass.
-        var blur = mode == Mode.Open || reduced ? 0 : 6;
-        CardLayer.Effect = _cardBlur;
-        Fade(_cardBlur, BlurEffect.RadiusProperty, blur, duration, fade);
+        // The card blurs only while it closes, and the blur is attached only while it moves: an open (and reduced motion) fades on
+        // opacity alone, so no effect pass runs for it.
+        if (mode == Mode.Open || reduced)
+        {
+            _cardBlur.BeginAnimation(BlurEffect.RadiusProperty, null);
+            _cardBlur.Radius = 0;  // so a later close blurs from 0 up to 6
+            CardLayer.Effect = null;
+        }
+        else
+        {
+            CardLayer.Effect = _cardBlur;
+            Fade(_cardBlur, BlurEffect.RadiusProperty, 6, duration, fade);
+        }
 
         // The shape's spring is the longest of these, so its completion is the end of the animation. The handler is attached
         // before the animation starts: WPF does not raise Completed for a handler added after BeginAnimation.
@@ -685,6 +755,15 @@ public partial class PillWindow : Window
                 }
                 ApplyAppearance();
                 ReevaluateClickThrough();
+                if (_openRefreshPending)
+                {
+                    // The publishes that came during the open are applied now, once: the sections' height is measured again.
+                    _openRefreshPending = false;
+                    if (_open)
+                    {
+                        Animate(Mode.Open);
+                    }
+                }
             }
         };
         _shape.BeginAnimation(RectangleGeometry.RectProperty, rect);
@@ -714,12 +793,19 @@ public partial class PillWindow : Window
 
     /// The open pill's height: the top row, then the body (the sections, or the "Nothing running" note when none has anything),
     /// up to MaxOpenHeight. The body's DesiredSize holds its own margins (the 26 DIP header above, the 32 DIP quick bar below)
-    /// and its padding, so they are counted once, here.
+    /// and its padding, so they are counted once, here. It is measured again only after the sections changed or changed size
+    /// (see the constructor and SyncSections); a publish that leaves them as they are reuses the last height.
     private double OpenHeight()
     {
+        if (_openHeightValid)
+        {
+            return _openHeight;
+        }
         FrameworkElement body = SectionList.Children.Count > 0 ? SectionScroll : EmptyNote;
         body.Measure(new Size(PillGeometry.OpenWidth, double.PositiveInfinity));
-        return Math.Min(PillGeometry.MaxOpenHeight, PillGeometry.ClosedHeight + body.DesiredSize.Height);
+        _openHeight = Math.Min(PillGeometry.MaxOpenHeight, PillGeometry.ClosedHeight + body.DesiredSize.Height);
+        _openHeightValid = true;
+        return _openHeight;
     }
 
     /// The toast's measured height for its current text.
@@ -836,6 +922,7 @@ public partial class PillWindow : Window
         if (!SameChildren(sections))
         {
             _sectionRebuilds++;
+            _openHeightValid = false;
             // A section that is gone is removed at once: the shape's spring already moves. A section that is new fades in (no scale).
             var wanted = new HashSet<object>(sections, ReferenceEqualityComparer.Instance);
             for (var i = SectionList.Children.Count - 1; i >= 0; i--)
@@ -858,7 +945,10 @@ public partial class PillWindow : Window
                     continue;
                 }
                 SectionList.Children.Insert(i, section);
-                PillMotion.Enter(section, scale: false, _state.Settings.Motion, SystemParameters.ClientAreaAnimation);
+                if (_open)
+                {
+                    PillMotion.Enter(section, scale: false, _state.Settings.Motion, SystemParameters.ClientAreaAnimation);  // a closed pill shows nothing to enter
+                }
             }
         }
         for (var i = 0; i < sections.Count; i++)
@@ -873,6 +963,7 @@ public partial class PillWindow : Window
     /// chip (the Mac's hasCollapsed). The note keeps its margins even without text, so the open height still counts them.
     private void SyncEmptyNote(bool noSections)
     {
+        _openHeightValid = false;  // the body (the note or the sections) may have changed
         var showText = noSections && !_hasCollapsed;
         EmptyNote.Visibility = noSections ? Visibility.Visible : Visibility.Collapsed;
         EmptyText.Text = L10n.L("Nothing running");
@@ -913,9 +1004,21 @@ public partial class PillWindow : Window
         SyncWaitTimer();
         if (_open)
         {
-            Animate(Mode.Open);  // the open pill's height follows its sections; the same height again does nothing
+            RefreshOpen();  // the open pill's height follows its sections; the same height again does nothing
         }
         ApplyAppearance();
+    }
+
+    /// The open pill follows a publish: it is retargeted now, unless an open is running, in which case the publish is applied once
+    /// when the open finishes (a publish during the first frames would otherwise restart the spring each time).
+    private void RefreshOpen()
+    {
+        if (_animating && _targetMode == Mode.Open)
+        {
+            _openRefreshPending = true;
+            return;
+        }
+        Animate(Mode.Open);
     }
 
     private void OnStateChanged(object? sender, PropertyChangedEventArgs e)
@@ -945,7 +1048,7 @@ public partial class PillWindow : Window
         SyncSections();  // the "Nothing running" note follows the badges and chips it is hidden by
         if (_open)
         {
-            Animate(Mode.Open);  // the open pill's height follows the note
+            RefreshOpen();  // the open pill's height follows the note
         }
         Bar.Update(_state);
         SyncHeader();
@@ -976,16 +1079,11 @@ public partial class PillWindow : Window
 
         // The background setting shows only while open; closed, the pill is black (Mac: opened ? background : .black).
         var background = _open ? settings.Background : "black";
-        ShapeFill.Fill = background switch
+        var fill = ShapeFillFor(background, settings);
+        if (!ReferenceEquals(ShapeFill.Fill, fill))
         {
-            "glass" => Frozen(new SolidColorBrush(Color.FromArgb(0xD9, 0x1C, 0x1C, 0x1E))),
-            "gradient" => Frozen(new LinearGradientBrush(
-                (Color)ColorConverter.ConvertFromString(settings.GradientA)!,
-                (Color)ColorConverter.ConvertFromString(settings.GradientB)!,
-                new Point(0, 0),
-                new Point(1, 1))),
-            _ => Brushes.Black,
-        };
+            ShapeFill.Fill = fill;  // assigned only when the brush changed: a publish with the same look assigns nothing
+        }
         Tint.Opacity = background switch
         {
             "glass" => 0.4,
@@ -998,16 +1096,56 @@ public partial class PillWindow : Window
         ShadowShape.Effect = _open ? _openShadow : _closedShadow;
 
         var glow = settings.Background == "glow" && (_open || _hasCollapsed);
-        var accentBrush = Frozen(new SolidColorBrush(_accent) { Opacity = 0.9 });
+        var accentBrush = AccentBrush();
         GlowBacking.Visibility = glow ? Visibility.Visible : Visibility.Collapsed;
-        GlowBacking.Stroke = accentBrush;
+        if (!ReferenceEquals(GlowBacking.Stroke, accentBrush))
+        {
+            GlowBacking.Stroke = accentBrush;
+        }
         if (_glow is null || _glow.Color != _accent)
         {
             _glow = new DropShadowEffect { Color = _accent, BlurRadius = 6, ShadowDepth = 0, Opacity = 1 };
         }
         GlowBacking.Effect = _glow;
         GlowRing.Visibility = glow ? Visibility.Visible : Visibility.Collapsed;
-        GlowRing.Stroke = accentBrush;
+        if (!ReferenceEquals(GlowRing.Stroke, accentBrush))
+        {
+            GlowRing.Stroke = accentBrush;
+        }
+    }
+
+    /// The pill's black surface for a background: the glass and gradient brushes are made once and kept while their inputs hold.
+    private Brush ShapeFillFor(string background, SettingsStore settings) => background switch
+    {
+        "glass" => _glassBrush ??= Frozen(new SolidColorBrush(Color.FromArgb(0xD9, 0x1C, 0x1C, 0x1E))),
+        "gradient" => GradientFor(settings.GradientA, settings.GradientB),
+        _ => Brushes.Black,
+    };
+
+    /// The gradient surface, made again only when its two colours change.
+    private LinearGradientBrush GradientFor(string from, string to)
+    {
+        var key = from + "|" + to;
+        if (_gradientBrush is null || _gradientKey != key)
+        {
+            _gradientKey = key;
+            _gradientBrush = Frozen(new LinearGradientBrush(
+                (Color)ColorConverter.ConvertFromString(from)!,
+                (Color)ColorConverter.ConvertFromString(to)!,
+                new Point(0, 0),
+                new Point(1, 1)));
+        }
+        return _gradientBrush;
+    }
+
+    /// The glow's accent brush (90 % opaque), made again only when the accent changes.
+    private SolidColorBrush AccentBrush()
+    {
+        if (_accentBrush is null || _accentBrush.Color != _accent)
+        {
+            _accentBrush = Frozen(new SolidColorBrush(_accent) { Opacity = 0.9 });
+        }
+        return _accentBrush;
     }
 
     private static DropShadowEffect Shadow(double opacity, double blur, double depth) =>
@@ -1034,6 +1172,7 @@ public partial class PillWindow : Window
         if (_open)
         {
             _state.PillOpened(false);
+            _open = false;  // a deferred open step still queued must not run after the close
         }
         _pollTimer.Stop();
         _closeTimer.Stop();

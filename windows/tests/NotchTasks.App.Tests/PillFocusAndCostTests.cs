@@ -83,6 +83,15 @@ public sealed class PillFocusAndCostTests
 
                 Fixture.Call(pill, "ApplyAppearance");  // a publish with the same state: the same effect object, not a new one
                 Assert.Same(first, shadow.Effect);
+
+                // The same goes for the brushes: a publish with nothing changed assigns the instances it already had.
+                var fill = Fixture.Named<System.Windows.Shapes.Path>(pill, "ShapeFill");
+                var glowStroke = Fixture.Named<System.Windows.Shapes.Path>(pill, "GlowRing");
+                var fillBefore = fill.Fill;
+                var strokeBefore = glowStroke.Stroke;
+                Fixture.Call(pill, "ApplyAppearance");
+                Assert.Same(fillBefore, fill.Fill);
+                Assert.Same(strokeBefore, glowStroke.Stroke);
             }
             finally
             {

@@ -289,7 +289,9 @@ public sealed class MediaSource : IModuleSource
         try
         {
             var bytes = await _reader.Artwork(source).ConfigureAwait(true);
-            if (bytes is not null && MediaArt.Decode(bytes) is { } image)
+            // The image is decoded on the background: a frozen BitmapImage crosses threads, and the UI thread only takes the result.
+            var image = bytes is null ? null : await Task.Run(() => MediaArt.Decode(bytes)).ConfigureAwait(true);
+            if (image is not null)
             {
                 _art.Put(key, image);
                 if (_started)
