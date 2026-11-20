@@ -182,10 +182,11 @@ public sealed class CiSourceTests
             var processes = new FakeProcesses();
             AddWorker(root, processes);
             var clock = new Clock();
+            // the test body runs on the STA (UI) thread; Apply's callbacks must run on that same thread
             var uiThread = Environment.CurrentManagedThreadId;
-            var publishOnUi = new List<bool>();
+            var publishThreads = new List<int>();
             var (source, module, _) = Make(root, settings, Readers(root, processes, new FakeGitHub(), clock),
-                () => publishOnUi.Add(Dispatcher.CurrentDispatcher.CheckAccess()));
+                () => publishThreads.Add(Environment.CurrentManagedThreadId));
 
             source.Start();
             Tick(source);
@@ -194,8 +195,8 @@ public sealed class CiSourceTests
             Assert.Equal("myrepo", job.Title);
             Assert.Equal("build", job.Detail);
             Assert.Equal("GitHub Actions", job.Tool);
-            Assert.NotEmpty(publishOnUi);
-            Assert.All(publishOnUi, onUi => Assert.True(onUi));
+            Assert.NotEmpty(publishThreads);
+            Assert.All(publishThreads, thread => Assert.Equal(uiThread, thread));
             // the scan itself runs off the UI thread
             Assert.NotEmpty(processes.SnapshotThreads);
             Assert.All(processes.SnapshotThreads, thread => Assert.NotEqual(uiThread, thread));

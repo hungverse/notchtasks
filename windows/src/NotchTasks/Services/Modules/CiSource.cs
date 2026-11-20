@@ -109,7 +109,7 @@ public sealed class CiSource : IModuleSource
         _tick = 0;
         var feed = new GitHubFeed(new GitHubWatcher(_reads.GitHub, _reads.Clock));
         var dev = new DevScanner(new TaskHistory(LoadHistory(), SaveHistory));
-        dev.Pushed += dir => feed.Pushes.Enqueue(dir);   // the poll hands pushes to the watcher, off the tick
+        dev.Pushed += dir => feed.EnqueuePush(dir);   // the poll hands pushes to the watcher, off the tick
         _dev = dev;
         _feed = feed;
         _files = new FileProgressWatcher(FileProgressWatcher.DefaultFolders(_reads.Home), _reads.Clock);
@@ -172,9 +172,21 @@ public sealed class CiSource : IModuleSource
     {
         public GitHubFeed(GitHubWatcher watcher) => Watcher = watcher;
 
+        /// At most this many pushes wait for the next poll; the oldest is dropped beyond it.
+        public const int MaxPushes = 32;
+
         public GitHubWatcher Watcher { get; }
 
         public ConcurrentQueue<string> Pushes { get; } = new();
+
+        /// Queues a push for the next poll, dropping the oldest when the queue is full.
+        public void EnqueuePush(string dir)
+        {
+            Pushes.Enqueue(dir);
+            while (Pushes.Count > MaxPushes && Pushes.TryDequeue(out _))
+            {
+            }
+        }
 
         public ConcurrentQueue<GhRun> Finished { get; } = new();
 
@@ -275,7 +287,8 @@ public sealed class CiSource : IModuleSource
 
     /// One GitHub poll on a task of its own. The pushes the scan saw go to the watcher first; then, while it watches a repo, the
     /// runs are polled, and the runs that finished queue for the UI thread. Busy is cleared when the poll ends, so a poll that never
-    /// answers holds only itself: the ticks go on.
+    /// answers holds only itself: the ticks go on. A push reaches the watcher at the next poll, up to about 20 s after the push
+    /// (every 10th tick); the watcher's EarlyStartMs (90 s) covers that delay, so a run started just before the push still counts.
     private static void StartPoll(GitHubFeed feed)
     {
         _ = Task.Run(async () =>
