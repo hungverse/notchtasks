@@ -78,11 +78,13 @@ public sealed class NextStepsTests
     [Fact]
     public void NextSteps_IgnoresUnbuiltModules()
     {
-        // Only the modules that are on and built ask for permissions. Privacy is built now, but the mic row has no modules (P3-R4),
-        // so it is never a step; ci is not built yet.
+        // Only the modules that are on and built ask for permissions. Privacy is built, but the mic row has no modules (P3-R4),
+        // so it is never a step. calendar is not built (nor on Windows), so it asks for nothing; ci is built since Phase 3d.
         Assert.Empty(NextSteps.Compute(new[] { Mic() }, new HashSet<string> { "privacy" }, notifications: false,
             present: [], installed: new HashSet<AgentKind>()));
-        Assert.Empty(NextSteps.Compute(new[] { Item("notifications", PermState.NotAsked) }, new HashSet<string> { "ci" },
+        Assert.Empty(NextSteps.Compute(new[] { Item("notifications", PermState.NotAsked) }, new HashSet<string> { "calendar" },
+            notifications: true, present: [], installed: new HashSet<AgentKind>()));
+        Assert.NotEmpty(NextSteps.Compute(new[] { Item("notifications", PermState.NotAsked) }, new HashSet<string> { "ci" },
             notifications: true, present: [], installed: new HashSet<AgentKind>()));
     }
 

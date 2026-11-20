@@ -295,6 +295,46 @@ public sealed class L10nTests
         Assert.Empty(placeholders);
     }
 
+    // Every key the Windows build passes to L10n.L in Phase 3d (the media, shelf, devices and mirror modules, and the
+    // CI module's leave of "Coming soon"), including the constants passed to it. Each one needs a text in every language.
+    private static readonly string[] Phase3dKeys =
+    [
+        "Add files…", "Add to shelf", "Close mirror", "Deselect", "Drag and drop or choose files",
+        "Drag files onto the notch, or click to choose files for the shelf", "Drag files onto the notch, or click + to choose",
+        "Click to select · double-click to open · drag out to drop into another app", "Drop here",
+        "Drag one selected file to bring all {0} files", "Drag to seek", "File not found anymore: {0}", "File shelf", "Mirror",
+        "Camera mirror", "Now Playing", "Devices", "No camera found", "NotchTasks can't use the camera yet", "Open Camera settings",
+        "Open {0}", "Open", "Playing audio", "Quick camera check", "Ready", "Remove all from the shelf (originals stay)",
+        "Remove from shelf", "Remove from the shelf (original stays)", "Select all", "Share all", "Share", "Show in folder",
+        "{0} battery low", "{0} connected", "{0} disconnected", "{0}/{1} selected",
+    ];
+
+    [Fact]
+    public void Phase3dKeys_ExistInEveryLanguage()
+    {
+        var overlayFile = Path.Combine(RepoRoot(), "electron", "l10n", "windows.json");
+        var missing = new List<string>();
+        var placeholders = new List<string>();
+        foreach (var (code, _) in L10n.Languages.Where(language => language.Code != "en"))
+        {
+            var mac = ReadStrings(Path.Combine(MacSources(), $"l10n-{code}.json"));
+            var windows = ReadOverlay(overlayFile, code);
+            foreach (var key in Phase3dKeys)
+            {
+                if (!mac.ContainsKey(key) && !windows.ContainsKey(key))
+                {
+                    missing.Add($"{code}: {key}");
+                }
+                if (windows.TryGetValue(key, out var text) && Placeholders(key).Any(p => !text.Contains(p, StringComparison.Ordinal)))
+                {
+                    placeholders.Add($"{code}: {key}");
+                }
+            }
+        }
+        Assert.Empty(missing);
+        Assert.Empty(placeholders);
+    }
+
     private static IEnumerable<string> Placeholders(string key) =>
         System.Text.RegularExpressions.Regex.Matches(key, @"\{\d+\}").Select(m => m.Value).Distinct();
 

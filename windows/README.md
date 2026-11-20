@@ -2,6 +2,14 @@
 
 Native Windows app (C#, WPF, .NET 10) that shows AI agents' questions in a floating pill at the top of the screen. It replaces the Electron app on Windows. The Mac app in `mac/` is the reference for behaviour and look; `electron/` is kept for Linux and is read only for Windows-specific details.
 
+What Phase 3d adds:
+
+- **Smoother motion**: the pill's shape is one composited shape, animated without a layout pass per frame. Chips scale and fade in, and sections fade. The decorative loops (the bars, the ripple, the seek bar and the device float) run at 30 fps and stop when their card leaves the screen. With **Reduced** motion, or animations off, only opacity moves.
+- **Now Playing**: the track, its artwork, the seek bar and the previous, play or pause and next buttons, read from the Windows media controls. Only apps that publish to the Windows media flyout are shown; an app that plays audio without publishing is not. A click on the artwork brings that app's window to the front.
+- **File shelf**: drop files on the notch to keep them, drag them out into another app, or **Share** them with the Windows share sheet. A missing file stays listed, dimmed, until you remove it. Folders can only be added by dragging them onto the notch, because the file dialog picks files only.
+- **Devices**: USB and Bluetooth accessories (headphones, keyboards, mice and so on) that Windows lists as devices, with a toast when one connects, disconnects or runs low. The battery level comes from the Bluetooth battery property only, so an accessory that reports its battery only over GATT shows none, and levels are read again every 60 s.
+- **Camera mirror**: a card with the camera's picture, to check it before a call. The camera runs only while the card is on screen. If another app holds the camera, the mirror shares it read-only.
+
 What Phase 3c adds:
 
 - **Build & CI**: a module, on by default, that watches what this PC builds and tests: builds, tests, installs, containers and renders. Each running job shows as a card on the pill.

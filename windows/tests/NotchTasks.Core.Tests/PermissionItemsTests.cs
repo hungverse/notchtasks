@@ -49,7 +49,8 @@ public sealed class PermissionItemsTests
         Assert.Empty(mic.Modules);
         Assert.False(PermissionItems.Needed(mic, modules, notifications: false));
         Assert.Equal(PermGroup.NotInUse, PermissionItems.GroupOf(mic, modules, notifications: false));
-        Assert.False(PermissionItems.Needed(Item("camera", "mirror"), new HashSet<string> { "mirror" }, notifications: false));
+        // The camera row has the mirror module, built since Phase 3d: it is needed while the mirror is on.
+        Assert.True(PermissionItems.Needed(Item("camera", "mirror"), new HashSet<string> { "mirror" }, notifications: false));
     }
 
     [Fact]
@@ -77,7 +78,8 @@ public sealed class PermissionItemsTests
         var notifications = Item("notifications");
 
         Assert.True(PermissionItems.Needed(notifications, new HashSet<string> { "agents" }, notifications: true));
-        Assert.False(PermissionItems.Needed(notifications, new HashSet<string> { "ci" }, notifications: true));
+        // ci is built since Phase 3d; media sends no toasts, so it never needs notifications.
+        Assert.True(PermissionItems.Needed(notifications, new HashSet<string> { "ci" }, notifications: true));
         Assert.False(PermissionItems.Needed(notifications, new HashSet<string> { "media" }, notifications: true));
         Assert.False(PermissionItems.Needed(notifications, new HashSet<string> { "agents" }, notifications: false));
     }
@@ -132,7 +134,7 @@ public sealed class PermissionItemsTests
             hooks: new Dictionary<AgentKind, bool?> { [AgentKind.Claude] = true, [AgentKind.Codex] = false }));
 
         Assert.Equal(PermGroup.Granted, PermissionItems.GroupOf(Find(items, "login"), modules, notifications: true));
-        Assert.Equal(PermGroup.NotInUse, PermissionItems.GroupOf(Find(items, "camera"), modules, notifications: true));  // mirror is not built
+        Assert.Equal(PermGroup.Needed, PermissionItems.GroupOf(Find(items, "camera"), modules, notifications: true));  // mirror is built
         Assert.Equal(PermGroup.Granted, PermissionItems.GroupOf(Find(items, "hook.claude"), modules, notifications: true));
         Assert.Equal(PermGroup.Needed, PermissionItems.GroupOf(Find(items, "hook.codex"), modules, notifications: true));
         Assert.Equal(PermGroup.NotInUse, PermissionItems.GroupOf(Find(items, "hook.codex"), new HashSet<string> { "mirror" }, notifications: true));
