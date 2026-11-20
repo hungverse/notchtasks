@@ -45,53 +45,47 @@ public sealed class DevicesModule(IAnnouncer announce, Func<string?> tint)
         var changed = !old.SequenceEqual(next);
         Devices = next;
 
-        if (!_baseline)
+        // The first scan is the baseline: it toasts no connect or disconnect. The low check runs on every scan, so a
+        // device already at 15% or below toasts once, as the Mac does.
+        var firstScan = !_baseline;
+        _baseline = true;
+
+        if (!firstScan)
         {
-            // The first scan is the baseline. A device already low is taken as warned, so it does not toast later.
-            _baseline = true;
+            var oldIds = new HashSet<string>(old.Select(d => d.Id), StringComparer.Ordinal);
+            var newIds = new HashSet<string>(next.Select(d => d.Id), StringComparer.Ordinal);
+
             foreach (var d in next)
             {
-                if (d.Lowest is int low && low <= LowLevel)
+                if (!oldIds.Contains(d.Id))
                 {
-                    _lowWarned.Add(d.Id);
+                    announce.Announce(new Toast(
+                        d.Symbol,
+                        tint() ?? DefaultTint,
+                        L10n.L("{0} connected", d.Name),
+                        d.Battery ?? L10n.L("Ready"),
+                        Event: "deviceOn",
+                        Art: new DeviceArt(d.Symbol, true),
+                        Module: "devices"), notify: false);
                 }
             }
-            return changed;
-        }
 
-        var oldIds = new HashSet<string>(old.Select(d => d.Id), StringComparer.Ordinal);
-        var newIds = new HashSet<string>(next.Select(d => d.Id), StringComparer.Ordinal);
-
-        foreach (var d in next)
-        {
-            if (!oldIds.Contains(d.Id))
+            foreach (var d in old)
             {
-                announce.Announce(new Toast(
-                    d.Symbol,
-                    tint() ?? DefaultTint,
-                    L10n.L("{0} connected", d.Name),
-                    d.Battery ?? L10n.L("Ready"),
-                    Event: "deviceOn",
-                    Art: new DeviceArt(d.Symbol, true),
-                    Module: "devices"), notify: false);
+                if (!newIds.Contains(d.Id))
+                {
+                    announce.Announce(new Toast(
+                        d.Symbol,
+                        DisconnectedTint,
+                        L10n.L("{0} disconnected", d.Name),
+                        Event: "deviceOff",
+                        Art: new DeviceArt(d.Symbol, false),
+                        Module: "devices"), notify: false);
+                }
             }
         }
 
-        foreach (var d in old)
-        {
-            if (!newIds.Contains(d.Id))
-            {
-                _lowWarned.Remove(d.Id);
-                announce.Announce(new Toast(
-                    d.Symbol,
-                    DisconnectedTint,
-                    L10n.L("{0} disconnected", d.Name),
-                    Event: "deviceOff",
-                    Art: new DeviceArt(d.Symbol, false),
-                    Module: "devices"), notify: false);
-            }
-        }
-
+        // The warned state survives a disconnect: only a level above 30 re-arms it.
         foreach (var d in next)
         {
             if (d.Lowest is not int low)

@@ -144,6 +144,41 @@ public class DevicesModuleTests
     }
 
     [Fact]
+    public void FirstScan_LowBattery_ToastsOnce()
+    {
+        var announcer = new RecordingAnnouncer();
+        var module = Module(announcer);
+
+        module.Update([Fact("a", "AirPods", 12)]);
+
+        // The baseline is silent for connects, but a device already at 15% or below warns once.
+        var low = Assert.Single(announcer.Calls);
+        Assert.Equal("lowBattery", low.Toast.Event);
+        Assert.Equal("AirPods battery low", low.Toast.Title);
+        Assert.Equal("12%", low.Toast.Subtitle);
+
+        module.Update([Fact("a", "AirPods", 11)]);
+        Assert.Single(announcer.Calls);
+    }
+
+    [Fact]
+    public void Disconnect_KeepsWarned()
+    {
+        var announcer = new RecordingAnnouncer();
+        var module = Module(announcer);
+        module.Update([Fact("a", "AirPods", 60)]);
+        module.Update([Fact("a", "AirPods", 12)]);
+        Assert.Equal(1, announcer.Calls.Count(c => c.Toast.Event == "lowBattery"));
+
+        module.Update([]);
+        module.Update([Fact("a", "AirPods", 10)]);
+
+        // Reconnecting at 10% toasts connected and disconnected, but not a second low warning.
+        Assert.Equal(1, announcer.Calls.Count(c => c.Toast.Event == "lowBattery"));
+        Assert.Equal(1, announcer.Calls.Count(c => c.Toast.Event == "deviceOn"));
+    }
+
+    [Fact]
     public void Clear_ResetsBaseline()
     {
         var announcer = new RecordingAnnouncer();

@@ -29,6 +29,7 @@ public static class ModuleGlyphs
         ["bolt"] = "",        // lightning bolt: charging
         ["plug"] = "",        // power symbol, the stand-in for the plug: unplugged
         ["batterylow"] = "",  // an almost empty battery: low battery
+        ["battery.25percent"] = "",  // a device's low battery (Devices module): the same almost empty battery glyph
         ["warning"] = "",
         ["thermometer"] = "\uE9CA",  // thermometer: the header temperature (Segoe Fluent Icons E9CA)
         ["check"] = "\uE73E",        // check mark: a finished job's status (Segoe Fluent Icons E73E)
