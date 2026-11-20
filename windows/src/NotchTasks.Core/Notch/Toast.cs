@@ -29,3 +29,6 @@ public abstract record ToastArt;
 
 /// The battery toast art: the charge level and whether the charger is plugged in.
 public sealed record ChargeArt(int Percent, bool Plugged) : ToastArt;
+
+/// The device toast art: the accessory's symbol and whether it connected (false: it went away).
+public sealed record DeviceArt(string Symbol, bool Connected) : ToastArt;
