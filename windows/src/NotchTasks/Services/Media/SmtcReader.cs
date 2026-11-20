@@ -18,6 +18,10 @@ public interface IMediaReader
     /// Stops listening and unsubscribes from every session.
     void Stop();
 
+    /// Subscribes the sessions' timeline events (a position that moves on its own) while true, and unsubscribes them while false.
+    /// The pill follows the timeline only while it is open; the properties and playback events stay subscribed.
+    void FollowTimeline(bool follow);
+
     /// The sessions the OS lists now, with their state, position and artwork key.
     Task<IReadOnlyList<MediaSessionFact>> Read();
 
@@ -51,7 +55,8 @@ public sealed class SmtcReader : IMediaReader
             list: manager => manager.GetSessions().ToList(),
             idOf: session => session.SourceAppUserModelId,
             subscribe: SubscribeSession,
-            watch: WatchManager);
+            watch: WatchManager,
+            subscribeTimeline: SubscribeTimeline);
     }
 
     public event Action Changed
@@ -86,6 +91,9 @@ public sealed class SmtcReader : IMediaReader
 
     /// Takes the handlers off the manager and every session.
     public void Stop() => _book.Stop();
+
+    /// Follows the timeline events of every session while follow is true (see IMediaReader.FollowTimeline).
+    public void FollowTimeline(bool follow) => _book.FollowTimeline(follow);
 
     /// Reads every listed session: its title and artist, its playback state and controls, and its timeline. A session that fails is
     /// left out of this read; the others still come.
@@ -272,24 +280,39 @@ public sealed class SmtcReader : IMediaReader
         });
     }
 
-    /// Hooks a session's media properties, playback info and timeline events, each raising Changed. The handle takes them off.
+    /// Hooks a session's media properties and playback info, each raising Changed. The handle takes them off. They are always hooked.
     private IDisposable SubscribeSession(GlobalSystemMediaTransportControlsSession session)
     {
         var properties = new TypedEventHandler<GlobalSystemMediaTransportControlsSession, MediaPropertiesChangedEventArgs>(
             (_, _) => Raise());
         var playback = new TypedEventHandler<GlobalSystemMediaTransportControlsSession, PlaybackInfoChangedEventArgs>(
             (_, _) => Raise());
-        var timeline = new TypedEventHandler<GlobalSystemMediaTransportControlsSession, TimelinePropertiesChangedEventArgs>(
-            (_, _) => Raise());
         session.MediaPropertiesChanged += properties;
         session.PlaybackInfoChanged += playback;
-        session.TimelinePropertiesChanged += timeline;
         return new ActionDisposable(() =>
         {
             try
             {
                 session.MediaPropertiesChanged -= properties;
                 session.PlaybackInfoChanged -= playback;
+            }
+            catch (Exception e)
+            {
+                Log("unsubscribe", e);
+            }
+        });
+    }
+
+    /// Hooks a session's timeline events, which raise Changed. The handle takes them off. Hooked only while the pill is open.
+    private IDisposable SubscribeTimeline(GlobalSystemMediaTransportControlsSession session)
+    {
+        var timeline = new TypedEventHandler<GlobalSystemMediaTransportControlsSession, TimelinePropertiesChangedEventArgs>(
+            (_, _) => Raise());
+        session.TimelinePropertiesChanged += timeline;
+        return new ActionDisposable(() =>
+        {
+            try
+            {
                 session.TimelinePropertiesChanged -= timeline;
             }
             catch (Exception e)

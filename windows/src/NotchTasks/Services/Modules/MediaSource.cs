@@ -98,6 +98,7 @@ public sealed class MediaSource : IModuleSource
     private bool _started;
     private bool _busy;
     private bool _wanted;
+    private bool _rebase;  // the next applied read publishes whether or not the shown session changed (the pill opened)
     private int _generation;  // every Start and Stop: a read that started under an older one is dropped when it lands
 
     /// module gets the reads; publish is called when the shown session changed (or its artwork or icon arrived); art holds the artwork
@@ -228,11 +229,11 @@ public sealed class MediaSource : IModuleSource
                 _wanted = false;
                 var generation = _generation;
                 var sessions = await Task.Run(() => _reader.Read()).ConfigureAwait(true);
-                if (!_started || generation != _generation || _wanted)
+                if (!_started || generation != _generation)
                 {
-                    continue;
+                    continue;  // stopped or restarted while the read ran: the result is stale
                 }
-                Apply(sessions);
+                Apply(sessions);  // a request that came meanwhile is read next, in this loop
             }
         }
         catch (Exception e)
@@ -255,9 +256,22 @@ public sealed class MediaSource : IModuleSource
             FetchArtwork(current);
             FetchIcon(current);
         }
-        if (changed)
+        if (changed || _rebase)
         {
+            _rebase = false;  // the read that follows an open publishes even when nothing changed: the seek bar rebases on it
             _publish();
+        }
+    }
+
+    /// The open pill follows the session's timeline (its position moves on its own); the closed pill does not. Opening also reads once,
+    /// so the seek bar rebases from the current position. Does nothing while the module is stopped beyond the flag.
+    public void FollowTimeline(bool open)
+    {
+        _reader.FollowTimeline(open);
+        if (open)
+        {
+            _rebase = true;
+            Request();
         }
     }
 

@@ -15,13 +15,16 @@ public sealed class ActionDisposable : IDisposable
 }
 
 /// The bookkeeping behind SmtcReader, with the OS types left out so it can be tested. It holds one lock around everything the
-/// reader's threads share: the running flag, the start generation, the attached manager, and the subscriptions by session id.
+/// reader's threads share: the running flag, the start generation, the attached manager, the timeline flag, and the subscriptions by
+/// session id.
 ///
 /// - BeginStart gives each Start a generation. Attach takes the manager only for the current generation and only once, so a Start
 ///   that was overtaken by a Stop (or a second Start) while its request was pending does nothing.
 /// - Sync brings the subscriptions in line with the manager's listed sessions. It does nothing once stopped or for a manager that is
 ///   no longer attached, so a session change that lands after Stop cannot subscribe again.
 /// - A session is matched by its id and by its object: a session that closed and reopened under the same id is resubscribed.
+/// - The timeline events (a position that moves on its own) are subscribed only while FollowTimeline is on, for every session. The
+///   properties and playback events are always subscribed.
 public sealed class MediaSessionBook<TManager, TSession>
     where TManager : class
     where TSession : class
@@ -31,24 +34,29 @@ public sealed class MediaSessionBook<TManager, TSession>
     private readonly Func<TSession, string> _idOf;
     private readonly Func<TSession, IDisposable> _subscribe;
     private readonly Func<TManager, IDisposable> _watch;
-    private readonly Dictionary<string, (TSession Session, IDisposable Handle)> _entries = new(StringComparer.Ordinal);
+    private readonly Func<TSession, IDisposable>? _subscribeTimeline;
+    private readonly Dictionary<string, Entry> _entries = new(StringComparer.Ordinal);
     private int _generation;
     private bool _running;
+    private bool _following;
     private TManager? _manager;
     private IDisposable? _managerWatch;
 
-    /// list reads a manager's sessions; idOf names a session; subscribe hooks a session's events (its handle takes them off);
-    /// watch hooks a manager's session-list events (the handle takes them off).
+    /// list reads a manager's sessions; idOf names a session; subscribe hooks a session's properties and playback events (its handle
+    /// takes them off); watch hooks a manager's session-list events (the handle takes them off); subscribeTimeline hooks a session's
+    /// timeline events while FollowTimeline is on (null: there are none).
     public MediaSessionBook(
         Func<TManager, IReadOnlyList<TSession>> list,
         Func<TSession, string> idOf,
         Func<TSession, IDisposable> subscribe,
-        Func<TManager, IDisposable> watch)
+        Func<TManager, IDisposable> watch,
+        Func<TSession, IDisposable>? subscribeTimeline = null)
     {
         _list = list;
         _idOf = idOf;
         _subscribe = subscribe;
         _watch = watch;
+        _subscribeTimeline = subscribeTimeline;
     }
 
     /// The number of sessions subscribed now.
@@ -59,6 +67,18 @@ public sealed class MediaSessionBook<TManager, TSession>
             lock (_gate)
             {
                 return _entries.Count;
+            }
+        }
+    }
+
+    /// Whether the timeline events are subscribed (see FollowTimeline).
+    public bool Following
+    {
+        get
+        {
+            lock (_gate)
+            {
+                return _following;
             }
         }
     }
@@ -124,17 +144,33 @@ public sealed class MediaSessionBook<TManager, TSession>
                 {
                     continue;
                 }
-                entry.Handle.Dispose();
+                entry.Dispose();
                 _entries.Remove(id);
             }
             foreach (var (id, session) in byId)
             {
                 if (!_entries.ContainsKey(id))
                 {
-                    _entries[id] = (session, _subscribe(session));
+                    var entry = new Entry(session, _subscribe(session));
+                    _entries[id] = entry;
+                    SyncTimeline(entry);
                 }
             }
             return true;
+        }
+    }
+
+    /// Subscribes the timeline events of every session while follow is true, and takes them off when it is false. The properties and
+    /// playback events are not affected. The flag is kept across a Stop, and applies to the sessions of the next Sync.
+    public void FollowTimeline(bool follow)
+    {
+        lock (_gate)
+        {
+            _following = follow;
+            foreach (var entry in _entries.Values)
+            {
+                SyncTimeline(entry);
+            }
         }
     }
 
@@ -147,7 +183,7 @@ public sealed class MediaSessionBook<TManager, TSession>
             _generation++;
             foreach (var entry in _entries.Values)
             {
-                entry.Handle.Dispose();
+                entry.Dispose();
             }
             _entries.Clear();
             _managerWatch?.Dispose();
@@ -162,6 +198,43 @@ public sealed class MediaSessionBook<TManager, TSession>
         lock (_gate)
         {
             return _entries.TryGetValue(id, out var entry) ? entry.Session : null;
+        }
+    }
+
+    /// Makes an entry's timeline subscription match the flag. Called under the gate.
+    private void SyncTimeline(Entry entry)
+    {
+        if (_following && entry.Timeline is null && _subscribeTimeline is not null)
+        {
+            entry.Timeline = _subscribeTimeline(entry.Session);
+        }
+        else if (!_following && entry.Timeline is not null)
+        {
+            entry.Timeline.Dispose();
+            entry.Timeline = null;
+        }
+    }
+
+    /// A subscribed session and its handles.
+    private sealed class Entry
+    {
+        public Entry(TSession session, IDisposable handle)
+        {
+            Session = session;
+            Handle = handle;
+        }
+
+        public TSession Session { get; }
+
+        public IDisposable Handle { get; }
+
+        public IDisposable? Timeline { get; set; }
+
+        public void Dispose()
+        {
+            Timeline?.Dispose();
+            Timeline = null;
+            Handle.Dispose();
         }
     }
 }

@@ -29,6 +29,12 @@ internal sealed class FakeMediaReader : IMediaReader
 
     public int Subscribers { get; private set; }
 
+    /// Every FollowTimeline call, in order (true when the pill opened).
+    public List<bool> FollowCalls { get; } = new();
+
+    /// When true, every Read raises Changed before it returns, as a busy session does (its events land during each read).
+    public bool RaiseDuringRead { get; set; }
+
     public List<(string Source, MediaCommand Command)> Sent { get; } = new();
 
     public List<(string Source, double Seconds)> Seeks { get; } = new();
@@ -62,9 +68,16 @@ internal sealed class FakeMediaReader : IMediaReader
 
     public void Stop() => Stops++;
 
+    public void FollowTimeline(bool follow) => FollowCalls.Add(follow);
+
     public Task<IReadOnlyList<MediaSessionFact>> Read()
     {
         Reads++;
+        if (RaiseDuringRead)
+        {
+            Raise();
+            Thread.Sleep(300);  // long enough for the 150 ms coalescing timer to request again before this read lands
+        }
         if (Holds.Count > 0)
         {
             return Holds.Dequeue().Task;
@@ -91,7 +104,8 @@ internal sealed class FakeMediaReader : IMediaReader
     }
 }
 
-/// The media source (module "media"): a burst of SMTC events makes one read, a read that a newer request overtakes is dropped,
+/// The media source (module "media"): a burst of SMTC events makes one read, a read that a newer request overtakes still applies (only a
+/// stop or restart drops a read), the timeline follows the open pill,
 /// stopping clears the module and unsubscribes, artwork is fetched once per key, and a toggle flips the card before SMTC answers.
 public sealed class MediaSourceTests
 {
@@ -146,7 +160,7 @@ public sealed class MediaSourceTests
     }
 
     [Fact]
-    public void StaleRead_Dropped()
+    public void OvertakenRead_AppliedThenNewerReadFollows()
     {
         Sta.Run(() =>
         {
@@ -167,8 +181,9 @@ public sealed class MediaSourceTests
             held.SetResult(new List<MediaSessionFact> { Session("spotify.exe", MediaStatus.Playing) });
             Fixture.PumpUntil(() => module.Current?.Source == "chrome.exe");
 
+            // The held read is not stale (the generation did not change), so it applies; the newer request's read follows it.
             Assert.Equal("chrome.exe", module.Current?.Source);
-            Assert.DoesNotContain("spotify.exe", published);
+            Assert.Equal(new[] { "spotify.exe", "chrome.exe" }, published);
             source.Stop();
         });
     }
@@ -274,6 +289,71 @@ public sealed class MediaSourceTests
             Assert.False(state.Media.Current!.Playing);  // the card flips at once, before SMTC answers
             Fixture.PumpUntil(() => reader.Sent.Count == 1);
             Assert.Equal(("spotify.exe", MediaCommand.Toggle), reader.Sent[0]);
+            state.Dispose();
+        });
+    }
+
+    [Fact]
+    public void BusySession_EventsDuringEveryRead_StillApply()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            var reader = new FakeMediaReader { RaiseDuringRead = true, Sessions = { Session("spotify.exe", MediaStatus.Playing) } };
+            var (source, module, _) = Make(reader);
+
+            source.Start();
+            Fixture.PumpUntil(() => module.Current is not null);
+
+            // Every read is overtaken by an event, yet the result of each one is applied (it is not dropped as stale).
+            Assert.Equal("spotify.exe", module.Current?.Source);
+            source.Stop();
+        });
+    }
+
+    [Fact]
+    public void FollowTimeline_ClosedThenOpen_FollowsAndReadsOnce()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            var reader = new FakeMediaReader { Sessions = { Session("spotify.exe", MediaStatus.Playing) } };
+            var (source, module, published) = Make(reader);
+
+            source.Start();
+            Fixture.PumpUntil(() => module.Current is not null);
+
+            source.FollowTimeline(false);
+            Assert.Equal(new[] { false }, reader.FollowCalls);
+            var reads = reader.Reads;
+            var publishes = published.Count;
+            Fixture.PumpUntil(() => false, 200);
+            Assert.Equal(reads, reader.Reads);  // closed: no read of its own
+
+            source.FollowTimeline(true);
+            Assert.Equal(new[] { false, true }, reader.FollowCalls);
+            Fixture.PumpUntil(() => reader.Reads > reads);
+            Fixture.PumpUntil(() => false, 300);
+            Assert.Equal(reads + 1, reader.Reads);  // opening reads once, so the seek bar rebases
+            Assert.True(published.Count > publishes);  // and that read publishes even though nothing changed
+            source.Stop();
+        });
+    }
+
+    [Fact]
+    public void PillOpened_DrivesTheTimelineFollow()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            var reader = new FakeMediaReader { Sessions = { Session("spotify.exe", MediaStatus.Playing) } };
+            var state = NewState(reader);
+            Fixture.PumpUntil(() => state.Media.Current is not null);
+
+            state.PillOpened(true);
+            state.PillOpened(false);
+
+            Assert.Equal(new[] { true, false }, reader.FollowCalls.Skip(reader.FollowCalls.Count - 2));
             state.Dispose();
         });
     }

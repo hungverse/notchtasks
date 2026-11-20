@@ -2,7 +2,8 @@ namespace NotchTasks.Core.Media;
 
 /// The seek bar's clock (Mac: SeekBar). It predicts the position from a base and runs it while playing.
 /// Report moves the base only on the first report, when the report is more than 1.5 s away from the prediction, or when the
-/// duration changes. A play-state change freezes the clock at the predicted value (pause) or resumes it from there (play).
+/// duration changes. A play-state change freezes the clock at the predicted value (pause) or resumes it from there (play), unless
+/// the report is more than 1.5 s from the prediction (a seek made while paused), which rebases it from the report.
 /// The clock takes its time from the caller (nowMs) and runs no timers.
 public sealed class SeekClock
 {
@@ -41,6 +42,14 @@ public sealed class SeekClock
         var predicted = At(nowMs);
         if (playing != _playing)
         {
+            if (Math.Abs(position - predicted) > DriftSeconds)
+            {
+                // A seek made while paused: the report is the position to resume from.
+                Rebase(position, playing, duration, nowMs);
+                Rebased = true;
+                return;
+            }
+
             // Freeze or resume from the predicted value; the reported position is not used for this change.
             _base = predicted;
             _baseAtMs = nowMs;

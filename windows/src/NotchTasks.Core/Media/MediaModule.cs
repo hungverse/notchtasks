@@ -21,7 +21,13 @@ public sealed class MediaModule
         var listed = sessions.Where(s => s.Status != MediaStatus.Other).ToList();
         var pick = PickSession(listed, lastShown);
 
-        _current = pick is null ? null : ToNowPlaying(pick, nowMs);
+        var fresh = pick is null ? null : ToNowPlaying(pick, nowMs);
+        if (previous is not null && fresh is not null && SameShown(previous, fresh, nowMs))
+        {
+            return false;  // the card shows the same; the old reading keeps extrapolating
+        }
+
+        _current = fresh;
         return !Equals(previous, _current);
     }
 
@@ -99,6 +105,30 @@ public sealed class MediaModule
             CanPrevious: s.CanPrevious,
             CanToggle: s.CanToggle,
             ArtworkKey: s.ArtworkKey);
+    }
+
+    /// A report this close to the shown position is the same position (SMTC's position is coarse).
+    private const double ReportDriftSeconds = 1.5;
+
+    /// Whether a fresh reading shows what the card already shows at nowMs: the same session, metadata, play state, duration and
+    /// controls, and a position within 1.5 s of the shown one extrapolated to nowMs.
+    private static bool SameShown(NowPlaying shown, NowPlaying fresh, long nowMs)
+    {
+        if (shown.Source != fresh.Source || shown.Title != fresh.Title || shown.Artist != fresh.Artist
+            || shown.Playing != fresh.Playing || shown.Duration != fresh.Duration || shown.ArtworkKey != fresh.ArtworkKey
+            || shown.CanSeek != fresh.CanSeek || shown.CanNext != fresh.CanNext || shown.CanPrevious != fresh.CanPrevious
+            || shown.CanToggle != fresh.CanToggle)
+        {
+            return false;
+        }
+
+        var expected = Extrapolate(shown.Position, shown.Playing, shown.PositionAtMs, nowMs, shown.Duration);
+        return (expected, fresh.Position) switch
+        {
+            (null, null) => true,
+            (null, _) or (_, null) => false,
+            var (a, b) => Math.Abs(a.Value - b.Value) <= ReportDriftSeconds,
+        };
     }
 
     /// The position at nowMs: the reading plus the time since it, while playing, clamped to [0, duration] when there is one.

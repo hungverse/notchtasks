@@ -25,6 +25,19 @@ public static class ChipView
     /// The chip and side a panel was made for (its key): a fill replaces a panel of the same key in place, with no motion.
     private static readonly DependencyProperty KeyProperty = DependencyProperty.RegisterAttached(
         "ChipKey", typeof(string), typeof(ChipView), new PropertyMetadata(null));
+    /// What a panel shows (its content signature). A fill whose chip has the same signature keeps the panel as it is: no new panel, no
+    /// content move, so a media chip's bars are not restarted by a position that moved.
+    private static readonly DependencyProperty SignatureProperty = DependencyProperty.RegisterAttached(
+        "ChipSignature", typeof(object), typeof(ChipView), new PropertyMetadata(null));
+
+    /// A media chip's content signature: the artwork key, whether its artwork and its app icon are cached, the tint and the sides.
+    /// Its position is not in it, so the chip is not rebuilt as the position moves.
+    private sealed record MediaSignature(string ArtKey, bool Art, bool Icon, Color Tint, bool Lead, bool Trail, string Side);
+
+    /// Any other chip's content signature: the chip record (its values, as the publish carries them), its tint, the sides, the language
+    /// (its words are drawn again on a switch) and the second: a timer, a call or a limit shows the time, so the panel is rebuilt once a
+    /// second at most.
+    private sealed record ChipSignature(Chip Chip, Color Tint, string Language, long Second, bool Lead, bool Trail, string Side);
     private static readonly Color AskOrange = Color.FromRgb(0xFF, 0x9F, 0x0A);
     private static readonly Color CallGreen = Color.FromRgb(0x30, 0xD1, 0x58);  // the Mac's green: a call's time
     private static readonly Color CallRed = Color.FromRgb(0xFF, 0x45, 0x3A);    // the Mac's red: a call's time while muted
@@ -289,44 +302,79 @@ public static class ChipView
         Func<string, ImageSource?>? art = null)
     {
         var (leftChips, rightChips, single) = ChipBoard.Sides(chips, placements);
-        var leftPanels = new List<(string Key, FrameworkElement Panel)>();
-        var rightPanels = new List<(string Key, FrameworkElement Panel)>();
+        var leftPanels = new List<ChipSlot>();
+        var rightPanels = new List<ChipSlot>();
         if (single is { } lone)
         {
-            Collect(leftPanels, lone, accent, colors, now, lead: true, trail: false, side: "L", processes, toolIcons, art);
-            Collect(rightPanels, lone, accent, colors, now, lead: false, trail: true, side: "R", processes, toolIcons, art);
+            Collect(left, leftPanels, lone, accent, colors, now, lead: true, trail: false, side: "L", processes, toolIcons, art);
+            Collect(right, rightPanels, lone, accent, colors, now, lead: false, trail: true, side: "R", processes, toolIcons, art);
         }
         foreach (var chip in leftChips)
         {
-            Collect(leftPanels, chip, accent, colors, now, lead: true, trail: true, side: "L", processes, toolIcons, art);
+            Collect(left, leftPanels, chip, accent, colors, now, lead: true, trail: true, side: "L", processes, toolIcons, art);
         }
         foreach (var chip in rightChips)
         {
-            Collect(rightPanels, chip, accent, colors, now, lead: true, trail: true, side: "R", processes, toolIcons, art);
+            Collect(right, rightPanels, chip, accent, colors, now, lead: true, trail: true, side: "R", processes, toolIcons, art);
         }
         Reconcile(left, leftPanels, rightWing: false, motion, animationsOn);
         Reconcile(right, rightPanels, rightWing: true, motion, animationsOn);
         return chips.Count;
     }
 
-    /// Makes a chip's panel for one wing and keys it by chip and side, so the next fill can tell it is the same chip.
-    private static void Collect(List<(string Key, FrameworkElement Panel)> panels, Chip chip, Color? accent,
+    /// A chip's place in a fill: its key, its panel (a held one when the content is unchanged), and its content signature (null when
+    /// the chip is always rebuilt).
+    private readonly record struct ChipSlot(string Key, FrameworkElement Panel, object? Signature);
+
+    /// Makes a chip's panel for one wing and keys it by chip and side, so the next fill can tell it is the same chip. The panel the wing
+    /// already holds for that chip is kept, with no new panel, when its signature is unchanged.
+    private static void Collect(StackPanel wing, List<ChipSlot> panels, Chip chip, Color? accent,
         IReadOnlyDictionary<string, string> colors, DateTimeOffset now, bool lead, bool trail, string side,
         IProcessReader? processes, IReadOnlyDictionary<string, JsonObject>? toolIcons, Func<string, ImageSource?>? art)
     {
+        var key = $"{chip.Kind}|{chip.Module}|{chip.Id}|{side}";
+        var signature = SignatureOf(chip, accent, colors, now, lead, trail, side, art);
+        if (signature is not null && HeldPanel(wing, key) is { } held && Equals(held.GetValue(SignatureProperty), signature))
+        {
+            panels.Add(new ChipSlot(key, held, signature));
+            return;
+        }
         if (Panel(chip, accent, colors, now, lead, trail, processes, toolIcons, art) is { } panel)
         {
             panel.Tag = ChipTag;
-            panels.Add(($"{chip.Kind}|{chip.Module}|{chip.Id}|{side}", panel));
+            panels.Add(new ChipSlot(key, panel, signature));
         }
     }
+
+    /// The content signature of a chip's panel, or null when the panel is always rebuilt: an agent's and a build's lead is its item icon,
+    /// which reads the live processes, so it is never kept.
+    private static object? SignatureOf(Chip chip, Color? accent, IReadOnlyDictionary<string, string> colors, DateTimeOffset now,
+        bool lead, bool trail, string side, Func<string, ImageSource?>? art)
+    {
+        var tint = TintOf(chip, accent, colors);
+        if (chip.Kind == ChipKind.Media && chip.Media is { } playing)
+        {
+            var artKey = playing.ArtworkKey ?? string.Empty;
+            var artCached = playing.ArtworkKey is { } key && art?.Invoke(key) is not null;
+            var iconCached = playing.AppExe is { } exe && ItemIcon.HasExeIcon(exe);
+            return new MediaSignature(artKey, artCached, iconCached, tint, lead, trail, side);
+        }
+        if (chip.Kind == ChipKind.Agent)
+        {
+            return null;
+        }
+        return new ChipSignature(chip, tint, L10n.Current, now.ToUnixTimeSeconds(), lead, trail, side);
+    }
+
+    /// The panel a wing holds for a chip key, when it is not leaving; null when there is none.
+    private static FrameworkElement? HeldPanel(StackPanel wing, string key) =>
+        wing.Children.OfType<FrameworkElement>().FirstOrDefault(e => e.Tag is ChipTag && KeyOf(e) == key && !PillMotion.IsExiting(e));
 
     /// Puts a wing's chip panels in place. A chip held before and still held keeps its element, so an enter in progress carries on
     /// (its new content is moved into it, with no motion). A chip it no longer holds fades out where it is, and is removed when the
     /// fade ends. A new chip enters with scale. A left wing's chips go after its badges; a right wing's chips go before its badges,
     /// after the chips already there, in the order given.
-    private static void Reconcile(StackPanel wing, List<(string Key, FrameworkElement Panel)> desired, bool rightWing,
-        string motion, bool animationsOn)
+    private static void Reconcile(StackPanel wing, List<ChipSlot> desired, bool rightWing, string motion, bool animationsOn)
     {
         var wanted = desired.Select(d => d.Key).ToHashSet(StringComparer.Ordinal);
         var previous = wing.Children.OfType<FrameworkElement>().Where(e => e.Tag is ChipTag).ToList();
@@ -358,16 +406,22 @@ public static class ChipView
 
         var placed = new List<(FrameworkElement Element, bool IsNew)>();
         var seen = new HashSet<string>(StringComparer.Ordinal);
-        foreach (var (key, panel) in desired)
+        foreach (var (key, panel, signature) in desired)
         {
             if (!seen.Add(key))
             {
                 continue;
             }
-            if (held.TryGetValue(key, out var old) && old is System.Windows.Controls.Panel oldPanel && panel is System.Windows.Controls.Panel newPanel)
+            if (held.TryGetValue(key, out var old) && ReferenceEquals(old, panel))
+            {
+                placed.Add((old, false));  // the same content: kept as it is, with no rebuild
+                continue;
+            }
+            if (held.TryGetValue(key, out var old2) && old2 is System.Windows.Controls.Panel oldPanel && panel is System.Windows.Controls.Panel newPanel)
             {
                 MoveContent(newPanel, oldPanel);
-                placed.Add((old, false));
+                oldPanel.SetValue(SignatureProperty, signature);
+                placed.Add((old2, false));
                 continue;
             }
             if (held.TryGetValue(key, out var stale))
@@ -375,6 +429,7 @@ public static class ChipView
                 wing.Children.Remove(stale);
             }
             panel.SetValue(KeyProperty, key);
+            panel.SetValue(SignatureProperty, signature);
             placed.Add((panel, true));
         }
 

@@ -15,6 +15,9 @@ public static class Loops
     /// The frame rate a decorative loop is drawn at.
     private const double FrameRate = 30;
 
+    /// The frame rate of the chip's working bars: small and always on while media plays, so drawn at 20 fps (P3d ruling).
+    private const double BarsFrameRate = 20;
+
     /// The working bars' period: 2π / 3.4 s.
     private static readonly TimeSpan BarsPeriod = TimeSpan.FromSeconds(2 * Math.PI / 3.4);
 
@@ -26,9 +29,10 @@ public static class Loops
 
     /// Repeats an animation of a property of a target forever, at 30 fps, while the owner is on screen. The animation is not
     /// changed beyond its repeat and frame rate: nothing is stored on it, so it can be frozen when it starts.
-    public static void Run(FrameworkElement owner, IAnimatable target, DependencyProperty property, AnimationTimeline animation)
+    public static void Run(FrameworkElement owner, IAnimatable target, DependencyProperty property, AnimationTimeline animation,
+        double frameRate = FrameRate)
     {
-        Timeline.SetDesiredFrameRate(animation, (int)FrameRate);
+        Timeline.SetDesiredFrameRate(animation, (int)frameRate);
         animation.RepeatBehavior = RepeatBehavior.Forever;
 
         var running = false;
@@ -101,7 +105,7 @@ public static class Loops
                 RenderTransform = transform,
                 Focusable = false,
             };
-            Run(panel, transform, ScaleTransform.ScaleYProperty, BarAnimation(i));
+            Run(panel, transform, ScaleTransform.ScaleYProperty, BarAnimation(i), BarsFrameRate);
             panel.Children.Add(bar);
         }
         return panel;

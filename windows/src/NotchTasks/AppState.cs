@@ -713,6 +713,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         {
             _healthSource.PillOpened(open);
             _thermalSource.PillOpened(open);
+            _mediaSource.FollowTimeline(open);  // the seek bar moves only while the pill is open
             if (!open && MirrorOn)
             {
                 CloseMirror();

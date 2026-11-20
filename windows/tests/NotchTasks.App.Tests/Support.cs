@@ -196,6 +196,10 @@ internal static class Fixture
         {
         }
 
+        public void FollowTimeline(bool follow)
+        {
+        }
+
         public Task<IReadOnlyList<MediaSessionFact>> Read() =>
             Task.FromResult<IReadOnlyList<MediaSessionFact>>(Array.Empty<MediaSessionFact>());
 
