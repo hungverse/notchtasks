@@ -1,35 +1,47 @@
 using System.Text.Json.Nodes;
 using System.Windows;
+using System.Windows.Media;
 using NotchTasks.Core;
 using NotchTasks.Core.Settings;
 using NotchTasks.Pill;
 
 namespace NotchTasks.ControlPanel;
 
-/// The icon editor of one build tool, opened from the Build & CI box (the Mac's BadgeEditor for a tool). Each edit saves the tool's
-/// icon at once (SettingsStore.SetToolIcon); a refused badge shows its reason, and the controls take the saved values back. Reset
-/// removes the tool's icon, so the box shows the tool's default again.
+/// The icon editor of a build tool (opened from the Build & CI box) or of a watched item (opened from the Watching pane): the Mac's
+/// BadgeEditor. Each edit is saved at once through save; a refused badge shows its reason, and the controls take the last saved
+/// values back. Reset removes the icon (the default comes back) and closes the dialog.
 public partial class BadgeEditorDialog : Window
 {
-    private readonly SettingsStore _store;
-    private readonly string _tool;
+    private readonly Color _accent;
+    private readonly Func<JsonObject, string?> _save;
+    private readonly Action _reset;
 
-    /// The badge shown: the tool's saved icon, as the store last accepted it.
+    /// The badge shown: the badge as the last save accepted it.
     private JsonObject _badge;
 
-    public BadgeEditorDialog(SettingsStore store, string tool, JsonObject badge)
+    /// The editor of any badge. accent is what a badge without a colour fills with. save stores the badge and returns the refusal
+    /// (null when saved); reset removes the icon.
+    public BadgeEditorDialog(string title, string subtitle, JsonObject badge, Color accent, Func<JsonObject, string?> save, Action reset)
     {
-        _store = store;
-        _tool = tool;
+        _accent = accent;
+        _save = save;
+        _reset = reset;
         _badge = (JsonObject)badge.DeepClone();
         InitializeComponent();
 
-        Title = L10n.L("Symbol");
-        SubtitleText.Text = tool;
+        Title = title;
+        SubtitleText.Text = subtitle;
         Body.Edit += OnEdit;
         DoneButton.Click += (_, _) => Close();
-        ResetButton.Click += (_, _) => ResetTool();
+        ResetButton.Click += (_, _) => ResetIcon();
         Render();
+    }
+
+    /// The editor of one build tool's icon: the tool's icon is saved in the store and removed by Reset.
+    public BadgeEditorDialog(SettingsStore store, string tool, JsonObject badge)
+        : this(L10n.L("Symbol"), tool, badge, BadgeGlyph.AccentOf(store),
+            next => store.SetToolIcon(tool, next), () => store.SetToolIcon(tool, null))
+    {
     }
 
     /// Applies one change to a copy of the badge and saves it. A refused badge is not saved: its reason shows.
@@ -37,30 +49,29 @@ public partial class BadgeEditorDialog : Window
     {
         var next = (JsonObject)_badge.DeepClone();
         change(next);
-        var refusal = _store.SetToolIcon(_tool, next);
+        var refusal = _save(next);
         if (refusal is null)
         {
-            _badge = _store.ToolIcons.TryGetValue(_tool, out var saved) ? saved : next;
+            _badge = next;
         }
         ShowError(refusal);
         Render();
     }
 
-    /// Removes the tool's icon and closes the dialog.
-    private void ResetTool()
+    /// Removes the icon and closes the dialog.
+    private void ResetIcon()
     {
-        _store.SetToolIcon(_tool, null);
+        _reset();
         Close();
     }
 
     private void Render()
     {
-        var accent = BadgeGlyph.AccentOf(_store);
-        var preview = BadgeGlyph.Create(_badge, 40, accent);
+        var preview = BadgeGlyph.Create(_badge, 40, _accent);
         preview.HorizontalAlignment = HorizontalAlignment.Center;
         preview.VerticalAlignment = VerticalAlignment.Center;
         Preview.Child = preview;
-        Body.Show(_badge, accent);
+        Body.Show(_badge, _accent);
     }
 
     private void ShowError(string? message)

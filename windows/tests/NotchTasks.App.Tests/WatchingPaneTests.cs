@@ -395,4 +395,68 @@ public sealed class WatchingPaneTests
             Assert.Equal(exe, editor.Result!.Exe);
         });
     }
+
+    /// The icon button of a row: the one the row holds in its first column.
+    private static Button IconButton(Grid row) => row.Children.OfType<Button>().Single(b => Grid.GetColumn(b) == 0);
+
+    [Fact]
+    public void Row_IconButton_ShowsTheItemsOwnBadge_ElseItsSymbol()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            var store = StoreWith("[{\"id\":\"a1\",\"name\":\"Alpha\",\"kind\":\"process\",\"process\":\"alpha\",\"enabled\":true,"
+                + "\"icon\":null},"
+                + "{\"id\":\"b1\",\"name\":\"Beta\",\"kind\":\"process\",\"process\":\"beta\",\"enabled\":true,"
+                + "\"icon\":{\"symbol\":\"seg:E735\",\"shape\":\"rounded\"}}]");
+            var pane = NewPane(store, new FakeProcesses(), root);
+            var window = Show(pane);
+            try
+            {
+                var rows = Rows(pane);
+                var plain = IconButton(rows[0]);
+                Assert.Equal(L10n.L("Change icon"), (string)plain.ToolTip);
+                Assert.IsType<TextBlock>(plain.Content);
+
+                // an item with its own icon shows the badge (a Grid: fill and glyph)
+                Assert.IsType<Grid>(IconButton(rows[1]).Content);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    [Fact]
+    public void IconEditor_SaveWritesTheItemsIcon_ResetClearsIt()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            var store = StoreWith("[{\"id\":\"a1\",\"name\":\"Alpha\",\"kind\":\"process\",\"process\":\"alpha\",\"enabled\":true}]");
+            var pane = NewPane(store, new FakeProcesses(), root);
+            var window = Show(pane);
+            try
+            {
+                // the editor's save: the item's icon is the badge, and only that item changes
+                var badge = new JsonObject { ["symbol"] = "seg:E735", ["shape"] = "rounded", ["plain"] = true };
+                Assert.Null(pane.SaveIcon("a1", badge));
+                var saved = store.Items.Single();
+                Assert.Equal("a1", saved.Id);
+                Assert.Equal("Alpha", saved.Name);
+                Assert.Equal(badge.ToJsonString(), saved.Icon);
+                Assert.IsType<Grid>(IconButton(Rows(pane)[0]).Content);
+
+                // the editor's reset: the icon is removed and the row shows the symbol again
+                Assert.Null(pane.SaveIcon("a1", null));
+                Assert.Null(store.Items.Single().Icon);
+                Assert.IsType<TextBlock>(IconButton(Rows(pane)[0]).Content);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
 }

@@ -1,4 +1,5 @@
 using System.IO;
+using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
@@ -90,19 +91,26 @@ public partial class WatchingPane : SettingsPane
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
-        // The item's symbol when the glyph map has it, else the sparkles an agent without an app icon shows on the pill.
-        var glyph = ModuleGlyphs.Get(WatchItems.Symbol(item));
-        var icon = new TextBlock
+        // The item's own badge when it has one (the Mac's row icon), else the glyph of its symbol. The icon is a button that opens
+        // the icon editor for this item.
+        FrameworkElement face = ItemIcon.BadgeOf(item) is { } own
+            ? BadgeGlyph.Create(own, 20, BadgeGlyph.AccentOf(Store))
+            : SymbolGlyph(item);
+        face.HorizontalAlignment = HorizontalAlignment.Center;
+        face.VerticalAlignment = VerticalAlignment.Center;
+        var icon = new Button
         {
-            Text = glyph == ModuleGlyphs.Fallback ? ModuleGlyphs.Get("sparkles") : glyph,
-            FontFamily = new FontFamily(SegoeFont),
-            FontSize = 18,
+            Style = (Style)FindResource("TileButton"),
+            Content = face,
             Width = 26,
             Height = 26,
-            TextAlignment = TextAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center,
             Margin = new Thickness(0, 0, 12, 0),
+            VerticalAlignment = VerticalAlignment.Center,
+            ToolTip = L10n.L("Change icon"),
         };
+        AutomationProperties.SetName(icon, L10n.L("Change icon"));
+        var id = item.Id;
+        icon.Click += (_, _) => ChangeIcon(id);
         Place(icon, grid, 0);
 
         var text = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
@@ -281,6 +289,51 @@ public partial class WatchingPane : SettingsPane
         {
             SaveItems(Store.Items.Select(i => i.Id == saved.Id ? saved : i).ToList());
         }
+    }
+
+    /// The item's symbol as its glyph when the glyph map has it, else the sparkles an agent without an app icon shows on the pill.
+    private static TextBlock SymbolGlyph(WatchItem item)
+    {
+        var glyph = ModuleGlyphs.Get(WatchItems.Symbol(item));
+        return new TextBlock
+        {
+            Text = glyph == ModuleGlyphs.Fallback ? ModuleGlyphs.Get("sparkles") : glyph,
+            FontFamily = new FontFamily(SegoeFont),
+            FontSize = 18,
+            Width = 26,
+            Height = 26,
+            TextAlignment = TextAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+    }
+
+    /// Opens the icon editor of a watch item (the Mac's BadgeEditor for item.icon). It starts from the item's own badge, else from
+    /// its symbol on a rounded shape. Each edit saves the item's icon at once; Reset removes it, so the symbol shows again.
+    private void ChangeIcon(string id)
+    {
+        var item = Store.Items.FirstOrDefault(i => i.Id == id);
+        if (item is null)
+        {
+            return;
+        }
+        var start = ItemIcon.BadgeOf(item) is { } own
+            ? (JsonObject)own.DeepClone()
+            : new JsonObject { ["symbol"] = WatchItems.Symbol(item), ["shape"] = "rounded" };
+        var editor = new BadgeEditorDialog(L10n.L("Symbol"), item.Name, start, BadgeGlyph.AccentOf(Store),
+            next => SaveIcon(id, next), () => SaveIcon(id, null))
+        {
+            Owner = Window.GetWindow(this),
+        };
+        editor.ShowDialog();
+    }
+
+    /// Saves an item's icon (null removes it) and reads the rows again. Returns the refusal, or null when saved. The editor's save
+    /// and reset call it; a test calls it as the editor does.
+    internal string? SaveIcon(string id, JsonObject? badge)
+    {
+        var refused = Store.SetItems(Store.Items.Select(i => i.Id == id ? i with { Icon = badge?.ToJsonString() } : i).ToList());
+        RenderWatchList();
+        return refused;
     }
 
     /// Appends an item under a new id, unless the list is full (the Mac and settings.js keep 64 items).
