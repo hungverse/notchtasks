@@ -1,6 +1,7 @@
 using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using System.Windows.Threading;
@@ -10,9 +11,9 @@ using NotchTasks.Pill;
 
 namespace NotchTasks.ControlPanel.Panes;
 
-/// The Icon Library pane (BadgesPane.swift IconStore): the animated icons by category. A click adds the icon to the notch
-/// (the left side, or the right when the left is full), or sets it on the icon selected on the Icons & lock pane. Each
-/// icon animates only while it is on screen: it is shown when its tile is inside the Control Panel's scrolled area.
+/// The Icon Library pane (BadgesPane.swift IconStore): the animated icons by category. A click sets the icon selected on the Icons
+/// & lock pane; else a menu at the tile puts the animation on a fixed spot of the notch, a watched app, or a build tool (useMenu).
+/// Each icon animates only while it is on screen: it is shown when its tile is inside the Control Panel's scrolled area.
 public partial class IconLibraryPane : SettingsPane
 {
     private static readonly Color TileFill = Color.FromRgb(0x14, 0x14, 0x16);
@@ -144,12 +145,12 @@ public partial class IconLibraryPane : SettingsPane
             ToolTip = entry.Name,
         };
         var tile = new LibraryTile(entry, button, sprite, inUse, name);
-        button.Click += (_, _) => OnTileClick(entry);
+        button.Click += (_, _) => OnTileClick(entry, button);
         return tile;
     }
 
-    /// With an icon selected, the animation is set on it. Else it is added to the left side, or the right when the left is full.
-    private void OnTileClick(SpriteEntry entry)
+    /// With an icon selected on the Icons & lock pane, the animation is set on it. Else a menu at the tile says where it goes.
+    private void OnTileClick(SpriteEntry entry, Button tile)
     {
         var badges = Store.Badges;
         if (IconSelection.BadgeId is { } id)
@@ -163,7 +164,61 @@ public partial class IconLibraryPane : SettingsPane
             IconSelection.Clear();
         }
 
-        var right = BadgeEdits.CountOnSide(badges, false) >= BadgeEdits.PerSide;
+        var menu = UseMenu(entry);
+        menu.PlacementTarget = tile;
+        menu.Placement = PlacementMode.Bottom;
+        menu.IsOpen = true;
+    }
+
+    /// Where an animation can go (the Mac's useMenu): a fixed spot on the notch (a full side is disabled), a watched app's icon, or a
+    /// build tool's icon. The apps and tools are listed only when there are some.
+    internal ContextMenu UseMenu(SpriteEntry entry)
+    {
+        var badges = Store.Badges;
+        var menu = new ContextMenu();
+        menu.Items.Add(Heading(L10n.L("Pinned icon on the notch")));
+        menu.Items.Add(UseEntry(L10n.L("Add on the left"), BadgeEdits.CountOnSide(badges, false) < BadgeEdits.PerSide,
+            () => AddToSide(entry, right: false)));
+        menu.Items.Add(UseEntry(L10n.L("Add on the right"), BadgeEdits.CountOnSide(badges, true) < BadgeEdits.PerSide,
+            () => AddToSide(entry, right: true)));
+
+        if (Store.Items.Count > 0)
+        {
+            menu.Items.Add(new Separator());
+            menu.Items.Add(Heading(L10n.L("Set for a watched app")));
+            foreach (var item in Store.Items)
+            {
+                var id = item.Id;
+                menu.Items.Add(UseEntry(item.Name, true, () => SetItemIcon(id, entry)));
+            }
+        }
+
+        if (Store.SeenTools.Count > 0)
+        {
+            menu.Items.Add(new Separator());
+            menu.Items.Add(Heading(L10n.L("Set for a build tool")));
+            foreach (var tool in Store.SeenTools)
+            {
+                menu.Items.Add(UseEntry(tool, true, () => SetToolIcon(tool, entry)));
+            }
+        }
+        return menu;
+    }
+
+    /// A disabled menu header. A TextBlock, not a string: a string header reads an "_" in a name as an access key.
+    private static MenuItem Heading(string text) => new() { Header = new TextBlock { Text = text }, IsEnabled = false };
+
+    private static MenuItem UseEntry(string text, bool enabled, Action choose)
+    {
+        var entry = new MenuItem { Header = new TextBlock { Text = text }, IsEnabled = enabled };
+        entry.Click += (_, _) => choose();
+        return entry;
+    }
+
+    /// Adds the animation to a fixed spot on the notch, unless that side is full.
+    private void AddToSide(SpriteEntry entry, bool right)
+    {
+        var badges = Store.Badges;
         if (BadgeEdits.CountOnSide(badges, right) >= BadgeEdits.PerSide)
         {
             _message = L10n.L("Both sides are full. Remove an icon first.");
@@ -175,6 +230,34 @@ public partial class IconLibraryPane : SettingsPane
             : L10n.L("Added {0} on the left.", entry.Name);
         Write("badges", BadgeEdits.Add(badges, right, entry.Id));
     }
+
+    /// Makes the animation the icon of a watched app: its Icon is the plain badge of the animation (the Mac's item.icon).
+    private void SetItemIcon(string id, SpriteEntry entry)
+    {
+        var item = Store.Items.FirstOrDefault(i => i.Id == id);
+        if (item is null)
+        {
+            return;
+        }
+        var refused = Store.SetItems(Store.Items.Select(i => i.Id == id ? i with { Icon = SpriteBadge(entry).ToJsonString() } : i).ToList());
+        _message = refused ?? L10n.L("Set {0} for {1}.", entry.Name, item.Name);
+        ApplyStored();
+    }
+
+    /// Makes the animation the icon of a build tool (the Mac's toolIcons).
+    private void SetToolIcon(string tool, SpriteEntry entry)
+    {
+        var refused = Store.SetToolIcon(tool, SpriteBadge(entry));
+        _message = refused ?? L10n.L("Set {0} for {1}.", entry.Name, tool);
+        ApplyStored();
+    }
+
+    /// The plain badge of an animation: what the Mac's Badge(plain: true, sprite:) is.
+    private static JsonObject SpriteBadge(SpriteEntry entry) => new()
+    {
+        ["plain"] = JsonValue.Create(true),
+        ["sprite"] = JsonValue.Create(entry.Id),
+    };
 
     /// Shows the tiles in view: the others are hidden, which stops their animation (SpriteClock steps visible sprites only).
     private void UpdateVisibleTiles()
