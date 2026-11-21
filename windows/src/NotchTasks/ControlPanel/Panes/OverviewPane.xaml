@@ -21,14 +21,11 @@
         </Border.Background>
         <Border Width="220" Height="30" VerticalAlignment="Top" HorizontalAlignment="Center"
                 Background="Black" CornerRadius="0,0,10,10">
+          <!-- The Mac's notch preview, live: the running count on the left (sparkle, count, working bars), the alerts on the
+               right (wrench, progress ring). Each side is empty when its count is 0. OverviewPane fills both. -->
           <Grid Margin="10,0">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
-              <TextBlock Text="&#xE8BD;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12"
-                         Foreground="#FF9F0A" VerticalAlignment="Center" />
-              <TextBlock Text="2" FontWeight="Bold" FontSize="12" Foreground="#FF9F0A" Margin="6,0,0,0" VerticalAlignment="Center" />
-            </StackPanel>
-            <TextBlock Text="&#xE90F;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12"
-                       Foreground="#FF9F0A" HorizontalAlignment="Right" VerticalAlignment="Center" />
+            <StackPanel x:Name="RunningPart" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" />
+            <StackPanel x:Name="AlertPart" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" />
           </Grid>
         </Border>
       </Border>

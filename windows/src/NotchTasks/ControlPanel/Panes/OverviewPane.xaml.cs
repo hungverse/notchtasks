@@ -5,6 +5,7 @@ using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
+using System.Windows.Shapes;
 using NotchTasks.Core;
 using NotchTasks.Core.Asks;
 using NotchTasks.Core.Modules;
@@ -12,6 +13,7 @@ using NotchTasks.Core.Onboarding;
 using NotchTasks.Core.Permissions;
 using NotchTasks.Core.Settings;
 using NotchTasks.Onboarding;
+using NotchTasks.Pill;
 using NotchTasks.Services;
 
 namespace NotchTasks.ControlPanel.Panes;
@@ -105,8 +107,106 @@ public partial class OverviewPane : SettingsPane
 
     private void UpdateCounts()
     {
-        _runningValue.Text = _state.Snapshot.Running.Count.ToString(CultureInfo.InvariantCulture);
-        _alertsValue.Text = _state.Snapshot.Alerts.Count.ToString(CultureInfo.InvariantCulture);
+        var running = _state.Snapshot.Running.Count;
+        var alerts = _state.Snapshot.Alerts.Count;
+        _runningValue.Text = running.ToString(CultureInfo.InvariantCulture);
+        _alertsValue.Text = alerts.ToString(CultureInfo.InvariantCulture);
+        RenderPreview(running, alerts);
+    }
+
+    /// The accent the user chose, or null when the accent is still "auto" (the Mac's default, orange, and green bars).
+    private Color? ChosenAccent()
+    {
+        if (Store.Accent == "auto")
+        {
+            return null;
+        }
+        return Appearance.ResolveAccent(Store.Accent, Store.CustomAccent, null) is { } hex ? HexColor.ToColor(hex) : null;
+    }
+
+    /// The notch preview (Preferences.swift NotchPreview): on the left, when something runs, the sparkle in a tile, the count
+    /// and the pill's working bars; on the right, when there are alerts, the wrench and a 60% progress ring. The tint is the
+    /// chosen accent, else orange; the bars are the chosen accent, else green.
+    private void RenderPreview(int running, int alerts)
+    {
+        var tint = new SolidColorBrush(ChosenAccent() ?? Color.FromRgb(0xFF, 0x9F, 0x0A));
+
+        RunningPart.Children.Clear();
+        if (running > 0)
+        {
+            var sparkle = new TextBlock
+            {
+                Text = "",
+                FontFamily = new FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets"),
+                FontSize = 10,
+                Foreground = tint,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+            RunningPart.Children.Add(new Border
+            {
+                Width = 18,
+                Height = 18,
+                CornerRadius = new CornerRadius(4),
+                Background = new SolidColorBrush(Color.FromArgb(0x1A, 0xFF, 0xFF, 0xFF)),
+                VerticalAlignment = VerticalAlignment.Center,
+                Child = sparkle,
+            });
+            RunningPart.Children.Add(new TextBlock
+            {
+                Text = running.ToString(CultureInfo.InvariantCulture),
+                FontWeight = FontWeights.Bold,
+                FontSize = 12,
+                Foreground = tint,
+                Margin = new Thickness(6, 0, 0, 0),
+                VerticalAlignment = VerticalAlignment.Center,
+            });
+            var bars = Loops.Bars(new SolidColorBrush(ChosenAccent() ?? Color.FromRgb(0x30, 0xD1, 0x58)));
+            bars.Margin = new Thickness(6, 0, 0, 0);
+            RunningPart.Children.Add(bars);
+        }
+
+        AlertPart.Children.Clear();
+        if (alerts > 0)
+        {
+            AlertPart.Children.Add(new TextBlock
+            {
+                Text = "",
+                FontFamily = new FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets"),
+                FontSize = 12,
+                Foreground = tint,
+                VerticalAlignment = VerticalAlignment.Center,
+            });
+            AlertPart.Children.Add(ProgressRing(tint, 0.6, new Thickness(6, 0, 0, 0)));
+        }
+    }
+
+    /// A 12 DIP ring filled to `fraction` of a turn, clockwise from the top (a 2 DIP stroke on a faint track).
+    private static Grid ProgressRing(Brush tint, double fraction, Thickness margin)
+    {
+        const double radius = 5;
+        var sweep = fraction * 360 * Math.PI / 180;
+        var start = new Point(6, 6 - radius);
+        // The end of the arc: the angle counts clockwise from the top, so the sine and cosine are shifted by a quarter turn.
+        var end = new Point(6 + radius * Math.Sin(sweep), 6 - radius * Math.Cos(sweep));
+        var figure = new PathFigure { StartPoint = start };
+        figure.Segments.Add(new ArcSegment(end, new Size(radius, radius), 0, sweep > Math.PI, SweepDirection.Clockwise, true));
+
+        var grid = new Grid { Width = 12, Height = 12, Margin = margin, VerticalAlignment = VerticalAlignment.Center };
+        grid.Children.Add(new Ellipse
+        {
+            Width = radius * 2,
+            Height = radius * 2,
+            Stroke = new SolidColorBrush(Color.FromArgb(0x33, 0xFF, 0xFF, 0xFF)),
+            StrokeThickness = 2,
+        });
+        grid.Children.Add(new System.Windows.Shapes.Path
+        {
+            Data = new PathGeometry { Figures = { figure } },
+            Stroke = tint,
+            StrokeThickness = 2,
+        });
+        return grid;
     }
 
     /// One stat: its glyph in its colour (the accent when color is null), its value over its label, in a card.
