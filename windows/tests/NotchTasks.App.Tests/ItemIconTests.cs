@@ -1,4 +1,7 @@
 using System.Threading;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
 using NotchTasks.Core.Agents;
 using NotchTasks.Pill;
 using Xunit;
@@ -91,6 +94,40 @@ public sealed class ItemIconTests
             finally
             {
                 ItemIcon.Clock = saved;
+            }
+        });
+    }
+
+    [Fact]
+    public void Element_AnItemWithAnIcon_DrawsItsBadge()
+    {
+        Sta.Run(() =>
+        {
+            // the item's own icon (set on the Watching pane) replaces the sparkles glyph on the pill
+            var item = new WatchItem("icon-badge", "Mine", WatchKind.Process,
+                Icon: "{\"symbol\":\"seg:E735\",\"shape\":\"rounded\"}");
+            var element = ItemIcon.Element(new ItemState(item, Array.Empty<Job>()), 18, Colors.Gray, null);
+
+            // a badge is a Grid: its fill, then its glyph
+            var badge = Assert.IsType<Grid>(element);
+            Assert.IsType<Border>(badge.Children[0]);
+            Assert.IsType<TextBlock>(badge.Children[1]);
+        });
+    }
+
+    [Fact]
+    public void Element_AnInvalidIcon_FallsBackToTheSparkles()
+    {
+        Sta.Run(() =>
+        {
+            // text that is not a JSON object is not a badge: the item shows what it showed before
+            foreach (var text in new[] { "not json", "[1,2]" })
+            {
+                var item = new WatchItem("icon-invalid", "Mine", WatchKind.Process, Icon: text);
+                var element = ItemIcon.Element(new ItemState(item, Array.Empty<Job>()), 18, Colors.Gray, null);
+
+                var glyph = Assert.IsType<TextBlock>(element);
+                Assert.Equal(ModuleGlyphs.Get("sparkles"), glyph.Text);
             }
         });
     }

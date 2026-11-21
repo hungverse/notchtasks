@@ -35,6 +35,7 @@ public partial class ItemCard : UserControl
     private bool _iconSet;
     private string? _iconPath;
     private Color _iconTint;
+    private string? _iconText;
 
     public ItemCard()
     {
@@ -105,12 +106,14 @@ public partial class ItemCard : UserControl
         SetText(NameText, state.Item.Name);
 
         var path = ItemIcon.PathOf(state, processes);
-        if (!_iconSet || path != _iconPath || tint != _iconTint)
+        // The icon is redrawn when the item's own icon changes too: a badge set on the Watching pane shows at once.
+        if (!_iconSet || path != _iconPath || tint != _iconTint || state.Item.Icon != _iconText)
         {
             IconHost.Content = SymbolIcon(state.Item, tint) ?? ItemIcon.Element(state, IconSize, tint, processes);
             _iconSet = true;
             _iconPath = path;
             _iconTint = tint;
+            _iconText = state.Item.Icon;
         }
 
         var count = state.Jobs.Count.ToString(CultureInfo.InvariantCulture);

@@ -3,6 +3,8 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Interop;
@@ -40,9 +42,53 @@ public static class ItemIcon
     /// The icon of a program by its exe name, read by LoadExeIconAsync (a null is kept: no running process).
     private static readonly Dictionary<string, ImageSource?> IconsByExe = new(StringComparer.OrdinalIgnoreCase);
 
-    /// The icon as an element of size by size: the program's icon as an Image, else the sparkles glyph in the tint.
+    /// The parsed badge of each icon text, so an item's icon is read once per text, not on every publish.
+    private static readonly Dictionary<string, JsonObject?> BadgesByText = new(StringComparer.Ordinal);
+    private const int MaxBadgeTexts = 256;
+
+    /// The item's own icon as a badge (the Mac's item.icon), or null when it has none or its text is not a JSON object.
+    public static JsonObject? BadgeOf(WatchItem item)
+    {
+        var text = item.Icon;
+        if (string.IsNullOrEmpty(text))
+        {
+            return null;
+        }
+        lock (Gate)
+        {
+            if (BadgesByText.TryGetValue(text, out var known))
+            {
+                return known;
+            }
+        }
+        JsonObject? badge = null;
+        try
+        {
+            badge = JsonNode.Parse(text) as JsonObject;
+        }
+        catch (JsonException)
+        {
+            // an icon that does not parse shows the item's own program icon, as before
+        }
+        lock (Gate)
+        {
+            if (BadgesByText.Count >= MaxBadgeTexts)
+            {
+                BadgesByText.Clear();
+            }
+            BadgesByText[text] = badge;
+        }
+        return badge;
+    }
+
+    /// The icon as an element of size by size: the item's own badge when it has one, else the program's icon as an Image,
+    /// else the sparkles glyph in the tint.
     public static FrameworkElement Element(ItemState state, double size, Color tint, IProcessReader? processes)
     {
+        if (BadgeOf(state.Item) is { } badge)
+        {
+            return BadgeGlyph.Create(badge, size, tint);
+        }
         if (Source(state, processes) is { } source)
         {
             return new Image
