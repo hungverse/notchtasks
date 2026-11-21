@@ -128,4 +128,34 @@ public sealed class ModuleCatalogTests
 
         Assert.Equal(new[] { "agents", "ci", "battery", "timer", "media" }, result.Take(5));
     }
+
+    [Fact]
+    public void Move_DownUpFirstAndLast_MovesOneVisibleModule()
+    {
+        // The default order of the Windows modules: every index is a visible module.
+        var stored = ModuleCatalog.Order(Array.Empty<string>());
+        var n = stored.Count;
+        bool All(string _) => true;
+
+        // Down: the module at 0 goes to 2, the two after it move up.
+        Assert.Equal(new[] { stored[1], stored[2], stored[0] }, ModuleCatalog.Move(stored, 0, 2, All).Take(3));
+        // Up: the module at 2 goes to 0.
+        Assert.Equal(new[] { stored[2], stored[0], stored[1] }, ModuleCatalog.Move(stored, 2, 0, All).Take(3));
+        // To first and to last.
+        Assert.Equal(stored[3], ModuleCatalog.Move(stored, 3, 0, All)[0]);
+        var last = ModuleCatalog.Move(stored, 0, n - 1, All);
+        Assert.Equal(stored[0], last[n - 1]);
+        Assert.Equal(stored.Skip(1), last.Take(n - 1));
+    }
+
+    [Fact]
+    public void Move_OntoItself_AndOutOfRange_NoChange()
+    {
+        var stored = ModuleCatalog.Order(Array.Empty<string>());
+        bool All(string _) => true;
+
+        Assert.Equal(stored, ModuleCatalog.Move(stored, 2, 2, All));
+        Assert.Equal(stored, ModuleCatalog.Move(stored, -1, 0, All));
+        Assert.Equal(stored, ModuleCatalog.Move(stored, 0, stored.Count, All));
+    }
 }

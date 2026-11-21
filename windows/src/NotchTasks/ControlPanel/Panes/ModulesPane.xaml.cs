@@ -5,6 +5,8 @@ using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Documents;
+using System.Windows.Input;
 using System.Windows.Media;
 using NotchTasks.Core;
 using NotchTasks.Core.Modules;
@@ -12,11 +14,15 @@ using NotchTasks.Core.Settings;
 
 namespace NotchTasks.ControlPanel.Panes;
 
-/// The Modules pane (Preferences.swift modules): the modules on the notch in order, with arrows to move them, each one's
-/// position when collapsed, colour and on/off switch. The modules not built yet keep their settings and show "Coming soon".
+/// The Modules pane (Preferences.swift modules): the modules on the notch in order, each one's position when collapsed,
+/// colour and on/off switch. A row moves by its arrows (the keyboard) or by a drag (the Mac's list move). The modules not
+/// built yet keep their settings and show "Coming soon".
 public partial class ModulesPane : SettingsPane
 {
     private const string DefaultColor = "#808080";
+
+    /// The private data format a dragged row carries: the module's id.
+    private const string DragFormat = "NotchTasks.Module";
 
     /// The tile of a module that is off: the Mac's grey, 50% (the Mac uses .gray at half opacity).
     private static readonly SolidColorBrush OffTile = new(Color.FromArgb(0x80, 0x80, 0x80, 0x80));
@@ -24,12 +30,26 @@ public partial class ModulesPane : SettingsPane
     private readonly Dictionary<string, ModuleRow> _rows = new();
     private readonly bool _hasBattery;
 
+    /// The visible module ids in the order shown (set by Apply): a drag works on these indices.
+    private List<string> _order = new();
+
+    /// A press on a row that is not on one of its controls: the module and where it was pressed (window coordinates).
+    private (string Id, Point At)? _pressed;
+
+    /// The accent line where a dragged row will land, while a drag is over the rows.
+    private DropLine? _dropLine;
+
     /// The pane. `hasBattery` says whether this PC has a battery: without one the battery row is hidden. The default asks
     /// Windows (PowerFacts.HasSystemBattery); tests pass their own answer.
     public ModulesPane(SettingsStore store, Func<bool>? hasBattery = null) : base(store)
     {
         InitializeComponent();
         _hasBattery = (hasBattery ?? PowerFacts.HasSystemBattery)();
+        // A dragged row lands on the rows panel: the drop line and the drop are handled there.
+        Rows.AllowDrop = true;
+        Rows.DragOver += OnRowsDragOver;
+        Rows.DragLeave += (_, _) => HideDropLine();
+        Rows.Drop += OnRowsDrop;
         foreach (var id in ModuleCatalog.All.Where(ModuleCatalog.OnWindows))
         {
             _rows[id] = BuildRow(id);
@@ -39,6 +59,7 @@ public partial class ModulesPane : SettingsPane
     protected override void Apply()
     {
         var order = ModuleCatalog.Order(Store.Modules).Where(Shown).ToList();
+        _order = order;
         var disabled = Store.Disabled.ToHashSet();
         var placements = Store.Placements;
         var colors = Store.ModuleColors;
@@ -175,7 +196,18 @@ public partial class ModulesPane : SettingsPane
         };
         swatch.Click += (_, _) => popup.IsOpen = true;
 
-        var element = new Grid { Margin = new Thickness(16, 0, 16, 0), MinHeight = 56 };
+        // A press on the row, not on one of its controls, and a move of more than the drag distance drag the row.
+        var element = new Grid { Margin = new Thickness(16, 0, 16, 0), MinHeight = 56, Cursor = Cursors.SizeNS };
+        element.PreviewMouseLeftButtonDown += (_, e) =>
+        {
+            _pressed = null;
+            if (!IsOnControl(e.OriginalSource as DependencyObject, element))
+            {
+                _pressed = (id, e.GetPosition(null));
+            }
+        };
+        element.PreviewMouseLeftButtonUp += (_, _) => _pressed = null;
+        element.MouseMove += (_, e) => StartDrag(id, element, e);
         element.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(60) });
         element.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         element.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
@@ -225,16 +257,169 @@ public partial class ModulesPane : SettingsPane
     {
         // Hidden and unknown ids keep their stored places (ModuleCatalog.Reorder): a hidden row is not a neighbour, so an
         // arrow swaps with the nearest shown module and the stored list keeps the hidden battery where it was.
-        var stored = Store.Modules;
-        var order = ModuleCatalog.Reorder(stored, id, delta, Shown);
-        if (order.SequenceEqual(stored))
+        if (!Commit(ModuleCatalog.Reorder(Store.Modules, id, delta, Shown)))
         {
             return;
         }
-        Write("modules", ToArray(order));
-
         var row = _rows[id];
         (delta < 0 ? row.Up : row.Down).Focus();
+    }
+
+    /// Moves a dragged row to visible index `to`: the same move and write as the arrows (Commit).
+    private void MoveRow(string id, int to) =>
+        Commit(ModuleCatalog.Move(Store.Modules, _order.IndexOf(id), to, Shown));
+
+    /// Saves a module order, if it changed: the arrows and a drag both end here. Returns false when nothing moved.
+    private bool Commit(IReadOnlyList<string> order)
+    {
+        if (order.SequenceEqual(Store.Modules))
+        {
+            return false;
+        }
+        Write("modules", ToArray(order));
+        return true;
+    }
+
+    /// Whether a press landed on a control of a row (an arrow, the position, the colour well, the switch): such a press keeps
+    /// its own click and does not start a drag.
+    private static bool IsOnControl(DependencyObject? source, DependencyObject row)
+    {
+        for (var node = source; node is not null && node != row; node = VisualTreeHelper.GetParent(node))
+        {
+            if (node is ButtonBase or ComboBox)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /// Starts the drag of a row once the mouse has moved more than the drag distance from the press, vertically.
+    private void StartDrag(string id, UIElement element, MouseEventArgs e)
+    {
+        if (_pressed is not { } press || press.Id != id || e.LeftButton != MouseButtonState.Pressed)
+        {
+            return;
+        }
+        if (Math.Abs(e.GetPosition(null).Y - press.At.Y) <= SystemParameters.MinimumVerticalDragDistance)
+        {
+            return;
+        }
+        _pressed = null;
+        // DoDragDrop returns when the drop is made or the drag is cancelled (Esc, or released outside the pane).
+        DragDrop.DoDragDrop(element, new DataObject(DragFormat, id), DragDropEffects.Move);
+        HideDropLine();
+    }
+
+    private void OnRowsDragOver(object sender, DragEventArgs e)
+    {
+        e.Handled = true;
+        if (!e.Data.GetDataPresent(DragFormat))
+        {
+            e.Effects = DragDropEffects.None;
+            HideDropLine();
+            return;
+        }
+        e.Effects = DragDropEffects.Move;
+        ShowDropLine(SlotAt(e.GetPosition(Rows).Y));
+    }
+
+    private void OnRowsDrop(object sender, DragEventArgs e)
+    {
+        e.Handled = true;
+        HideDropLine();
+        if (e.Data.GetData(DragFormat) is not string id || !_order.Contains(id))
+        {
+            return;
+        }
+        // The slot is counted with the row still in its place, so a row dropped below itself lands one place lower.
+        var from = _order.IndexOf(id);
+        var slot = SlotAt(e.GetPosition(Rows).Y);
+        MoveRow(id, slot > from ? slot - 1 : slot);
+    }
+
+    /// The slot a pointer at `y` (in the rows panel) falls in: 0 above the first row's middle, n below the last row's.
+    private int SlotAt(double y)
+    {
+        var slot = 0;
+        for (var i = 0; i < _order.Count; i++)
+        {
+            if (y < RowTop(_order[i]) + _rows[_order[i]].Element.ActualHeight / 2)
+            {
+                break;
+            }
+            slot = i + 1;
+        }
+        return slot;
+    }
+
+    /// The y of the top edge of a row, in the rows panel.
+    private double RowTop(string id) => _rows[id].Element.TransformToAncestor(Rows).Transform(new Point(0, 0)).Y;
+
+    /// The y of a slot's line: the top edge of the row in that slot, or the bottom edge of the last row.
+    private double SlotY(int slot)
+    {
+        if (_order.Count == 0)
+        {
+            return 0;
+        }
+        if (slot < _order.Count)
+        {
+            return RowTop(_order[slot]);
+        }
+        var last = _rows[_order[^1]].Element;
+        return RowTop(_order[^1]) + last.ActualHeight;
+    }
+
+    private void ShowDropLine(int slot)
+    {
+        if (AdornerLayer.GetAdornerLayer(Rows) is not { } layer)
+        {
+            return;
+        }
+        if (_dropLine is null)
+        {
+            _dropLine = new DropLine(Rows);
+            layer.Add(_dropLine);
+        }
+        _dropLine.Y = SlotY(slot);
+    }
+
+    private void HideDropLine()
+    {
+        if (_dropLine is null)
+        {
+            return;
+        }
+        AdornerLayer.GetAdornerLayer(Rows)?.Remove(_dropLine);
+        _dropLine = null;
+    }
+
+    /// The 2 DIP accent line where a dragged row will land. It is an adorner on the rows panel, so the rows do not move.
+    private sealed class DropLine : Adorner
+    {
+        private double _y;
+
+        public DropLine(UIElement adorned) : base(adorned)
+        {
+            IsHitTestVisible = false;
+        }
+
+        public double Y
+        {
+            get => _y;
+            set
+            {
+                _y = value;
+                InvalidateVisual();
+            }
+        }
+
+        protected override void OnRender(DrawingContext drawingContext)
+        {
+            var brush = (Brush)((FrameworkElement)AdornedElement).FindResource("AccentFillColorDefaultBrush");
+            drawingContext.DrawRoundedRectangle(brush, null, new Rect(0, _y - 1, ActualWidth, 2), 1, 1);
+        }
     }
 
     /// Saves the switch: a module that is on is not in the disabled list.

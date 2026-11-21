@@ -37,7 +37,7 @@
   </local:SettingsPane.Resources>
   <StackPanel>
     <TextBlock Style="{StaticResource PaneTitle}" Text="{l:L Modules}" />
-    <TextBlock Style="{StaticResource PaneNote}" Text="{l:L Use the arrows to reorder the modules on the notch.}" />
+    <TextBlock Style="{StaticResource PaneNote}" Text="{l:L Drag to reorder the modules on the notch.}" />
 
     <!-- The column names, over the controls of each row (the same columns as a row). -->
     <Grid Margin="16,20,16,4">

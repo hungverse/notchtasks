@@ -108,12 +108,22 @@ public static class ModuleCatalog
     {
         var visible = Order(stored).Where(shown).ToList();
         var index = visible.IndexOf(id);
-        var target = index + delta;
-        if (index < 0 || target < 0 || target >= visible.Count)
+        return Move(stored, index, index + delta, shown);
+    }
+
+    /// The stored list with the visible module at index `from` moved to index `to` among the visible modules (both as
+    /// counted by Order and `shown`): the rows the arrows and a drag both use. Out of range, or from equal to to, returns
+    /// the stored list unchanged. Hidden ids keep their stored places, as in Reorder.
+    public static IReadOnlyList<string> Move(IReadOnlyList<string> stored, int from, int to, Func<string, bool> shown)
+    {
+        var visible = Order(stored).Where(shown).ToList();
+        if (from < 0 || from >= visible.Count || to < 0 || to >= visible.Count || from == to)
         {
             return stored.ToList();
         }
-        (visible[index], visible[target]) = (visible[target], visible[index]);
+        var moved = visible[from];
+        visible.RemoveAt(from);
+        visible.Insert(to, moved);
 
         // Walk the stored list: a visible module's slot takes the next visible module of the new order; hidden ids stay.
         var result = new List<string>(stored.Count + visible.Count);

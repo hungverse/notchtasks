@@ -26,6 +26,49 @@ public sealed class ModulesPaneRowTests
     private static Button SwatchOf(Grid row) =>
         Descendants<Button>(row).First(button => button.ToolTip as string == L10n.L("Color"));
 
+    [Fact]
+    public void Drag_WritesTheSameOrderAsTheArrow()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            var pane = Fixture.Create<ModulesPane>(state.Settings, new Func<bool>(() => true));
+            Fixture.Call(pane, "Apply");
+            var start = state.Settings.Modules.ToList();
+            var index = start.IndexOf("timer");
+
+            // The arrow moves timer one place down.
+            Fixture.Call(pane, "Move", "timer", 1);
+            var byArrow = state.Settings.Modules.ToList();
+
+            // The same move by a drag: a drop on the slot below timer (slot index + 2, counted with timer still in place)
+            // lands timer at index + 1, which is the final index MoveRow takes.
+            state.Settings.Set("modules", new JsonArray(start.Select(id => (JsonNode?)JsonValue.Create(id)).ToArray()));
+            Fixture.Call(pane, "Apply");
+            Fixture.Call(pane, "MoveRow", "timer", index + 1);
+
+            Assert.Equal(byArrow, state.Settings.Modules);
+        });
+    }
+
+    [Fact]
+    public void Drag_OntoItself_WritesNothing()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            var pane = Fixture.Create<ModulesPane>(state.Settings, new Func<bool>(() => true));
+            Fixture.Call(pane, "Apply");
+            var start = state.Settings.Modules.ToList();
+
+            Fixture.Call(pane, "MoveRow", "timer", start.IndexOf("timer"));
+
+            Assert.Equal(start, state.Settings.Modules);
+        });
+    }
+
     private static IEnumerable<T> Descendants<T>(DependencyObject root) where T : DependencyObject
     {
         for (var i = 0; i < VisualTreeHelper.GetChildrenCount(root); i++)
