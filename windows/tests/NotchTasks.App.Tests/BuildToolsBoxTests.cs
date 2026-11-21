@@ -242,4 +242,25 @@ public sealed class BuildToolsBoxTests
             dialog.Close();
         }
     });
+
+    [Fact]
+    public void Dialog_ResetIsLabelledUseTheDefaultIcon() => Sta.Run(() =>
+    {
+        using var root = new TempRoot();
+        var store = StoreWith("{}");
+        store.SetToolIcon("Docker", new JsonObject { ["symbol"] = DevRules.DefaultSymbol("Docker"), ["shape"] = "rounded" });
+        var dialog = new BadgeEditorDialog(store, "Docker", store.ToolIcons["Docker"]);
+        Fixture.ShowOffScreen(dialog);
+        try
+        {
+            // The Mac's words for the reset (BadgesPane.swift), in the button's own width.
+            var reset = Fixture.Named<Button>(dialog, "ResetButton");
+            Assert.Equal(L10n.L("Use the default icon"), reset.Content);
+            Assert.Equal(140, reset.MinWidth);
+        }
+        finally
+        {
+            dialog.Close();
+        }
+    });
 }

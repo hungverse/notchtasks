@@ -33,7 +33,8 @@
 
     <DockPanel Margin="0,16,0,0">
       <Button x:Name="DoneButton" DockPanel.Dock="Right" MinWidth="90" IsDefault="True" IsCancel="True" Content="{l:L Done}" />
-      <Button x:Name="ResetButton" MinWidth="90" Content="{l:L Reset}" />
+      <!-- The Mac's words for it: the icon goes back to the tool's default. Wide enough for the whole label. -->
+      <Button x:Name="ResetButton" MinWidth="140" Content="{l:L Use the default icon}" />
     </DockPanel>
   </StackPanel>
 </Window>
