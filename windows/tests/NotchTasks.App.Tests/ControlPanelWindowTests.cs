@@ -117,7 +117,7 @@ public sealed class ControlPanelWindowTests
             {
                 Fixture.ShowOffScreen(window);
                 window.MinHeight = 0;
-                window.Height = 200; // short enough that the Modules pane must scroll
+                window.Height = 150; // short enough that the Modules pane must scroll (its page is short without the title)
                 var scroll = Fixture.Named<ScrollViewer>(window, "PaneScroll");
                 Fixture.Call(window, "SelectPane", PaneId.Modules);
                 window.UpdateLayout();
@@ -168,6 +168,54 @@ public sealed class ControlPanelWindowTests
                 window.Close();
             }
         });
+    }
+
+    [Fact]
+    public void SelectingAPane_SetsTheWindowTitleToItsName_AndHidesThePageTitle()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            var window = Fixture.Create<ControlPanelWindow>(state, PaneId.Overview);
+            try
+            {
+                Fixture.ShowOffScreen(window);
+                Fixture.Call(window, "SelectPane", PaneId.Modules);
+                window.UpdateLayout();
+
+                // The title bar names the pane, as the sidebar row does; the big title in the page is collapsed.
+                var modules = PaneItem.All.First(item => item.Pane == PaneId.Modules);
+                Assert.Equal(modules.Title, window.Title);
+
+                var pane = Assert.IsAssignableFrom<FrameworkElement>(Fixture.Named<ContentControl>(window, "PaneHost").Content);
+                var titleStyle = window.FindResource("PaneTitle");
+                var titles = TextBlocksIn(pane).Where(text => text.Style == titleStyle).ToList();
+                Assert.NotEmpty(titles);
+                Assert.All(titles, text => Assert.Equal(Visibility.Collapsed, text.Visibility));
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    /// Every TextBlock under `root`, depth first.
+    private static IEnumerable<TextBlock> TextBlocksIn(DependencyObject root)
+    {
+        for (var i = 0; i < System.Windows.Media.VisualTreeHelper.GetChildrenCount(root); i++)
+        {
+            var child = System.Windows.Media.VisualTreeHelper.GetChild(root, i);
+            if (child is TextBlock text)
+            {
+                yield return text;
+            }
+            foreach (var deeper in TextBlocksIn(child))
+            {
+                yield return deeper;
+            }
+        }
     }
 
     [Fact]

@@ -6,7 +6,7 @@
   <StackPanel>
     <TextBlock Style="{StaticResource PaneTitle}" Text="{l:L Sound}" />
 
-    <Border Style="{StaticResource Card}" Margin="0,8,0,0">
+    <Border Style="{StaticResource Card}">
       <StackPanel>
         <DockPanel Style="{StaticResource SettingRow}">
           <CheckBox x:Name="SoundOn" DockPanel.Dock="Right" VerticalAlignment="Center" />

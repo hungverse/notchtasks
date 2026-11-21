@@ -43,7 +43,13 @@ public partial class ControlPanelWindow : Window
             IconSelection.Clear();
             SpriteCache.Retain(PillSprites());
         };
-        Closed += (_, _) => _window = null;
+        // The pane's name is the window's title (the Mac's navigationTitle); it follows the language while the window is open.
+        LocalizedStrings.Instance.PropertyChanged += OnLanguageChanged;
+        Closed += (_, _) =>
+        {
+            LocalizedStrings.Instance.PropertyChanged -= OnLanguageChanged;
+            _window = null;
+        };
         SelectPane(pane);
     }
 
@@ -114,9 +120,19 @@ public partial class ControlPanelWindow : Window
             return;
         }
         _pane = item.Pane;
+        Title = item.Title;
         PaneHost.Content = PaneFor(item.Pane);
         // Every pane opens at its title, not wherever the previous pane was scrolled.
         PaneScroll.ScrollToTop();
+    }
+
+    /// The window's title follows the language: the selected pane's sidebar title, read again.
+    private void OnLanguageChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (Sidebar.SelectedItem is PaneItem item)
+        {
+            Title = item.Title;
+        }
     }
 
     private UserControl PaneFor(PaneId pane)
