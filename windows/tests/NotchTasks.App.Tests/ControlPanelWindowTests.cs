@@ -140,6 +140,37 @@ public sealed class ControlPanelWindowTests
     }
 
     [Fact]
+    public void Slider_GetsTheMacsBlueTrack()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            var window = Fixture.Create<ControlPanelWindow>(state, PaneId.Behavior);
+            try
+            {
+                Fixture.ShowOffScreen(window);
+                var pane = Assert.IsAssignableFrom<FrameworkElement>(Fixture.Named<ContentControl>(window, "PaneHost").Content);
+                var slider = Fixture.Named<Slider>(pane, "DelaySlider");
+                window.UpdateLayout();
+
+                // The MacSlider template: its Track is PART_Track, and the filled part (the decrease button) is the Mac's blue.
+                var track = Assert.IsType<System.Windows.Controls.Primitives.Track>(slider.Template.FindName("PART_Track", slider));
+                var fill = Assert.IsType<System.Windows.Controls.Primitives.RepeatButton>(track.DecreaseRepeatButton);
+                Assert.False(fill.Focusable);
+                fill.ApplyTemplate();
+                var border = Assert.IsType<Border>(System.Windows.Media.VisualTreeHelper.GetChild(fill, 0));
+                var brush = Assert.IsType<System.Windows.Media.SolidColorBrush>(border.Background);
+                Assert.Equal(System.Windows.Media.Color.FromRgb(0x0A, 0x84, 0xFF), brush.Color);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    [Fact]
     public void SidebarHasOneRowPerPane()
     {
         Sta.Run(() =>

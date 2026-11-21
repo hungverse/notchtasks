@@ -118,6 +118,82 @@
     </Setter>
   </Style>
 
+  <!-- The Mac's thumb: a 20 DIP white knob with a soft shadow and a hairline. The Fluent thumb ignores the window accent,
+       so the thumb is drawn here; its accent ring (2 DIP, just outside the knob) shows while the slider has keyboard focus. -->
+  <Style x:Key="MacSliderThumb" TargetType="Thumb">
+    <Setter Property="Width" Value="20" />
+    <Setter Property="Height" Value="20" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+    <Setter Property="Focusable" Value="False" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Thumb">
+          <Grid>
+            <Ellipse Fill="White" Stroke="#26000000" StrokeThickness="0.5">
+              <Ellipse.Effect>
+                <DropShadowEffect Opacity="0.3" BlurRadius="4" ShadowDepth="1" Direction="270" />
+              </Ellipse.Effect>
+            </Ellipse>
+            <Ellipse x:Name="Ring" Width="22" Height="22" Stroke="{TemplateBinding BorderBrush}" StrokeThickness="2" />
+          </Grid>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+    <Style.Triggers>
+      <!-- The thumb's slider has keyboard focus: the ring takes the accent. -->
+      <DataTrigger Binding="{Binding IsKeyboardFocused, RelativeSource={RelativeSource AncestorType=Slider}}" Value="True">
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+      </DataTrigger>
+    </Style.Triggers>
+  </Style>
+
+  <!-- The Mac's horizontal slider: a 4 DIP track (#33FFFFFF) whose filled part is the accent, with the MacSliderThumb.
+       The repeat buttons are chrome-less and not focusable, so a click on the track moves the value and the keyboard
+       still reaches the slider. Horizontal only: the Control Panel's sliders are all horizontal. As the implicit Slider
+       style of the Control Panel (ControlPanelWindow.xaml), it keeps each slider's Minimum, Maximum and ticks. -->
+  <Style x:Key="MacSlider" TargetType="Slider">
+    <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+    <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Slider">
+          <Grid x:Name="Root" Height="22" VerticalAlignment="Center" Background="Transparent">
+            <Border x:Name="TrackBack" Height="4" CornerRadius="2" Background="#33FFFFFF" VerticalAlignment="Center" />
+            <Track x:Name="PART_Track" VerticalAlignment="Center">
+              <Track.DecreaseRepeatButton>
+                <RepeatButton Focusable="False" IsTabStop="False" Command="Slider.DecreaseLarge">
+                  <RepeatButton.Template>
+                    <ControlTemplate TargetType="RepeatButton">
+                      <Border Height="4" CornerRadius="2" VerticalAlignment="Center"
+                              Background="{DynamicResource AccentFillColorDefaultBrush}" />
+                    </ControlTemplate>
+                  </RepeatButton.Template>
+                </RepeatButton>
+              </Track.DecreaseRepeatButton>
+              <Track.IncreaseRepeatButton>
+                <RepeatButton Focusable="False" IsTabStop="False" Command="Slider.IncreaseLarge">
+                  <RepeatButton.Template>
+                    <ControlTemplate TargetType="RepeatButton">
+                      <Border Background="Transparent" />
+                    </ControlTemplate>
+                  </RepeatButton.Template>
+                </RepeatButton>
+              </Track.IncreaseRepeatButton>
+              <Track.Thumb>
+                <Thumb Style="{StaticResource MacSliderThumb}" />
+              </Track.Thumb>
+            </Track>
+          </Grid>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsEnabled" Value="False">
+              <Setter TargetName="Root" Property="Opacity" Value="0.4" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
   <!-- An icon tile: the Mac's accent-filled square that holds a white glyph (28 DIP; the glyph is IconGlyph). -->
   <Style x:Key="IconTile" TargetType="Border">
     <Setter Property="Width" Value="28" />
