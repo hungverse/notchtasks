@@ -163,7 +163,8 @@
             <Border x:Name="TrackBack" Height="4" CornerRadius="2" Background="#33FFFFFF" VerticalAlignment="Center" />
             <Track x:Name="PART_Track" VerticalAlignment="Center">
               <Track.DecreaseRepeatButton>
-                <RepeatButton Focusable="False" IsTabStop="False" Command="Slider.DecreaseLarge">
+                <RepeatButton Focusable="False" IsTabStop="False" Command="Slider.DecreaseLarge"
+                              HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                   <RepeatButton.Template>
                     <ControlTemplate TargetType="RepeatButton">
                       <Border Height="4" CornerRadius="2" VerticalAlignment="Center"
@@ -173,7 +174,8 @@
                 </RepeatButton>
               </Track.DecreaseRepeatButton>
               <Track.IncreaseRepeatButton>
-                <RepeatButton Focusable="False" IsTabStop="False" Command="Slider.IncreaseLarge">
+                <RepeatButton Focusable="False" IsTabStop="False" Command="Slider.IncreaseLarge"
+                              HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                   <RepeatButton.Template>
                     <ControlTemplate TargetType="RepeatButton">
                       <Border Background="Transparent" />

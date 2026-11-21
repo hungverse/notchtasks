@@ -171,6 +171,41 @@ public sealed class ControlPanelWindowTests
     }
 
     [Fact]
+    public void Slider_FilledPartIsLaidOutAndVisible()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            var window = Fixture.Create<ControlPanelWindow>(state, PaneId.Behavior);
+            try
+            {
+                Fixture.ShowOffScreen(window);
+                var pane = Assert.IsAssignableFrom<FrameworkElement>(Fixture.Named<ContentControl>(window, "PaneHost").Content);
+                var slider = Fixture.Named<Slider>(pane, "DelaySlider");
+                window.UpdateLayout();
+
+                var track = Assert.IsType<System.Windows.Controls.Primitives.Track>(slider.Template.FindName("PART_Track", slider));
+                var fill = Assert.IsType<System.Windows.Controls.Primitives.RepeatButton>(track.DecreaseRepeatButton);
+                window.UpdateLayout();
+
+                Assert.True(fill.ActualWidth > 0, $"The filled part must have a width (was {fill.ActualWidth}).");
+                Assert.True(fill.IsVisible, "The filled part must be visible.");
+
+                var border = Assert.IsType<Border>(System.Windows.Media.VisualTreeHelper.GetChild(fill, 0));
+                Assert.True(border.ActualWidth > 0, $"The filled border must have a width (was {border.ActualWidth}).");
+                Assert.Equal(4, border.ActualHeight);
+                var brush = Assert.IsType<System.Windows.Media.SolidColorBrush>(border.Background);
+                Assert.Equal(System.Windows.Media.Color.FromRgb(0x0A, 0x84, 0xFF), brush.Color);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    [Fact]
     public void SelectingAPane_SetsTheWindowTitleToItsName_AndHidesThePageTitle()
     {
         Sta.Run(() =>
