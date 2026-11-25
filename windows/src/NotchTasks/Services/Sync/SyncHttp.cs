@@ -2,7 +2,6 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using System.IO;
-using System.Net;
 using System.Net.Http;
 using System.Text;
 using NotchTasks.Core.Sync;
@@ -52,7 +51,15 @@ public sealed class SyncHttp : ISyncHttp, IDisposable
             response.Dispose();
             throw new HttpRequestException($"The answers stream answered {(int)status}.", null, status);
         }
-        return await response.Content.ReadAsStreamAsync(ct);
+        try
+        {
+            return await response.Content.ReadAsStreamAsync(ct);
+        }
+        catch
+        {
+            response.Dispose();
+            throw;
+        }
     }
 
     public void Dispose() => _client.Dispose();

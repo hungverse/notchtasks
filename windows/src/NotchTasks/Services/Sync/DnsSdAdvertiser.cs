@@ -17,6 +17,8 @@ public sealed class DnsSdAdvertiser : IServiceAdvertiser
     private readonly object _gate = new();
     private Registration? _current;
     private bool _unavailableLogged;
+    private bool _registrationLogged;
+    private readonly object _logGate = new();
 
     public DnsSdAdvertiser()
         : this(text => ErrorLog.Write(new InvalidOperationException(text)))
@@ -30,14 +32,14 @@ public sealed class DnsSdAdvertiser : IServiceAdvertiser
         lock (_gate)
         {
             UnpublishLocked();
-            var registration = new Registration(_log);
+            var registration = new Registration(LogRegistrationOnce);
             try
             {
                 registration.Prepare($"{instanceName}{ServiceSuffix}", $"{Dns.GetHostName()}.local", port);
                 var status = DnsSdNative.DnsServiceRegister(registration.Request, IntPtr.Zero);
                 if (status is not 0 and not DnsRequestPending)
                 {
-                    _log($"mDNS: registration refused (status {status})");
+                    LogRegistrationOnce($"mDNS: registration refused (status {status})");
                     registration.Release();
                     return;
                 }
@@ -51,7 +53,7 @@ public sealed class DnsSdAdvertiser : IServiceAdvertiser
             catch (Exception e)
             {
                 registration.Release();
-                _log($"mDNS: registration failed ({e.GetType().Name})");
+                LogRegistrationOnce($"mDNS: registration failed ({e.GetType().Name})");
             }
         }
     }
@@ -95,6 +97,21 @@ public sealed class DnsSdAdvertiser : IServiceAdvertiser
             registration.Release();
             _log($"mDNS: deregistration failed ({e.GetType().Name})");
         }
+    }
+
+    /// A refused or failed registration is logged once per advertiser (P4-R5), however many times Publish is tried.
+    /// Its own lock: a callback can run on the thread that holds _gate.
+    private void LogRegistrationOnce(string text)
+    {
+        lock (_logGate)
+        {
+            if (_registrationLogged)
+            {
+                return;
+            }
+            _registrationLogged = true;
+        }
+        _log(text);
     }
 
     private void LogUnavailableOnce()
@@ -196,18 +213,32 @@ internal static partial class DnsSdNative
     [LibraryImport("dnsapi.dll", EntryPoint = "DnsServiceDeRegister")]
     public static partial uint DnsServiceDeRegister(nint request, nint cancel);
 
+    // Callbacks run on a dnsapi thread. An exception that escapes into native code would end the process, so nothing escapes.
     private static void OnRegisterComplete(uint status, nint context, nint instance)
     {
-        if (status != 0)
+        try
         {
-            DnsSdAdvertiser.Registration.FromContext(context)?.Log($"mDNS: registration failed (status {status})");
+            if (status != 0)
+            {
+                DnsSdAdvertiser.Registration.FromContext(context)?.Log($"mDNS: registration failed (status {status})");
+            }
+        }
+        catch (Exception)
+        {
+            // Swallowed: the advertisement is best effort and the LAN listener still runs.
         }
     }
 
     private static void OnDeregisterComplete(uint status, nint context, nint instance)
     {
-        var registration = DnsSdAdvertiser.Registration.FromContext(context);
-        registration?.Release();
+        try
+        {
+            DnsSdAdvertiser.Registration.FromContext(context)?.Release();
+        }
+        catch (Exception)
+        {
+            // Swallowed: a native thread must not see an exception.
+        }
     }
 
     /// DNS_SERVICE_INSTANCE: the instance and host names, the port (the WORD fields), and no addresses or TXT keys.

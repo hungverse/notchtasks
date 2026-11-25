@@ -47,7 +47,8 @@
 
   <ItemGroup>
     <PackageReference Include="H.NotifyIcon.Wpf" Version="2.4.1" />
-    <PackageReference Include="QRCoder" Version="1.6.0" />  </ItemGroup>
+    <PackageReference Include="QRCoder" Version="1.6.0" />
+  </ItemGroup>
 
   <!-- The hook is not referenced as an assembly; copy its files next to NotchTasks.exe explicitly. -->
   <Target Name="CopyHookExe" AfterTargets="Build">

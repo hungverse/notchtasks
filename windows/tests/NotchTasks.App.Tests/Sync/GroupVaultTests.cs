@@ -2,11 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json.Nodes;
+using NotchTasks.Core;
 using NotchTasks.Core.Sync;
 using NotchTasks.Services.Sync;
 using Xunit;
@@ -15,6 +14,7 @@ namespace NotchTasks.AppTests;
 
 /// The pairing vault: DPAPI on the Windows file, the Electron group.bin migrated, anything unreadable is unpaired.
 /// Every test works in its own temp folder; the DPAPI calls are the test user's, on those temp files only.
+[Collection("L10n")]
 public sealed class GroupVaultTests : IDisposable
 {
     private static readonly SyncGroup Group = new("g-one", "k-one", "uid-one", "refresh-one");
@@ -125,7 +125,7 @@ public sealed class GroupVaultTests : IDisposable
     }
 
     [Fact]
-    public void Vault_SaveNull_ThenElectronGroupIsNotBroughBack()
+    public void Vault_SaveNull_ThenElectronGroupIsNotBroughtBack()
     {
         var aesKey = RandomNumberGenerator.GetBytes(32);
         WriteLocalState(Electron.Dpapi(aesKey));
@@ -134,6 +134,39 @@ public sealed class GroupVaultTests : IDisposable
         Assert.Null(Vault().Save(null));
 
         Assert.Null(Vault().Load());
+    }
+
+    [Fact]
+    public void Vault_SaveNull_WhenNothingIsStored_IsNull()
+    {
+        Assert.Null(Vault().Save(null));
+        Assert.Null(new GroupVault(FilePath("never-made"), _log.Add).Save(null));
+        Assert.Empty(_log);
+    }
+
+    [Fact]
+    public void Vault_SaveFailure_ReturnsTheLocalizedProblem()
+    {
+        // A folder where the pairing file goes makes the rename fail, which is a save failure.
+        Directory.CreateDirectory(FilePath("pairing.bin"));
+        InitEnglish();
+
+        var problem = Vault().Save(Group);
+
+        Assert.Equal("Couldn't save the pairing on this computer.", problem);
+        Assert.Single(_log);
+    }
+
+    private static void InitEnglish() => L10n.Init(MacTables(), "en");
+
+    private static string MacTables()
+    {
+        var dir = AppContext.BaseDirectory;
+        while (dir is not null && !Directory.Exists(Path.Combine(dir, "mac", "Sources")))
+        {
+            dir = Path.GetDirectoryName(dir);
+        }
+        return Path.Combine(dir ?? throw new DirectoryNotFoundException("mac/Sources"), "mac", "Sources");
     }
 
     private void WriteLocalState(string encryptedKeyBase64)

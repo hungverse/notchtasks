@@ -168,7 +168,7 @@ public sealed class GroupVault : IGroupVault
         catch (Exception e)
         {
             _log($"vault: pairing not saved ({e.GetType().Name})");
-            return "Couldn't save the pairing on this computer.";
+            return L10n.L("Couldn't save the pairing on this computer.");
         }
     }
 
@@ -178,6 +178,11 @@ public sealed class GroupVault : IGroupVault
         string? problem = null;
         foreach (var path in new[] { PairingPath, ElectronGroupPath })
         {
+            // A file that is not there (or a folder that is not there) is already forgotten.
+            if (!File.Exists(path))
+            {
+                continue;
+            }
             try
             {
                 File.Delete(path);
@@ -185,7 +190,7 @@ public sealed class GroupVault : IGroupVault
             catch (Exception e) when (e is IOException or UnauthorizedAccessException)
             {
                 _log($"vault: {Path.GetFileName(path)} not deleted ({e.GetType().Name})");
-                problem = "Couldn't forget the pairing on this computer.";
+                problem = L10n.L("Couldn't forget the pairing on this computer.");
             }
         }
         return problem;
