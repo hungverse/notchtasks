@@ -89,7 +89,8 @@
   <Target Name="AddHelperFilesToPublish" AfterTargets="ComputeResolvedFilesToPublishList" DependsOnTargets="ResolveHelperFiles">
     <ItemGroup>
       <ResolvedFileToPublish Include="@(HookFiles)" Condition="'%(Extension)' == '.dll'" RelativePath="%(Filename)%(Extension)" CopyToPublishDirectory="PreserveNewest" />
-      <ResolvedFileToPublish Include="@(SensorsFiles)" Condition="'%(Extension)' == '.dll'" RelativePath="%(Filename)%(Extension)" CopyToPublishDirectory="PreserveNewest" />
+      <!-- System.CodeDom.dll is a Windows Desktop runtime assembly: a self-contained publish already has it (publishing it twice is NETSDK1152). -->
+      <ResolvedFileToPublish Include="@(SensorsFiles)" Condition="'%(Extension)' == '.dll' And '%(Filename)' != 'System.CodeDom'" RelativePath="%(Filename)%(Extension)" CopyToPublishDirectory="PreserveNewest" />
       <ResolvedFileToPublish Include="@(SensorsRuntimeFiles)" RelativePath="runtimes\%(RecursiveDir)%(Filename)%(Extension)" CopyToPublishDirectory="PreserveNewest" />
     </ItemGroup>
   </Target>
