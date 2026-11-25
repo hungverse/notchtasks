@@ -50,8 +50,9 @@
     <PackageReference Include="QRCoder" Version="1.6.0" />
   </ItemGroup>
 
-  <!-- The hook is not referenced as an assembly; copy its files next to NotchTasks.exe explicitly. -->
-  <Target Name="CopyHookExe" AfterTargets="Build">
+  <!-- Lists the hook's and the sensors helper's files once; the Build copy and the publish step both use them. -->
+  <!-- The sensors helper runs from a copy: its files, System.Management and its dependency, and its runtimes folder (optional files only if built). -->
+  <Target Name="ResolveHelperFiles">
     <MSBuild Projects="..\NotchTasksHook\NotchTasksHook.csproj" Targets="GetTargetPath">
       <Output TaskParameter="TargetOutputs" ItemName="HookTargetPath" />
     </MSBuild>
@@ -61,13 +62,7 @@
     <ItemGroup>
       <HookFiles Include="$(HookOutDir)NotchTasksHook.exe;$(HookOutDir)NotchTasksHook.dll;$(HookOutDir)NotchTasksHook.deps.json;$(HookOutDir)NotchTasksHook.runtimeconfig.json" />
     </ItemGroup>
-    <Copy SourceFiles="@(HookFiles)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
-  </Target>
 
-  <!-- The temperature helper (elevated only after the user's click) is copied next to NotchTasks.exe the same way, with what it
-       needs to run from a copy: its files, System.Management and its dependency, and the runtime-specific assemblies folder that
-       the deps file names. The optional files are copied only when the build produced them. NotchTasks.Core.dll is the app's own. -->
-  <Target Name="CopySensorsExe" AfterTargets="Build">
     <MSBuild Projects="..\NotchTasksSensors\NotchTasksSensors.csproj" Targets="GetTargetPath">
       <Output TaskParameter="TargetOutputs" ItemName="SensorsTargetPath" />
     </MSBuild>
@@ -79,8 +74,22 @@
       <SensorsFiles Include="$(SensorsOutDir)System.Management.dll;$(SensorsOutDir)System.CodeDom.dll" Condition="Exists('$(SensorsOutDir)System.Management.dll')" />
       <SensorsRuntimeFiles Include="$(SensorsOutDir)runtimes\**\*" />
     </ItemGroup>
+  </Target>
+
+  <!-- Copies the helpers next to NotchTasks.exe, so the plain build output runs them. -->
+  <Target Name="CopyHookExe" AfterTargets="Build" DependsOnTargets="ResolveHelperFiles">
+    <Copy SourceFiles="@(HookFiles)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(SensorsFiles)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(SensorsRuntimeFiles)" DestinationFiles="@(SensorsRuntimeFiles->'$(OutDir)runtimes\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+  </Target>
+
+  <!-- Adds the same helper files to the publish folder. The SDK already publishes the helpers' .exe, .deps.json and .runtimeconfig.json. -->
+  <Target Name="AddHelperFilesToPublish" AfterTargets="ComputeResolvedFilesToPublishList" DependsOnTargets="ResolveHelperFiles">
+    <ItemGroup>
+      <ResolvedFileToPublish Include="@(HookFiles)" Condition="'%(Extension)' == '.dll'" RelativePath="%(Filename)%(Extension)" CopyToPublishDirectory="PreserveNewest" />
+      <ResolvedFileToPublish Include="@(SensorsFiles)" Condition="'%(Extension)' == '.dll'" RelativePath="%(Filename)%(Extension)" CopyToPublishDirectory="PreserveNewest" />
+      <ResolvedFileToPublish Include="@(SensorsRuntimeFiles)" RelativePath="runtimes\%(RecursiveDir)%(Filename)%(Extension)" CopyToPublishDirectory="PreserveNewest" />
+    </ItemGroup>
   </Target>
 
 </Project>
