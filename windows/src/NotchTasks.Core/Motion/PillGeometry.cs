@@ -3,6 +3,8 @@ namespace NotchTasks.Core.Motion;
 /// Pill sizes (DIP) and where the pill window sits. The window is sized once; the pill animates inside it.
 public static class PillGeometry
 {
+    /// The closed pill's width while it is idle: today's 200 DIP strip, centred. It is only the hover area then (the pill is
+    /// invisible); a closed pill with content is as wide as its content (ClosedContentWidth).
     public const double ClosedWidth = 200;
     public const double ClosedHeight = 32;
     public const double ClosedRadius = 16;
@@ -26,6 +28,27 @@ public static class PillGeometry
 
     /// How far the wings move in from the layout's edges for a shape `w` wide: the left wing by +offset, the right by -offset.
     public static double WingOffset(double w) => (LayoutWidth - w) / 2;
+
+    /// The padding of a closed pill outside its content: the Mac's max((height - icon) / 2, 6), so one icon sits in a circle.
+    public static double ClosedPadding(double iconSize) => Math.Max((ClosedHeight - iconSize) / 2, 6);
+
+    /// The icon size of the closed pill, as the Mac's Settings.swift: 16 in the compact size, else 20.
+    public static double IconSizeFor(string size) => size == "compact" ? 16 : 20;
+
+    /// The gap between the two wings: none when one wing is empty; else 5 for the single chip (its lead and trail), 10 otherwise.
+    public static double WingGap(double leftWidth, double rightWidth, bool single) =>
+        leftWidth > 0 && rightWidth > 0 ? (single ? 5 : 10) : 0;
+
+    /// The width of a closed pill that holds content: padding, the left wing, the gap, the right wing and padding. Never below
+    /// ClosedHeight, so one icon gives a circle of ClosedHeight. Each wing is its ink width (its icons and text, no margins).
+    public static double ClosedContentWidth(double leftWidth, double rightWidth, double iconSize, bool single) =>
+        Math.Max(ClosedHeight, 2 * ClosedPadding(iconSize) + leftWidth + rightWidth + WingGap(leftWidth, rightWidth, single));
+
+    /// The width a closed pill shrinks to, and grows from, when it has nothing to show (it is invisible then).
+    public static double IdleWidth(double iconSize) => 2 * ClosedPadding(iconSize);
+
+    /// The left edge, in the layout, of a closed group `groupWidth` wide: the group is centred in the layout.
+    public static double ClosedGroupLeft(double groupWidth) => (LayoutWidth - groupWidth) / 2;
 
     /// How far the pill floats below the top of the work area (DIP), as the Mac's islandTop does. The gap above it still
     /// counts for hover: the screen's top edge opens the pill.

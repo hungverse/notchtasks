@@ -35,4 +35,48 @@ public sealed class PillGeometryTests
         Assert.Equal(100 + (1001 - 560) / 2, x);
         Assert.Equal(40 + 4, y);
     }
+
+    [Fact]
+    public void OneIcon_FitsACircle()
+    {
+        // 20 DIP icon: padding 6 each side; the height is the floor, so the width is the circle's 32.
+        Assert.Equal(32, PillGeometry.ClosedContentWidth(20, 0, PillGeometry.IconSizeFor("regular"), single: false));
+        // compact 16 DIP icon: padding 8 each side, still 32.
+        Assert.Equal(32, PillGeometry.ClosedContentWidth(16, 0, PillGeometry.IconSizeFor("compact"), single: false));
+        // a lone right-wing icon is the same.
+        Assert.Equal(32, PillGeometry.ClosedContentWidth(0, 20, PillGeometry.IconSizeFor("regular"), single: false));
+    }
+
+    [Fact]
+    public void Wings_TwoWide_GapTen()
+    {
+        Assert.Equal(102, PillGeometry.ClosedContentWidth(50, 30, 20, single: false));  // 6 + 50 + 10 + 30 + 6
+    }
+
+    [Fact]
+    public void SingleChip_GapFive()
+    {
+        Assert.Equal(77, PillGeometry.ClosedContentWidth(20, 40, 20, single: true));  // 6 + 20 + 5 + 40 + 6
+    }
+
+    [Fact]
+    public void OnlyRightWing_NoGap()
+    {
+        Assert.Equal(56, PillGeometry.ClosedContentWidth(0, 44, 20, single: false));  // 6 + 44 + 6
+    }
+
+    [Fact]
+    public void IdleWidth_IsTwoPaddings()
+    {
+        Assert.Equal(12, PillGeometry.IdleWidth(20));
+        Assert.Equal(16, PillGeometry.IdleWidth(16));
+        Assert.Equal(PillGeometry.ClosedHeight, PillGeometry.ClosedContentWidth(0, 0, 20, single: false));
+    }
+
+    [Fact]
+    public void IconSize_CompactIs16_OtherwiseIs20()
+    {
+        Assert.Equal(16, PillGeometry.IconSizeFor("compact"));
+        Assert.Equal(20, PillGeometry.IconSizeFor("regular"));
+    }
 }
