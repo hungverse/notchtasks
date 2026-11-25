@@ -15,12 +15,12 @@
     <Border x:Name="CardFrame" Visibility="Collapsed" CornerRadius="18" BorderThickness="1"
             Background="#EB000000" IsHitTestVisible="False" />
     <!-- Compact: one row on the pill's own line. The glyph sits in the left column, the value in the right; the pill's own
-         200 px sits between the two columns. -->
+         notch width (12 px, the island's; set in code from IslandNotchWidth) sits between the two columns. -->
     <!-- The 14 px padding is outside the side columns, as on the Mac: the value gets its whole column. -->
     <Grid x:Name="CompactRow" Height="32" Margin="14,0,14,0" VerticalAlignment="Top" Visibility="Collapsed">
       <Grid.ColumnDefinitions>
         <ColumnDefinition x:Name="CompactLeft" Width="52" />
-        <ColumnDefinition Width="200" />
+        <ColumnDefinition x:Name="CompactMiddle" Width="12" />
         <ColumnDefinition x:Name="CompactRight" Width="52" />
       </Grid.ColumnDefinitions>
       <!-- The glyph holder: a font glyph (its TextBlock inherits the font) or a drawn path for a glyph the font lacks. -->

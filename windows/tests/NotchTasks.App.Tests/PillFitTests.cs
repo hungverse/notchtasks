@@ -219,6 +219,42 @@ public sealed class PillFitTests
     }
 
     [Fact]
+    public void ClosedRetarget_GrowsWithTheGrowCurve_AndShrinksWithTheSettleCurve()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            state.Settings.Set("modules", JsonNode.Parse("[\"timer\"]"));
+            state.Settings.Set("disabled", JsonNode.Parse("[]"));
+            state.Settings.Set("badges", JsonNode.Parse(OneBadge));
+            var pill = new PillWindow(state);
+            try
+            {
+                ShowAway(pill);
+                state.Publish();
+                Settle(pill);
+
+                // A chip joins the closed badge: the shape grows, so the grow curve (with its bounce) is used.
+                state.Timer.Start(5, DateTimeOffset.Now);
+                state.Publish();
+                Assert.True(pill.LastCurveOpening);
+                Settle(pill);
+
+                // The chip goes: it fades first, then the pill shrinks back to the badge's circle, with the settle curve.
+                state.Timer.Stop();
+                state.Publish();
+                Fixture.PumpUntil(() => Fixture.Field<double>(pill, "_targetWidth") < 40);
+                Assert.False(pill.LastCurveOpening);
+            }
+            finally
+            {
+                pill.Close();
+            }
+        });
+    }
+
+    [Fact]
     public void IdleShape_NarrowerThanItsCorners_HitTestDoesNotThrow()
     {
         // The idle shape is 12 DIP wide, and rounding can leave its corner bounds a hair apart; the test must not throw.

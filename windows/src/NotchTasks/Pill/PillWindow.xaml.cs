@@ -117,6 +117,9 @@ public partial class PillWindow : Window
     private Mode _targetMode = Mode.Closed;  // the mode of that shape
     private bool _single;  // the one-chip case: the closed wings are 5 DIP apart (ChipView.IsSingle)
     private bool _shapeShown;  // the pill's visibility as last set; it fades when this changes (SetShapeShown)
+
+    /// Whether the last shape animation used the grow curve (the shape opened or grew) rather than the settle curve. A test reads it.
+    internal bool LastCurveOpening { get; private set; }
     private bool _warm;  // the card layer is laid out at zero opacity while the pointer is near (WarmCard)
     private bool _openRefreshPending;  // a publish came during an open: it is applied once when the open finishes
     private double _openHeight;  // the open pill's height, as last measured
@@ -576,7 +579,7 @@ public partial class PillWindow : Window
         _outsideSince = null;
         _closeTimer.Stop();
         _waitTimer.Stop();
-        Animate(Mode.Closed);  // sets _closing: the pill stays visible until the close spring has finished
+        Animate(Mode.Closed);  // the pill fades out while its shape settles to the closed width (SetShapeShown)
         ApplyAppearance();
         SyncToast();  // a toast that came in while the pill was open shows now
         _state.PillOpened(false);  // no load is sampled while the pill is closed; the meters are forgotten
@@ -643,7 +646,7 @@ public partial class PillWindow : Window
         if (target is not null)
         {
             var ask = target.AskId is { } askId ? _state.Asks.FirstOrDefault(a => a.Id == askId) : null;
-            ToastBox.Show(target, _state.Settings.ToastStyle, ask, _state.Settings.Motion, ClosedWidthNow);
+            ToastBox.Show(target, _state.Settings.ToastStyle, ask, _state.Settings.Motion);
             // Topmost is asserted again when a toast shows, as OpenPill does; the window itself never activates.
             Win32.SetWindowPos(_hwnd, Win32.HwndTopmost, 0, 0, 0, 0, Win32.SWP_NOMOVE | Win32.SWP_NOSIZE | Win32.SWP_NOACTIVATE);
             Animate(Mode.Toast);
@@ -693,10 +696,16 @@ public partial class PillWindow : Window
             ReevaluateClickThrough();
             return;
         }
-        var curve = SpringCurve.For(settings.Motion, mode != Mode.Closed, animationsOn);
+        // The grow curve (bounce) when the shape opens or grows, the settle curve (no bounce) when it shrinks: as the Mac's
+        // motion.animation and motion.settle. Judged against the width on screen now, not the last target.
+        var opening = mode != Mode.Closed || width > _shape.Rect.Width;
+        var curve = SpringCurve.For(settings.Motion, opening, animationsOn);
+        LastCurveOpening = opening;
         FrameLog.Begin(mode.ToString());
 
         var token = ++_animation;
+        // The card, the toast and the top row fade and blur only when the shape changes mode; a width change while closed does not.
+        var changesMode = _targetMode != mode;
         _closing = mode == Mode.Closed;
         _animating = true;
         _targetMode = mode;
@@ -730,21 +739,24 @@ public partial class PillWindow : Window
         var fadeSeconds = Math.Min(curve.Settle, MaxFadeDuration.TotalSeconds);
         var fade = new SpringCurve(fadeSeconds, 1) { EaseInOut = true };
         var duration = new Duration(TimeSpan.FromSeconds(fadeSeconds));
-        Fade(CardLayer, OpacityProperty, mode == Mode.Open ? 1 : 0, duration, fade);
-        Fade(ToastBox, OpacityProperty, mode == Mode.Toast ? 1 : 0, duration, fade);
-        Fade(TopRow, OpacityProperty, mode == Mode.Toast ? 0 : 1, duration, fade);
-        // The card blurs only while it closes, and the blur is attached only while it moves: an open (and reduced motion) fades on
-        // opacity alone, so no effect pass runs for it.
-        if (mode == Mode.Open || reduced)
+        if (changesMode)
         {
-            _cardBlur.BeginAnimation(BlurEffect.RadiusProperty, null);
-            _cardBlur.Radius = 0;  // so a later close blurs from 0 up to 6
-            CardLayer.Effect = null;
-        }
-        else
-        {
-            CardLayer.Effect = _cardBlur;
-            Fade(_cardBlur, BlurEffect.RadiusProperty, 6, duration, fade);
+            Fade(CardLayer, OpacityProperty, mode == Mode.Open ? 1 : 0, duration, fade);
+            Fade(ToastBox, OpacityProperty, mode == Mode.Toast ? 1 : 0, duration, fade);
+            Fade(TopRow, OpacityProperty, mode == Mode.Toast ? 0 : 1, duration, fade);
+            // The card blurs only while it closes, and the blur is attached only while it moves: an open (and reduced motion) fades on
+            // opacity alone, so no effect pass runs for it.
+            if (mode == Mode.Open || reduced)
+            {
+                _cardBlur.BeginAnimation(BlurEffect.RadiusProperty, null);
+                _cardBlur.Radius = 0;  // so a later close blurs from 0 up to 6
+                CardLayer.Effect = null;
+            }
+            else
+            {
+                CardLayer.Effect = _cardBlur;
+                Fade(_cardBlur, BlurEffect.RadiusProperty, 6, duration, fade);
+            }
         }
 
         // The shape's spring is the longest of these, so its completion is the end of the animation. The handler is attached
@@ -878,9 +890,6 @@ public partial class PillWindow : Window
     /// Whether the pill has something to show: it is open, a toast shows, a badge or a chip is in a wing, or an ask waits. Without it the
     /// pill is invisible and only its ClosedWidth hover strip is live.
     private bool ShowsContent => _open || _shownToast is not null || _hasCollapsed || _state.Snapshot.AskCount > 0;
-
-    /// The width of the closed pill for the content now: the toast's compact row is laid out around it.
-    private double ClosedWidthNow => Target(Mode.Closed).Width;
 
     /// Sets the pill's visibility: the shape and its shadow (and the glow) fade over the grow curve's fade, from where they are.
     private void SetShapeShown(bool shown)

@@ -90,11 +90,11 @@ public sealed class PillWindowTests
 
             view.Show(toast, "compact", null, "bouncy");
             Assert.Equal(Visibility.Visible, Fixture.Named<UIElement>(view, "CompactRow").Visibility);
-            // A title in the compact style: two 170 px side columns, the pill's 200 px, and the Mac's 14 px padding outside.
-            Assert.Equal(568.0, view.Width);
+            // A title in the compact style: two 170 px side columns, the island's 12 px notch width, and the Mac's 14 px padding outside.
+            Assert.Equal(380.0, view.Width);
             view.Show(new Toast("hand", "#FF9F0A", "3:00", "4:59", Compact: true), "island", null, "bouncy");
-            // A compact toast: two 52 px side columns, the same 200 px and the same padding.
-            Assert.Equal(332.0, view.Width);
+            // A compact toast: two 52 px side columns, the same 12 px notch width and the same padding.
+            Assert.Equal(144.0, view.Width);
             Assert.Equal(Visibility.Collapsed, Fixture.Named<UIElement>(view, "WideBody").Visibility);
 
             view.Show(toast, "banner", null, "bouncy");
