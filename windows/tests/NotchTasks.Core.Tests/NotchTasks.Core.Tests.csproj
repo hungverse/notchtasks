@@ -22,6 +22,11 @@
     <None Update="Fixtures\**" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
+  <!-- The Swift-sealed crosscheck fixtures, copied from electron/test/fixtures/crosscheck (Sync/BoxTests). -->
+  <ItemGroup>
+    <None Include="Fixtures\crosscheck\*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
   <!-- The hook is not referenced as an assembly; copy its files next to the tests so HookExeTests can run it. -->
   <Target Name="CopyHookExe" AfterTargets="Build">
     <MSBuild Projects="..\..\src\NotchTasksHook\NotchTasksHook.csproj" Targets="GetTargetPath">
