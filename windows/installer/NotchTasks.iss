@@ -93,8 +93,10 @@ function AppRunning(): Boolean;
 var
   ResultCode: Integer;
 begin
+  // The tools are called by their full path in {sys} (no PATH lookup). {sys} has no spaces, so the paths are not quoted.
   Result := Exec(ExpandConstant('{sys}\cmd.exe'),
-    '/C tasklist /FI "IMAGENAME eq NotchTasks.exe" /NH | find /I "NotchTasks.exe" >nul',
+    '/C ' + ExpandConstant('{sys}\tasklist.exe') + ' /FI "IMAGENAME eq NotchTasks.exe" /NH | ' +
+    ExpandConstant('{sys}\find.exe') + ' /I "NotchTasks.exe" >nul',
     '', SW_HIDE, ewWaitUntilTerminated, ResultCode) and (ResultCode = 0);
 end;
 
@@ -179,15 +181,15 @@ begin
   RemoveElectronInstall();
 end;
 
-function InitializeUninstall(): Boolean;
-begin
-  if FileExists(ExpandConstant('{app}\NotchTasks.dll')) then
-    StopNotchTasks();
-  Result := True;
-end;
-
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 begin
+  // usUninstall runs after the "Are you sure?" confirmation, before [UninstallRun] and the file removal. Quitting earlier
+  // (in InitializeUninstall) would leave the app stopped if the user answers No.
+  if CurUninstallStep = usUninstall then
+  begin
+    if FileExists(ExpandConstant('{app}\NotchTasks.dll')) then
+      StopNotchTasks();
+  end;
   // Only the autostart entry. %APPDATA%\NotchTasks is the user's data and stays.
   if CurUninstallStep = usPostUninstall then
     RegDeleteValue(HKCU, RunKey, 'NotchTasks');
