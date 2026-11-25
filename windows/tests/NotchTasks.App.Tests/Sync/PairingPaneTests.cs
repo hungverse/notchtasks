@@ -37,7 +37,7 @@ public sealed class PairingPaneTests
             Assert.Equal("Pro lifetime", PairingPane.ProStatus(30_000_000_000_000, now));
 
             var until = now.ToUnixTimeMilliseconds() + 3 * OneDayMs;
-            var date = DateTimeOffset.FromUnixTimeMilliseconds(until).ToLocalTime().DateTime.ToString("d", System.Globalization.CultureInfo.CurrentCulture);
+            var date = DateTimeOffset.FromUnixTimeMilliseconds(until).ToLocalTime().DateTime.ToString("MMM d, yyyy", System.Globalization.CultureInfo.CurrentCulture);
             Assert.Equal("Pro until " + date, PairingPane.ProStatus(until, now));
         });
     }

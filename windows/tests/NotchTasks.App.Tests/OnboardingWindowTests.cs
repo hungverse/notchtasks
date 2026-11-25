@@ -100,6 +100,10 @@ public sealed class OnboardingWindowTests
                 Assert.Contains(L10n.L("Open Pairing"), PairingVisuals.Texts((DependencyObject)host.Content));
                 Assert.Contains(L10n.L("Phone (optional)"), PairingVisuals.Texts((DependencyObject)host.Content));
 
+                // The heading is visible: the guide's pages have no window title to carry it.
+                var heading = PairingVisuals.Find<TextBlock>((DependencyObject)host.Content, text => text.Text == L10n.L("Phone (optional)"));
+                Assert.Equal(Visibility.Visible, heading.Visibility);
+
                 Fixture.Call(window, "ShowPage", 5);
                 window.UpdateLayout();
                 Assert.Equal(L10n.L("Show me"), Fixture.Named<Button>(window, "NextButton").Content);

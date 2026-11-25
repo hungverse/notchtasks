@@ -107,7 +107,7 @@ public partial class OnboardingWindow : Window
     private UIElement Phone()
     {
         var panel = new StackPanel();
-        panel.Children.Add(new TextBlock { Style = (Style)FindResource("PaneTitle"), Text = L10n.L("Phone (optional)") });
+        panel.Children.Add(new TextBlock { Style = (Style)FindResource("PageHeading"), Text = L10n.L("Phone (optional)") });
         panel.Children.Add(new TextBlock
         {
             Style = (Style)FindResource("PaneNote"),
@@ -148,7 +148,7 @@ public partial class OnboardingWindow : Window
         var panel = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 40, 0, 0) };
         panel.Children.Add(new TextBlock
         {
-            Style = (Style)FindResource("PaneTitle"),
+            Style = (Style)FindResource("PageHeading"),
             HorizontalAlignment = HorizontalAlignment.Center,
             TextAlignment = TextAlignment.Center,
             Text = L10n.L("Welcome to NotchTasks"),
@@ -169,7 +169,7 @@ public partial class OnboardingWindow : Window
     private UIElement Ready()
     {
         var panel = new StackPanel();
-        panel.Children.Add(new TextBlock { Style = (Style)FindResource("PaneTitle"), Text = L10n.L("You're all set") });
+        panel.Children.Add(new TextBlock { Style = (Style)FindResource("PageHeading"), Text = L10n.L("You're all set") });
         panel.Children.Add(new TextBlock
         {
             Style = (Style)FindResource("PaneNote"),

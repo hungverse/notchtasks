@@ -8,6 +8,16 @@
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource ApplicationBackgroundBrush}"
         Foreground="{DynamicResource TextFillColorPrimaryBrush}">
+  <Window.Resources>
+    <!-- The page heading: 28 px semibold, visible. (PaneTitle is collapsed: the Control Panel's window title carries it there, but a
+         guide page has no window title of its own, so its heading must show.) -->
+    <Style x:Key="PageHeading" TargetType="TextBlock">
+      <Setter Property="FontSize" Value="28" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+      <Setter Property="Margin" Value="0,0,0,8" />
+    </Style>
+  </Window.Resources>
   <Grid>
     <Grid.RowDefinitions>
       <RowDefinition Height="*" />

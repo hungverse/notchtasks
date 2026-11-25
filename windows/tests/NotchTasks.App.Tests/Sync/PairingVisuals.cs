@@ -42,6 +42,20 @@ internal static class PairingVisuals
         return texts;
     }
 
+    /// The first element of type T under the root that matches.
+    public static T Find<T>(DependencyObject root, Func<T, bool> match) where T : DependencyObject
+    {
+        T? found = null;
+        Walk(root, element =>
+        {
+            if (found is null && element is T typed && match(typed))
+            {
+                found = typed;
+            }
+        });
+        return found ?? throw new InvalidOperationException("No matching element under the root.");
+    }
+
     /// Every element under the root, the root first.
     public static void Walk(DependencyObject root, Action<DependencyObject> visit)
     {

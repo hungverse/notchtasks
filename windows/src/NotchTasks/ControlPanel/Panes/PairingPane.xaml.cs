@@ -33,6 +33,12 @@ public partial class PairingPane : UserControl
     private bool _showCode;
     private string? _pairUrl;
 
+    /// True while a phone read is in flight: a tick that finds it set does nothing.
+    private bool _refreshing;
+
+    /// True once this open of the pane has tried the automatic code (a paired group with no phone); reset on each open.
+    private bool _autoCodeTried;
+
     public PairingPane(SyncBridge? bridge)
     {
         _bridge = bridge;
@@ -69,7 +75,8 @@ public partial class PairingPane : UserControl
             return L10n.L("Pro lifetime");
         }
         var date = DateTimeOffset.FromUnixTimeMilliseconds((long)ms).ToLocalTime().DateTime;
-        return L10n.L("Pro until {0}", date.ToString("d", CultureInfo.CurrentCulture));
+        // The Mac's abbreviated date ("Nov 25, 2026" in English): the month abbreviated, the day, the year.
+        return L10n.L("Pro until {0}", date.ToString("MMM d, yyyy", CultureInfo.CurrentCulture));
     }
 
     private static T Frozen<T>(T freezable) where T : Freezable
@@ -111,6 +118,7 @@ public partial class PairingPane : UserControl
         _bridge.Changed += OnBridgeChanged;
         L10n.Changed += OnLanguageChanged;
         _poll.Start();
+        _autoCodeTried = false;
         Render();
         _ = RefreshPhonesAsync();
     }
@@ -156,12 +164,15 @@ public partial class PairingPane : UserControl
     }
 
     /// Reads the phones. A paired group with no phone yet shows its code, as the Mac does: the first pairing needs the QR at once.
+    /// One read at a time: a slow read is not overlapped by the next tick. The code is shown on its own once per open of the pane,
+    /// so a failed pairing is not retried on every tick (the user's click retries it).
     private async Task RefreshPhonesAsync()
     {
-        if (_bridge is null || _bridge.Hub.Group is null)
+        if (_bridge is null || _bridge.Hub.Group is null || _refreshing)
         {
             return;
         }
+        _refreshing = true;
         try
         {
             await _bridge.Hub.LoadPhonesAsync();
@@ -170,8 +181,13 @@ public partial class PairingPane : UserControl
         {
             LogFailure("reading the phones", e);
         }
-        if (IsLoaded && _pairUrl is null && !_busy && _bridge.State.Paired && _bridge.State.Phones.Count == 0)
+        finally
         {
+            _refreshing = false;
+        }
+        if (IsLoaded && !_autoCodeTried && _pairUrl is null && !_busy && _bridge.State.Paired && _bridge.State.Phones.Count == 0)
+        {
+            _autoCodeTried = true;
             await ShowCodeAsync();
         }
     }
