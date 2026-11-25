@@ -79,7 +79,10 @@ public partial class ControlPanelWindow : Window
 
     /// The version shown at the foot of the sidebar: the informational version up to its build hash ("1.0.0+abc" shows
     /// "1.0.0"), or major.minor when the build has none.
-    private static string AppVersion()
+    private static string AppVersion() => AppVersionParts().Version;
+
+    /// The app's version and build: "1.0.0+abc" is version "1.0.0" and build "abc" (no build: empty). The report sends both.
+    internal static (string Version, string Build) AppVersionParts()
     {
         var assembly = System.Reflection.Assembly.GetEntryAssembly() ?? typeof(ControlPanelWindow).Assembly;
         var informational = assembly.GetCustomAttributes(typeof(System.Reflection.AssemblyInformationalVersionAttribute), false)
@@ -87,10 +90,11 @@ public partial class ControlPanelWindow : Window
             .FirstOrDefault()?.InformationalVersion;
         if (!string.IsNullOrWhiteSpace(informational))
         {
-            return informational.Split('+')[0];
+            var parts = informational.Split('+');
+            return (parts[0], parts.Length > 1 ? parts[1] : string.Empty);
         }
         var version = assembly.GetName().Version;
-        return version is null ? string.Empty : $"{version.Major}.{version.Minor}";
+        return (version is null ? string.Empty : $"{version.Major}.{version.Minor}", string.Empty);
     }
 
     /// The sprites the pill's badges name (settings "badges"): the ones that stay cached when the Control Panel closes.
@@ -145,6 +149,7 @@ public partial class ControlPanelWindow : Window
                 PaneId.Modules => new ModulesPane(State.Settings),
                 PaneId.Permissions => new PermissionsPane(State.Settings, State.Helper),
                 PaneId.Watching => new WatchingPane(State.Settings, State.Processes, AppFiles.Home),
+                PaneId.Pairing => new PairingPane(State.Bridge),
                 PaneId.Appearance => new AppearancePane(State.Settings),
                 PaneId.Badges => new BadgesPane(State.Settings, State),
                 PaneId.Store => new IconLibraryPane(State.Settings),

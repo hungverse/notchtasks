@@ -30,6 +30,9 @@ public partial class OverviewPane : SettingsPane
     /// The glyph of an agent row (the sparkle the Mac uses for agents; the same as the agent module).
     private const string AgentGlyph = "";
 
+    /// The glyph of the phone step (the iPhone the Mac shows).
+    private const string PhoneGlyph = "";
+
     /// The module groups of the Mac's overview (Settings.swift groups), in the Mac's order. The last group also takes every
     /// Windows module no other group names.
     private static readonly (string Title, string[] Ids)[] Groups =
@@ -86,7 +89,9 @@ public partial class OverviewPane : SettingsPane
         UpdateCounts();
         _permissionsValue.Text = string.Format(CultureInfo.InvariantCulture, "{0}/{1}",
             items.Count(item => item.State == PermState.Granted), items.Count);
-        RenderNextSteps(NextSteps.Compute(items, modules, Store.SystemNotifications, present, installed), items);
+        // The phone step is asked for only where sync is on, and while no phone is paired yet.
+        var paired = _state.Bridge is null || _state.Bridge.State.Phones.Count > 0;
+        RenderNextSteps(NextSteps.Compute(items, modules, Store.SystemNotifications, present, installed, paired), items);
         ErrorText.Text = _actionError ?? string.Empty;
         ErrorText.Visibility = _actionError is null ? Visibility.Collapsed : Visibility.Visible;
         RenderModules();
@@ -265,6 +270,9 @@ public partial class OverviewPane : SettingsPane
                 var name = AgentKinds.Spec(agent.Kind).Name;
                 return Row(AgentGlyph, name + " · " + L10n.L("Answer agents on the notch"), L10n.L("On"),
                     () => TurnOnHook(agent.Kind));
+            case NextStep.Phone:
+                return Row(PhoneGlyph, L10n.L("Pairing"), L10n.L("Pairing"),
+                    () => ControlPanelWindow.Show(_state, PaneId.Pairing));
             default:
                 throw new ArgumentOutOfRangeException(nameof(step));
         }

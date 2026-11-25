@@ -3,13 +3,14 @@ using NotchTasks.Core;
 
 namespace NotchTasks.ControlPanel;
 
-/// The panes of the Control Panel, in the Mac's order (Preferences.swift). Pairing and Fans & temperature are not shown here.
+/// The panes of the Control Panel, in the Mac's order (Preferences.swift). Fans & temperature is not shown here.
 public enum PaneId
 {
     Overview,
     Modules,
     Permissions,
     Watching,
+    Pairing,
     Appearance,
     Badges,
     Store,
@@ -26,6 +27,7 @@ public static class PaneIds
         PaneId.Modules => "Modules",
         PaneId.Permissions => "Permissions",
         PaneId.Watching => "Watching",
+        PaneId.Pairing => "Pairing",
         PaneId.Appearance => "Appearance",
         PaneId.Badges => "Icons & lock",
         PaneId.Store => "Icon Library",
@@ -41,6 +43,7 @@ public static class PaneIds
         PaneId.Modules => "",
         PaneId.Permissions => "",
         PaneId.Watching => "",
+        PaneId.Pairing => "",
         PaneId.Appearance => "",
         PaneId.Badges => "",
         PaneId.Store => "",

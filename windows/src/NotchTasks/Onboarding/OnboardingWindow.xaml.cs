@@ -11,13 +11,13 @@ using NotchTasks.Services;
 
 namespace NotchTasks.Onboarding;
 
-/// The first-run guide (Onboarding.swift OnboardingView) as a window of five pages: welcome, modules, agents, permissions and
-/// ready. The phone page comes with pairing (Phase 4). The modules, agents and permissions pages are the Control Panel's own
-/// panes, so their rows are not built twice. Closing the window by any means (Skip, Show me, the close button) sets
+/// The first-run guide (Onboarding.swift OnboardingView) as a window of six pages: welcome, modules, agents, permissions, phone
+/// and ready. The modules, agents and permissions pages are the Control Panel's own panes, so their rows are not built twice.
+/// The phone page opens the Pairing pane once the guide is closed. Closing the window by any means (Skip, Show me, the close button) sets
 /// onboardingDone, once. There is one guide: Show brings the open one to the front.
 public partial class OnboardingWindow : Window
 {
-    private const int LastPage = 4;
+    private const int LastPage = 5;
 
     private static OnboardingWindow? _window;
 
@@ -99,8 +99,38 @@ public partial class OnboardingWindow : Window
         1 => Pane(page, () => new ModulesPane(Settings)),
         2 => Pane(page, () => new WatchingPane(Settings, _state.Processes, AppFiles.Home)),
         3 => Pane(page, () => new PermissionsPane(Settings, _state.Helper)),
+        4 => Phone(),
         _ => Ready(),
     };
+
+    /// The phone page (Onboarding.swift phone): what pairing is for, and the button that closes the guide and opens Pairing.
+    private UIElement Phone()
+    {
+        var panel = new StackPanel();
+        panel.Children.Add(new TextBlock { Style = (Style)FindResource("PaneTitle"), Text = L10n.L("Phone (optional)") });
+        panel.Children.Add(new TextBlock
+        {
+            Style = (Style)FindResource("PaneNote"),
+            Margin = new Thickness(0, 0, 0, 12),
+            Text = L10n.L("Pair your phone to answer agents from the lock screen when away from your computer."),
+        });
+        var open = new Button
+        {
+            Style = (Style)FindResource("SecondaryButton"),
+            HorizontalAlignment = HorizontalAlignment.Left,
+            Content = L10n.L("Open Pairing"),
+        };
+        open.Click += (_, _) => OpenPairing();
+        panel.Children.Add(open);
+        return panel;
+    }
+
+    /// Closes the guide (it is finished, as Show me is) and opens the Control Panel on Pairing.
+    private void OpenPairing()
+    {
+        Close();
+        ControlPanelWindow.Show(_state, PaneId.Pairing);
+    }
 
     /// A pane page. Its pane is made once and kept, so going back and forth keeps its state.
     private UserControl Pane(int page, Func<UserControl> create)

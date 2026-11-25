@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using NotchTasks.Core;
 using NotchTasks.Onboarding;
 using Xunit;
 
@@ -53,7 +54,7 @@ public sealed class OnboardingWindowTests
     }
 
     [Fact]
-    public void PagesOneToFiveBuild()
+    public void PagesOneToSixBuild()
     {
         Sta.Run(() =>
         {
@@ -66,12 +67,43 @@ public sealed class OnboardingWindowTests
                 var host = Fixture.Named<ContentControl>(window, "PageHost");
 
                 // Page 1 (index 0) is built by the constructor; the rest are shown in turn.
-                for (var page = 0; page < 5; page++)
+                for (var page = 0; page < 6; page++)
                 {
                     Fixture.Call(window, "ShowPage", page);
                     window.UpdateLayout();
                     Assert.NotNull(host.Content);
                 }
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    [Fact]
+    public void Onboarding_PhonePage_BeforeReady()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            var window = Fixture.Create<OnboardingWindow>(state, null);
+            try
+            {
+                Fixture.ShowOffScreen(window);
+                var host = Fixture.Named<ContentControl>(window, "PageHost");
+
+                // Page 5 (index 4) is the phone page; the last page (index 5) is the ready page.
+                Fixture.Call(window, "ShowPage", 4);
+                window.UpdateLayout();
+                Assert.Contains(L10n.L("Open Pairing"), PairingVisuals.Texts((DependencyObject)host.Content));
+                Assert.Contains(L10n.L("Phone (optional)"), PairingVisuals.Texts((DependencyObject)host.Content));
+
+                Fixture.Call(window, "ShowPage", 5);
+                window.UpdateLayout();
+                Assert.Equal(L10n.L("Show me"), Fixture.Named<Button>(window, "NextButton").Content);
+                Assert.Equal(L10n.L("Step {0}/{1}", 6, 6), Fixture.Named<TextBlock>(window, "StepText").Text);
             }
             finally
             {

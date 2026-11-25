@@ -97,4 +97,16 @@ public sealed class NextStepsTests
         Assert.Empty(NextSteps.Compute(new[] { absent }, new HashSet<string> { "agents" }, notifications: false,
             present: [], installed: new HashSet<AgentKind>()));
     }
+
+    [Fact]
+    public void NextSteps_PhoneWhenNotPaired()
+    {
+        var none = NextSteps.Compute(Array.Empty<PermItem>(), new HashSet<string>(), notifications: false,
+            present: [], installed: new HashSet<AgentKind>(), paired: false);
+        Assert.Equal(new NextStep[] { new NextStep.Phone() }, none);
+
+        var paired = NextSteps.Compute(Array.Empty<PermItem>(), new HashSet<string>(), notifications: false,
+            present: [], installed: new HashSet<AgentKind>(), paired: true);
+        Assert.Empty(paired);
+    }
 }
