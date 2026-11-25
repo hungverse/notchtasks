@@ -113,19 +113,26 @@ const
   RunKey = 'Software\Microsoft\Windows\CurrentVersion\Run';
   UninstallKey = 'Software\Microsoft\Windows\CurrentVersion\Uninstall';
 
-// True while a process named NotchTasks.exe is listed (find exits 0 only when it finds the image name).
+// The image-name filter with the user filter: only this user's NotchTasks.exe counts (another signed-in user's copy is theirs).
+function UserFilter(): String;
+begin
+  Result := ' /FI "USERNAME eq ' + ExpandConstant('{username}') + '"';
+end;
+
+// True while this user's process named NotchTasks.exe is listed (find exits 0 only when it finds the image name).
 function AppRunning(): Boolean;
 var
   ResultCode: Integer;
 begin
   // The tools are called by their full path in {sys} (no PATH lookup). {sys} has no spaces, so the paths are not quoted.
   Result := Exec(ExpandConstant('{sys}\cmd.exe'),
-    '/C ' + ExpandConstant('{sys}\tasklist.exe') + ' /FI "IMAGENAME eq NotchTasks.exe" /NH | ' +
+    '/C ' + ExpandConstant('{sys}\tasklist.exe') + ' /FI "IMAGENAME eq NotchTasks.exe"' + UserFilter() + ' /NH | ' +
     ExpandConstant('{sys}\find.exe') + ' /I "NotchTasks.exe" >nul',
     '', SW_HIDE, ewWaitUntilTerminated, ResultCode) and (ResultCode = 0);
 end;
 
 // A native install is running: ask it to quit (--quit blocks up to 5 s for it to exit), then force it if it is still there.
+// The forced kill has no /T: the update's own installer runs as a child of the app, and a tree kill would end it too.
 procedure StopNotchTasks();
 var
   ResultCode, I: Integer;
@@ -140,7 +147,7 @@ begin
       Sleep(500);
     end;
     if AppRunning() then
-      Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /T /IM NotchTasks.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+      Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM NotchTasks.exe' + UserFilter(), '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
   except
     Log('Could not stop NotchTasks: ' + GetExceptionMessage);
   end;
