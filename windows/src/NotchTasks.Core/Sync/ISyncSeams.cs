@@ -52,4 +52,8 @@ public sealed record SyncDeps(
 
     /// The backoff wait of the answers stream. Tests replace it; the app keeps Task.Delay.
     internal Func<TimeSpan, CancellationToken, Task> Delay { get; init; } = Task.Delay;
+
+    /// How long the answers stream may stay silent before it counts as lost (Firebase sends a keep-alive every 30 s). A dead
+    /// connection (sleep, a Wi-Fi change) then ends the read and the stream reconnects. Tests lower it.
+    internal TimeSpan StreamIdle { get; init; } = TimeSpan.FromSeconds(90);
 }

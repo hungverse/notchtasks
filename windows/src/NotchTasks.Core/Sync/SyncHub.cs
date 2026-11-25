@@ -137,6 +137,16 @@ public sealed partial class SyncHub : IAsyncDisposable
 
     public async ValueTask DisposeAsync() => await StopAsync();
 
+    /// Restarts the answers stream at once (after a resume from sleep or a network change), with the backoff reset. Does nothing
+    /// unless the hub is running and paired.
+    public void Reconnect()
+    {
+        lock (_gate)
+        {
+            StartStream();
+        }
+    }
+
     /// The 1 s tick: publishes what changed, and returns at once when nothing did. The timer calls it; tests call it directly.
     public void Tick()
     {
@@ -825,7 +835,19 @@ public sealed partial class SyncHub : IAsyncDisposable
         var data = new List<string>();
         while (true)
         {
-            var n = await body.ReadAsync(bytes, ct);
+            int n;
+            using (var idle = CancellationTokenSource.CreateLinkedTokenSource(ct))
+            {
+                idle.CancelAfter(_deps.StreamIdle);
+                try
+                {
+                    n = await body.ReadAsync(bytes, idle.Token);
+                }
+                catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+                {
+                    throw new TimeoutException("The answers stream went silent.");
+                }
+            }
             if (n == 0)
             {
                 return StreamEnd.Ended;

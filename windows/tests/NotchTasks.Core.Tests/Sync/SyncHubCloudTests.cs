@@ -33,7 +33,7 @@ public sealed class SyncHubCloudTests
         private readonly ConcurrentQueue<string> _logs = new();
         private readonly ConcurrentQueue<TimeSpan> _delays = new();
 
-        public Rig(bool group)
+        public Rig(bool group, TimeSpan? idle = null)
         {
             if (group)
             {
@@ -51,6 +51,7 @@ public sealed class SyncHubCloudTests
                 message => _logs.Enqueue(message))
             {
                 LanBindAddress = System.Net.IPAddress.Loopback,
+                StreamIdle = idle ?? TimeSpan.FromSeconds(90),
                 Delay = (t, _) =>
                 {
                     _delays.Enqueue(t);
@@ -125,6 +126,9 @@ public sealed class SyncHubCloudTests
 
     private static bool Deleted(Rig rig, string path) =>
         rig.Fb.Calls.Any(c => c.Method == "DELETE" && c.Url.Contains(path, StringComparison.Ordinal));
+
+    private static int StreamOpens(Rig rig) =>
+        rig.Fb.Calls.Count(c => c.ContentType == "text/event-stream");
 
     [Fact]
     public async Task Pair_SignsUpAnonymously_WritesTheMacMember_ReturnsACodeThatParses()
@@ -292,6 +296,31 @@ public sealed class SyncHubCloudTests
         await WaitFor(() => rig.Delays.Count == 2);
         Assert.Equal(new[] { TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(10) }, rig.Delays);
         Assert.Equal("Lost connection to the phone, retrying…", rig.Hub.State.Problem);
+        await rig.Hub.StopAsync();
+    }
+
+    [Fact]
+    public async Task Stream_Idle_ReconnectsAfterLimit()
+    {
+        // the fake stream never yields: the idle limit ends the read as a failure, so the loop reopens it and says so
+        await using var rig = new Rig(group: true, idle: TimeSpan.FromMilliseconds(100));
+        await rig.Hub.StartAsync();
+
+        await WaitFor(() => StreamOpens(rig) >= 2);
+        await WaitFor(() => rig.Hub.State.Problem == "Lost connection to the phone, retrying…");
+        await rig.Hub.StopAsync();
+    }
+
+    [Fact]
+    public async Task Reconnect_OpensANewStream()
+    {
+        await using var rig = new Rig(group: true);
+        await rig.Hub.StartAsync();
+        await WaitFor(() => rig.Fb.Events is not null);
+        Assert.Equal(1, StreamOpens(rig));
+
+        rig.Hub.Reconnect();
+        await WaitFor(() => StreamOpens(rig) == 2);
         await rig.Hub.StopAsync();
     }
 

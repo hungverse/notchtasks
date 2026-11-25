@@ -1,7 +1,9 @@
 using System.IO;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Text.Json.Nodes;
 using System.Windows.Threading;
+using Microsoft.Win32;
 using NotchTasks.Core;
 using NotchTasks.Core.Agents;
 using NotchTasks.Core.Asks;
@@ -116,6 +118,9 @@ public sealed class SyncBridge : IAsyncDisposable
             return;
         }
         _running = true;
+        // a resume from sleep or a network change restarts the answers stream at once (a dead connection is not noticed for long)
+        SystemEvents.PowerModeChanged += OnPowerModeChanged;
+        NetworkChange.NetworkAddressChanged += OnNetworkAddressChanged;
         try
         {
             await Hub.StartAsync();
@@ -192,6 +197,8 @@ public sealed class SyncBridge : IAsyncDisposable
         }
         _disposed = true;
         _running = false;
+        SystemEvents.PowerModeChanged -= OnPowerModeChanged;
+        NetworkChange.NetworkAddressChanged -= OnNetworkAddressChanged;
         // StopAsync completes at once today. It is not awaited here (the UI thread must not block on it), so a fault it reports
         // later is observed and logged instead of being dropped; a synchronous throw is logged here.
         try
@@ -234,6 +241,25 @@ public sealed class SyncBridge : IAsyncDisposable
         if (a.Ask.Length > 0 && _app.Asks.Any(ask => ask.Id == a.Ask))
         {
             _app.Answer(a.Ask, a.Reply);
+        }
+    }
+
+    private void OnPowerModeChanged(object sender, PowerModeChangedEventArgs e)
+    {
+        if (e.Mode == PowerModes.Resume)
+        {
+            ReconnectHub();
+        }
+    }
+
+    private void OnNetworkAddressChanged(object? sender, EventArgs e) => ReconnectHub();
+
+    /// Restarts the answers stream now (the hub does nothing when it is not paired). Called from the system's event threads.
+    private void ReconnectHub()
+    {
+        if (!_disposed && _running)
+        {
+            Hub.Reconnect();
         }
     }
 
