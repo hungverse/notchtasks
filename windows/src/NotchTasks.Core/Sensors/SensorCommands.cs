@@ -11,6 +11,9 @@ public enum SensorMode
 
     /// Stop the user's helper, remove the logon task and the Program Files copy. Elevated.
     UninstallLogon,
+
+    /// Not elevated, from the installer: when this user has a sign-in helper, one UAC prompt runs UninstallLogon for them.
+    UninstallOwn,
 }
 
 /// A parsed command line of the helper.
@@ -47,6 +50,9 @@ public static class SensorArgs
                     return new SensorCommand(SensorMode.UninstallLogon, null, null);
                 }
                 return args.Length == 2 && SensorNames.IsSid(args[1]) ? new SensorCommand(SensorMode.UninstallLogon, args[1], null) : null;
+
+            case "--uninstall-own":
+                return args.Length == 1 ? new SensorCommand(SensorMode.UninstallOwn, null, null) : null;
 
             case "--install-logon":
                 if (args.Length < 2 || !SensorNames.IsSid(args[1]))

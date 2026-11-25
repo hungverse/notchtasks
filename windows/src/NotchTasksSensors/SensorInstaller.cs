@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Security.AccessControl;
 using System.Security.Principal;
@@ -83,6 +84,36 @@ internal static class SensorInstaller
         }
         var outcome = SensorUninstall.Run(sid, TargetFolder, new RealSensorSystem());
         return Task.FromResult(outcome == UninstallOutcome.Removed ? 0 : 1);
+    }
+
+    /// The installer's opt-in removal, run by the user's own process: when this user has a sign-in helper (their marker is there), one
+    /// UAC prompt runs --uninstall-logon for them. Exit 0 when the removal succeeded or there was nothing to remove; 1 otherwise,
+    /// including a UAC prompt the user cancelled.
+    public static async Task<int> RemoveOwnSignInAsync()
+    {
+        var sid = WindowsIdentity.GetCurrent().User?.Value;
+        if (!SensorNames.IsSid(sid) || !File.Exists(SensorNames.MarkerPath(sid!)))
+        {
+            return 0;
+        }
+        var self = Environment.ProcessPath ?? throw new InvalidOperationException("The helper's path is unknown.");
+        var start = new ProcessStartInfo(self)
+        {
+            UseShellExecute = true,
+            Verb = "runas",
+            Arguments = SensorArgs.UninstallLogonArgs(sid),
+            WindowStyle = ProcessWindowStyle.Hidden,
+        };
+        try
+        {
+            using var elevated = Process.Start(start) ?? throw new InvalidOperationException("The elevated uninstall did not start.");
+            await elevated.WaitForExitAsync();
+            return elevated.ExitCode == 0 ? 0 : 1;
+        }
+        catch (Win32Exception e) when (e.NativeErrorCode == 1223)
+        {
+            return 1;  // the user said no to UAC: nothing changes
+        }
     }
 
     /// The folder exists and keeps the permissions it inherits from Program Files. A new folder inherits them. An existing folder

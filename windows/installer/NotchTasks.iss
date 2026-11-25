@@ -213,6 +213,42 @@ begin
   RemoveElectronInstall();
 end;
 
+// The temperature helper's sign-in task runs as SYSTEM after NotchTasks is gone, so the user is offered its removal. Removing it
+// needs administrator rights, so it is opt-in: the default is No, and a silent uninstall keeps it (logged). Yes runs the helper's own
+// uninstall, elevated, for this user. The question is asked when any user's sign-in marker is there (another user's helper is kept).
+procedure RemoveSensorSignIn();
+var
+  Found: TFindRec;
+  Helper: String;
+  ResultCode: Integer;
+begin
+  Helper := ExpandConstant('{app}\NotchTasksSensors.exe');
+  if not FileExists(Helper) then
+    Exit;
+  if not FindFirst(ExpandConstant('{pf}\NotchTasks Sensors\*.signin'), Found) then
+    Exit;
+  FindClose(Found);
+  if UninstallSilent then
+  begin
+    Log('Silent uninstall: the temperature helper sign-in task is kept (removing it needs administrator rights).');
+    Exit;
+  end;
+  if MsgBox('The temperature helper is set to start when you sign in. Removing its sign-in task needs administrator rights ' +
+     '(Windows asks once).' + #13#10#13#10 + 'Remove the sign-in task too?', mbConfirmation, MB_YESNO or MB_DEFBUTTON2) = IDYES then
+  begin
+    try
+      if Exec(Helper, '--uninstall-own', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) and (ResultCode = 0) then
+        Log('Removed the temperature helper sign-in task.')
+      else
+        Log(Format('The temperature helper sign-in task was not removed (exit code %d).', [ResultCode]));
+    except
+      Log('Could not remove the temperature helper sign-in task: ' + GetExceptionMessage);
+    end;
+  end
+  else
+    Log('The temperature helper sign-in task was kept at the user''s choice.');
+end;
+
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 begin
   // usUninstall runs after the "Are you sure?" confirmation, before [UninstallRun] and the file removal. Quitting earlier
@@ -221,6 +257,7 @@ begin
   begin
     if FileExists(ExpandConstant('{app}\NotchTasks.dll')) then
       StopNotchTasks();
+    RemoveSensorSignIn();
   end;
   // Only the autostart entries (ours, and the one the Electron build wrote). %APPDATA%\NotchTasks is the user's data and stays.
   if CurUninstallStep = usPostUninstall then

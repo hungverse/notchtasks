@@ -140,6 +140,8 @@ public sealed class SensorProtocolTests
         Assert.Null(logon.Parent);
 
         Assert.Equal(SensorMode.UninstallLogon, SensorArgs.Parse(new[] { "--uninstall-logon" })!.Mode);
+        Assert.Equal(SensorMode.UninstallOwn, SensorArgs.Parse(new[] { "--uninstall-own" })!.Mode);
+        Assert.Null(SensorArgs.Parse(new[] { "--uninstall-own", Sid }));
         Assert.Null(SensorArgs.Parse(new[] { "--serve" }));
         Assert.Null(SensorArgs.Parse(new[] { "--install-logon", "S-1-5-21 & calc" }));
         Assert.Null(SensorArgs.Parse(new[] { "--serve", "--user", Sid, "--parent", "-3" }));
