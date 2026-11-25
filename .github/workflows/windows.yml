@@ -37,13 +37,65 @@ jobs:
         shell: pwsh
         run: pwsh windows/installer/build.ps1
 
+      # The hook shipped here is the Native AOT build (this runner has MSVC), which the unit tests never run. Both commands run the
+      # staged exe: --hook answers a sample prompt (no app is running, so it returns at once), and --uninstall-hooks must remove our
+      # hook from a settings file. Windows takes the profile folder from the account, not from USERPROFILE, so this uses the
+      # runner's own profile and puts back whatever settings file it found there.
+      - name: Hook smoke test (staged build)
+        shell: pwsh
+        timeout-minutes: 5
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $stage = (Resolve-Path windows/installer/out/stage).Path
+          $hook = Join-Path $stage 'NotchTasksHook.exe'
+          if (-not (Test-Path -LiteralPath $hook -PathType Leaf)) { throw "Stage is missing NotchTasksHook.exe: $stage" }
+          $flavour = if (Test-Path -LiteralPath (Join-Path $stage 'NotchTasksHook.dll')) { 'self-contained' } else { 'Native AOT' }
+          Write-Host "Shipped hook: $flavour"
+
+          $sample = '{"hook_event_name":"PermissionRequest","tool_name":"Bash","tool_input":{"command":"echo smoke"},"session_id":"smoke","cwd":"C:/"}'
+          $answer = $sample | & $hook --hook claude
+          if ($LASTEXITCODE -ne 0) { throw "--hook claude exited with $LASTEXITCODE" }
+          Write-Host "--hook claude: exit 0, output: $answer"
+
+          $claudeDir = Join-Path ([Environment]::GetFolderPath('UserProfile')) '.claude'
+          $settings = Join-Path $claudeDir 'settings.json'
+          $original = if (Test-Path -LiteralPath $settings) { [IO.File]::ReadAllBytes($settings) } else { $null }
+          try {
+            $fixture = [ordered]@{
+              theme = 'dark'
+              hooks = [ordered]@{
+                PermissionRequest = @(
+                  [ordered]@{ matcher = '*'; hooks = @([ordered]@{ type = 'command'; command = "`"$hook`" --hook claude" }) },
+                  [ordered]@{ matcher = '*'; hooks = @([ordered]@{ type = 'command'; command = 'C:/Other/tool.exe' }) }
+                )
+              }
+            }
+            New-Item -ItemType Directory -Force -Path $claudeDir | Out-Null
+            [IO.File]::WriteAllText($settings, ($fixture | ConvertTo-Json -Depth 10), [Text.UTF8Encoding]::new($false))
+
+            & $hook --uninstall-hooks
+            if ($LASTEXITCODE -ne 0) { throw "--uninstall-hooks exited with $LASTEXITCODE" }
+
+            $after = Get-Content -Raw -LiteralPath $settings | ConvertFrom-Json
+            $commands = @($after.hooks.PermissionRequest | ForEach-Object { $_.hooks } | ForEach-Object { $_.command })
+            if ($commands | Where-Object { $_ -like '*NotchTasksHook*' }) { throw 'Our hook is still in settings.json after --uninstall-hooks.' }
+            if ($commands -notcontains 'C:/Other/tool.exe') { throw "--uninstall-hooks removed another tool's hook." }
+            if ($after.theme -ne 'dark') { throw '--uninstall-hooks changed an unrelated setting.' }
+            Write-Host "--uninstall-hooks: our hook removed, other hooks and settings kept ($flavour)."
+          } finally {
+            if ($null -ne $original) {
+              [IO.File]::WriteAllBytes($settings, $original)
+            } elseif (Test-Path -LiteralPath $settings) {
+              Remove-Item -LiteralPath $settings -Force
+            }
+          }
+
       - name: Feed entry (version-win.json)
         shell: pwsh
         run: |
           $setup = Get-ChildItem -Path windows/installer/out -Filter 'NotchTasks-*-win-x64-setup.exe' | Select-Object -First 1
           if (-not $setup) { throw 'No setup exe in windows/installer/out' }
-          $json = & windows/installer/manifest.ps1 -Installer $setup.FullName -Url 'https://notchtasks.web.app/assets/NotchTasks-Setup.exe'
-          $json | Out-File -FilePath windows/installer/out/version-win.json -Encoding utf8
+          & windows/installer/manifest.ps1 -Installer $setup.FullName -Url 'https://notchtasks.web.app/assets/NotchTasks-Setup.exe' -OutFile windows/installer/out/version-win.json
 
       - uses: actions/upload-artifact@v4
         with:
