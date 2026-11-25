@@ -215,7 +215,10 @@ begin
     if FileExists(ExpandConstant('{app}\NotchTasks.dll')) then
       StopNotchTasks();
   end;
-  // Only the autostart entry. %APPDATA%\NotchTasks is the user's data and stays.
+  // Only the autostart entries (ours, and the one the Electron build wrote). %APPDATA%\NotchTasks is the user's data and stays.
   if CurUninstallStep = usPostUninstall then
+  begin
     RegDeleteValue(HKCU, RunKey, 'NotchTasks');
+    RegDeleteValue(HKCU, RunKey, 'com.notchtasks.windows');
+  end;
 end;

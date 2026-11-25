@@ -75,6 +75,66 @@ public sealed class StartAtLoginTests : IDisposable
     }
 
     [Fact]
+    public void MigrateElectron_OnState_MovesToOurValue_AndDeletesTheOld()
+    {
+        var reg = new FakeRegistry();
+        const string electron = @"C:\Users\Hung\AppData\Local\Programs\NotchTasks\NotchTasks.exe";
+        reg.SetString(StartAtLogin.KeyPath, StartAtLogin.ElectronValueName, "\"" + electron + "\"");
+
+        StartAtLogin.MigrateElectron(reg, Exe, _ => true);
+
+        Assert.Null(reg.GetString(StartAtLogin.KeyPath, StartAtLogin.ElectronValueName));
+        Assert.True(StartAtLogin.IsOn(reg, Exe));
+    }
+
+    [Fact]
+    public void MigrateElectron_ExeInAnyFolder_CountsWhenItExists()
+    {
+        var reg = new FakeRegistry();
+        reg.SetString(StartAtLogin.KeyPath, StartAtLogin.ElectronValueName, @"""D:\Apps\notchtasks\NotchTasks.exe""");
+
+        StartAtLogin.MigrateElectron(reg, Exe, path => path == @"D:\Apps\notchtasks\NotchTasks.exe");
+
+        Assert.True(StartAtLogin.IsOn(reg, Exe));
+    }
+
+    [Fact]
+    public void MigrateElectron_MissingExe_DeletesTheOldValueOnly()
+    {
+        var reg = new FakeRegistry();
+        reg.SetString(StartAtLogin.KeyPath, StartAtLogin.ElectronValueName, @"""C:\Gone\NotchTasks.exe""");
+
+        StartAtLogin.MigrateElectron(reg, Exe, _ => false);
+
+        Assert.Null(reg.GetString(StartAtLogin.KeyPath, StartAtLogin.ElectronValueName));
+        Assert.False(StartAtLogin.IsOn(reg, Exe));
+    }
+
+    [Fact]
+    public void MigrateElectron_NotNotchTasksExe_IsDeletedButNotAdopted()
+    {
+        var reg = new FakeRegistry();
+        reg.SetString(StartAtLogin.KeyPath, StartAtLogin.ElectronValueName, @"""C:\Other\Helper.exe""");
+
+        StartAtLogin.MigrateElectron(reg, Exe, _ => true);
+
+        Assert.Null(reg.GetString(StartAtLogin.KeyPath, StartAtLogin.ElectronValueName));
+        Assert.False(StartAtLogin.IsOn(reg, Exe));
+    }
+
+    [Fact]
+    public void MigrateElectron_NoOldValue_LeavesTheRunKeyAlone()
+    {
+        var reg = new FakeRegistry();
+        reg.SetString(StartAtLogin.KeyPath, "SomeOtherApp", @"""C:\Other\App.exe""");
+
+        StartAtLogin.MigrateElectron(reg, Exe, _ => true);
+
+        Assert.Equal(@"""C:\Other\App.exe""", reg.GetString(StartAtLogin.KeyPath, "SomeOtherApp"));
+        Assert.False(StartAtLogin.IsOn(reg, Exe));
+    }
+
+    [Fact]
     public void FirstRun_DoesNothingOnLaterRuns()
     {
         var reg = new FakeRegistry();
