@@ -257,10 +257,9 @@ internal static partial class DnsSdNative
             }
             if (status != 0)
             {
-                // a failed registration gets no deregistration, so its memory is released here
-                var registration = DnsSdAdvertiser.Registration.FromContext(context);
-                registration?.Log($"mDNS: registration failed (status {status})");
-                registration?.Release();
+                // not released here: dnsapi may still use the request and instance memory, so a late callback could free a newer
+                // registration. The small leak is accepted.
+                DnsSdAdvertiser.Registration.FromContext(context)?.Log($"mDNS: registration failed (status {status})");
             }
         }
         catch (Exception)
