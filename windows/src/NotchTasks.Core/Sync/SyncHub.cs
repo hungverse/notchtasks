@@ -93,7 +93,16 @@ public sealed partial class SyncHub : IAsyncDisposable
     }
 
     /// The LAN listener's port. Null: there is no listener yet (the LAN half of the hub sets it).
-    public int? LanPort => null;
+    public int? LanPort
+    {
+        get
+        {
+            lock (_gate)
+            {
+                return _lanPort;
+            }
+        }
+    }
 
     // MARK: lifecycle
 
@@ -548,6 +557,7 @@ public sealed partial class SyncHub : IAsyncDisposable
         }
         var t = AtMs(NowMs());
         var s = _builder.Build(input, _deps.MacName, t);
+        PublishLan(g, s);
 
         var handled = _direct.ToList();
         var needsCloud = _phones.Count == 0 ? _lanPhones == 0 : _phones.Keys.Any(u => !_direct.Contains(u));
