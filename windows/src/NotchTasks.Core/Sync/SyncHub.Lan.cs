@@ -160,26 +160,46 @@ public sealed partial class SyncHub
 
     // MARK: accepting (sync.js accept)
 
+    /// Accept failures in a row before the listener is restarted, and the backoff between them (100 ms doubling to 5 s).
+    private const int AcceptFailuresToRestart = 10;
+    private static readonly TimeSpan AcceptBackoffStart = TimeSpan.FromMilliseconds(100);
+    private static readonly TimeSpan AcceptBackoffMax = TimeSpan.FromSeconds(5);
+
     private async Task AcceptLoopAsync(LanSession s)
     {
+        var failures = 0;
+        var backoff = AcceptBackoffStart;
         while (true)
         {
             TcpClient client;
             try
             {
-                client = await s.Listener.AcceptTcpClientAsync();
+                client = await _deps.AcceptAsync(s.Listener);
             }
             catch (Exception e)
             {
-                // the listener is stopped on a stop; any other failure is logged and the loop goes on
+                // the listener is stopped on a stop; any other failure backs off, logs its first failure only, and after
+                // 10 in a row restarts the listener (the same path SetLan uses) and ends this loop
                 if (s.Stopped)
                 {
                     return;
                 }
-                _deps.Log($"lan: accept failed ({e.GetType().Name})");
-                await Task.Delay(TimeSpan.FromMilliseconds(100));
+                failures++;
+                if (failures == 1)
+                {
+                    _deps.Log($"lan: accept failed ({e.GetType().Name})");
+                }
+                if (failures >= AcceptFailuresToRestart)
+                {
+                    RestartLan(s);
+                    return;
+                }
+                await _deps.Delay(backoff, CancellationToken.None);
+                backoff = TimeSpan.FromTicks(Math.Min(backoff.Ticks * 2, AcceptBackoffMax.Ticks));
                 continue;
             }
+            failures = 0;
+            backoff = AcceptBackoffStart;
             try
             {
                 ConfigureSocket(client);
@@ -195,6 +215,24 @@ public sealed partial class SyncHub
                 _deps.Log($"lan: connection setup failed ({e.GetType().Name})");
             }
         }
+    }
+
+    /// Restarts the listener after repeated accept failures: the same stop and start SetLan does. Does nothing when the session
+    /// was already replaced or stopped.
+    private void RestartLan(LanSession s)
+    {
+        lock (_gate)
+        {
+            if (s.Stopped || !ReferenceEquals(_lanSession, s))
+            {
+                return;
+            }
+            _deps.Log("lan: listener restarted after repeated accept failures");
+            StopLan();
+            StartLan();
+            Emit();
+        }
+        Flush();
     }
 
     /// Admits the connection (up to 8), starts its hello timer and its read loop. Returns false when it is refused.

@@ -50,8 +50,12 @@ public sealed record SyncDeps(
     /// The address the LAN listener binds. The app keeps Any (phones on the Wi-Fi reach it); the tests bind loopback only.
     public System.Net.IPAddress LanBindAddress { get; init; } = System.Net.IPAddress.Any;
 
-    /// The backoff wait of the answers stream. Tests replace it; the app keeps Task.Delay.
+    /// The backoff wait of the answers stream and of the LAN accept loop. Tests replace it; the app keeps Task.Delay.
     internal Func<TimeSpan, CancellationToken, Task> Delay { get; init; } = Task.Delay;
+
+    /// Accepts the next phone connection on the LAN listener. Tests replace it to fail accepts; the app keeps AcceptTcpClientAsync.
+    internal Func<System.Net.Sockets.TcpListener, Task<System.Net.Sockets.TcpClient>> AcceptAsync { get; init; } =
+        listener => listener.AcceptTcpClientAsync();
 
     /// How long the answers stream may stay silent before it counts as lost (Firebase sends a keep-alive every 30 s). A dead
     /// connection (sleep, a Wi-Fi change) then ends the read and the stream reconnects. Tests lower it.

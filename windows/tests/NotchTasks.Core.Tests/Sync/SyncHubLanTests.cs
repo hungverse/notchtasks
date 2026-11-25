@@ -102,7 +102,14 @@ public sealed class SyncHubLanTests
         private readonly ConcurrentQueue<PhoneAnswer> _answers = new();
         private readonly ConcurrentQueue<TcpClient> _clients = new();
 
-        public Rig(string members = "{}", TimeSpan? helloTimeout = null)
+        /// Every line the hub logged, oldest first.
+        public ConcurrentQueue<string> Logs { get; } = new();
+
+        public Rig(
+            string members = "{}",
+            TimeSpan? helloTimeout = null,
+            Func<TcpListener, Task<TcpClient>>? accept = null,
+            Func<TimeSpan, CancellationToken, Task>? delay = null)
         {
             Vault.Stored = new SyncGroup(GroupId, KeyText, "uid-mac", "ref-1");
             Fb.MembersJson = members;
@@ -115,10 +122,12 @@ public sealed class SyncHubLanTests
                 () => false,
                 _ => 0,
                 (_, _) => { },
-                _ => { })
+                message => Logs.Enqueue(message))
             {
                 HelloTimeout = helloTimeout ?? TimeSpan.FromSeconds(5),
                 LanBindAddress = IPAddress.Loopback,
+                AcceptAsync = accept ?? (listener => listener.AcceptTcpClientAsync()),
+                Delay = delay ?? ((t, ct) => Task.Delay(t, ct)),
             };
             Hub = new SyncHub(deps);
             Hub.StateChanged += s => _states.Enqueue(s);
@@ -475,5 +484,38 @@ public sealed class SyncHubLanTests
             using var c = new TcpClient();
             await c.ConnectAsync(IPAddress.Loopback, port);
         });
+    }
+
+    [Fact]
+    public async Task AcceptFailures_BackOff_LogOnce_AndAfterTenTheListenerRestarts()
+    {
+        var failing = 0;
+        var listeners = new ConcurrentQueue<TcpListener>();
+        var waits = new ConcurrentQueue<TimeSpan>();
+        await using var rig = new Rig(
+            accept: async listener =>
+            {
+                listeners.Enqueue(listener);
+                if (Interlocked.Increment(ref failing) <= 10)
+                {
+                    throw new IOException("accept failed in the test");
+                }
+                return await listener.AcceptTcpClientAsync();
+            },
+            delay: (t, _) =>
+            {
+                waits.Enqueue(t);
+                return Task.CompletedTask;
+            });
+
+        await rig.Hub.StartAsync();
+        // the tenth failure restarts the listener: a new listener accepts, and the new port is advertised
+        await WaitFor(() => listeners.Distinct().Count() == 2 && rig.Adv.Published.Length == 2);
+
+        // 100 ms doubling to 5 s between the first nine failures; no wait after the tenth
+        var expected = new[] { 100, 200, 400, 800, 1600, 3200, 5000, 5000, 5000 }.Select(ms => TimeSpan.FromMilliseconds(ms));
+        Assert.Equal(expected, waits.ToArray());
+        Assert.Single(rig.Logs, l => l.StartsWith("lan: accept failed", StringComparison.Ordinal));
+        Assert.NotNull(rig.Hub.LanPort);
     }
 }
