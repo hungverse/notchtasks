@@ -1,3 +1,4 @@
+using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -169,7 +170,7 @@ public sealed class PillMotionTests
     }
 
     [Fact]
-    public void Badges_NeverAnimate()
+    public void Badges_UnchangedNeverAnimate()
     {
         Sta.Run(() =>
         {
@@ -178,16 +179,18 @@ public sealed class PillMotionTests
             Fixture.ShowOffScreen(window);
             try
             {
-                var badge = new Border { Width = 16, Height = 16 };  // an installed badge: not a chip, so no Tag
-                left.Children.Add(badge);
+                FillBadges(left, right, "[{\"id\":\"a\",\"symbol\":\"seg:E700\",\"right\":false}]");
+                PumpFor(TimeSpan.FromMilliseconds(16));
+                Fixture.PumpUntil(() => !Moving(left.Children[0]));  // the new badge's ooze ends
+                var badge = left.Children[0];
 
+                // The same badges again (a settings save that keeps the ids): the same element, and nothing starts to animate.
+                FillBadges(left, right, "[{\"id\":\"a\",\"symbol\":\"seg:E700\",\"right\":false}]");
                 Fill(left, right, new[] { new Chip(ChipKind.Timer, "timer", "a") });
-                Fill(left, right, Array.Empty<Chip>());
-                PumpFor(TimeSpan.FromMilliseconds(500));
-
-                Assert.Contains(badge, left.Children.OfType<UIElement>());
+                PumpFor(TimeSpan.FromMilliseconds(16));
+                Assert.Same(badge, left.Children[0]);
+                Assert.False(Moving(badge));
                 Assert.Equal(1.0, badge.Opacity);
-                Assert.Null(badge.RenderTransform as ScaleTransform);
             }
             finally
             {
@@ -195,6 +198,71 @@ public sealed class PillMotionTests
             }
         });
     }
+
+    [Fact]
+    public void Badges_NewIdOozesIn_OthersDoNot()
+    {
+        Sta.Run(() =>
+        {
+            var (left, right, host) = ChipHost();
+            var window = new Window { Content = host };
+            Fixture.ShowOffScreen(window);
+            try
+            {
+                FillBadges(left, right, "[{\"id\":\"a\",\"symbol\":\"seg:E700\",\"right\":false}]");
+                PumpFor(TimeSpan.FromMilliseconds(16));
+                Fixture.PumpUntil(() => !Moving(left.Children[0]));  // the ooze ends
+                var kept = left.Children[0];
+
+                // A badge with a new id joins the wing: it oozes in, and the badge already there does not move.
+                FillBadges(left, right, "[{\"id\":\"a\",\"symbol\":\"seg:E700\",\"right\":false},{\"id\":\"b\",\"symbol\":\"seg:E701\",\"right\":false}]");
+                var added = left.Children[1];
+                PumpFor(TimeSpan.FromMilliseconds(16));
+                Assert.Same(kept, left.Children[0]);
+                Assert.False(Moving(kept));
+                Assert.True(Moving(added));
+                Assert.IsType<TransformGroup>(added.RenderTransform);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    [Fact]
+    public void Badges_NewIdReduced_OpacityOnly()
+    {
+        Sta.Run(() =>
+        {
+            var (left, right, host) = ChipHost();
+            var window = new Window { Content = host };
+            Fixture.ShowOffScreen(window);
+            try
+            {
+                FillBadges(left, right, "[{\"id\":\"a\",\"symbol\":\"seg:E700\",\"right\":false}]", motion: "reduced");
+                var added = left.Children[0];
+                PumpFor(TimeSpan.FromMilliseconds(16));  // one frame into the 0.15 s fade
+                Assert.True(added.Opacity < 1);  // the fade runs
+                Assert.Null(added.RenderTransform as TransformGroup);  // no scale and no offset
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    /// Fills the wings with the badges of a settings array, as the pill does (the closed size's 16 DIP icons).
+    private static void FillBadges(StackPanel left, StackPanel right, string json, string motion = "smooth") =>
+        BadgeGlyph.FillWings(left, right, JsonNode.Parse(json)!.AsArray(), System.Windows.Media.Colors.Gray, 16, motion, animationsOn: true);
+
+    /// Whether an element's ooze is moving it now: its opacity is below 1, or its scale or offset is off rest. (A transform's
+    /// HasAnimatedProperties stays true once it has been animated, so it cannot say that.)
+    private static bool Moving(UIElement e) =>
+        e.Opacity < 1
+        || e.RenderTransform is TransformGroup group
+            && (((ScaleTransform)group.Children[0]).ScaleX != 1 || ((TranslateTransform)group.Children[1]).X != 0);
 
     [Fact]
     public void Enter_Completed_LocalOpacityIsNotPinned()

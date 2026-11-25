@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Windows.Threading;
 using NotchTasks.Core.Motion;
 using NotchTasks.Pill;
 using Xunit;
@@ -22,9 +23,7 @@ public sealed class PillFitTests
         {
             using var root = new TempRoot();
             using var state = Fixture.NewState();
-            // The regular size: a 20 DIP icon, padding 6, so the lone 18 DIP badge is the circle of 32. (In the compact size the
-            // padding is 8 for its 16 DIP icon, and the badge measures 34: the badge is drawn at 18 whatever the size.)
-            state.Settings.Set("size", JsonValue.Create("regular"));
+            // The default size is compact: a 16 DIP badge (the Mac's iconSize) and padding 8, so one badge is a 32 DIP circle.
             state.Settings.Set("badges", JsonNode.Parse(OneBadge));
             var pill = new PillWindow(state);
             try
@@ -34,10 +33,14 @@ public sealed class PillFitTests
                 Assert.Equal(PillGeometry.ClosedHeight, Fixture.Field<double>(pill, "_targetWidth"));
 
                 Settle(pill);
-                Arrange(pill);
                 Assert.Equal(PillGeometry.ClosedHeight, Fixture.Field<RectangleGeometry>(pill, "_shape").Rect.Width, 0.5);
 
                 var badge = Assert.IsAssignableFrom<FrameworkElement>(Fixture.Named<StackPanel>(pill, "LeftWing").Children[0]);
+                Assert.Equal(16, badge.Width);  // the compact icon size, as the Mac's iconSize
+                // The badge oozes in (its transform moves it until the ooze ends), so the centre is read once that is done.
+                PumpFrame();
+                Fixture.PumpUntil(() => badge.Opacity == 1 && ((TranslateTransform)((TransformGroup)badge.RenderTransform!).Children[1]).X == 0);
+                Arrange(pill);
                 var shape = Fixture.Named<FrameworkElement>(pill, "PillShape");
                 var centre = badge.TransformToAncestor(shape).Transform(new Point(badge.ActualWidth / 2, badge.ActualHeight / 2));
                 Assert.Equal(PillGeometry.LayoutWidth / 2, centre.X, 0.5);
@@ -58,7 +61,6 @@ public sealed class PillFitTests
             using var state = Fixture.NewState();
             state.Settings.Set("modules", JsonNode.Parse("[\"timer\"]"));
             state.Settings.Set("disabled", JsonNode.Parse("[]"));
-            state.Settings.Set("size", JsonValue.Create("regular"));  // padding 6, as in the test above
             state.Settings.Set("placements", JsonNode.Parse("{\"timer\":\"right\"}"));  // not the lone case: a gap of 10
             state.Settings.Set("badges", JsonNode.Parse(OneBadge));
             var pill = new PillWindow(state);
@@ -70,10 +72,11 @@ public sealed class PillFitTests
                 Settle(pill);
                 Arrange(pill);
 
-                // The left wing is the badge alone (18 DIP); the right wing is the chip, its ink without its own 3 DIP margins.
-                var right = Fixture.Named<StackPanel>(pill, "RightWing");
-                var rightInk = right.DesiredSize.Width - 3 - 3;
-                var expected = 2 * 6 + 18 + 10 + rightInk;  // padding 6 each side (a 20 DIP icon), the badge, the gap, the chip
+                // The left wing is the badge alone; the right wing is the chip. Each wing's ink is its width less its own end margins (3 DIP).
+                var leftInk = Fixture.Named<StackPanel>(pill, "LeftWing").DesiredSize.Width - 3 - 3;
+                var rightInk = Fixture.Named<StackPanel>(pill, "RightWing").DesiredSize.Width - 3 - 3;
+                var padding = PillGeometry.ClosedPadding(PillGeometry.IconSizeFor(state.Settings.Size));
+                var expected = 2 * padding + leftInk + 10 + rightInk;  // the padding each side, the badge, the gap of 10, the chip
                 Assert.Equal(expected, Fixture.Field<double>(pill, "_targetWidth"), 0.5);
             }
             finally
@@ -186,6 +189,36 @@ public sealed class PillFitTests
     }
 
     [Fact]
+    public void SizeChange_RemeasuresAndRespringsTheWidth()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            // Two badges in one wing: their ink is 16 + 6 + 16 at compact (the 6 is the two inner margins), 20 + 6 + 20 at regular.
+            state.Settings.Set("badges", JsonNode.Parse("[{\"id\":\"a\",\"symbol\":\"seg:E700\",\"right\":false},{\"id\":\"b\",\"symbol\":\"seg:E701\",\"right\":false}]"));
+            var pill = new PillWindow(state);
+            try
+            {
+                ShowAway(pill);
+                state.Publish();
+                Assert.Equal(2 * 8 + 38, Fixture.Field<double>(pill, "_targetWidth"), 0.5);  // compact: padding 8
+
+                state.Settings.Set("size", JsonValue.Create("regular"));
+                Fixture.Flush();
+                state.Publish();
+                Assert.Equal(2 * 6 + 46, Fixture.Field<double>(pill, "_targetWidth"), 0.5);  // regular: padding 6
+                Settle(pill);
+                Assert.Equal(2 * 6 + 46, Fixture.Field<RectangleGeometry>(pill, "_shape").Rect.Width, 0.5);
+            }
+            finally
+            {
+                pill.Close();
+            }
+        });
+    }
+
+    [Fact]
     public void IdleShape_NarrowerThanItsCorners_HitTestDoesNotThrow()
     {
         // The idle shape is 12 DIP wide, and rounding can leave its corner bounds a hair apart; the test must not throw.
@@ -201,6 +234,20 @@ public sealed class PillFitTests
         Fixture.ShowOffScreen(pill);
         pill.Left = -10000;
         pill.Top = -10000;
+    }
+
+    /// Runs the dispatcher for one frame, so the animations started in it have moved their values.
+    private static void PumpFrame()
+    {
+        var frame = new DispatcherFrame();
+        var timer = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromMilliseconds(16) };
+        timer.Tick += (_, _) =>
+        {
+            timer.Stop();
+            frame.Continue = false;
+        };
+        timer.Start();
+        Dispatcher.PushFrame(frame);
     }
 
     /// Runs the dispatcher until the pill's shape animation has finished (or five seconds pass).

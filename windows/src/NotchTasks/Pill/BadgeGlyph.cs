@@ -28,25 +28,106 @@ public static class BadgeGlyph
         return HexColor.ToColor(hex);
     }
 
-    /// Puts the settings' badges in their wings, replacing the badges already there: a badge with "right" set goes to the
-    /// right wing. Badges are the outer edge of their wing; ChipView puts the chips inside them. Returns how many badges there are.
-    public static int FillWings(StackPanel left, StackPanel right, JsonArray badges, Color accent)
+    /// The Tag of a badge's element in a wing: what a fill tells a badge from a chip by.
+    public const string BadgeTag = "badge";
+
+    /// The badge's id (or its place, when it has none), and what it was drawn from (its settings, size and accent).
+    private static readonly DependencyProperty KeyProperty = DependencyProperty.RegisterAttached(
+        "BadgeKey", typeof(string), typeof(BadgeGlyph), new PropertyMetadata(null));
+    private static readonly DependencyProperty SignatureProperty = DependencyProperty.RegisterAttached(
+        "BadgeSignature", typeof(string), typeof(BadgeGlyph), new PropertyMetadata(null));
+
+    /// Puts the settings' badges in their wings, a badge with "right" set in the right wing, at `size` DIP (the closed pill's icon size).
+    /// Badges are the outer edge of their wing; ChipView puts the chips inside them. A badge whose id is new to the pill oozes in
+    /// (PillMotion.Ooze); a badge already there and unchanged stays as it is, with no motion, as does one whose settings changed (it is
+    /// drawn again in its place); a badge that is gone is removed. Returns how many badges there are.
+    public static int FillWings(StackPanel left, StackPanel right, JsonArray badges, Color accent, double size = 18,
+        string motion = "smooth", bool animationsOn = true)
     {
-        left.Children.Clear();
-        right.Children.Clear();
+        var heldLeft = Held(left);
+        var heldRight = Held(right);
+        var known = new HashSet<string>(heldLeft.Keys.Concat(heldRight.Keys), StringComparer.Ordinal);
+        var sides = new[]
+        {
+            (Wing: left, Right: false, Held: heldLeft, Items: new List<FrameworkElement>()),
+            (Wing: right, Right: true, Held: heldRight, Items: new List<FrameworkElement>()),
+        };
+        var oozing = new List<(FrameworkElement Element, bool Right)>();
+        var count = 0;
         foreach (var node in badges)
         {
             if (node is not JsonObject badge)
             {
                 continue;
             }
-            var wing = ReadBool(badge, "right") ? right : left;
-            var glyph = Create(badge, 18, accent);
+            var side = sides[ReadBool(badge, "right") ? 1 : 0];
+            var key = ReadString(badge, "id") ?? "#" + count.ToString(CultureInfo.InvariantCulture);
+            count++;
+            var signature = badge.ToJsonString() + "|" + size.ToString(CultureInfo.InvariantCulture) + "|" + accent;
+            if (side.Held.TryGetValue(key, out var held) && Equals(held.GetValue(SignatureProperty), signature))
+            {
+                side.Items.Add(held);  // unchanged: kept as it is
+                continue;
+            }
+            var glyph = Create(badge, size, accent);
             glyph.Margin = new Thickness(3, 0, 3, 0);
             glyph.VerticalAlignment = VerticalAlignment.Center;
-            wing.Children.Add(glyph);
+            glyph.Tag = BadgeTag;
+            glyph.SetValue(KeyProperty, key);
+            glyph.SetValue(SignatureProperty, signature);
+            side.Items.Add(glyph);
+            if (!known.Contains(key))
+            {
+                oozing.Add((glyph, side.Right));  // a new id: it comes in (a changed badge is drawn again without motion)
+            }
         }
-        return badges.Count;
+
+        foreach (var side in sides)
+        {
+            var wing = side.Wing;
+            foreach (var child in wing.Children.OfType<FrameworkElement>().Where(e => e.Tag is BadgeTag).ToList())
+            {
+                if (!side.Items.Contains(child))
+                {
+                    wing.Children.Remove(child);
+                }
+            }
+            // The badges sit first in a left wing, and after its chips in a right wing (the chips go inside the badges).
+            var first = side.Right ? wing.Children.OfType<FrameworkElement>().Count(e => e.Tag is not BadgeTag) : 0;
+            for (var i = 0; i < side.Items.Count; i++)
+            {
+                var element = side.Items[i];
+                var current = wing.Children.IndexOf(element);
+                if (current == first + i)
+                {
+                    continue;
+                }
+                if (current >= 0)
+                {
+                    wing.Children.RemoveAt(current);
+                }
+                wing.Children.Insert(first + i, element);
+            }
+        }
+        foreach (var (element, inRightWing) in oozing)
+        {
+            PillMotion.Ooze(element, leftWing: !inRightWing, motion, animationsOn);
+        }
+        return count;
+    }
+
+    /// The badges a wing holds, by key.
+    private static Dictionary<string, FrameworkElement> Held(StackPanel wing)
+    {
+        var held = new Dictionary<string, FrameworkElement>(StringComparer.Ordinal);
+        foreach (var element in wing.Children.OfType<FrameworkElement>().Where(e => e.Tag is BadgeTag))
+        {
+            if (element.GetValue(KeyProperty) is string key)
+            {
+                held[key] = element;
+            }
+        }
+        return held;
     }
 
     /// The badge at `size` DIP square, without margins (the caller places it).

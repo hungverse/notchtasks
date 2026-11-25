@@ -1193,7 +1193,7 @@ public partial class PillWindow : Window
         _accent = (Color)ColorConverter.ConvertFromString(hex)!;
         _chosenAccent = ChosenAccent(settings);
         // The badges take the accent when they have no colour of their own, so a new accent rebuilds them too.
-        var key = hex + "|" + badges.ToJsonString();
+        var key = hex + "|" + settings.Size + "|" + badges.ToJsonString();  // a size change draws the icons again
         if (key != _badgesKey)
         {
             _badgesKey = key;
@@ -1313,7 +1313,8 @@ public partial class PillWindow : Window
     }
 
     /// The badges of the settings, in their wings. The chips go after them in RebuildChips.
-    private void RebuildBadges(JsonArray badges) => _badgeCount = BadgeGlyph.FillWings(LeftWing, RightWing, badges, _accent);
+    private void RebuildBadges(JsonArray badges) => _badgeCount = BadgeGlyph.FillWings(LeftWing, RightWing, badges, _accent,
+        PillGeometry.IconSizeFor(_state.Settings.Size), _state.Settings.Motion, SystemParameters.ClientAreaAnimation);
 
     /// The closed pill's chips, after the badges in the wings. A pill with a badge or a chip shows.
     /// The closed pill follows the wings: a chip that leaves fades first, and the pill follows it when it is gone (RetargetClosed).

@@ -8,6 +8,7 @@ using NotchTasks.ControlPanel;
 using NotchTasks.Core;
 using NotchTasks.Core.Agents;
 using NotchTasks.Core.Limits;
+using NotchTasks.Core.Motion;
 using NotchTasks.Core.Media;
 using NotchTasks.Core.Notch;
 using NotchTasks.Pill.Sections;
@@ -35,12 +36,12 @@ public static class ChipView
     /// artwork key, whether its artwork and its app icon are cached, the tint and the sides. Its position is not in it, so the chip is
     /// not rebuilt as the position moves.
     private sealed record MediaSignature(string Source, string? AppExe, string ArtKey, bool Art, bool Icon, Color Tint, bool Lead, bool Trail,
-        string Side);
+        string Side, double LeadSize);
 
     /// Any other chip's content signature: the chip record (its values, as the publish carries them), its tint, the sides, the language
     /// (its words are drawn again on a switch) and the second: a timer, a call or a limit shows the time, so the panel is rebuilt once a
     /// second at most.
-    private sealed record ChipSignature(Chip Chip, Color Tint, string Language, long Second, bool Lead, bool Trail, string Side);
+    private sealed record ChipSignature(Chip Chip, Color Tint, string Language, long Second, bool Lead, bool Trail, string Side, double LeadSize);
     private static readonly Color AskOrange = Color.FromRgb(0xFF, 0x9F, 0x0A);
     private static readonly Color CallGreen = Color.FromRgb(0x30, 0xD1, 0x58);  // the Mac's green: a call's time
     private static readonly Color CallRed = Color.FromRgb(0xFF, 0x45, 0x3A);    // the Mac's red: a call's time while muted
@@ -50,10 +51,10 @@ public static class ChipView
     /// badges by tool, which a build chip's lead uses.
     public static FrameworkElement? Panel(Chip chip, Color? accent, IReadOnlyDictionary<string, string> moduleColors,
         DateTimeOffset now, bool lead, bool trail, IProcessReader? processes = null, IReadOnlyDictionary<string, JsonObject>? toolIcons = null,
-        Func<string, ImageSource?>? art = null)
+        Func<string, ImageSource?>? art = null, double leadSize = 18)
     {
         var panel = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(3, 0, 3, 0) };
-        if (lead && Lead(chip, 18, accent, moduleColors, processes, toolIcons, art) is { } leadElement)
+        if (lead && Lead(chip, leadSize, accent, moduleColors, processes, toolIcons, art) is { } leadElement)
         {
             panel.Children.Add(leadElement);
         }
@@ -294,7 +295,7 @@ public static class ChipView
     public static int FillWings(StackPanel left, StackPanel right, AppState state, Color? accent, Action? removed = null) =>
         Fill(left, right, ChipBoard.Chips(state.Snapshot), state.Settings.Placements, state.Settings.ModuleColors, accent,
             DateTimeOffset.Now, state.Processes, state.Settings.ToolIcons, state.Settings.Motion, SystemParameters.ClientAreaAnimation,
-            state.MediaArt, removed);
+            state.MediaArt, removed, PillGeometry.IconSizeFor(state.Settings.Size));
 
     /// True when the chips make the one-activity case: a lone chip is split into its lead (left) and its trail (right). The
     /// closed pill's wings are then 5 DIP apart, not 10 (the Mac's single-chip HStack spacing).
@@ -307,23 +308,23 @@ public static class ChipView
     public static int Fill(StackPanel left, StackPanel right, IReadOnlyList<Chip> chips, IReadOnlyDictionary<string, string> placements,
         IReadOnlyDictionary<string, string> colors, Color? accent, DateTimeOffset now, IProcessReader? processes,
         IReadOnlyDictionary<string, JsonObject>? toolIcons = null, string motion = "smooth", bool animationsOn = true,
-        Func<string, ImageSource?>? art = null, Action? removed = null)
+        Func<string, ImageSource?>? art = null, Action? removed = null, double leadSize = 18)
     {
         var (leftChips, rightChips, single) = ChipBoard.Sides(chips, placements);
         var leftPanels = new List<ChipSlot>();
         var rightPanels = new List<ChipSlot>();
         if (single is { } lone)
         {
-            Collect(left, leftPanels, lone, accent, colors, now, lead: true, trail: false, side: "L", processes, toolIcons, art);
-            Collect(right, rightPanels, lone, accent, colors, now, lead: false, trail: true, side: "R", processes, toolIcons, art);
+            Collect(left, leftPanels, lone, accent, colors, now, lead: true, trail: false, side: "L", processes, toolIcons, art, leadSize);
+            Collect(right, rightPanels, lone, accent, colors, now, lead: false, trail: true, side: "R", processes, toolIcons, art, leadSize);
         }
         foreach (var chip in leftChips)
         {
-            Collect(left, leftPanels, chip, accent, colors, now, lead: true, trail: true, side: "L", processes, toolIcons, art);
+            Collect(left, leftPanels, chip, accent, colors, now, lead: true, trail: true, side: "L", processes, toolIcons, art, leadSize);
         }
         foreach (var chip in rightChips)
         {
-            Collect(right, rightPanels, chip, accent, colors, now, lead: true, trail: true, side: "R", processes, toolIcons, art);
+            Collect(right, rightPanels, chip, accent, colors, now, lead: true, trail: true, side: "R", processes, toolIcons, art, leadSize);
         }
         Reconcile(left, leftPanels, rightWing: false, motion, animationsOn, removed);
         Reconcile(right, rightPanels, rightWing: true, motion, animationsOn, removed);
@@ -338,16 +339,16 @@ public static class ChipView
     /// already holds for that chip is kept, with no new panel, when its signature is unchanged.
     private static void Collect(StackPanel wing, List<ChipSlot> panels, Chip chip, Color? accent,
         IReadOnlyDictionary<string, string> colors, DateTimeOffset now, bool lead, bool trail, string side,
-        IProcessReader? processes, IReadOnlyDictionary<string, JsonObject>? toolIcons, Func<string, ImageSource?>? art)
+        IProcessReader? processes, IReadOnlyDictionary<string, JsonObject>? toolIcons, Func<string, ImageSource?>? art, double leadSize)
     {
         var key = $"{chip.Kind}|{chip.Module}|{chip.Id}|{side}";
-        var signature = SignatureOf(chip, accent, colors, now, lead, trail, side, art);
+        var signature = SignatureOf(chip, accent, colors, now, lead, trail, side, art, leadSize);
         if (signature is not null && HeldPanel(wing, key) is { } held && Equals(held.GetValue(SignatureProperty), signature))
         {
             panels.Add(new ChipSlot(key, held, signature));
             return;
         }
-        if (Panel(chip, accent, colors, now, lead, trail, processes, toolIcons, art) is { } panel)
+        if (Panel(chip, accent, colors, now, lead, trail, processes, toolIcons, art, leadSize) is { } panel)
         {
             panel.Tag = ChipTag;
             panels.Add(new ChipSlot(key, panel, signature));
@@ -357,7 +358,7 @@ public static class ChipView
     /// The content signature of a chip's panel, or null when the panel is always rebuilt: an agent's and a build's lead is its item icon,
     /// which reads the live processes, so it is never kept.
     private static object? SignatureOf(Chip chip, Color? accent, IReadOnlyDictionary<string, string> colors, DateTimeOffset now,
-        bool lead, bool trail, string side, Func<string, ImageSource?>? art)
+        bool lead, bool trail, string side, Func<string, ImageSource?>? art, double leadSize)
     {
         var tint = TintOf(chip, accent, colors);
         if (chip.Kind == ChipKind.Media && chip.Media is { } playing)
@@ -365,13 +366,13 @@ public static class ChipView
             var artKey = playing.ArtworkKey ?? string.Empty;
             var artCached = playing.ArtworkKey is { } key && art?.Invoke(key) is not null;
             var iconCached = playing.AppExe is { } exe && ItemIcon.HasExeIcon(exe);
-            return new MediaSignature(playing.Source, playing.AppExe, artKey, artCached, iconCached, tint, lead, trail, side);
+            return new MediaSignature(playing.Source, playing.AppExe, artKey, artCached, iconCached, tint, lead, trail, side, leadSize);
         }
         if (chip.Kind == ChipKind.Agent)
         {
             return null;
         }
-        return new ChipSignature(chip, tint, L10n.Current, now.ToUnixTimeSeconds(), lead, trail, side);
+        return new ChipSignature(chip, tint, L10n.Current, now.ToUnixTimeSeconds(), lead, trail, side, leadSize);
     }
 
     /// The panel a wing holds for a chip key, when it is not leaving; null when there is none.
