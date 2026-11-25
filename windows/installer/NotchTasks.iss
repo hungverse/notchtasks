@@ -116,7 +116,7 @@ const
 // The image-name filter with the user filter: only this user's NotchTasks.exe counts (another signed-in user's copy is theirs).
 function UserFilter(): String;
 begin
-  Result := ' /FI "USERNAME eq ' + ExpandConstant('{username}') + '"';
+  Result := ' /FI "USERNAME eq ' + GetUserNameString() + '"';
 end;
 
 // True while this user's process named NotchTasks.exe is listed (find exits 0 only when it finds the image name).
