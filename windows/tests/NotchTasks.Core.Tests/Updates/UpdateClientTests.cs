@@ -71,6 +71,28 @@ public sealed class UpdateClientTests : IDisposable
     }
 
     [Fact]
+    public async Task CheckAsync_BodyWithUtf8ByteOrderMark_IsOffered()
+    {
+        // Windows PowerShell's Out-File -Encoding utf8 writes a BOM; the feed must still be read.
+        var body = new byte[] { 0xEF, 0xBB, 0xBF }.Concat(Manifest(build: 5)).ToArray();
+        var client = new UpdateClient(new FakeHandler(_ => Bytes(body)));
+
+        var m = await client.CheckAsync(Feed, 4, Windows11, CancellationToken.None);
+
+        Assert.NotNull(m);
+        Assert.Equal(5, m!.Build);
+    }
+
+    [Fact]
+    public async Task CheckAsync_BodyWithDuplicateKeys_IsNoUpdate()
+    {
+        var body = Encoding.UTF8.GetBytes("{\"version\":\"2.3.0\",\"version\":\"2.3.1\"}");
+        var client = new UpdateClient(new FakeHandler(_ => Bytes(body)));
+
+        Assert.Null(await client.CheckAsync(Feed, 4, Windows11, CancellationToken.None));
+    }
+
+    [Fact]
     public async Task CheckAsync_BodyOver64KiB_IsNoUpdate()
     {
         // A valid entry that is only too long: without the cap it would be offered.

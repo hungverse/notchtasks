@@ -11,14 +11,19 @@ The https URL the setup will be published at, e.g. https://notchtasks.web.app/do
 .PARAMETER Notes
 Optional JSON file of release notes: { "<lang>": "text", ... }. Default: { "en": "NotchTasks <version>." }
 
+.PARAMETER OutFile
+Optional file to write the entry to, as UTF-8 without a byte order mark. Use it instead of `>` or Out-File: Windows PowerShell 5.1
+writes UTF-16 or a BOM there, and the update clients then read no update at all.
+
 .EXAMPLE
-.\manifest.ps1 -Installer .\out\NotchTasks-3.0.0-win-x64-setup.exe -Url https://notchtasks.web.app/download/NotchTasks-3.0.0-win-x64-setup.exe
+.\manifest.ps1 -Installer .\out\NotchTasks-3.0.0-win-x64-setup.exe -Url https://notchtasks.web.app/download/NotchTasks-3.0.0-win-x64-setup.exe -OutFile .\out\version-win.json
 #>
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)][string]$Installer,
     [Parameter(Mandatory)][string]$Url,
-    [string]$Notes
+    [string]$Notes,
+    [string]$OutFile
 )
 
 $ErrorActionPreference = 'Stop'
@@ -64,4 +69,12 @@ $manifest = [ordered]@{
     notes   = $notesObject
 }
 
-$manifest | ConvertTo-Json -Depth 5
+$json = $manifest | ConvertTo-Json -Depth 5
+if (-not $OutFile) {
+    $json
+    return
+}
+$outPath = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($OutFile)
+# UTF-8 without a BOM: the update clients read the feed as UTF-8 text, and a BOM would look like no update at all.
+[IO.File]::WriteAllText($outPath, $json + [Environment]::NewLine, [Text.UTF8Encoding]::new($false))
+Write-Host "Wrote $outPath"

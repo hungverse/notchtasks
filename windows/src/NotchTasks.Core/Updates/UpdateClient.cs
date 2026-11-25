@@ -120,11 +120,27 @@ public sealed class UpdateClient
         {
             return null;
         }
+        // A UTF-8 byte order mark (a feed written by Windows PowerShell) is skipped; the decoder keeps it as U+FEFF otherwise.
+        var text = Encoding.UTF8.GetString(body);
+        if (text.Length > 0 && text[0] == '﻿')
+        {
+            text = text[1..];
+        }
         try
         {
-            return JsonNode.Parse(Encoding.UTF8.GetString(body));
+            var node = JsonNode.Parse(text);
+            // A duplicate key throws only when its object is read, so read the top level here: such a feed is then "no update", as
+            // other text that is not JSON is.
+            if (node is JsonObject top)
+            {
+                foreach (var property in top)
+                {
+                    _ = property.Key;
+                }
+            }
+            return node;
         }
-        catch (JsonException)
+        catch (Exception e) when (e is JsonException or ArgumentException)
         {
             return null;
         }
