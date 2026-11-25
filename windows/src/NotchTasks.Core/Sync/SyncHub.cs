@@ -8,6 +8,7 @@ namespace NotchTasks.Core.Sync;
 /// The PC's side of phone sync: the cloud half of SyncHub in electron/src/core/sync.js (the Mac's Sources/Sync.swift). It holds the
 /// group and its pairing, Pro, the snapshot written to Firebase, the answers stream and problem reports. State sits behind _gate and
 /// is never touched while a network call is awaited; events are queued under _gate and raised by Flush after it is released.
+/// Its awaits continue on the caller's context (no ConfigureAwait), so a caller must not block on them.
 public sealed partial class SyncHub : IAsyncDisposable
 {
     /// The Mac app's Firebase client config (Config/GoogleService-Info.plist): public by design, the rules guard the data.

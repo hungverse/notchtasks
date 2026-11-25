@@ -79,13 +79,20 @@ public sealed class DnsSdAdvertiser : IServiceAdvertiser
         _current = null;
         try
         {
-            registration.PrepareDeregister();
-            var status = DnsSdNative.DnsServiceDeRegister(registration.Request, IntPtr.Zero);
-            if (status is not 0 and not DnsRequestPending)
+            var status = registration.Deregister();
+            if (status is null)
             {
-                _log($"mDNS: deregistration refused (status {status})");
-                registration.Release();
+                return; // a registration that failed was freed when it failed: nothing to deregister
             }
+            if (status.Value == DnsRequestPending)
+            {
+                return; // the deregistration callback frees it
+            }
+            if (status.Value != 0)
+            {
+                _log($"mDNS: deregistration refused (status {status.Value})");
+            }
+            registration.Release(); // dnsapi is done with it at once (sync status), so no callback will come
         }
         catch (Exception e) when (e is EntryPointNotFoundException or DllNotFoundException)
         {
@@ -132,6 +139,8 @@ public sealed class DnsSdAdvertiser : IServiceAdvertiser
         private nint _hostName;
         private nint _instance;
         private GCHandle _context;
+        private readonly object _state = new(); // the memory is freed once, by whichever side finishes last
+        private bool _freed;
 
         /// The DNS_SERVICE_REGISTER_REQUEST in unmanaged memory (what dnsapi is given).
         public nint Request;
@@ -152,24 +161,45 @@ public sealed class DnsSdAdvertiser : IServiceAdvertiser
             WriteRequest(DnsSdNative.RegisterCallbackPointer);
         }
 
-        public void PrepareDeregister() => WriteRequest(DnsSdNative.DeregisterCallbackPointer);
+        /// Starts the deregistration with dnsapi. Returns its status, or null when the memory is already freed (the registration
+        /// failed, so there is nothing to deregister).
+        public uint? Deregister()
+        {
+            lock (_state)
+            {
+                if (_freed)
+                {
+                    return null;
+                }
+                WriteRequest(DnsSdNative.DeregisterCallbackPointer);
+                return DnsSdNative.DnsServiceDeRegister(Request, IntPtr.Zero);
+            }
+        }
 
         public void Log(string text) => log(text);
 
         public static Registration? FromContext(nint context) =>
             context == IntPtr.Zero ? null : GCHandle.FromIntPtr(context).Target as Registration;
 
-        /// Frees the unmanaged memory and the context handle. Called once the native side is done with them.
+        /// Frees the unmanaged memory and the context handle. Called once the native side is done with them. Safe to call twice.
         public void Release()
         {
-            if (_context.IsAllocated)
+            lock (_state)
             {
-                _context.Free();
+                if (_freed)
+                {
+                    return;
+                }
+                _freed = true;
+                if (_context.IsAllocated)
+                {
+                    _context.Free();
+                }
+                FreeIfSet(ref Request);
+                FreeIfSet(ref _instance);
+                FreeIfSet(ref _instanceName);
+                FreeIfSet(ref _hostName);
             }
-            FreeIfSet(ref Request);
-            FreeIfSet(ref _instance);
-            FreeIfSet(ref _instanceName);
-            FreeIfSet(ref _hostName);
         }
 
         private void WriteRequest(nint callback) =>
@@ -213,14 +243,24 @@ internal static partial class DnsSdNative
     [LibraryImport("dnsapi.dll", EntryPoint = "DnsServiceDeRegister")]
     public static partial uint DnsServiceDeRegister(nint request, nint cancel);
 
+    [LibraryImport("dnsapi.dll", EntryPoint = "DnsServiceFreeInstance")]
+    public static partial void DnsServiceFreeInstance(nint instance);
+
     // Callbacks run on a dnsapi thread. An exception that escapes into native code would end the process, so nothing escapes.
     private static void OnRegisterComplete(uint status, nint context, nint instance)
     {
         try
         {
+            if (instance != IntPtr.Zero)
+            {
+                DnsServiceFreeInstance(instance); // dnsapi's copy of the instance is ours to free
+            }
             if (status != 0)
             {
-                DnsSdAdvertiser.Registration.FromContext(context)?.Log($"mDNS: registration failed (status {status})");
+                // a failed registration gets no deregistration, so its memory is released here
+                var registration = DnsSdAdvertiser.Registration.FromContext(context);
+                registration?.Log($"mDNS: registration failed (status {status})");
+                registration?.Release();
             }
         }
         catch (Exception)

@@ -184,7 +184,7 @@ public sealed class SyncBridgeTests
         {
             using var root = new TempRoot();
             var settings = SettingsStore.Load(AppPaths.SettingsFile);
-            using var rig = new Rig(settings, paired: false);
+            using var rig = new Rig(settings, paired: true); // the input is built only while paired
             var app = rig.App;
             app.Bridge!.StartAsync();
             Fixture.PumpUntil(() => app.Bridge!.LastInput is not null);
@@ -207,7 +207,7 @@ public sealed class SyncBridgeTests
         {
             using var root = new TempRoot();
             var settings = SettingsStore.Load(AppPaths.SettingsFile);
-            using var rig = new Rig(settings, paired: false);
+            using var rig = new Rig(settings, paired: true); // the input is built only while paired
             var app = rig.App;
             app.Bridge!.StartAsync();
             Fixture.PumpUntil(() => app.Bridge!.LastInput is not null);

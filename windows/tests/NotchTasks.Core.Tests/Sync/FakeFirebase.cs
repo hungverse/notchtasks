@@ -39,6 +39,12 @@ internal sealed class FakeFirebase : ISyncHttp
     /// With FailStreamOpens: the failing open waits until the hub stops, then fails (a stream failure that races the stop).
     public bool FailStreamAfterStop { get; set; }
 
+    /// The status a failing stream open answers with (a 401 or 403 refuses the token).
+    public HttpStatusCode StreamFailureStatus { get; set; } = HttpStatusCode.ServiceUnavailable;
+
+    /// Each token renewal answers a new token (tok-2, tok-3, ...), so a test can tell which one a request used.
+    private int _renewals;
+
     /// The writer of the answers stream that was opened last. Null until a stream is open.
     public PipeWriter? Events
     {
@@ -123,7 +129,7 @@ internal sealed class FakeFirebase : ISyncHttp
                 _streamFailures--;
                 return FailStreamAfterStop
                     ? FailWhenStoppedAsync(ct)
-                    : Task.FromException<Stream>(new HttpRequestException("stream failed", null, HttpStatusCode.ServiceUnavailable));
+                    : Task.FromException<Stream>(new HttpRequestException("stream failed", null, StreamFailureStatus));
             }
         }
         var pipe = new Pipe();
@@ -173,7 +179,7 @@ internal sealed class FakeFirebase : ISyncHttp
         }
         if (url.Contains("securetoken", StringComparison.Ordinal))
         {
-            return Ok("{\"id_token\":\"tok-2\"}");
+            return Ok($"{{\"id_token\":\"tok-{Interlocked.Increment(ref _renewals) + 1}\"}}");
         }
         if (url.Contains("/entitlement.json", StringComparison.Ordinal))
         {

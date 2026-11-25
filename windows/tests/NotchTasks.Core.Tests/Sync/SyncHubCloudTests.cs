@@ -324,6 +324,23 @@ public sealed class SyncHubCloudTests
         await rig.Hub.StopAsync();
     }
 
+    [Theory]
+    [InlineData(401)]
+    [InlineData(403)]
+    public async Task StreamRefused_ClearsTheToken_AndTheReopenRenewsIt(int status)
+    {
+        await using var rig = new Rig(group: true);
+        rig.Fb.FailStreamOpens(1);
+        rig.Fb.StreamFailureStatus = (System.Net.HttpStatusCode)status;
+
+        await rig.Hub.StartAsync();
+        await WaitFor(() => StreamOpens(rig) == 2);
+
+        var urls = rig.Fb.Calls.Where(c => c.ContentType == "text/event-stream").Select(c => c.Url).ToList();
+        Assert.NotEqual(urls[0], urls[1]); // the refused token was dropped, so the reopen uses a renewed one
+        await rig.Hub.StopAsync();
+    }
+
     [Fact]
     public async Task WriteFails_ProblemIsSet_ThenClearedOnTheNextSuccess()
     {

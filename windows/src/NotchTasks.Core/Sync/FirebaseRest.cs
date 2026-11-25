@@ -1,3 +1,5 @@
+using System.Net;
+using System.Net.Http;
 using System.Text.Json.Nodes;
 
 namespace NotchTasks.Core.Sync;
@@ -93,11 +95,20 @@ internal sealed class FirebaseRest
         return res.Body;
     }
 
-    /// Opens the answers stream of the group: `{db}/groups/{g}/answers.json`, with a fresh ID token.
+    /// Opens the answers stream of the group: `{db}/groups/{g}/answers.json`, with a fresh ID token. A 401 or 403 from the stream
+    /// forgets the token like a REST 401, so the reopen renews it.
     public async Task<Stream> OpenAnswersAsync(string refresh, string groupId, CancellationToken ct)
     {
         var token = await IdTokenAsync(refresh, ct);
-        return await _http.OpenEventStreamAsync($"{_db}/groups/{groupId}/answers.json?auth={token}", ct);
+        try
+        {
+            return await _http.OpenEventStreamAsync($"{_db}/groups/{groupId}/answers.json?auth={token}", ct);
+        }
+        catch (HttpRequestException e) when (e.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
+        {
+            ClearToken();
+            throw;
+        }
     }
 
     /// Forgets the ID token (after a 401, or when the stream says the session was revoked).

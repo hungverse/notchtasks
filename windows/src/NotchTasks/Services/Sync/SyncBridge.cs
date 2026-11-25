@@ -58,8 +58,13 @@ public sealed class SyncBridge : IAsyncDisposable
         _state = hub.State;
         hub.StateChanged += state => Post(() =>
         {
+            var becamePaired = state.Paired && !_state.Paired;
             _state = state;
             Changed?.Invoke();
+            if (becamePaired)
+            {
+                Update(); // the phones get the app's state as soon as the PC is paired, not at the next publish
+            }
         });
         hub.Answered += answer => Post(() => OnAnswer(answer));
         hub.ProNote += text => Post(() => _app.Announce(new Toast("sparkles", ProNoteTint, text, Event: null), notify: false));
@@ -133,10 +138,10 @@ public sealed class SyncBridge : IAsyncDisposable
     }
 
     /// Sends the app's state to the hub: called at the end of every publish. Building the input is cheap; the hub ignores an
-    /// unchanged state.
+    /// unchanged state. Unpaired, nothing goes to a phone, so the input is not built.
     public void Update()
     {
-        if (_disposed || !_running)
+        if (_disposed || !_running || Hub.Group is null)
         {
             return;
         }
