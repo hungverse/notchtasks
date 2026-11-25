@@ -55,20 +55,25 @@ public partial class App : System.Windows.Application
         AppDomain.CurrentDomain.UnhandledException += (_, args) =>
             ErrorLog.Write(args.ExceptionObject as Exception ?? new Exception(args.ExceptionObject.ToString()));
 
-        // Before anything else: a second launch exits at once and creates nothing. First it asks the first instance to show
-        // its window (the guide, or the Control Panel).
-        _instance = new SingleInstance();
-        // `--quit` (the installer, before it installs or removes the app) comes next, before anything starts. A running app is
-        // asked to quit, through its normal exit path, and this process waits up to 5 s for it to exit. With no app running,
-        // there is nothing to quit: this process exits at once, holding nothing.
+        // `--quit` (the installer, before it installs or removes the app) comes first. A running app is asked to quit, through its
+        // normal exit path, and this process waits up to 5 s for it to exit. With no app running, there is nothing to quit: this
+        // process exits at once, holding nothing. It always exits 0: the installer waits for it, and a dialog would hang that.
         if (e.Args.Contains("--quit"))
         {
-            if (!_instance.IsFirst)
-            {
-                _instance.SignalQuit();
-                _instance.WaitForFirstExit(TimeSpan.FromSeconds(5));
-            }
+            QuitRunningApp();
             Shutdown(0);
+            return;
+        }
+        // Before anything else: a second launch exits at once and creates nothing. First it asks the first instance to show
+        // its window (the guide, or the Control Panel).
+        try
+        {
+            _instance = new SingleInstance();
+        }
+        catch (Exception ex)
+        {
+            ErrorLog.Write(ex);
+            Shutdown(1);
             return;
         }
         if (!_instance.IsFirst)
@@ -88,6 +93,25 @@ public partial class App : System.Windows.Application
             // A failed start must not leave an invisible app holding the mutex: log it and exit with code 1.
             ErrorLog.Write(ex);
             Shutdown(1);
+        }
+    }
+
+    /// The installer's `--quit`: asks the running app to quit and waits up to 5 s for it. Never throws, so the process always exits 0
+    /// without a crash dialog.
+    private static void QuitRunningApp()
+    {
+        try
+        {
+            using var instance = new SingleInstance();
+            if (!instance.IsFirst)
+            {
+                instance.SignalQuit();
+                instance.WaitForFirstExit(TimeSpan.FromSeconds(5));
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorLog.Write(ex);
         }
     }
 
