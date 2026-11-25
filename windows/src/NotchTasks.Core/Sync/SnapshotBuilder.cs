@@ -197,7 +197,7 @@ public sealed class SnapshotBuilder
     private static string IconText(JsonObject? icon) => icon is null ? "" : SyncJson.Write(icon);
 
     /// JavaScript's Number() for what the entitlement carries: a number, or numeric text. Anything else is NaN.
-    private static double JsNumber(JsonNode? n)
+    internal static double JsNumber(JsonNode? n)
     {
         if (n is not JsonValue v)
         {

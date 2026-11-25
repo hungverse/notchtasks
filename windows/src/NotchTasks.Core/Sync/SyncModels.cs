@@ -81,3 +81,23 @@ public sealed record SyncInput(
 
 /// What the push function is told about the agents at work: Count, the oldest run's At, and Stamp (when the signal was last sent), all in ms since 1970.
 public sealed record CrewSig(int Count, double At, double Stamp);
+
+/// The Pro note the group last had (why: moved, refunded or expired) and when it was made (ms since 1970).
+public sealed record ProNoteInfo(string Why, double At);
+
+/// What the Pairing pane shows: whether the group exists, its phones by uid, the LAN phone count, the last problem, the Pro state
+/// (ProUntil in ms, ProHolders the uids with a grant), the Pro note, and the two switches.
+public sealed record SyncState(
+    bool Paired,
+    IReadOnlyDictionary<string, string> Phones,
+    int LanPhones,
+    string? Problem,
+    bool Pro,
+    double? ProUntil,
+    IReadOnlyList<string> ProHolders,
+    ProNoteInfo? ProNote,
+    bool Lan,
+    bool OnlyAway);
+
+/// The details of a problem report that come from this PC (the app's version, build, Windows version and language).
+public sealed record ReportInfo(string Version, string Build, string Os, string Lang);
