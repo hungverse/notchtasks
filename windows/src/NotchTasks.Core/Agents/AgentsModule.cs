@@ -290,7 +290,8 @@ public sealed class AgentsModule
                 Title: L10n.L("{0} done", w.Item.Name),
                 Subtitle: $"{w.Title} · {Ago.Text(took)}",
                 Event: "taskDone",
-                Module: _build ? "ci" : "agents"));
+                Module: _build ? "ci" : "agents",
+                ToPhone: true));
         }
     }
 

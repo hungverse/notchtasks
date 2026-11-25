@@ -15,7 +15,8 @@ public sealed record Toast(
     string? Action = null,
     string? Pane = null,
     string? AskId = null,
-    string? Module = null)
+    string? Module = null,
+    bool ToPhone = false)
 {
     /// Set at construction, so each toast is distinct even when its texts are equal.
     public Guid Id { get; } = Guid.NewGuid();

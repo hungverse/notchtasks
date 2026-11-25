@@ -282,6 +282,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         }
         Snapshot = BuildSnapshot();
         LoadChanged?.Invoke();
+        Bridge?.Update();  // the phone gets the load too (the input reads Snapshot.Load)
     }
 
     /// The thermal feed's reading changed (null when none is shown). Only the header reads it.
@@ -293,6 +294,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         }
         Thermal = reading;
         ThermalChanged?.Invoke();
+        Bridge?.Update();  // the phone gets the temperature too (the input reads Thermal)
     }
 
     /// The power status changed (the AC line or the battery): the battery reads it now, while the battery module is on.

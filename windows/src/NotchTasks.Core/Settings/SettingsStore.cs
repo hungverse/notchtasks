@@ -427,6 +427,22 @@ public sealed class SettingsStore : INotifyPropertyChanged, IDisposable
         return null;
     }
 
+    /// Saves the notch's badges (settings "badges") from a list that came from outside, such as the phone: each badge goes through
+    /// the same check SetToolIcon uses, and a badge that fails it is dropped. Returns how many were saved.
+    public int SetBadges(IEnumerable<JsonObject> badges)
+    {
+        var clean = new JsonArray();
+        foreach (var badge in badges)
+        {
+            if (CheckBadge(badge, out var checkedBadge) is null)
+            {
+                clean.Add((JsonNode?)checkedBadge);
+            }
+        }
+        Set("badges", clean);
+        return clean.Count;
+    }
+
     /// The badge check of electron/src/core/settings.js (badge): every field is kept with its default. Returns null when the
     /// badge passes, else the field that does not; clean is the checked badge.
     private static string? CheckBadge(JsonObject badge, out JsonObject clean)

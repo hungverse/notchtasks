@@ -481,7 +481,8 @@ public sealed class CiModule
                 Title: L10n.L("{0} done", w.Title),
                 Subtitle: Ago.Text(took),
                 Event: "taskDone",
-                Module: ModuleId));
+                Module: ModuleId,
+                ToPhone: true));
         }
     }
 

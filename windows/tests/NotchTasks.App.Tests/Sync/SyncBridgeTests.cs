@@ -154,6 +154,71 @@ public sealed class SyncBridgeTests
     }
 
     [Fact]
+    public void ApplyNotch_DropsAnInvalidBadgeAndToolIcon_FromThePhone()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            var settings = SettingsStore.Load(AppPaths.SettingsFile);
+            settings.Set("seenTools", JsonNode.Parse("[\"Claude\"]"));
+            var notch = JsonNode.Parse(
+                """
+                {"badges":[{"id":"BAD","symbol":"star","shape":5},{"id":"OK","symbol":"star","shape":"circle"},
+                           {"id":"FR","symbol":"star","frames":4}],
+                 "toolIcons":{"Claude":{"id":"T3","symbol":"star","shape":5}}}
+                """)!.AsObject();
+
+            SyncBridge.ApplyNotch(settings, notch);
+
+            // BAD has a field of the wrong type and is not stored; FR has frames but no picture this PC holds; OK is the only one kept
+            var badge = Assert.Single(settings.Badges);
+            Assert.Equal("OK", badge!["id"]!.GetValue<string>());
+            Assert.Empty(settings.ToolIcons);
+        });
+    }
+
+    [Fact]
+    public void LoadPath_UpdatesTheInputTheHubIsGiven()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            var settings = SettingsStore.Load(AppPaths.SettingsFile);
+            using var rig = new Rig(settings, paired: false);
+            var app = rig.App;
+            app.Bridge!.StartAsync();
+            Fixture.PumpUntil(() => app.Bridge!.LastInput is not null);
+
+            // the first sample is the baseline; the second is 50 % busy over the interval (idle 50 of 100)
+            app.Health.Sample(new CpuTimes(0, 0, 0), 0.4);
+            app.Health.Sample(new CpuTimes(50, 50, 50), 0.4);
+            Fixture.Call(app, "PublishLoad");
+
+            var health = app.Bridge!.LastInput!.Health!;
+            Assert.Equal(0.5, health.Cpu);
+            Assert.Equal(0.4, health.Memory);
+        });
+    }
+
+    [Fact]
+    public void ThermalPath_UpdatesTheInputTheHubIsGiven()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            var settings = SettingsStore.Load(AppPaths.SettingsFile);
+            using var rig = new Rig(settings, paired: false);
+            var app = rig.App;
+            app.Bridge!.StartAsync();
+            Fixture.PumpUntil(() => app.Bridge!.LastInput is not null);
+
+            Fixture.Call(app, "PublishThermal", new ThermalReading("CPU", 80.0));
+
+            Assert.Equal(80.0, app.Bridge!.LastInput!.Health!.Temp);
+        });
+    }
+
+    [Fact]
     public void PhoneAnswer_Allow_AnswersTheAsk()
     {
         Sta.Run(() =>

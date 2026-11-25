@@ -135,19 +135,23 @@ public sealed class SyncBridge : IAsyncDisposable
         {
             return;
         }
-        Hub.Update(InputOf(_app.Snapshot, _app.Asks, _app.Thermal, _app.Settings));
+        var input = InputOf(_app.Snapshot, _app.Asks, _app.Thermal, _app.Settings);
+        LastInput = input;
+        Hub.Update(input);
     }
 
+    /// The input the bridge last sent the hub (null until the first update). Tests read it to see what the phone is given.
+    internal SyncInput? LastInput { get; private set; }
+
     /// A notice worth knowing on the phone: the toast's event, title and subtitle. A toast with no event is not for the phone. A done
-    /// toast of an agent or a build goes to the phone (Electron toPhone); the other kinds reach it only as the hub decides.
+    /// toast of an agent or a build is sent to the phone (its ToPhone, Electron toPhone); the other kinds reach it only as the hub decides.
     public void Record(Toast t)
     {
         if (_disposed || t.Event is not { } kind)
         {
             return;
         }
-        var toPhone = kind == "taskDone" && t.Module is not null;
-        Hub.Record(kind, t.Title, t.Subtitle, toPhone);
+        Hub.Record(kind, t.Title, t.Subtitle, t.ToPhone);
     }
 
     /// Saves the LAN switch (state.json syncLAN) and applies it to the hub.
@@ -188,9 +192,11 @@ public sealed class SyncBridge : IAsyncDisposable
         }
         _disposed = true;
         _running = false;
+        // StopAsync completes at once today. It is not awaited here (the UI thread must not block on it), so a fault it reports
+        // later is observed and logged instead of being dropped; a synchronous throw is logged here.
         try
         {
-            Hub.StopAsync();
+            _ = Hub.StopAsync().ContinueWith(t => ErrorLog.Write(t.Exception!), TaskContinuationOptions.OnlyOnFaulted);
         }
         catch (Exception e)
         {
@@ -358,45 +364,80 @@ public sealed class SyncBridge : IAsyncDisposable
             TrySet(s, key, clean);
         }
 
+        // Badges go through the settings' badge check (SetBadges drops an invalid one); tool icons through SetToolIcon, one by one.
         if (n["badges"] is JsonArray badges)
         {
             var current = s.Badges.OfType<JsonObject>().ToList();
-            var kept = new JsonArray();
+            var kept = new List<JsonObject>();
             foreach (var node in badges)
             {
                 if (node is JsonObject badge && KeepPicture(badge, current))
                 {
-                    kept.Add(badge.DeepClone());
+                    kept.Add((JsonObject)badge.DeepClone());
                 }
             }
-            TrySet(s, "badges", kept);
+            try
+            {
+                s.SetBadges(kept);
+            }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+            {
+                ErrorLog.Write(new IOException("NotchTasks: could not save the phone's badges", e));
+            }
         }
 
         if (n["toolIcons"] is JsonObject tools)
         {
             var seen = s.SeenTools;
             var current = s.ToolIcons.Values.ToList();
-            var kept = new JsonObject();
+            var kept = new Dictionary<string, JsonObject>(StringComparer.Ordinal);
             foreach (var (tool, node) in tools)
             {
                 if (node is JsonObject badge && seen.Contains(tool) && KeepPicture(badge, current))
                 {
-                    kept[tool] = badge.DeepClone();
+                    kept[tool] = (JsonObject)badge.DeepClone();
                 }
             }
-            TrySet(s, "toolIcons", kept);
+            // The map is replaced as the phone sent it: a tool the phone no longer names loses its icon.
+            foreach (var tool in s.ToolIcons.Keys.Where(t => !kept.ContainsKey(t)).ToList())
+            {
+                TrySetToolIcon(s, tool, null);
+            }
+            foreach (var (tool, badge) in kept)
+            {
+                TrySetToolIcon(s, tool, badge);  // a badge the check refuses is not saved, and the old one stays
+            }
         }
     }
 
-    /// A badge with a picture is kept only when a kept badge holds the same picture (Electron keepPicture).
-    private static bool KeepPicture(JsonObject badge, IEnumerable<JsonObject> kept)
+    /// A badge with a picture is kept only when a current badge holds the same picture: the same image (a missing image never
+    /// matches a missing image) and the same frames. Electron's keepPicture matched on the image alone; here a badge that has
+    /// frames but no image has no picture this PC can match, so it is dropped.
+    private static bool KeepPicture(JsonObject badge, IEnumerable<JsonObject> current)
     {
         if (badge["image"] is null && badge["frames"] is null)
         {
             return true;
         }
         var image = TextOf(badge["image"]);
-        return kept.Any(x => TextOf(x["image"]) == image);
+        if (image is null)
+        {
+            return false;
+        }
+        return current.Any(x => TextOf(x["image"]) == image && JsonNode.DeepEquals(x["frames"], badge["frames"]));
+    }
+
+    /// Saves one tool's icon through the settings (SetToolIcon). A file that cannot be written is logged and the icon stays as it was.
+    private static void TrySetToolIcon(SettingsStore s, string tool, JsonObject? badge)
+    {
+        try
+        {
+            _ = s.SetToolIcon(tool, badge);
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            ErrorLog.Write(new IOException($"NotchTasks: could not save the phone's tool icon for {tool}", e));
+        }
     }
 
     /// The value the notch takes for a key, clamped or filtered as the settings take it; null when this PC does not take it.
