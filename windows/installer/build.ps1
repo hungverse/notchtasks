@@ -42,6 +42,8 @@ if ($Version -notmatch '^\d+\.\d+\.\d+$') {
 if (-not $Out) { $Out = Join-Path $installerDir 'out' }
 $Out = [IO.Path]::GetFullPath($Out)
 $stage = Join-Path $Out 'stage'
+# Every publish gets the same version, so the app, the helper and the hook agree with the setup and the feed entry.
+$versionProperty = "-p:Version=$Version"
 
 function Invoke-Dotnet {
     param([string[]]$Arguments)
@@ -50,6 +52,24 @@ function Invoke-Dotnet {
     if ($LASTEXITCODE -ne 0) {
         throw "dotnet $($Arguments[0]) failed with exit code $LASTEXITCODE"
     }
+}
+
+# The app's own version (what the update check compares) must be the one the setup and the feed carry: -Version is passed to each publish
+# as -p:Version, and this checks the staged NotchTasks.dll really has it.
+function Assert-StagedVersion {
+    param([string]$Dll, [string]$Expected)
+    if (-not (Test-Path -LiteralPath $Dll -PathType Leaf)) {
+        throw "Stage is missing NotchTasks.dll: $Dll"
+    }
+    $info = (Get-Item -LiteralPath $Dll).VersionInfo
+    # The file version is 4-part (3.0.1.0); the product version may carry a source suffix (3.0.1+abc123).
+    $fileVersion = $info.FileVersion
+    $fileMajorMinorPatch = if ($fileVersion -match '^(\d+\.\d+\.\d+)') { $Matches[1] } else { $fileVersion }
+    $productVersion = ($info.ProductVersion -split '\+')[0]
+    if ($fileMajorMinorPatch -ne $Expected -or $productVersion -ne $Expected) {
+        throw "NotchTasks.dll is version '$fileVersion' / '$($info.ProductVersion)', expected $Expected. Check -p:Version in build.ps1."
+    }
+    Write-Host "App version in NotchTasks.dll: $Expected"
 }
 
 function Find-Iscc {
@@ -70,16 +90,16 @@ if (Test-Path -LiteralPath $stage) { Remove-Item -LiteralPath $stage -Recurse -F
 New-Item -ItemType Directory -Path $stage -Force | Out-Null
 
 # 1. The app (framework-only parts come from its own publish; the helper files it publishes are replaced below).
-Invoke-Dotnet @('publish', $appProj, '-c', 'Release', '-r', 'win-x64', '--self-contained', '-o', $stage)
+Invoke-Dotnet @('publish', $appProj, '-c', 'Release', '-r', 'win-x64', '--self-contained', $versionProperty, '-o', $stage)
 
 # 2. The sensors helper, self-contained, into the same stage.
-Invoke-Dotnet @('publish', $sensorsProj, '-c', 'Release', '-r', 'win-x64', '--self-contained', '-o', $stage)
+Invoke-Dotnet @('publish', $sensorsProj, '-c', 'Release', '-r', 'win-x64', '--self-contained', $versionProperty, '-o', $stage)
 
 # 3. The hook: Native AOT when the MSVC linker is present, else self-contained.
 $hookAot = Join-Path ([IO.Path]::GetTempPath()) ("notchtasks-hook-aot-" + [guid]::NewGuid().ToString('N'))
 $aotOk = $false
 try {
-    Invoke-Dotnet @('publish', $hookProj, '-c', 'Release', '-r', 'win-x64', '-p:UseAot=true', '-o', $hookAot)
+    Invoke-Dotnet @('publish', $hookProj, '-c', 'Release', '-r', 'win-x64', '-p:UseAot=true', $versionProperty, '-o', $hookAot)
     $aotOk = Test-Path -LiteralPath (Join-Path $hookAot 'NotchTasksHook.exe') -PathType Leaf
 } catch {
     Write-Warning "Native AOT publish of the hook failed: $($_.Exception.Message)"
@@ -94,7 +114,7 @@ if ($aotOk) {
     Write-Host 'Hook: Native AOT.'
 } else {
     Write-Warning 'Native AOT unavailable (no MSVC linker?): the hook is published self-contained instead.'
-    Invoke-Dotnet @('publish', $hookProj, '-c', 'Release', '-r', 'win-x64', '--self-contained', '-o', $stage)
+    Invoke-Dotnet @('publish', $hookProj, '-c', 'Release', '-r', 'win-x64', '--self-contained', $versionProperty, '-o', $stage)
     Write-Host 'Hook: self-contained.'
 }
 if (Test-Path -LiteralPath $hookAot) { Remove-Item -LiteralPath $hookAot -Recurse -Force }
@@ -102,6 +122,7 @@ if (Test-Path -LiteralPath $hookAot) { Remove-Item -LiteralPath $hookAot -Recurs
 if (-not (Test-Path -LiteralPath (Join-Path $stage 'NotchTasks.exe') -PathType Leaf)) {
     throw "Stage is missing NotchTasks.exe: $stage"
 }
+Assert-StagedVersion -Dll (Join-Path $stage 'NotchTasks.dll') -Expected $Version
 
 # 4. The installer.
 $iscc = Find-Iscc
