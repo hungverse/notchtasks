@@ -80,7 +80,7 @@ public sealed partial class SyncHub
         try
         {
             var key = Box.FromB64Url(g.K);
-            listener = new TcpListener(IPAddress.Any, 0);
+            listener = new TcpListener(_deps.LanBindAddress, 0);
             listener.Start();
             var session = new LanSession(listener, ((IPEndPoint)listener.LocalEndpoint).Port, key);
             var name = Box.ServiceName(g.G);
@@ -171,24 +171,28 @@ public sealed partial class SyncHub
             }
             catch (Exception e)
             {
-                if (!s.Stopped)
+                // the listener is stopped on a stop; any other failure is logged and the loop goes on
+                if (s.Stopped)
                 {
-                    _deps.Log($"lan: accept stopped: {e.Message}");
+                    return;
                 }
-                return;
+                _deps.Log($"lan: accept failed ({e.GetType().Name})");
+                await Task.Delay(TimeSpan.FromMilliseconds(100));
+                continue;
             }
             try
             {
                 ConfigureSocket(client);
+                if (!Admit(s, client))
+                {
+                    client.Dispose();
+                }
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                // this connection only: its socket is closed, the next one is still accepted
                 client.Dispose();
-                continue;
-            }
-            if (!Admit(s, client))
-            {
-                client.Dispose();
+                _deps.Log($"lan: connection setup failed ({e.GetType().Name})");
             }
         }
     }
@@ -292,6 +296,7 @@ public sealed partial class SyncHub
             {
                 return;
             }
+            var phoneChanged = a.Phone is not null && a.Phone != c.Phone;
             if (a.Phone is not null)
             {
                 c.Phone = a.Phone;
@@ -305,6 +310,10 @@ public sealed partial class SyncHub
                 _sentLocal = null;
                 Emit();
                 PublishSafely();
+            }
+            else if (phoneChanged)
+            {
+                RecountLan(); // the proven-phone set follows the uid this connection now names
             }
             if ((NowMs() - a.At.ToUnixTimeMilliseconds()) / 1000 < WaitSeconds)
             {
@@ -352,7 +361,14 @@ public sealed partial class SyncHub
     private async Task WriteInOrderAsync(LanConn c, Task previous, byte[] frame)
     {
         await Task.Yield(); // never inline in Flush: a failure closes the connection on its own task
-        await previous;
+        try
+        {
+            await previous;
+        }
+        catch (Exception)
+        {
+            // the write before this one failed (it closed the connection); this one still runs its own checks
+        }
         if (c.Closed)
         {
             return;

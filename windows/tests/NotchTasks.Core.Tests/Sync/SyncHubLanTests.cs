@@ -118,6 +118,7 @@ public sealed class SyncHubLanTests
                 _ => { })
             {
                 HelloTimeout = helloTimeout ?? TimeSpan.FromSeconds(5),
+                LanBindAddress = IPAddress.Loopback,
             };
             Hub = new SyncHub(deps);
             Hub.StateChanged += s => _states.Enqueue(s);
@@ -466,6 +467,7 @@ public sealed class SyncHubLanTests
         Assert.True(await WaitClosedAsync(client));
         Assert.Null(rig.Hub.LanPort);
         Assert.Equal(0, rig.Hub.State.LanPhones);
+        await WaitFor(() => rig.States.LastOrDefault()?.LanPhones == 0);
         Assert.Equal(1, rig.Adv.Unpublished);
         Assert.Equal(1, rig.Adv.Disposed);
         await Assert.ThrowsAnyAsync<SocketException>(async () =>

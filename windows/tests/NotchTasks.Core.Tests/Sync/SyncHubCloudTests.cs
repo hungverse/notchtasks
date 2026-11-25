@@ -50,6 +50,7 @@ public sealed class SyncHubCloudTests
                 (g, at) => Notes[g] = at,
                 message => _logs.Enqueue(message))
             {
+                LanBindAddress = System.Net.IPAddress.Loopback,
                 Delay = (t, _) =>
                 {
                     _delays.Enqueue(t);

@@ -47,6 +47,9 @@ public sealed record SyncDeps(
     public bool Lan { get; init; } = true;
     public bool OnlyAway { get; init; } = true;
 
+    /// The address the LAN listener binds. The app keeps Any (phones on the Wi-Fi reach it); the tests bind loopback only.
+    public System.Net.IPAddress LanBindAddress { get; init; } = System.Net.IPAddress.Any;
+
     /// The backoff wait of the answers stream. Tests replace it; the app keeps Task.Delay.
     internal Func<TimeSpan, CancellationToken, Task> Delay { get; init; } = Task.Delay;
 }

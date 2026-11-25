@@ -129,6 +129,7 @@ public sealed partial class SyncHub : IAsyncDisposable
             UpdateTimer();
             StopStream();
             StopLan();
+            Emit(); // LanPhones is back to 0 (and LanPort null)
         }
         Flush();
         return Task.CompletedTask;
