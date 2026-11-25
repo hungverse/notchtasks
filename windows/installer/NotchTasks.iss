@@ -56,20 +56,25 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; Flags: unchecked
 Source: "{#Stage}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs
 
 [InstallDelete]
-; Electron leftovers from the previous install, in the same folder.
+; Electron leftovers from the previous install, in the same folder. Exact names only: a wildcard here also matches Inno's own
+; unins000.dat and the native files. None of these names is in the native stage.
 Type: filesandordirs; Name: "{app}\resources"
 Type: filesandordirs; Name: "{app}\locales"
-Type: files; Name: "{app}\*.pak"
-Type: files; Name: "{app}\*.dat"
-Type: files; Name: "{app}\*.bin"
-Type: files; Name: "{app}\chrome_*"
-Type: files; Name: "{app}\ffmpeg.dll"
+Type: files; Name: "{app}\chrome_100_percent.pak"
+Type: files; Name: "{app}\chrome_200_percent.pak"
+Type: files; Name: "{app}\resources.pak"
+Type: files; Name: "{app}\icudtl.dat"
+Type: files; Name: "{app}\snapshot_blob.bin"
+Type: files; Name: "{app}\v8_context_snapshot.bin"
 Type: files; Name: "{app}\d3dcompiler_47.dll"
+Type: files; Name: "{app}\ffmpeg.dll"
 Type: files; Name: "{app}\libEGL.dll"
 Type: files; Name: "{app}\libGLESv2.dll"
-Type: files; Name: "{app}\vk_swiftshader*"
+Type: files; Name: "{app}\vk_swiftshader.dll"
+Type: files; Name: "{app}\vk_swiftshader_icd.json"
 Type: files; Name: "{app}\vulkan-1.dll"
-Type: files; Name: "{app}\LICENSE*"
+Type: files; Name: "{app}\LICENSE.electron.txt"
+Type: files; Name: "{app}\LICENSES.chromium.html"
 Type: files; Name: "{app}\Uninstall NotchTasks.exe"
 
 [Icons]
@@ -79,6 +84,26 @@ Name: "{userdesktop}\NotchTasks"; Filename: "{app}\NotchTasks.exe"; AppUserModel
 [Run]
 ; Also after a silent update: the app starts again in place of the one the update closed.
 Filename: "{app}\NotchTasks.exe"; Flags: nowait postinstall
+
+[UninstallDelete]
+; Folders the stage ships (they would stay empty after the files go). Only inside {app}; the user's data is never listed.
+Type: filesandordirs; Name: "{app}\l10n"
+Type: filesandordirs; Name: "{app}\Sprites"
+Type: filesandordirs; Name: "{app}\runtimes"
+Type: filesandordirs; Name: "{app}\cs"
+Type: filesandordirs; Name: "{app}\de"
+Type: filesandordirs; Name: "{app}\es"
+Type: filesandordirs; Name: "{app}\fr"
+Type: filesandordirs; Name: "{app}\it"
+Type: filesandordirs; Name: "{app}\ja"
+Type: filesandordirs; Name: "{app}\ko"
+Type: filesandordirs; Name: "{app}\pl"
+Type: filesandordirs; Name: "{app}\pt-BR"
+Type: filesandordirs; Name: "{app}\ru"
+Type: filesandordirs; Name: "{app}\tr"
+Type: filesandordirs; Name: "{app}\zh-Hans"
+Type: filesandordirs; Name: "{app}\zh-Hant"
+Type: dirifempty; Name: "{app}"
 
 [UninstallRun]
 Filename: "{app}\NotchTasksHook.exe"; Parameters: "--uninstall-hooks"; RunOnceId: "hooks"; Flags: runhidden waituntilterminated
