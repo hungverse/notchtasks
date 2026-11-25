@@ -2,6 +2,31 @@
 
 Native Windows app (C#, WPF, .NET 10) that shows AI agents' questions in a floating pill at the top of the screen. It replaces the Electron app on Windows. The Mac app in `mac/` is the reference for behaviour and look; `electron/` is kept for Linux and is read only for Windows-specific details.
 
+## Install
+
+Run `NotchTasks-Setup.exe` (from the [website](https://notchtasks.web.app/assets/NotchTasks-Setup.exe), or `irm https://notchtasks.web.app/install.ps1 | iex`). The installer is not code-signed yet: if Windows protects your PC, choose **More info → Run anyway**. It is per-user, so it needs no administrator rights. It installs over the Electron app and keeps your settings, pairing and agent hooks.
+
+## Build
+
+Needs the .NET 10 SDK. For the app and tests, from the repo root:
+
+- `dotnet build windows/NotchTasks.sln`
+- `dotnet test windows/NotchTasks.sln`
+
+The installer needs Inno Setup 6 (`ISCC.exe` on PATH, or in `Program Files (x86)\Inno Setup 6`). Then run `pwsh windows/installer/build.ps1`. It writes `windows/installer/out/NotchTasks-<version>-win-x64-setup.exe`. See `installer/README.md` for details.
+
+## Release
+
+1. Run `pwsh windows/installer/build.ps1`.
+2. Upload the setup as `https://notchtasks.web.app/assets/NotchTasks-Setup.exe`.
+3. Run `windows/installer/manifest.ps1` with `-Installer` (the setup) and `-Url https://notchtasks.web.app/assets/NotchTasks-Setup.exe`, and upload its output as `version-win.json`.
+
+Electron 2.x installs pick the native installer up through the same feed. The CI workflow (`.github/workflows/windows.yml`) builds all of this on every push and keeps the setup and `version-win.json` as an artifact.
+
+## Updates
+
+The app checks for a new version 30 s after it starts, and then every 6 hours. The Control Panel footer shows the version and the update state, and you can check at any time by clicking the version there.
+
 What Phase 3d adds:
 
 - **Smoother motion**: the pill's shape is one composited shape, animated without a layout pass per frame. Chips scale and fade in, and sections fade. The decorative loops (the bars, the ripple, the seek bar and the device float) run at 30 fps and stop when their card leaves the screen. With **Reduced** motion, or animations off, only opacity moves.

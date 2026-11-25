@@ -1,0 +1,54 @@
+name: windows
+
+# The native Windows app (windows/): build and test with warnings as errors, then the per-user installer
+# (NotchTasks-<version>-win-x64-setup.exe) and its version-win.json feed entry, as one artifact.
+on:
+  push:
+    branches: [main, windows-native]
+    paths: ["windows/**", "mac/Sources/l10n-*.json", "mac/Resources/Sprites/**", "electron/l10n/**", ".github/workflows/windows.yml"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Windows (native)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Build (warnings as errors)
+        run: dotnet build windows/NotchTasks.sln -c Release -warnaserror
+
+      - name: Tests
+        run: dotnet test windows/NotchTasks.sln -c Release --no-build
+
+      - name: Inno Setup (if missing)
+        shell: pwsh
+        run: |
+          $iscc = Get-Command ISCC.exe -ErrorAction SilentlyContinue
+          if (-not $iscc -and -not (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")) {
+            choco install innosetup -y --no-progress
+          }
+
+      - name: Installer
+        shell: pwsh
+        run: pwsh windows/installer/build.ps1
+
+      - name: Feed entry (version-win.json)
+        shell: pwsh
+        run: |
+          $setup = Get-ChildItem -Path windows/installer/out -Filter 'NotchTasks-*-win-x64-setup.exe' | Select-Object -First 1
+          if (-not $setup) { throw 'No setup exe in windows/installer/out' }
+          $json = & windows/installer/manifest.ps1 -Installer $setup.FullName -Url 'https://notchtasks.web.app/assets/NotchTasks-Setup.exe'
+          $json | Out-File -FilePath windows/installer/out/version-win.json -Encoding utf8
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: notchtasks-windows-native
+          path: |
+            windows/installer/out/NotchTasks-*-win-x64-setup.exe
+            windows/installer/out/version-win.json
+          if-no-files-found: error

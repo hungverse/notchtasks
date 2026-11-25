@@ -50,11 +50,11 @@ On Debian or Ubuntu you can also install the package: [.deb x64](https://notchta
 
 ```sh
 mac/build.sh                                  # macOS app → mac/build/NotchTasks.app
-cd electron && npm ci && npm run dist:win     # Windows installer → electron/dist/
-cd electron && npm run dist:linux             # Linux tar.gz and deb → electron/dist/
+pwsh windows/installer/build.ps1              # Windows installer (needs Inno Setup 6) → windows/installer/out/
+cd electron && npm ci && npm run dist:linux   # Linux tar.gz and deb → electron/dist/
 ```
 
-`mac/` is Swift (AppKit + SwiftUI), `electron/` is the Windows and Linux app (Electron), and `l10n/` holds the translations
+`mac/` is Swift (AppKit + SwiftUI), `windows/` is the Windows app (C#, WPF), `electron/` is the Linux app (Electron), and `l10n/` holds the translations
 (`python3 l10n/build.py` after editing a table).
 
 ## License
