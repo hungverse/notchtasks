@@ -445,10 +445,13 @@ public sealed partial class SyncHub : IAsyncDisposable
                 }
                 lock (_gate)
                 {
-                    _phones.Clear();
-                    foreach (var (uid, name) in found)
+                    if (ReferenceEquals(_group, g)) // a read that was out while the group was unpaired must not repopulate it
                     {
-                        _phones[uid] = name;
+                        _phones.Clear();
+                        foreach (var (uid, name) in found)
+                        {
+                            _phones[uid] = name;
+                        }
                     }
                 }
             }
@@ -542,6 +545,10 @@ public sealed partial class SyncHub : IAsyncDisposable
 
         lock (_gate)
         {
+            if (!ReferenceEquals(_group, g)) // unpaired (or paired again) while the reads were out: they are for another group
+            {
+                return;
+            }
             _pro = pro;
             _proUntil = proUntil;
             _proHolders = holders;
@@ -633,17 +640,20 @@ public sealed partial class SyncHub : IAsyncDisposable
         {
             // _sending and the problem change together, so a publish that follows sees both
             _sending = false;
-            if (error is not null)
+            if (ReferenceEquals(_group, g)) // unpaired meanwhile: nothing to record, and no problem to report for the old group
             {
-                SetProblem(error);
-            }
-            else if (ReferenceEquals(_group, g)) // unpaired meanwhile: nothing to record
-            {
-                _sent = s;
-                _sentAway = away;
-                if (_problem is not null)
+                if (error is not null)
                 {
-                    SetProblem(null);
+                    SetProblem(error);
+                }
+                else
+                {
+                    _sent = s;
+                    _sentAway = away;
+                    if (_problem is not null)
+                    {
+                        SetProblem(null);
+                    }
                 }
             }
         }
@@ -806,6 +816,10 @@ public sealed partial class SyncHub : IAsyncDisposable
             }
             catch (Exception)
             {
+                if (ct.IsCancellationRequested) // stopped (or unpaired) during the failure: nothing to report
+                {
+                    return;
+                }
                 fails++;
                 lock (_gate)
                 {

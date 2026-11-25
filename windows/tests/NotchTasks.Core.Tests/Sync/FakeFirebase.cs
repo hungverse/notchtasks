@@ -30,6 +30,15 @@ internal sealed class FakeFirebase : ISyncHttp
     /// When set, the snapshot PUT waits for this task before it answers.
     public TaskCompletionSource? HoldSnapshot { get; set; }
 
+    /// When set, the held snapshot PUT answers this status once the hold is released (a write that fails late).
+    public int? HoldFailure { get; set; }
+
+    /// When set, the next members read waits for this task before it answers (a read that is still out when the group changes).
+    public TaskCompletionSource? HoldMembers { get; set; }
+
+    /// With FailStreamOpens: the failing open waits until the hub stops, then fails (a stream failure that races the stop).
+    public bool FailStreamAfterStop { get; set; }
+
     /// The writer of the answers stream that was opened last. Null until a stream is open.
     public PipeWriter? Events
     {
@@ -74,18 +83,32 @@ internal sealed class FakeFirebase : ISyncHttp
 
     public async Task<SyncHttpResult> SendAsync(string method, string url, string? body, CancellationToken ct, string contentType = "application/json")
     {
+        TaskCompletionSource? membersHold = null;
         lock (_gate)
         {
             _calls.Add(new Call(method, url, body, contentType));
+            if (method == "GET" && url.Contains("/members.json", StringComparison.Ordinal))
+            {
+                membersHold = HoldMembers; // taken now, so the caller can see the read is out before it moves on
+                HoldMembers = null;
+            }
         }
         var status = TakeFailure(method, url);
         if (status is not null)
         {
             return new SyncHttpResult(status.Value, "{\"error\":\"fake\"}");
         }
+        if (membersHold is not null)
+        {
+            await membersHold.Task;
+        }
         if (method == "PUT" && url.Contains("/snapshot.json", StringComparison.Ordinal) && HoldSnapshot is { } hold)
         {
             await hold.Task;
+            if (HoldFailure is { } held)
+            {
+                return new SyncHttpResult(held, "{\"error\":\"fake\"}");
+            }
         }
         return Answer(method, url);
     }
@@ -98,7 +121,9 @@ internal sealed class FakeFirebase : ISyncHttp
             if (_streamFailures > 0)
             {
                 _streamFailures--;
-                return Task.FromException<Stream>(new HttpRequestException("stream failed", null, HttpStatusCode.ServiceUnavailable));
+                return FailStreamAfterStop
+                    ? FailWhenStoppedAsync(ct)
+                    : Task.FromException<Stream>(new HttpRequestException("stream failed", null, HttpStatusCode.ServiceUnavailable));
             }
         }
         var pipe = new Pipe();
@@ -108,6 +133,14 @@ internal sealed class FakeFirebase : ISyncHttp
         }
         _ = ct.Register(() => pipe.Writer.Complete());
         return Task.FromResult(pipe.Reader.AsStream());
+    }
+
+    private static async Task<Stream> FailWhenStoppedAsync(CancellationToken ct)
+    {
+        var stopped = new TaskCompletionSource();
+        using var reg = ct.Register(() => stopped.TrySetResult());
+        await stopped.Task;
+        throw new HttpRequestException("stream failed as the hub stopped", null, HttpStatusCode.ServiceUnavailable);
     }
 
     /// Writes server-sent event text into the open answers stream.

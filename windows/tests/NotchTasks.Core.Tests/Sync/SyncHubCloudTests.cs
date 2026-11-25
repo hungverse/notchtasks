@@ -418,6 +418,56 @@ public sealed class SyncHubCloudTests
     }
 
     [Fact]
+    public async Task UnpairAll_WriteFailsAfter_ProblemStaysNull()
+    {
+        await using var rig = new Rig(group: true);
+        var hold = new TaskCompletionSource();
+        rig.Fb.HoldSnapshot = hold;
+        rig.Fb.HoldFailure = 500;
+
+        rig.Hub.Update(Input(runs: [Run("r1")]));
+        await WaitFor(() => rig.Snaps().Count == 1);
+        await rig.Hub.UnpairAllAsync();
+
+        hold.SetResult(); // the write for the old group fails now
+        await Task.Delay(50);
+        Assert.Null(rig.Hub.State.Problem);
+    }
+
+    [Fact]
+    public async Task UnpairAll_LatePhonesRead_DoesNotRepopulate()
+    {
+        await using var rig = new Rig(group: true);
+        rig.Fb.MembersJson = "{\"uid-phone\":{\"role\":\"phone\",\"name\":\"Pixel\"}}";
+        var hold = new TaskCompletionSource();
+        rig.Fb.HoldMembers = hold;
+
+        var late = rig.Hub.LoadPhonesAsync();
+        await WaitFor(() => rig.Fb.Calls.Any(c => c.Method == "GET" && c.Url.Contains("/members.json", StringComparison.Ordinal)));
+        await rig.Hub.UnpairAllAsync();
+
+        hold.SetResult(); // the members read that was out answers after the unpair
+        await late;
+        Assert.False(rig.Hub.State.Paired);
+        Assert.Empty(rig.Hub.State.Phones);
+    }
+
+    [Fact]
+    public async Task Stop_DuringStreamFailure_NoProblem()
+    {
+        await using var rig = new Rig(group: true);
+        rig.Fb.FailStreamOpens(1);
+        rig.Fb.FailStreamAfterStop = true;
+
+        await rig.Hub.StartAsync();
+        await WaitFor(() => StreamOpens(rig) == 1);
+        await rig.Hub.StopAsync();
+
+        await Task.Delay(50);
+        Assert.Null(rig.Hub.State.Problem);
+    }
+
+    [Fact]
     public async Task ProNote_NewerThanSeen_IsRaisedOnceAndStored()
     {
         await using var rig = new Rig(group: true);
