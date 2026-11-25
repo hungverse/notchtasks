@@ -73,9 +73,11 @@ public partial class ToastView : UserControl
 
     /// The width of the toast in the pill: a compact row is the pill's 200 px between two side columns; a card is 380; a
     /// banner, and an island with an ask, 520; any other island 340.
-    public static double WidthOf(Toast t, string style, AgentAsk? ask) => LookOf(t, style) switch
+    /// `closedWidth` is the closed pill's current content width: a compact row's middle is that, but never less than the 200 its
+    /// text was laid out for (the toast's own minimum).
+    public static double WidthOf(Toast t, string style, AgentAsk? ask, double closedWidth = PillGeometry.ClosedWidth) => LookOf(t, style) switch
     {
-        ToastLook.Compact => 2 * SideOf(t) + PillGeometry.ClosedWidth + 2 * CompactPadding,
+        ToastLook.Compact => 2 * SideOf(t) + Math.Max(closedWidth, PillGeometry.ClosedWidth) + 2 * CompactPadding,
         ToastLook.Card => CardWidth,
         ToastLook.Banner => PillGeometry.OpenWidth,
         _ => ask is null ? IslandWidth : PillGeometry.OpenWidth,
@@ -99,7 +101,7 @@ public partial class ToastView : UserControl
 
     /// Shows the toast in a style: its glyph, title, subtitle and the buttons it needs. `ask` is the agent's ask the toast
     /// stands for, or null. `motion` is the Motion setting, which a battery toast's art springs by.
-    public void Show(Toast t, string style, AgentAsk? ask, string motion)
+    public void Show(Toast t, string style, AgentAsk? ask, string motion, double closedWidth = PillGeometry.ClosedWidth)
     {
         // A toast that replaces one on screen cross-fades: the old content is kept as a picture, over the new, and fades out.
         var previous = _toast is null ? null : Snapshot();
@@ -111,7 +113,7 @@ public partial class ToastView : UserControl
         var color = HexColor.TryNormalize(t.Tint, out var hex) ? HexColor.ToColor(hex) : Colors.White;
         var tint = Frozen(new SolidColorBrush(color));
 
-        Width = WidthOf(t, style, ask);
+        Width = WidthOf(t, style, ask, closedWidth);
         ShapeRadius = look switch
         {
             ToastLook.Compact => PillGeometry.ClosedRadius,

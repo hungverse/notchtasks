@@ -57,6 +57,40 @@ public static class PillMotion
         }
     }
 
+    /// The distance a wing's new item comes from (DIP): from the centre side, as the Mac's ooze.
+    private const double OozeOffset = 18;
+
+    /// The scale an item oozes in from (the Mac's ooze: 0.4 → 1).
+    private const double OozeScale = 0.4;
+
+    /// Oozes a new item into a wing (Mac ooze): opacity 0 → 1, scale 0.4 → 1 and an offset of 18 DIP → 0, all anchored at the
+    /// edge that faces the centre of the pill (a left wing's item comes from the right, a right wing's from the left). Only
+    /// opacity moves when reduced or with animations off. Each animation is FillBehavior.Stop, so the element rests at its own values.
+    public static void Ooze(UIElement e, bool leftWing, string motion, bool animationsOn)
+    {
+        e.SetValue(ExitingProperty, null);
+        e.BeginAnimation(UIElement.OpacityProperty, null);
+        var duration = Fade(motion, animationsOn);
+        var ease = Ease(duration);
+        e.Opacity = 1;
+        e.BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation(0, 1, duration) { EasingFunction = ease, FillBehavior = FillBehavior.Stop });
+        if (!animationsOn || motion == "reduced")
+        {
+            return;
+        }
+        var grow = SpringCurve.For(motion, opening: true, animationsOn: true);
+        var growDuration = new Duration(TimeSpan.FromSeconds(grow.Settle));
+        var growEase = new SpringEase(grow);
+        var scale = new ScaleTransform(1, 1);
+        var shift = new TranslateTransform(0, 0);
+        e.RenderTransformOrigin = new Point(leftWing ? 1 : 0, 0.5);
+        e.RenderTransform = new TransformGroup { Children = { scale, shift } };
+        var from = leftWing ? OozeOffset : -OozeOffset;
+        scale.BeginAnimation(ScaleTransform.ScaleXProperty, new DoubleAnimation(OozeScale, 1, growDuration) { EasingFunction = growEase, FillBehavior = FillBehavior.Stop });
+        scale.BeginAnimation(ScaleTransform.ScaleYProperty, new DoubleAnimation(OozeScale, 1, growDuration) { EasingFunction = growEase, FillBehavior = FillBehavior.Stop });
+        shift.BeginAnimation(TranslateTransform.XProperty, new DoubleAnimation(from, 0, growDuration) { EasingFunction = growEase, FillBehavior = FillBehavior.Stop });
+    }
+
     /// The scale transform an entering element uses: a new one when it has the identity transform, or its scale transform while that
     /// is at 1 (from an earlier enter). Null for any other transform: the element's own transform is never overwritten.
     private static ScaleTransform? ScaleFor(UIElement e)
@@ -77,7 +111,7 @@ public static class PillMotion
 
     /// Fades an element out, then removes it from its parent. It is not hit-testable while it fades. If it is entered again
     /// before the fade ends (Enter), it stays where it is.
-    public static void Exit(Panel parent, UIElement e, string motion, bool animationsOn)
+    public static void Exit(Panel parent, UIElement e, string motion, bool animationsOn, Action? removed = null)
     {
         e.IsHitTestVisible = false;
         var token = new object();
@@ -100,6 +134,7 @@ public static class PillMotion
             {
                 parent.Children.Remove(e);
             }
+            removed?.Invoke();  // the wing has its new width now: the closed pill may follow it
         };
         e.BeginAnimation(UIElement.OpacityProperty, animation);
     }

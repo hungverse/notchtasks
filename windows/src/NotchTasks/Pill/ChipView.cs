@@ -291,10 +291,15 @@ public static class ChipView
     /// Fills the wings with the closed pill's chips, inside the badges already in them: a badge is always the outermost item of
     /// its wing. The left wing reads badges then chips; the right wing reads chips then badges. A lone chip shows its lead on the
     /// left and its trail on the right; the others sit whole in the wing ChipBoard.Sides puts them in. Returns how many chips there are.
-    public static int FillWings(StackPanel left, StackPanel right, AppState state, Color? accent) =>
+    public static int FillWings(StackPanel left, StackPanel right, AppState state, Color? accent, Action? removed = null) =>
         Fill(left, right, ChipBoard.Chips(state.Snapshot), state.Settings.Placements, state.Settings.ModuleColors, accent,
             DateTimeOffset.Now, state.Processes, state.Settings.ToolIcons, state.Settings.Motion, SystemParameters.ClientAreaAnimation,
-            state.MediaArt);
+            state.MediaArt, removed);
+
+    /// True when the chips make the one-activity case: a lone chip is split into its lead (left) and its trail (right). The
+    /// closed pill's wings are then 5 DIP apart, not 10 (the Mac's single-chip HStack spacing).
+    public static bool IsSingle(AppState state) =>
+        ChipBoard.Sides(ChipBoard.Chips(state.Snapshot), state.Settings.Placements).Single is not null;
 
     /// FillWings with its inputs given: the same placement, order and badge rule. Returns how many chips there are. A chip that
     /// is new enters (PillMotion.Enter); a chip that is gone exits after its fade; a chip updated in place is replaced without
@@ -302,7 +307,7 @@ public static class ChipView
     public static int Fill(StackPanel left, StackPanel right, IReadOnlyList<Chip> chips, IReadOnlyDictionary<string, string> placements,
         IReadOnlyDictionary<string, string> colors, Color? accent, DateTimeOffset now, IProcessReader? processes,
         IReadOnlyDictionary<string, JsonObject>? toolIcons = null, string motion = "smooth", bool animationsOn = true,
-        Func<string, ImageSource?>? art = null)
+        Func<string, ImageSource?>? art = null, Action? removed = null)
     {
         var (leftChips, rightChips, single) = ChipBoard.Sides(chips, placements);
         var leftPanels = new List<ChipSlot>();
@@ -320,8 +325,8 @@ public static class ChipView
         {
             Collect(right, rightPanels, chip, accent, colors, now, lead: true, trail: true, side: "R", processes, toolIcons, art);
         }
-        Reconcile(left, leftPanels, rightWing: false, motion, animationsOn);
-        Reconcile(right, rightPanels, rightWing: true, motion, animationsOn);
+        Reconcile(left, leftPanels, rightWing: false, motion, animationsOn, removed);
+        Reconcile(right, rightPanels, rightWing: true, motion, animationsOn, removed);
         return chips.Count;
     }
 
@@ -375,9 +380,9 @@ public static class ChipView
 
     /// Puts a wing's chip panels in place. A chip held before and still held keeps its element, so an enter in progress carries on
     /// (its new content is moved into it, with no motion). A chip it no longer holds fades out where it is, and is removed when the
-    /// fade ends. A new chip enters with scale. A left wing's chips go after its badges; a right wing's chips go before its badges,
+    /// fade ends (then `removed` runs, so the closed pill can follow the wing's new width). A new chip oozes in. A left wing's chips go after its badges; a right wing's chips go before its badges,
     /// after the chips already there, in the order given.
-    private static void Reconcile(StackPanel wing, List<ChipSlot> desired, bool rightWing, string motion, bool animationsOn)
+    private static void Reconcile(StackPanel wing, List<ChipSlot> desired, bool rightWing, string motion, bool animationsOn, Action? removed)
     {
         var wanted = desired.Select(d => d.Key).ToHashSet(StringComparer.Ordinal);
         var previous = wing.Children.OfType<FrameworkElement>().Where(e => e.Tag is ChipTag).ToList();
@@ -395,7 +400,7 @@ public static class ChipView
             }
             else if (!wantedNow)
             {
-                PillMotion.Exit(wing, element, motion, animationsOn);
+                PillMotion.Exit(wing, element, motion, animationsOn, removed);
             }
             else if (held.ContainsKey(key!))
             {
@@ -477,7 +482,7 @@ public static class ChipView
             }
             if (isNew)
             {
-                PillMotion.Enter(element, scale: true, motion, animationsOn);
+                PillMotion.Ooze(element, leftWing: !rightWing, motion, animationsOn);
             }
         }
     }

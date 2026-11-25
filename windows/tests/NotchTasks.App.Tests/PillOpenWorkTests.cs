@@ -76,6 +76,10 @@ public sealed class PillOpenWorkTests
             var (pill, _) = Make(state);
             try
             {
+                // A spring runs only in a presented window: the pill is shown off screen, so the open is in flight.
+                Fixture.ShowOffScreen(pill);
+                pill.Left = -10000;
+                pill.Top = -10000;
                 Fixture.Call(pill, "OpenPill");
                 Fixture.Field<System.Windows.Threading.DispatcherTimer>(pill, "_closeTimer").Stop();  // the test pointer is not over the pill
                 var token = Fixture.Field<int>(pill, "_animation");

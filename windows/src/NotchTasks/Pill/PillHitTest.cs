@@ -12,12 +12,16 @@ internal static class PillHitTest
         var width = r.Width;
         var height = r.Height;
         var cr = Math.Min(radius, Math.Min(width, height) / 2);
-        var cx = Math.Clamp(p.X, x + cr, x + width - cr);
-        var cy = Math.Clamp(p.Y, r.Y + cr, r.Y + height - cr);
+        var cx = Span(p.X, x + cr, x + width - cr);
+        var cy = Span(p.Y, r.Y + cr, r.Y + height - cr);
         var dx = p.X - cx;
         var dy = p.Y - cy;
         return Math.Sqrt(dx * dx + dy * dy) - cr;
     }
+
+    /// v held between lo and hi. Unlike Math.Clamp this never throws: a shape narrower than its corners (the idle pill) has hi a
+    /// rounding error below lo, and the point then sits on the bound it is nearer to.
+    private static double Span(double v, double lo, double hi) => Math.Min(Math.Max(v, lo), Math.Max(lo, hi));
 
     /// True when p lies in the band `gap` high just above the rectangle (x, y, w, h), within its width. The gap above a
     /// floating pill still counts, so the screen's top edge opens it (the Mac's islandTop gap).
@@ -32,8 +36,8 @@ internal static class PillHitTest
             return false;
         }
         var r = Math.Min(radius, Math.Min(w, h) / 2);
-        var cx = Math.Clamp(p.X, x + r, x + w - r);
-        var cy = Math.Clamp(p.Y, y + r, y + h - r);
+        var cx = Span(p.X, x + r, x + w - r);
+        var cy = Span(p.Y, y + r, y + h - r);
         var dx = p.X - cx;
         var dy = p.Y - cy;
         return dx * dx + dy * dy <= r * r;

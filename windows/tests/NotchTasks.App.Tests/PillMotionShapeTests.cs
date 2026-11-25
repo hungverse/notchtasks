@@ -59,7 +59,8 @@ public sealed class PillMotionShapeTests
         {
             using var root = new TempRoot();
             using var state = Fixture.NewState();
-            state.Settings.Set("badges", JsonNode.Parse("[]"));
+            // One badge: the closed pill is one icon's circle (ClosedHeight wide), so the open flight starts from that.
+            state.Settings.Set("badges", JsonNode.Parse("[{\"symbol\":\"seg:E700\",\"right\":false}]"));
             var pill = new PillWindow(state);
             try
             {
@@ -81,7 +82,7 @@ public sealed class PillMotionShapeTests
                 Fixture.Call(pill, "ClosePill");
                 var width = shape.Rect.Width;
 
-                Assert.True(width > PillGeometry.ClosedWidth && width < PillGeometry.OpenWidth, $"width was {width}");
+                Assert.True(width > PillGeometry.ClosedHeight && width < PillGeometry.OpenWidth, $"width was {width}");
             }
             finally
             {
@@ -184,7 +185,7 @@ public sealed class PillMotionShapeTests
 
     /// Whether the shape's width is strictly between the closed and the open width.
     private static bool InFlight(RectangleGeometry shape) =>
-        shape.Rect.Width > PillGeometry.ClosedWidth && shape.Rect.Width < PillGeometry.OpenWidth;
+        shape.Rect.Width > PillGeometry.ClosedHeight && shape.Rect.Width < PillGeometry.OpenWidth;
 
     /// Opens the pill and holds it open. A test's pointer is never over the pill, so the close timer would close it 350 ms
     /// after the open; the timer is stopped here, as a pointer on the pill would.

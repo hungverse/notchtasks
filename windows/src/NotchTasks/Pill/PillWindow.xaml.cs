@@ -50,7 +50,8 @@ public partial class PillWindow : Window
     // layout, see PillGeometry.ShapeRect) and its radii animate; the layout itself never does.
     private readonly RectangleGeometry _shape = new()
     {
-        Rect = ToRect(PillGeometry.ShapeRect(PillGeometry.ClosedWidth, PillGeometry.ClosedHeight)),
+        // Idle until the first refresh: the shape is as wide as its padding alone, and the first retarget sets it to the content.
+        Rect = ToRect(PillGeometry.ShapeRect(PillGeometry.IdleWidth(PillGeometry.IconSizeFor(string.Empty)), PillGeometry.ClosedHeight)),
         RadiusX = PillGeometry.ClosedRadius,
         RadiusY = PillGeometry.ClosedRadius,
     };
@@ -112,7 +113,10 @@ public partial class PillWindow : Window
     private int _animation;  // counts the animations; only the last one's completion clears _closing
     private bool _animating;  // a shape animation runs: the poll evaluates click-through on every tick
     private double _targetWidth, _targetHeight, _targetRadius;  // the shape the running animation springs to
+    private double _targetLeft, _targetRight;  // the wings' shifts that animation springs to
     private Mode _targetMode = Mode.Closed;  // the mode of that shape
+    private bool _single;  // the one-chip case: the closed wings are 5 DIP apart (ChipView.IsSingle)
+    private bool _shapeShown;  // the pill's visibility as last set; it fades when this changes (SetShapeShown)
     private bool _warm;  // the card layer is laid out at zero opacity while the pointer is near (WarmCard)
     private bool _openRefreshPending;  // a publish came during an open: it is applied once when the open finishes
     private double _openHeight;  // the open pill's height, as last measured
@@ -148,9 +152,7 @@ public partial class PillWindow : Window
         Tint.Data = _shape;
         GlowRing.Data = _shape;
         PillContent.Clip = _shape;
-        // The wings start where the closed pill's edges are; they spring to the open shape's from there.
-        LeftWingShift.X = PillGeometry.WingOffset(PillGeometry.ClosedWidth);
-        RightWingShift.X = -PillGeometry.WingOffset(PillGeometry.ClosedWidth);
+        PillShape.Opacity = 0;  // idle until the first refresh shows it (SetShapeShown)
 
         LoadMeters.Children.Add(_cpuMeter);
         LoadMeters.Children.Add(_ramMeter);
@@ -641,7 +643,7 @@ public partial class PillWindow : Window
         if (target is not null)
         {
             var ask = target.AskId is { } askId ? _state.Asks.FirstOrDefault(a => a.Id == askId) : null;
-            ToastBox.Show(target, _state.Settings.ToastStyle, ask, _state.Settings.Motion);
+            ToastBox.Show(target, _state.Settings.ToastStyle, ask, _state.Settings.Motion, ClosedWidthNow);
             // Topmost is asserted again when a toast shows, as OpenPill does; the window itself never activates.
             Win32.SetWindowPos(_hwnd, Win32.HwndTopmost, 0, 0, 0, 0, Win32.SWP_NOMOVE | Win32.SWP_NOSIZE | Win32.SWP_NOACTIVATE);
             Animate(Mode.Toast);
@@ -682,8 +684,10 @@ public partial class PillWindow : Window
         var settings = _state.Settings;
         var animationsOn = SystemParameters.ClientAreaAnimation;
         var reduced = !animationsOn || settings.Motion == "reduced";
-        var (width, height, radius) = Target(mode);
-        if (mode == _targetMode && Near(width, _targetWidth) && Near(height, _targetHeight) && Near(radius, _targetRadius))
+        var target = Target(mode);
+        var (width, height, radius) = (target.Width, target.Height, target.Radius);
+        if (mode == _targetMode && Near(width, _targetWidth) && Near(height, _targetHeight) && Near(radius, _targetRadius)
+            && Near(target.LeftShift, _targetLeft) && Near(target.RightShift, _targetRight))
         {
             // The shape already springs to this target: a repeat (an ask, then the sections it changed) does not restart it.
             ReevaluateClickThrough();
@@ -697,6 +701,7 @@ public partial class PillWindow : Window
         _animating = true;
         _targetMode = mode;
         (_targetWidth, _targetHeight, _targetRadius) = (width, height, radius);
+        (_targetLeft, _targetRight) = (target.LeftShift, target.RightShift);
         var spring = new Duration(TimeSpan.FromSeconds(curve.Settle));
         // The card's height is set once per animation, to the open shape's height below the top row: the quick bar sits at the
         // bottom of the shape. The card shows only for an open, and the toast only for a toast.
@@ -712,12 +717,15 @@ public partial class PillWindow : Window
 
         // The shape, its corners and the wings all spring with the same curve from their current values (no From), so a
         // mid-flight retarget carries on from where the shape is. Nothing here changes the layout.
+        var presented = _hwnd != nint.Zero;
         var rect = new RectAnimation(ToRect(PillGeometry.ShapeRect(width, height)), spring) { EasingFunction = new SpringEase(curve) };
-        Spring(_shape, RectangleGeometry.RadiusXProperty, radius, curve, spring);
-        Spring(_shape, RectangleGeometry.RadiusYProperty, radius, curve, spring);
-        var offset = PillGeometry.WingOffset(width);
-        Spring(LeftWingShift, TranslateTransform.XProperty, offset, curve, spring);
-        Spring(RightWingShift, TranslateTransform.XProperty, -offset, curve, spring);
+        if (presented)
+        {
+            Spring(_shape, RectangleGeometry.RadiusXProperty, radius, curve, spring);
+            Spring(_shape, RectangleGeometry.RadiusYProperty, radius, curve, spring);
+            Spring(LeftWingShift, TranslateTransform.XProperty, target.LeftShift, curve, spring);
+            Spring(RightWingShift, TranslateTransform.XProperty, target.RightShift, curve, spring);
+        }
 
         var fadeSeconds = Math.Min(curve.Settle, MaxFadeDuration.TotalSeconds);
         var fade = new SpringCurve(fadeSeconds, 1) { EaseInOut = true };
@@ -741,7 +749,7 @@ public partial class PillWindow : Window
 
         // The shape's spring is the longest of these, so its completion is the end of the animation. The handler is attached
         // before the animation starts: WPF does not raise Completed for a handler added after BeginAnimation.
-        rect.Completed += (_, _) =>
+        void Finish()
         {
             if (token == _animation)
             {
@@ -769,8 +777,23 @@ public partial class PillWindow : Window
                     }
                 }
             }
-        };
-        _shape.BeginAnimation(RectangleGeometry.RectProperty, rect);
+        }
+
+        if (presented)
+        {
+            // The handler is attached before the animation starts: WPF does not raise Completed for a handler added after BeginAnimation.
+            rect.Completed += (_, _) => Finish();
+            _shape.BeginAnimation(RectangleGeometry.RectProperty, rect);
+        }
+        else
+        {
+            // Not presented yet: no clock runs, so the shape and the wings take their values at once.
+            _shape.Rect = ToRect(PillGeometry.ShapeRect(width, height));
+            _shape.RadiusX = _shape.RadiusY = radius;
+            LeftWingShift.X = target.LeftShift;
+            RightWingShift.X = target.RightShift;
+            Finish();
+        }
         // The pointer may already be over the target shape: the window must take its clicks from this frame on.
         ReevaluateClickThrough();
     }
@@ -787,13 +810,109 @@ public partial class PillWindow : Window
         }
     }
 
-    /// The width, height and radius a mode springs to. The open height follows the sections; the toast follows its text.
-    private (double Width, double Height, double Radius) Target(Mode mode) => mode switch
+    /// The inset of the open pill's wings from its edges (DIP), as the margin they had before the closed pill was sized to its content.
+    private const double OpenWingInset = 12;
+
+    /// What a mode springs to: the shape's width, height and corner radius, and the shifts of the two wings.
+    private readonly record struct ShapeTarget(double Width, double Height, double Radius, double LeftShift, double RightShift);
+
+    /// The shape a mode springs to. The open height follows the sections; the toast follows its text; the closed pill is as
+    /// wide as its content (ClosedTarget).
+    private ShapeTarget Target(Mode mode) => mode switch
     {
-        Mode.Open => (PillGeometry.OpenWidth, OpenHeight(), PillGeometry.OpenRadius),
-        Mode.Toast => (ToastBox.Width, ToastHeight(), ToastBox.ShapeRadius),
-        _ => (PillGeometry.ClosedWidth, PillGeometry.ClosedHeight, PillGeometry.ClosedRadius),
+        Mode.Open => EdgeTarget(PillGeometry.OpenWidth, OpenHeight(), PillGeometry.OpenRadius),
+        Mode.Toast => EdgeTarget(ToastBox.Width, ToastHeight(), ToastBox.ShapeRadius),
+        _ => ClosedTarget(),
     };
+
+    /// The open and toast shapes: the wings sit at the shape's two edges, inset by OpenWingInset.
+    private static ShapeTarget EdgeTarget(double width, double height, double radius)
+    {
+        var offset = PillGeometry.WingOffset(width) + OpenWingInset;
+        return new ShapeTarget(width, height, radius, offset, -offset);
+    }
+
+    /// The closed pill: as wide as its wings' ink, the wings side by side and centred as a group (PillGeometry.ClosedContentWidth).
+    /// Nothing shown gives the idle width. A wing's shift puts its ink at the group's edge, past the wing's own end margin.
+    private ShapeTarget ClosedTarget()
+    {
+        var (left, leftOuter) = WingInk(LeftWing, rightWing: false);
+        var (right, rightOuter) = WingInk(RightWing, rightWing: true);
+        var icon = PillGeometry.IconSizeFor(_state.Settings.Size);
+        var hasContent = left + right > 0;
+        var width = hasContent
+            ? PillGeometry.ClosedContentWidth(left, right, icon, _single)
+            : PillGeometry.IdleWidth(icon);
+        var group = left + right + PillGeometry.WingGap(left, right, _single);
+        var groupLeft = PillGeometry.ClosedGroupLeft(group);
+        return new ShapeTarget(width, PillGeometry.ClosedHeight, PillGeometry.ClosedRadius, groupLeft - leftOuter, -groupLeft + rightOuter);
+    }
+
+    /// A wing's ink width: its items' widths less the margins at its two ends (the outer end is the padding; the inner end meets the
+    /// other wing and its gap), and the outer margin. Measured now, so the closed pill follows what the wing holds.
+    private static (double Ink, double Outer) WingInk(StackPanel wing, bool rightWing)
+    {
+        wing.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+        var items = wing.Children.OfType<FrameworkElement>().ToList();
+        if (items.Count == 0)
+        {
+            return (0, 0);
+        }
+        // The left wing reads outer to inner from its left end; the right wing reads inner to outer, so its outer end is its last item.
+        var outer = rightWing ? items[^1].Margin.Right : items[0].Margin.Left;
+        var inner = rightWing ? items[0].Margin.Left : items[^1].Margin.Right;
+        return (Math.Max(0, wing.DesiredSize.Width - outer - inner), outer);
+    }
+
+    /// The closed pill springs to the width its content measures now. Nothing changes while it is open or a toast shows: those
+    /// shapes are their own, and a closed pill is retargeted when they close.
+    private void RetargetClosed()
+    {
+        if (_open || _shownToast is not null)
+        {
+            return;
+        }
+        Animate(Mode.Closed);
+    }
+
+    /// Whether the pill has something to show: it is open, a toast shows, a badge or a chip is in a wing, or an ask waits. Without it the
+    /// pill is invisible and only its ClosedWidth hover strip is live.
+    private bool ShowsContent => _open || _shownToast is not null || _hasCollapsed || _state.Snapshot.AskCount > 0;
+
+    /// The width of the closed pill for the content now: the toast's compact row is laid out around it.
+    private double ClosedWidthNow => Target(Mode.Closed).Width;
+
+    /// Sets the pill's visibility: the shape and its shadow (and the glow) fade over the grow curve's fade, from where they are.
+    private void SetShapeShown(bool shown)
+    {
+        if (shown == _shapeShown)
+        {
+            return;
+        }
+        _shapeShown = shown;
+        var duration = PillMotion.Fade(_state.Settings.Motion, SystemParameters.ClientAreaAnimation);
+        var to = shown ? 1.0 : 0.0;
+        FadeOpacity(PillShape, to, duration);
+        FadeOpacity(ShadowShape, to, duration);
+        FadeOpacity(GlowBacking, to, duration);
+    }
+
+    /// Fades an element's opacity to `to` from its current value. Not presented yet, no clock runs, so it is set at once.
+    private void FadeOpacity(UIElement e, double to, TimeSpan duration)
+    {
+        var from = (double)e.GetValue(UIElement.OpacityProperty);
+        e.BeginAnimation(UIElement.OpacityProperty, null);
+        e.Opacity = to;
+        if (_hwnd == nint.Zero || from == to)
+        {
+            return;
+        }
+        e.BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation(from, to, duration)
+        {
+            EasingFunction = PillMotion.Ease(duration),
+            FillBehavior = FillBehavior.Stop,  // the local value is `to` once the fade ends
+        });
+    }
 
     /// The open pill's height: the top row, then the body (the sections, or the "Nothing running" note when none has anything),
     /// up to MaxOpenHeight. The body's DesiredSize holds its own margins (the 26 DIP header above, the 32 DIP quick bar below)
@@ -867,8 +986,14 @@ public partial class PillWindow : Window
     private bool IsOverShape(NativePoint screenPoint) =>
         IsInsidePill(screenPoint) || (_animating && IsInsideShape(screenPoint, _targetWidth, _targetHeight, _targetRadius));
 
-    /// Hit test in the animated geometry: the shape's current rectangle and corner radius.
-    private bool IsInsidePill(NativePoint screenPoint) => IsInsideRect(screenPoint, _shape.Rect, _shape.RadiusX);
+    /// Hit test in the animated geometry: the shape's current rectangle and corner radius. While nothing shows, the pill's hover
+    /// strip (ClosedWidth, centred) is live too, so the top centre still opens it.
+    private bool IsInsidePill(NativePoint screenPoint) =>
+        IsInsideRect(screenPoint, _shape.Rect, _shape.RadiusX)
+        || (!ShowsContent && IsInsideRect(screenPoint, IdleHoverRect, PillGeometry.ClosedRadius));
+
+    /// The idle hover strip in the layout: ClosedWidth by ClosedHeight, centred.
+    private static Rect IdleHoverRect => ToRect(PillGeometry.ShapeRect(PillGeometry.ClosedWidth, PillGeometry.ClosedHeight));
 
     private bool IsInsideShape(NativePoint screenPoint, double width, double height, double radius) =>
         IsInsideRect(screenPoint, ToRect(PillGeometry.ShapeRect(width, height)), radius);
@@ -890,6 +1015,10 @@ public partial class PillWindow : Window
     {
         var p = ToShapePoint(screenPoint);
         if (PillHitTest.DistanceToShape(p, OnWindow(_shape.Rect), _shape.RadiusX) <= NearMargin)
+        {
+            return true;
+        }
+        if (!ShowsContent && PillHitTest.DistanceToShape(p, OnWindow(IdleHoverRect), PillGeometry.ClosedRadius) <= NearMargin)
         {
             return true;
         }
@@ -1096,9 +1225,9 @@ public partial class PillWindow : Window
     private void ApplyAppearance()
     {
         var settings = _state.Settings;
-        // Idle (no badges, no ask, closed) hides the pill only once the close spring has finished; its hover area stays.
-        // A toast, a waiting ask and any chip or badge show the pill too.
-        PillShape.Opacity = _open || _closing || _shownToast is not null || _hasCollapsed || _state.Snapshot.AskCount > 0 ? 1 : 0;
+        // Idle (no badges, no ask, closed) hides the pill as the shape settles to its idle width; its hover strip stays. A toast, a
+        // waiting ask and any chip or badge show the pill too. The shape fades with this (SetShapeShown).
+        SetShapeShown(ShowsContent);
         // Only the open sections and the toast take the pointer; the closed pill's wings never do.
         CardLayer.IsHitTestVisible = _open;
         ToastBox.IsHitTestVisible = _shownToast is not null;
@@ -1118,7 +1247,6 @@ public partial class PillWindow : Window
         };
 
         // The shadow and glow effects live on the backing borders behind the pill; setting them here is per state change only.
-        ShadowShape.Opacity = PillShape.Opacity;
         ShadowShape.Effect = _open ? _openShadow : _closedShadow;
 
         var glow = settings.Background == "glow" && (_open || _hasCollapsed);
@@ -1188,10 +1316,13 @@ public partial class PillWindow : Window
     private void RebuildBadges(JsonArray badges) => _badgeCount = BadgeGlyph.FillWings(LeftWing, RightWing, badges, _accent);
 
     /// The closed pill's chips, after the badges in the wings. A pill with a badge or a chip shows.
+    /// The closed pill follows the wings: a chip that leaves fades first, and the pill follows it when it is gone (RetargetClosed).
     private void RebuildChips()
     {
-        var chips = ChipView.FillWings(LeftWing, RightWing, _state, _chosenAccent);
+        _single = ChipView.IsSingle(_state);
+        var chips = ChipView.FillWings(LeftWing, RightWing, _state, _chosenAccent, removed: RetargetClosed);
         _hasCollapsed = _badgeCount > 0 || chips > 0;
+        RetargetClosed();
     }
 
     private void OnClosed(object? sender, EventArgs e)

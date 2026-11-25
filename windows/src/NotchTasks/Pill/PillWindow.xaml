@@ -79,14 +79,15 @@
               HorizontalAlignment="Left" VerticalAlignment="Top" Stretch="None" />
         <Grid>
           <Grid x:Name="TopRow" Height="32" VerticalAlignment="Top">
+            <!-- No margin: the closed pill's padding is PillGeometry's, and the open pill's inset is the code's (Animate). -->
             <StackPanel x:Name="LeftWing" Orientation="Horizontal" HorizontalAlignment="Left"
-                        VerticalAlignment="Center" Margin="12,0,0,0">
+                        VerticalAlignment="Center" Margin="0">
               <StackPanel.RenderTransform>
                 <TranslateTransform x:Name="LeftWingShift" />
               </StackPanel.RenderTransform>
             </StackPanel>
             <StackPanel x:Name="RightWing" Orientation="Horizontal" HorizontalAlignment="Right"
-                        VerticalAlignment="Center" Margin="0,0,12,0">
+                        VerticalAlignment="Center" Margin="0">
               <StackPanel.RenderTransform>
                 <TranslateTransform x:Name="RightWingShift" />
               </StackPanel.RenderTransform>
