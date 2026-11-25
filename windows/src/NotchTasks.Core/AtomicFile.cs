@@ -7,14 +7,21 @@ public static class AtomicFile
     private static readonly UTF8Encoding Utf8 = new(encoderShouldEmitUTF8Identifier: false);
 
     /// Writes a temporary file next to the target, then renames it over the target, so a crash never leaves half a file.
-    public static void WriteAllText(string path, string text)
+    public static void WriteAllText(string path, string text) =>
+        Write(path, tmp => File.WriteAllText(tmp, text, Utf8));
+
+    /// WriteAllText for binary files (the DPAPI-protected pairing): the same temporary file and rename.
+    public static void WriteAllBytes(string path, byte[] bytes) =>
+        Write(path, tmp => File.WriteAllBytes(tmp, bytes));
+
+    private static void Write(string path, Action<string> writeTemp)
     {
         var full = Path.GetFullPath(path);
         Directory.CreateDirectory(Path.GetDirectoryName(full)!);
         var tmp = $"{full}.tmp-{Guid.NewGuid():N}";
         try
         {
-            File.WriteAllText(tmp, text, Utf8);
+            writeTemp(tmp);
             MoveWithRetry(tmp, full);
         }
         catch

@@ -1,0 +1,242 @@
+using System;
+using System.Net;
+using System.Runtime.InteropServices;
+using NotchTasks.Core.Sync;
+
+namespace NotchTasks.Services.Sync;
+
+/// Advertises the LAN listener through Windows' own DNS-SD (dnsapi.dll DnsServiceRegister, Windows 10 1809 and later).
+/// Publish and Unpublish swallow and log failures. A missing entry point (an old Windows) is logged once; the LAN still
+/// listens, and phones reach the PC through the relay.
+public sealed class DnsSdAdvertiser : IServiceAdvertiser
+{
+    private const string ServiceSuffix = "._notchtasks._tcp.local";
+    private const uint DnsRequestPending = 9506;
+
+    private readonly Action<string> _log;
+    private readonly object _gate = new();
+    private Registration? _current;
+    private bool _unavailableLogged;
+
+    public DnsSdAdvertiser()
+        : this(text => ErrorLog.Write(new InvalidOperationException(text)))
+    {
+    }
+
+    internal DnsSdAdvertiser(Action<string> log) => _log = log;
+
+    public void Publish(string instanceName, int port)
+    {
+        lock (_gate)
+        {
+            UnpublishLocked();
+            var registration = new Registration(_log);
+            try
+            {
+                registration.Prepare($"{instanceName}{ServiceSuffix}", $"{Dns.GetHostName()}.local", port);
+                var status = DnsSdNative.DnsServiceRegister(registration.Request, IntPtr.Zero);
+                if (status is not 0 and not DnsRequestPending)
+                {
+                    _log($"mDNS: registration refused (status {status})");
+                    registration.Release();
+                    return;
+                }
+                _current = registration;
+            }
+            catch (Exception e) when (e is EntryPointNotFoundException or DllNotFoundException)
+            {
+                registration.Release();
+                LogUnavailableOnce();
+            }
+            catch (Exception e)
+            {
+                registration.Release();
+                _log($"mDNS: registration failed ({e.GetType().Name})");
+            }
+        }
+    }
+
+    public void Unpublish()
+    {
+        lock (_gate)
+        {
+            UnpublishLocked();
+        }
+    }
+
+    public void Dispose() => Unpublish();
+
+    /// Deregisters the current registration. Its memory is freed by the deregistration callback (or at once when the call fails).
+    private void UnpublishLocked()
+    {
+        var registration = _current;
+        if (registration is null)
+        {
+            return;
+        }
+        _current = null;
+        try
+        {
+            registration.PrepareDeregister();
+            var status = DnsSdNative.DnsServiceDeRegister(registration.Request, IntPtr.Zero);
+            if (status is not 0 and not DnsRequestPending)
+            {
+                _log($"mDNS: deregistration refused (status {status})");
+                registration.Release();
+            }
+        }
+        catch (Exception e) when (e is EntryPointNotFoundException or DllNotFoundException)
+        {
+            registration.Release();
+            LogUnavailableOnce();
+        }
+        catch (Exception e)
+        {
+            registration.Release();
+            _log($"mDNS: deregistration failed ({e.GetType().Name})");
+        }
+    }
+
+    private void LogUnavailableOnce()
+    {
+        if (_unavailableLogged)
+        {
+            return;
+        }
+        _unavailableLogged = true;
+        _log("mDNS: DnsServiceRegister is not available on this Windows; phones reach this PC through the relay");
+    }
+
+    /// The unmanaged state of one registration. dnsapi keeps the pointers until the deregistration completes, so they are
+    /// allocated outside the GC heap; the context handle links the callbacks back to this object for logging and freeing.
+    internal sealed class Registration(Action<string> log)
+    {
+        private nint _instanceName;
+        private nint _hostName;
+        private nint _instance;
+        private GCHandle _context;
+
+        /// The DNS_SERVICE_REGISTER_REQUEST in unmanaged memory (what dnsapi is given).
+        public nint Request;
+
+        public void Prepare(string fullName, string hostName, int port)
+        {
+            _context = GCHandle.Alloc(this);
+            _instanceName = Marshal.StringToHGlobalUni(fullName);
+            _hostName = Marshal.StringToHGlobalUni(hostName);
+            _instance = Marshal.AllocHGlobal(Marshal.SizeOf<DnsSdNative.ServiceInstance>());
+            Marshal.StructureToPtr(new DnsSdNative.ServiceInstance
+            {
+                InstanceName = _instanceName,
+                HostName = _hostName,
+                Port = (ushort)port,
+            }, _instance, fDeleteOld: false);
+            Request = Marshal.AllocHGlobal(Marshal.SizeOf<DnsSdNative.RegisterRequest>());
+            WriteRequest(DnsSdNative.RegisterCallbackPointer);
+        }
+
+        public void PrepareDeregister() => WriteRequest(DnsSdNative.DeregisterCallbackPointer);
+
+        public void Log(string text) => log(text);
+
+        public static Registration? FromContext(nint context) =>
+            context == IntPtr.Zero ? null : GCHandle.FromIntPtr(context).Target as Registration;
+
+        /// Frees the unmanaged memory and the context handle. Called once the native side is done with them.
+        public void Release()
+        {
+            if (_context.IsAllocated)
+            {
+                _context.Free();
+            }
+            FreeIfSet(ref Request);
+            FreeIfSet(ref _instance);
+            FreeIfSet(ref _instanceName);
+            FreeIfSet(ref _hostName);
+        }
+
+        private void WriteRequest(nint callback) =>
+            Marshal.StructureToPtr(new DnsSdNative.RegisterRequest
+            {
+                Version = 1,
+                InterfaceIndex = 0,
+                ServiceInstance = _instance,
+                Callback = callback,
+                Context = GCHandle.ToIntPtr(_context),
+                Credentials = IntPtr.Zero,
+                UnicastEnabled = 0,
+            }, Request, fDeleteOld: false);
+
+        private static void FreeIfSet(ref nint pointer)
+        {
+            if (pointer != IntPtr.Zero)
+            {
+                Marshal.FreeHGlobal(pointer);
+                pointer = IntPtr.Zero;
+            }
+        }
+    }
+}
+
+/// The dnsapi.dll calls and their structures (DNS_SERVICE_INSTANCE, DNS_SERVICE_REGISTER_REQUEST). The callbacks are static
+/// delegates so the native side always has a live target.
+internal static partial class DnsSdNative
+{
+    public delegate void CompletionCallback(uint status, nint context, nint instance);
+
+    private static readonly CompletionCallback RegisterComplete = OnRegisterComplete;
+    private static readonly CompletionCallback DeregisterComplete = OnDeregisterComplete;
+
+    public static readonly nint RegisterCallbackPointer = Marshal.GetFunctionPointerForDelegate(RegisterComplete);
+    public static readonly nint DeregisterCallbackPointer = Marshal.GetFunctionPointerForDelegate(DeregisterComplete);
+
+    [LibraryImport("dnsapi.dll", EntryPoint = "DnsServiceRegister")]
+    public static partial uint DnsServiceRegister(nint request, nint cancel);
+
+    [LibraryImport("dnsapi.dll", EntryPoint = "DnsServiceDeRegister")]
+    public static partial uint DnsServiceDeRegister(nint request, nint cancel);
+
+    private static void OnRegisterComplete(uint status, nint context, nint instance)
+    {
+        if (status != 0)
+        {
+            DnsSdAdvertiser.Registration.FromContext(context)?.Log($"mDNS: registration failed (status {status})");
+        }
+    }
+
+    private static void OnDeregisterComplete(uint status, nint context, nint instance)
+    {
+        var registration = DnsSdAdvertiser.Registration.FromContext(context);
+        registration?.Release();
+    }
+
+    /// DNS_SERVICE_INSTANCE: the instance and host names, the port (the WORD fields), and no addresses or TXT keys.
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct ServiceInstance
+    {
+        public nint InstanceName;
+        public nint HostName;
+        public nint Ip4Address;
+        public nint Ip6Address;
+        public ushort Port;
+        public ushort Priority;
+        public ushort Weight;
+        public uint PropertiesCount;
+        public nint Keys;
+        public nint Values;
+        public uint InterfaceIndex;
+    }
+
+    /// DNS_SERVICE_REGISTER_REQUEST: version 1, the callback and its context, no credentials, unicast off.
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct RegisterRequest
+    {
+        public uint Version;
+        public uint InterfaceIndex;
+        public nint ServiceInstance;
+        public nint Callback;
+        public nint Context;
+        public nint Credentials;
+        public int UnicastEnabled;
+    }
+}
