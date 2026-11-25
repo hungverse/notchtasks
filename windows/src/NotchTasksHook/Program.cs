@@ -17,6 +17,15 @@ catch
 
 static async Task<int> RunAsync(string[] args)
 {
+    // NotchTasksHook.exe --uninstall-hooks: the installer runs this before it removes the app. It removes our hook from each
+    // agent whose settings point at this exe, and shows nothing.
+    if (args is ["--uninstall-hooks"])
+    {
+        HookInstaller.UninstallPointingAt(Path.Combine(AppContext.BaseDirectory, "NotchTasksHook.exe"),
+            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
+        return 0;
+    }
+
     if (args.Length != 2 || args[0] != "--hook" || AgentKinds.Parse(args[1]) is not { } kind)
     {
         return 0;

@@ -58,6 +58,19 @@ public partial class App : System.Windows.Application
         // Before anything else: a second launch exits at once and creates nothing. First it asks the first instance to show
         // its window (the guide, or the Control Panel).
         _instance = new SingleInstance();
+        // `--quit` (the installer, before it installs or removes the app) comes next, before anything starts. A running app is
+        // asked to quit, through its normal exit path, and this process waits up to 5 s for it to exit. With no app running,
+        // there is nothing to quit: this process exits at once, holding nothing.
+        if (e.Args.Contains("--quit"))
+        {
+            if (!_instance.IsFirst)
+            {
+                _instance.SignalQuit();
+                _instance.WaitForFirstExit(TimeSpan.FromSeconds(5));
+            }
+            Shutdown(0);
+            return;
+        }
         if (!_instance.IsFirst)
         {
             _instance.SignalFirst();
@@ -137,6 +150,8 @@ public partial class App : System.Windows.Application
         _tray = new Tray(() => ControlPanelWindow.Show(_state), () => OnboardingWindow.Show(_state), Quit);
         ApplyTrayVisibility(settings);
         _instance?.Listen(() => Dispatcher.BeginInvoke(new Action(ShowFromSecondLaunch)));
+        // `--quit` runs the tray's Quit on the UI thread, so OnExit removes app.pid like a Quit from the tray does.
+        _instance?.ListenQuit(() => Dispatcher.BeginInvoke(new Action(() => Quit())));
     }
 
     /// A second launch shows this instance's window: the guide when it is open, else the Control Panel. Runs on the UI thread.

@@ -313,6 +313,48 @@ public sealed class HookInstallerTests : IDisposable
     }
 
     [Fact]
+    public void UninstallPointingAt_RemovesOnlyHooksOfThisExe_KeepsOtherToolsAndKinds()
+    {
+        var claude = SettingsOf(AgentKind.Claude);
+        Write(claude, OtherHookJson);
+        HookInstaller.Install(AgentKind.Claude, Exe, _home);   // ours, next to another tool's hook
+        HookInstaller.Install(AgentKind.Gemini, Exe, _home);   // ours
+        HookInstaller.Install(AgentKind.Codex, Other, _home);  // another copy of NotchTasks: not this exe's
+
+        var removed = HookInstaller.UninstallPointingAt(Exe, _home);
+
+        Assert.Equal(new[] { AgentKind.Claude, AgentKind.Gemini }, removed);
+        Assert.False(HookInstaller.IsInstalled(AgentKind.Claude, _home));
+        Assert.False(HookInstaller.IsInstalled(AgentKind.Gemini, _home));
+        var root = ReadJson(claude);
+        Assert.Equal("opus", root["model"]!.GetValue<string>());
+        Assert.Single(root["hooks"]!["PermissionRequest"]!.AsArray());
+        Assert.True(HookInstaller.PointsAt(AgentKind.Codex, Other, _home));
+    }
+
+    [Fact]
+    public void UninstallPointingAt_BrokenSettingsOfOneAgent_DoNotStopTheOthers()
+    {
+        Write(SettingsOf(AgentKind.Claude), "{ not json");
+        HookInstaller.Install(AgentKind.Codex, Exe, _home);
+
+        var removed = HookInstaller.UninstallPointingAt(Exe, _home);
+
+        Assert.Equal(new[] { AgentKind.Codex }, removed);
+        Assert.False(HookInstaller.IsInstalled(AgentKind.Codex, _home));
+        Assert.Equal("{ not json", File.ReadAllText(SettingsOf(AgentKind.Claude)));  // never overwritten
+    }
+
+    [Fact]
+    public void UninstallPointingAt_NothingInstalled_RemovesNothingAndWritesNothing()
+    {
+        var removed = HookInstaller.UninstallPointingAt(Exe, _home);
+
+        Assert.Empty(removed);
+        Assert.False(File.Exists(SettingsOf(AgentKind.Claude)));
+    }
+
+    [Fact]
     public void SortedJson_SortsKeys_TwoSpaceIndent_NoTrailingNewline_KeepsNonAscii()
     {
         var node = JsonNode.Parse("""{"b":1,"a":{"d":[{"z":true,"y":null}],"c":"Nguyễn <tag> & 'q'"}}""")!;

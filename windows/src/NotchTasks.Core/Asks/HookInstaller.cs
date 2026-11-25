@@ -135,6 +135,30 @@ public static class HookInstaller
     /// Removes our hook from the agent's settings; everything else is kept. Same file rules as Install.
     public static void Uninstall(AgentKind kind, string home) => SetInstalled(on: false, kind, hookExe: "", home);
 
+    /// Removes our hook from each agent whose settings run exactly this hookExe, for the uninstaller. Each agent is tried on
+    /// its own, and a failure is ignored, so one broken settings file does not keep the others from being cleaned. Returns the
+    /// agents whose hook was removed.
+    public static IReadOnlyList<AgentKind> UninstallPointingAt(string hookExe, string home)
+    {
+        var removed = new List<AgentKind>();
+        foreach (var kind in Enum.GetValues<AgentKind>())
+        {
+            try
+            {
+                if (IsInstalled(kind, home) && PointsAt(kind, hookExe, home))
+                {
+                    Uninstall(kind, home);
+                    removed.Add(kind);
+                }
+            }
+            catch (Exception)
+            {
+                // The file is left as it was (Uninstall writes nothing it cannot parse). The uninstall goes on.
+            }
+        }
+        return removed;
+    }
+
     /// The hook command an agent runs: the quoted exe path, then --hook and the agent's id (asks.js command).
     public static string Command(AgentKind kind, string hookExe) => $"\"{hookExe}\" --hook {kind.Id()}";
 
