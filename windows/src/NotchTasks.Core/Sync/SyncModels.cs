@@ -63,3 +63,21 @@ public sealed record PhoneAnswer(
     JsonObject? Notch,
     int? Timer,
     bool Refresh);
+
+/// A usage limit as main gives it to the builder: Used is a percentage (fractions are cut), Resets is exact to the millisecond.
+public sealed record SyncLimitInput(string Provider, string Label, double Used, DateTimeOffset Resets);
+
+/// The computer's readings as main gives them: Cpu and Memory are fractions from 0 to 1, Temp in degrees.
+public sealed record SyncHealthInput(int? Battery, bool Charging, double? Temp, double? Cpu, double? Memory);
+
+/// What the snapshot is built from: the runs and builds on screen, the asks, the limits, the health and the notch. Run Since values are ignored (the builder keeps its own).
+public sealed record SyncInput(
+    IReadOnlyList<SyncRun> Runs,
+    IReadOnlyList<SyncRun> Builds,
+    IReadOnlyList<SyncAsk> Asks,
+    IReadOnlyList<SyncLimitInput> Limits,
+    SyncHealthInput? Health,
+    JsonObject? Notch);
+
+/// What the push function is told about the agents at work: Count, the oldest run's At, and Stamp (when the signal was last sent), all in ms since 1970.
+public sealed record CrewSig(int Count, double At, double Stamp);
