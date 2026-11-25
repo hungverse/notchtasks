@@ -3,6 +3,7 @@ using NotchTasks.Core.Agents;
 using NotchTasks.Core.Limits;
 using NotchTasks.Core.Modules;
 using NotchTasks.Core.Sync;
+using NotchTasks.Core.Updates;
 using NotchTasks.Services;
 using NotchTasks.Services.Devices;
 using NotchTasks.Services.Media;
@@ -24,6 +25,8 @@ namespace NotchTasks;
 /// Camera makes the mirror's camera session (null: this PC's CameraSession; a test passes a fake, so no test touches the camera).
 /// Sync makes the phone sync's hub from the SyncDeps the bridge builds (null: no sync at all, so no hub, no listener and no stream;
 /// the app passes new SyncHub, a test passes one built on fakes).
+/// Update reads the update feed (null: the real one over the network; a test passes a client over a fake handler, so no test reaches
+/// the feed. Nothing is read at construction: the service checks only when the app starts it, or when the Control Panel opens).
 public sealed record AppStateOptions(
     string? DownloadsFolder = null,
     NetworkReaders? Network = null,
@@ -43,7 +46,8 @@ public sealed record AppStateOptions(
     IMediaReader? Media = null,
     IDeviceReader? Devices = null,
     Func<ICameraSession>? Camera = null,
-    Func<SyncDeps, SyncHub>? Sync = null)
+    Func<SyncDeps, SyncHub>? Sync = null,
+    UpdateClient? Update = null)
 {
     /// This PC's readers: the options the app runs with (the same as passing none).
     public static AppStateOptions Production { get; } = new();

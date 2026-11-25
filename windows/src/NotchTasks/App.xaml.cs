@@ -8,6 +8,7 @@ using NotchTasks.Core;
 using NotchTasks.Core.Asks;
 using NotchTasks.Core.Settings;
 using NotchTasks.Core.Sync;
+using NotchTasks.Core.Updates;
 using NotchTasks.Onboarding;
 using NotchTasks.Pill;
 using NotchTasks.Services;
@@ -116,6 +117,9 @@ public partial class App : System.Windows.Application
 
         _state = new AppState(settings, store, AppStateOptions.Production with { Sync = deps => new SyncHub(deps) });
         _state.StartWatching();
+        // The installers an earlier run downloaded and did not start are removed before the first check can download another.
+        UpdateClient.RemoveLeftovers(Path.GetTempPath());
+        _state.Updates.Start();
         _ = _state.Bridge?.StartAsync();  // the phone sync: nothing runs for an unpaired PC beyond the vault read
         // The Sync motion moment, so the animated icons are in step from the first frame.
         SpriteClock.SetEpoch(AnimationEpoch.Read(AppPaths.StateFile));

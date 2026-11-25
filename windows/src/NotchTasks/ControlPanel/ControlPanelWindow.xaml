@@ -79,10 +79,9 @@
           </ListBox.ItemTemplate>
         </ListBox>
 
-        <!-- The app version, at the foot of the sidebar, under a hairline. -->
+        <!-- The app version and its update line, at the foot of the sidebar, under a hairline. -->
         <Border Grid.Row="1" BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="0,1,0,0">
-          <TextBlock x:Name="VersionText" FontSize="12" Padding="16,10"
-                     Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+          <l:UpdateFooter x:Name="Footer" />
         </Border>
       </Grid>
     </Border>

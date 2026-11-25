@@ -35,7 +35,7 @@ public partial class ControlPanelWindow : Window
 
         Sidebar.ItemsSource = PaneItem.All;
         Sidebar.SelectionChanged += OnSelectionChanged;
-        VersionText.Text = AppVersion();
+        Footer.Bind(state.Updates);
         Closing += (_, _) =>
         {
             SaveSize();
@@ -75,11 +75,9 @@ public partial class ControlPanelWindow : Window
             _window.WindowState = WindowState.Normal;
         }
         _window.Activate();
+        // Opening the Control Panel checks for an update, at most once a minute (the Mac's checkIfDue).
+        state.Updates.CheckIfDue();
     }
-
-    /// The version shown at the foot of the sidebar: the informational version up to its build hash ("1.0.0+abc" shows
-    /// "1.0.0"), or major.minor when the build has none.
-    private static string AppVersion() => AppVersionParts().Version;
 
     /// The app's version and build: "1.0.0+abc" is version "1.0.0" and build "abc" (no build: empty). The report sends both.
     internal static (string Version, string Build) AppVersionParts()

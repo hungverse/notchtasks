@@ -14,11 +14,13 @@ using NotchTasks.Core.Notch;
 using NotchTasks.Core.Settings;
 using NotchTasks.Core.Shelf;
 using NotchTasks.Core.Sync;
+using NotchTasks.Core.Updates;
 using NotchTasks.Services;
 using NotchTasks.Services.Devices;
 using NotchTasks.Services.Media;
 using NotchTasks.Services.Modules;
 using NotchTasks.Services.Sync;
+using NotchTasks.Services.Updates;
 
 namespace NotchTasks;
 
@@ -110,9 +112,15 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         Snapshot = BuildSnapshot();
         settings.Changed += OnSettingsChanged;
         Bridge = o.Sync is null ? null : SyncBridge.Create(this, o.Sync);
+        // The update notice is not a sound toast: it is announced without the notification (the Mac's notify: false).
+        Updates = new UpdateService(o.Update ?? new UpdateClient(), () => AppPaths.StateFile,
+            toast => Announce(toast, notify: false), App.Quit, UpdateService.StartInstaller, _dispatcher);
     }
 
     public SettingsStore Settings { get; }
+
+    /// The app's self-update: its check, offer and install. The app starts it (Start) once it is up; the Control Panel's footer shows it.
+    public UpdateService Updates { get; }
 
     /// The asks still waiting, oldest first. Changed on the UI thread only.
     public ObservableCollection<AgentAsk> Asks { get; }
@@ -795,6 +803,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         }
         _disposed = true;
         Settings.Changed -= OnSettingsChanged;
+        Updates.Dispose();  // the update timers stop
         Bridge?.Close();  // the hub stops: its stream, its tick and its listener
         UsageCounters.Stop();
         _watcher?.Dispose();

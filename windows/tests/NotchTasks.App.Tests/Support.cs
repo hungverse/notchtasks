@@ -1,10 +1,12 @@
 using System.IO;
+using System.Net.Http;
 using System.Reflection;
 using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Windows;
 using System.Windows.Threading;
 using NotchTasks.Core;
+using NotchTasks.Core.Updates;
 using NotchTasks.Core.Agents;
 using NotchTasks.Core.Asks;
 using NotchTasks.Core.Ci;
@@ -163,7 +165,15 @@ internal static class Fixture
             () => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()),
         Media: new NoMedia(),
         Devices: new NoDevices(),
-        Camera: () => new NoCamera());
+        Camera: () => new NoCamera(),
+        Update: new UpdateClient(new NoFeed()));
+
+    /// The update feed with no network: every request answers 404, so a check finds no update.
+    public sealed class NoFeed : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct) =>
+            Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.NotFound));
+    }
 
     /// The camera seam with no camera: a start finds none, and nothing is captured.
     public sealed class NoCamera : ICameraSession

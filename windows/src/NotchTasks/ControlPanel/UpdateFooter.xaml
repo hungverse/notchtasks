@@ -1,0 +1,57 @@
+<UserControl x:Class="NotchTasks.ControlPanel.UpdateFooter"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}">
+  <UserControl.Resources>
+    <!-- The version and "Check now" are a borderless button: the text, with no chrome (the Mac's plain button). -->
+    <Style x:Key="PlainButton" TargetType="Button">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="HorizontalAlignment" Value="Left" />
+      <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <!-- The transparent border keeps the whole row clickable, not only the glyphs. -->
+            <Border Background="{TemplateBinding Background}">
+              <ContentPresenter TextElement.Foreground="{TemplateBinding Foreground}" />
+            </Border>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+  </UserControl.Resources>
+
+  <StackPanel Margin="16,10">
+    <TextBlock x:Name="CheckingText" Visibility="Collapsed" />
+
+    <Button x:Name="VersionButton" Style="{StaticResource PlainButton}" Visibility="Collapsed" Click="OnCheckClick" />
+
+    <TextBlock x:Name="UpToDateText" Visibility="Collapsed" />
+
+    <!-- Offered or failed: the install button, or the download's progress while the installer is fetched. -->
+    <StackPanel x:Name="OfferPanel" Visibility="Collapsed">
+      <Button x:Name="InstallButton" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Margin="0,2,0,0"
+              Click="OnInstallClick">
+        <StackPanel Orientation="Horizontal">
+          <TextBlock Text="&#xE896;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Margin="0,0,6,0" VerticalAlignment="Center" />
+          <TextBlock x:Name="InstallLabel" VerticalAlignment="Center" />
+        </StackPanel>
+      </Button>
+
+      <StackPanel x:Name="ProgressPanel" Visibility="Collapsed">
+        <TextBlock x:Name="ProgressText" Margin="0,0,0,4" />
+        <ProgressBar x:Name="ProgressBar" Height="4" Minimum="0" Maximum="1" />
+      </StackPanel>
+
+      <!-- The release note: two lines at most; the full text is in the tooltip. -->
+      <TextBlock x:Name="NoteText" Margin="0,5,0,0" TextWrapping="Wrap" MaxHeight="34" Visibility="Collapsed" />
+
+      <TextBlock x:Name="ErrorText" Margin="0,5,0,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"
+                 Foreground="{DynamicResource SystemFillColorCriticalBrush}" Visibility="Collapsed" />
+    </StackPanel>
+  </StackPanel>
+</UserControl>

@@ -71,10 +71,12 @@ public sealed class ControlPanelWindowTests
             try
             {
                 Fixture.ShowOffScreen(window);
-                var version = Fixture.Named<TextBlock>(window, "VersionText");
+                // The footer's version button: the app's version, without the build hash.
+                var footer = Fixture.Named<UpdateFooter>(window, "Footer");
+                var version = Assert.IsType<string>(Fixture.Named<System.Windows.Controls.Button>(footer, "VersionButton").Content);
 
-                Assert.False(string.IsNullOrWhiteSpace(version.Text));
-                Assert.DoesNotContain('+', version.Text);
+                Assert.False(string.IsNullOrWhiteSpace(version));
+                Assert.DoesNotContain('+', version);
             }
             finally
             {
