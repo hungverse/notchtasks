@@ -13,10 +13,12 @@ using NotchTasks.Core.Modules;
 using NotchTasks.Core.Notch;
 using NotchTasks.Core.Settings;
 using NotchTasks.Core.Shelf;
+using NotchTasks.Core.Sync;
 using NotchTasks.Services;
 using NotchTasks.Services.Devices;
 using NotchTasks.Services.Media;
 using NotchTasks.Services.Modules;
+using NotchTasks.Services.Sync;
 
 namespace NotchTasks;
 
@@ -107,6 +109,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         _host.Apply(ActiveModules(settings));
         Snapshot = BuildSnapshot();
         settings.Changed += OnSettingsChanged;
+        Bridge = o.Sync is null ? null : SyncBridge.Create(this, o.Sync);
     }
 
     public SettingsStore Settings { get; }
@@ -234,6 +237,10 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
     /// The state the closed pill's chips are built from. Rebuilt by Publish.
     public NotchSnapshot Snapshot { get; private set; }
 
+    /// The phone sync's bridge: null when the options pass no sync (the tests that do not sync). It is sent the state at the end of
+    /// every Publish, and receives the phone's answers and the notable toasts.
+    public SyncBridge? Bridge { get; private set; }
+
     /// Raised after Snapshot is rebuilt.
     public event Action? NotchChanged;
 
@@ -249,6 +256,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
     /// Plays the toast's sound (its Event) and queues the toast. notify is ignored until system notifications exist.
     public void Announce(Toast t, bool notify = true)
     {
+        Bridge?.Record(t);
         if (t.Event is { } sound)
         {
             Sounds.Play(sound);
@@ -262,6 +270,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         UsageCounters.Publish();
         Snapshot = BuildSnapshot();
         NotchChanged?.Invoke();
+        Bridge?.Update();
     }
 
     /// Rebuilds only Snapshot (its Load) and raises LoadChanged. The chips, the sections and the toasts are left alone.
@@ -784,6 +793,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         }
         _disposed = true;
         Settings.Changed -= OnSettingsChanged;
+        Bridge?.Close();  // the hub stops: its stream, its tick and its listener
         UsageCounters.Stop();
         _watcher?.Dispose();
         StopMirror();  // the camera is released, and no frame is delivered after this

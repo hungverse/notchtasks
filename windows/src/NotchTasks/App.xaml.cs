@@ -7,6 +7,7 @@ using NotchTasks.ControlPanel;
 using NotchTasks.Core;
 using NotchTasks.Core.Asks;
 using NotchTasks.Core.Settings;
+using NotchTasks.Core.Sync;
 using NotchTasks.Onboarding;
 using NotchTasks.Pill;
 using NotchTasks.Services;
@@ -113,8 +114,9 @@ public partial class App : System.Windows.Application
         MigrateHooks();
         LoginItems.ApplyFirstRun();
 
-        _state = new AppState(settings, store);
+        _state = new AppState(settings, store, AppStateOptions.Production with { Sync = deps => new SyncHub(deps) });
         _state.StartWatching();
+        _ = _state.Bridge?.StartAsync();  // the phone sync: nothing runs for an unpaired PC beyond the vault read
         // The Sync motion moment, so the animated icons are in step from the first frame.
         SpriteClock.SetEpoch(AnimationEpoch.Read(AppPaths.StateFile));
         _pill = new PillWindow(_state);
