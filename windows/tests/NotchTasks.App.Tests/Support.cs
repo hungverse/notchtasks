@@ -8,6 +8,7 @@ using System.Windows.Threading;
 using NotchTasks.Core;
 using NotchTasks.Core.Updates;
 using NotchTasks.Core.Agents;
+using NotchTasks.Core.Calendars;
 using NotchTasks.Core.Asks;
 using NotchTasks.Core.Ci;
 using NotchTasks.Core.Devices;
@@ -177,6 +178,7 @@ internal static class Fixture
             () => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()),
         Media: new NoMedia(),
         Devices: new NoDevices(),
+        Calendar: new NoCalendar(),
         Camera: () => new NoCamera(),
         Update: new UpdateClient(new NoFeed()),
         Notifier: new NoNotifier());
@@ -186,6 +188,33 @@ internal static class Fixture
     {
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct) =>
             Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.NotFound));
+    }
+
+    /// The calendar seam with an empty store: it opens, and holds no appointments, so the calendar shows no events and no hint. No test
+    /// touches the real appointment store. A test that needs events applies them to the module itself; the hint is set by the test too.
+    public sealed class NoCalendar : ICalendarOpener
+    {
+        public Task<ICalendarStore?> OpenAsync() => Task.FromResult<ICalendarStore?>(new EmptyStore());
+
+        private sealed class EmptyStore : ICalendarStore
+        {
+            public event Action? Changed
+            {
+                add
+                {
+                }
+                remove
+                {
+                }
+            }
+
+            public Task<IReadOnlyList<CalendarRecord>> ReadAsync(DateTimeOffset from, TimeSpan length) =>
+                Task.FromResult<IReadOnlyList<CalendarRecord>>(Array.Empty<CalendarRecord>());
+
+            public void Dispose()
+            {
+            }
+        }
     }
 
     /// The OS notifier of every App test that is not about toasts: it posts nothing, so no test shows a real Windows toast.

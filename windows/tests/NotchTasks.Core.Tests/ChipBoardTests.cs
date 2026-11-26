@@ -1,4 +1,5 @@
 using NotchTasks.Core.Agents;
+using NotchTasks.Core.Calendars;
 using NotchTasks.Core.Ci;
 using NotchTasks.Core.Media;
 using NotchTasks.Core.Notch;
@@ -152,6 +153,29 @@ public class ChipBoardTests
         Assert.Null(single);
         Assert.Equal(new[] { ChipKind.Timer }, left.Select(c => c.Kind));
         Assert.Equal(new[] { ChipKind.Sensor }, right.Select(c => c.Kind));
+    }
+
+    [Fact]
+    public void Calendar_ChipShowsTheSoonEvent_WhenTheModuleIsOn()
+    {
+        // The Mac's calendar chip: the event the snapshot carries (a timed one soon, or running), in the calendar module's place.
+        var soon = new CalendarEvent("a@1", "Standup", T0, T0.AddMinutes(30), "#0A84FF", false, "Work", null, "a");
+        var snap = Snap(new[] { "timer", "calendar" }, timer: Timer) with { SoonEvent = soon };
+
+        var chips = ChipBoard.Chips(snap);
+
+        Assert.Equal(new[] { ChipKind.Timer, ChipKind.Calendar }, chips.Select(c => c.Kind));
+        Assert.Same(soon, chips[1].Event);
+        Assert.Equal("calendar", chips[1].Module);
+    }
+
+    [Fact]
+    public void Calendar_NoChip_WhenTheModuleIsOff_OrNothingIsSoon()
+    {
+        var soon = new CalendarEvent("a@1", "Standup", T0, T0.AddMinutes(30), "#0A84FF", false, "Work", null, "a");
+
+        Assert.Empty(ChipBoard.Chips(Snap(new[] { "timer" }) with { SoonEvent = soon }));
+        Assert.Empty(ChipBoard.Chips(Snap(new[] { "calendar" })));
     }
 
     private static WatchItem BuildItem(string id) => new(id, id, WatchKind.Dev);

@@ -60,6 +60,8 @@ public static class ModuleGlyphs
         ["externaldrive"] = new(""),                     // hard_drive (Mac externaldrive)
         ["gauge"] = new(""),                             // gauge (Mac gauge.with.dots.needle.67percent): a limit below 100 %
         ["hourglass"] = new(""),                         // hourglass (Mac hourglass): a limit at 100 %
+        ["calendar"] = new(""),                    // calendar_ltr (Mac calendar): the calendar chip and module
+        ["sun"] = new("", true),                   // weather_sunny filled (Mac sun.max.fill): an all-day event
     };
 
     /// The codes the badge symbols were stored as before the Fluent icons (a "seg:" + Segoe code in settings). They still

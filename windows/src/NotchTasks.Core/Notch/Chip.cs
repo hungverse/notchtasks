@@ -1,11 +1,12 @@
 using NotchTasks.Core.Agents;
+using NotchTasks.Core.Calendars;
 using NotchTasks.Core.Limits;
 using NotchTasks.Core.Media;
 
 namespace NotchTasks.Core.Notch;
 
 /// The kinds of chip the closed pill can show. More come with later modules.
-public enum ChipKind { Call, Ask, Timer, Sensor, Limit, Agent, Alerts, Media }
+public enum ChipKind { Call, Ask, Timer, Sensor, Limit, Agent, Alerts, Media, Calendar }
 
 /// A provider's limit on the pill: the provider's name and its window at or above the warning level (Mac: NotchView .limit).
 public sealed record LimitChip(string Name, LimitWindow W);
@@ -26,4 +27,7 @@ public sealed record Chip(ChipKind Kind, string Module, string Id)
     public LimitChip? Limit { get; init; }
     public ItemState? Agent { get; init; }
     public NowPlaying? Media { get; init; }
+
+    /// The calendar event the chip shows: a timed one starting soon, or running (Mac: the calendar chip's soonEvent).
+    public CalendarEvent? Event { get; init; }
 }

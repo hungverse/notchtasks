@@ -1139,5 +1139,7 @@
 "GIF files",
 "Couldn't export the profile",
 "Couldn't import the profile",
-"This file isn't a NotchTasks profile."
+"This file isn't a NotchTasks profile.",
+"Join",
+"Calendar can't be opened. Check Settings > Privacy & security > Calendar."
 ]

@@ -1,7 +1,8 @@
 namespace NotchTasks.Core.Settings;
 
 /// The modules of the notch, in the Mac's order (Settings.swift ModuleID): their English title and blurb keys (L10n reads
-/// them), their Fluent System Icons glyph, and whether this PC has them. Levels, calendar and fans are not on Windows.
+/// them), their Fluent System Icons glyph, and whether this PC has them. Levels and fans are not on Windows; calendar is (it reads
+/// the Windows appointment store).
 public static class ModuleCatalog
 {
     private static readonly IReadOnlyList<string> Ids =
@@ -10,14 +11,14 @@ public static class ModuleCatalog
         "levels", "network", "downloads", "health", "mirror",
     ];
 
-    private static readonly HashSet<string> NotOnWindows = new(StringComparer.Ordinal) { "levels", "calendar", "fans" };
+    private static readonly HashSet<string> NotOnWindows = new(StringComparer.Ordinal) { "levels", "fans" };
 
     /// The modules this build actually does. Any id not listed here shows "Coming soon" and asks for no permission
     /// (PermissionItems.Needed, NextSteps).
     private static readonly HashSet<string> BuiltIds = new(StringComparer.Ordinal)
     {
         "agents", "ci", "timer", "media", "shelf", "battery", "network", "downloads", "health", "privacy", "calls", "limits",
-        "devices", "mirror",
+        "devices", "mirror", "calendar",
     };
 
     /// Every module id, in the Mac's order.

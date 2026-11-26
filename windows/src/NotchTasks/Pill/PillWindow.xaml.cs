@@ -92,6 +92,8 @@ public partial class PillWindow : Window
     private readonly Func<AppState, FrameworkElement?> _agentsSection;  // the builder this pill registered for "agents"
     private readonly TimerCard _timerCard = new();  // the timer's card: one element, refreshed by its builder
     private readonly Func<AppState, FrameworkElement?> _timerSection;  // the builder this pill registered for "timer"
+    private readonly CalendarCard _calendarCard = new();  // the calendar's card: its events, or the hint; one element, refreshed by its builder
+    private readonly Func<AppState, FrameworkElement?> _calendarSection;  // the builder this pill registered for "calendar"
     private readonly CallCard _callCard = new();  // the live call's card: one element, refreshed by its builder
     private readonly Func<AppState, FrameworkElement?> _callSection;  // the builder this pill registered for "calls"
     private readonly SensorRow _sensorRow = new();  // the mic and camera row, outside a call
@@ -204,6 +206,10 @@ public partial class PillWindow : Window
         // The timer's section is its card while a timer runs.
         _timerSection = state => _timerCard.Update(state, _chosenAccent) ? _timerCard : null;
         SectionRegistry.Register("timer", _timerSection);
+        // The calendar's card: its events (or the hint when the store cannot be opened). Opening an event closes the pill, as the Mac's open().
+        _calendarCard.OpenRequested += ClosePill;
+        _calendarSection = state => _calendarCard.Update(state) ? _calendarCard : null;
+        SectionRegistry.Register("calendar", _calendarSection);
         // The call's card while a call is on: its Open button closes the pill, as the Mac's openCallApp does. The privacy row
         // shows while something uses the mic or camera outside a call.
         _callCard.OpenRequested += ClosePill;
@@ -1378,6 +1384,7 @@ public partial class PillWindow : Window
         // Only this pill's own builder: a newer pill may have registered its own since.
         SectionRegistry.Unregister("agents", _agentsSection);
         SectionRegistry.Unregister("timer", _timerSection);
+        SectionRegistry.Unregister("calendar", _calendarSection);
         SectionRegistry.Unregister("calls", _callSection);
         SectionRegistry.Unregister("privacy", _privacySection);
         SectionRegistry.Unregister("ci", _ciSection);

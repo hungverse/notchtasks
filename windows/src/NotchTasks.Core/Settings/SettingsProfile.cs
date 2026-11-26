@@ -173,8 +173,7 @@ public static class SettingsProfile
         return map;
     }
 
-    /// Whether a module id is one this PC has: the Mac's calendar and levels modules are not on Windows, so a profile's entries
-    /// for them are dropped.
+    /// Whether a module id is one this PC has: the Mac's levels module is not on Windows, so a profile's entries for it are dropped.
     private static bool IsModule(string id) => ModuleCatalog.OnWindows(id);
 
     /// A placement: "auto", "left" or "right" (Mac placements).

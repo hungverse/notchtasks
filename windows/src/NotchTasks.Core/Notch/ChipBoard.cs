@@ -1,4 +1,5 @@
 using NotchTasks.Core.Agents;
+using NotchTasks.Core.Calendars;
 using NotchTasks.Core.Limits;
 
 namespace NotchTasks.Core.Notch;
@@ -45,6 +46,11 @@ public static class ChipBoard
                     // the Now Playing chip, only while the shown session plays (the Mac's media chip)
                     if (s.Media is { Playing: true } playing)
                         list.Add(new Chip(ChipKind.Media, "media", "media") { Media = playing });
+                    break;
+                case "calendar":
+                    // the event starting soon, or running (the Mac's calendar chip): chosen when the snapshot is built
+                    if (s.SoonEvent is { } soon)
+                        list.Add(new Chip(ChipKind.Calendar, "calendar", "calendar") { Event = soon });
                     break;
                 case "limits":
                     // per provider, the window fullest among those at or above the warning level (NotchView .limits)

@@ -8,6 +8,7 @@ using System.Windows.Shapes;
 using NotchTasks.ControlPanel;
 using NotchTasks.Core;
 using NotchTasks.Core.Agents;
+using NotchTasks.Core.Calendars;
 using NotchTasks.Core.Limits;
 using NotchTasks.Core.Motion;
 using NotchTasks.Core.Media;
@@ -82,6 +83,10 @@ public static class ChipView
         if (chip.Kind == ChipKind.Alerts)
         {
             return Glyph("warning", size, HexColor.Brush(ToHex(TintOf(chip, accent, moduleColors))));
+        }
+        if (chip.Kind == ChipKind.Calendar && chip.Event is { } soon)
+        {
+            return CalendarLead(soon, size, TintOf(chip, accent, moduleColors));
         }
         if (chip.Kind == ChipKind.Agent && chip.Module == "ci" && chip.Agent is { } build)
         {
@@ -304,6 +309,8 @@ public static class ChipView
                 return LimitTrail(limit, size, now);
             case ChipKind.Media when chip.Media is not null:
                 return MediaTrail(TintOf(chip, accent, moduleColors));
+            case ChipKind.Calendar when chip.Event is { } soon:
+                return CalendarTrail(soon, size, TintOf(chip, accent, moduleColors), now);
             case ChipKind.Alerts:
                 return new TextBlock
                 {
@@ -589,7 +596,78 @@ public static class ChipView
         {
             return AlertRed;
         }
+        // an event's chip, with no calendar module colour, takes the colour of its calendar (Mac: color(for: .calendar) ?? e.color)
+        if (chip.Kind == ChipKind.Calendar && chip.Event is { } soon && HexColor.TryNormalize(soon.Color, out var calendarHex))
+        {
+            return HexColor.ToColor(calendarHex);
+        }
         return accent ?? DefaultTint(chip.Kind);
+    }
+
+    /// The calendar chip's glyph (Mac ChipView .event): a ring filling up to the end while the event runs, else the calendar icon.
+    private static FrameworkElement CalendarLead(CalendarEvent soon, double size, Color tint)
+    {
+        if (!soon.Running(DateTimeOffset.Now))
+        {
+            return Glyph("calendar", size * 0.8, new SolidColorBrush(tint));
+        }
+        const double stroke = 2.5;
+        var diameter = size * 0.75;
+        var radius = (diameter - stroke) / 2;
+        var centre = size / 2;
+        var fraction = Math.Max(soon.Elapsed(DateTimeOffset.Now), 0.03);  // the Mac's max(elapsed, 0.03): a sliver shows at once
+        var sweep = fraction * 2 * Math.PI;
+        var start = new Point(centre, centre - radius);
+        var end = new Point(centre + radius * Math.Sin(sweep), centre - radius * Math.Cos(sweep));
+        var arc = new Path
+        {
+            Stroke = new SolidColorBrush(tint),
+            StrokeThickness = stroke,
+            StrokeStartLineCap = PenLineCap.Round,
+            StrokeEndLineCap = PenLineCap.Round,
+            Data = new PathGeometry
+            {
+                Figures = new PathFigureCollection
+                {
+                    new PathFigure
+                    {
+                        StartPoint = start,
+                        Segments = new PathSegmentCollection
+                        {
+                            new ArcSegment(end, new Size(radius, radius), 0, fraction > 0.5, SweepDirection.Clockwise, true),
+                        },
+                    },
+                },
+            },
+        };
+        var track = new Ellipse
+        {
+            Width = diameter,
+            Height = diameter,
+            Stroke = new SolidColorBrush(Color.FromArgb(0x40, tint.R, tint.G, tint.B)),
+            StrokeThickness = stroke,
+        };
+        var ring = new Grid { Width = size, Height = size, VerticalAlignment = VerticalAlignment.Center };
+        ring.Children.Add(track);
+        ring.Children.Add(arc);
+        return ring;
+    }
+
+    /// The calendar chip's trail (Mac ChipView .event): the minutes, "N′", in white until the event starts, then in its tint while it
+    /// runs (the minutes it has left). Mac: Int(seconds / 60) + 1, so a minute left reads 1′.
+    private static TextBlock CalendarTrail(CalendarEvent soon, double size, Color tint, DateTimeOffset now)
+    {
+        var until = soon.Start - now;
+        var seconds = until > TimeSpan.Zero ? until.TotalSeconds : (soon.End - now).TotalSeconds;
+        return new TextBlock
+        {
+            Text = (int)(seconds / 60) + 1 + "′",
+            Foreground = until > TimeSpan.Zero ? Brushes.White : new SolidColorBrush(tint),
+            FontSize = size,
+            FontWeight = FontWeights.SemiBold,
+            Margin = new Thickness(6, 0, 6, 0),
+            VerticalAlignment = VerticalAlignment.Center,
+        };
     }
 
     /// The colour of a call's time: red while the mic is muted, else the calls module's colour, else green (the Mac's

@@ -1,4 +1,5 @@
 using NotchTasks.Core.Agents;
+using NotchTasks.Core.Calendars;
 using NotchTasks.Core.Ci;
 using NotchTasks.Core.Limits;
 using NotchTasks.Core.Media;
@@ -38,4 +39,8 @@ public sealed record NotchSnapshot(
 
     /// The item of the first ask waiting, whose icon the ask chip shows (null when no ask waits or the agents module is off).
     public WatchItem? AskItem { get; init; }
+
+    /// The calendar event the chip shows, chosen when the snapshot is built (null unless the calendar module is on and one is soon or
+    /// running). The chip is built from it, so the chip board does not read the clock.
+    public CalendarEvent? SoonEvent { get; init; }
 }

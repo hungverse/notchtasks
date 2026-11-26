@@ -74,13 +74,13 @@ public sealed class ModulesPaneBatteryTests
             // Down: media swaps with timer, the nearest shown neighbour; battery keeps index 2.
             Fixture.Call(pane, "Move", "media", 1);
             Assert.Equal(
-                new[] { "agents", "ci", "battery", "timer", "media", "shelf", "limits", "devices", "calls", "privacy", "network", "downloads", "health", "mirror" },
+                new[] { "agents", "ci", "battery", "timer", "media", "calendar", "shelf", "limits", "devices", "calls", "privacy", "network", "downloads", "health", "mirror" },
                 state.Settings.Modules);
 
             // Up: back to the stored order.
             Fixture.Call(pane, "Move", "media", -1);
             Assert.Equal(
-                new[] { "agents", "ci", "battery", "media", "timer", "shelf", "limits", "devices", "calls", "privacy", "network", "downloads", "health", "mirror" },
+                new[] { "agents", "ci", "battery", "media", "timer", "calendar", "shelf", "limits", "devices", "calls", "privacy", "network", "downloads", "health", "mirror" },
                 state.Settings.Modules);
         });
     }

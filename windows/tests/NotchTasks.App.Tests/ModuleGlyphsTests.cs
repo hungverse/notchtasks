@@ -13,7 +13,7 @@ public sealed class ModuleGlyphsTests
     {
         "hand", "question", "timer", "download", "drive", "phone", "phonedown", "video", "mic", "micoff", "camera",
         "wifi", "wifioff", "network", "vpn", "vpnoff", "battery", "batterylow", "bolt", "plug", "warning", "thermometer",
-        "check", "sparkles", "log", "media", "previous", "next", "play", "pause", "gauge", "hourglass",
+        "check", "sparkles", "log", "media", "previous", "next", "play", "pause", "gauge", "hourglass", "calendar", "sun",
     };
 
     /// The icon each name draws: the key of the bundled font it is (ic_fluent_<name>_20_regular, or _filled where the Mac draws
@@ -52,6 +52,8 @@ public sealed class ModuleGlyphsTests
         ["pause"] = "ic_fluent_pause_20_filled",
         ["gauge"] = "ic_fluent_gauge_20_regular",
         ["hourglass"] = "ic_fluent_hourglass_20_regular",
+        ["calendar"] = "ic_fluent_calendar_ltr_20_regular",
+        ["sun"] = "ic_fluent_weather_sunny_20_filled",
     };
 
     /// Pairs of names that share a code point on purpose. Empty: every name has its own glyph.

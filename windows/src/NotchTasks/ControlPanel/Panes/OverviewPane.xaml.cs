@@ -37,7 +37,7 @@ public partial class OverviewPane : SettingsPane
     /// Windows module no other group names.
     private static readonly (string Title, string[] Ids)[] Groups =
     [
-        ("Work", ["agents", "ci", "limits", "timer"]),
+        ("Work", ["agents", "ci", "limits", "calendar", "timer"]),
         ("Music & devices", ["media", "devices", "battery"]),
         ("Calls & privacy", ["calls", "privacy", "mirror"]),
         ("System", ["network", "downloads", "health", "shelf"]),

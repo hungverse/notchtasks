@@ -18,13 +18,21 @@ public sealed class ModuleCatalogTests
     }
 
     [Fact]
-    public void OnWindows_HidesLevelsCalendarFans()
+    public void OnWindows_HidesLevelsAndFans_ButNotCalendar()
     {
+        // Calendar reads the Windows appointment store, so it is on this PC; levels and fans are not.
         Assert.False(ModuleCatalog.OnWindows("levels"));
-        Assert.False(ModuleCatalog.OnWindows("calendar"));
         Assert.False(ModuleCatalog.OnWindows("fans"));
+        Assert.True(ModuleCatalog.OnWindows("calendar"));
         Assert.True(ModuleCatalog.OnWindows("agents"));
         Assert.True(ModuleCatalog.OnWindows("media"));
+    }
+
+    [Fact]
+    public void Built_IncludesCalendar()
+    {
+        // Phase 9 builds the calendar module: it leaves "Coming soon" and asks for nothing extra.
+        Assert.True(ModuleCatalog.Built("calendar"));
     }
 
     [Fact]
@@ -64,7 +72,7 @@ public sealed class ModuleCatalogTests
         var order = ModuleCatalog.Order(new[] { "timer", "agents", "calendar", "bogus", "timer", "levels" });
 
         Assert.Equal(
-            new[] { "timer", "agents", "ci", "media", "shelf", "limits", "battery", "devices", "calls", "privacy", "network", "downloads", "health", "mirror" },
+            new[] { "timer", "agents", "calendar", "ci", "media", "shelf", "limits", "battery", "devices", "calls", "privacy", "network", "downloads", "health", "mirror" },
             order);
     }
 
@@ -72,7 +80,7 @@ public sealed class ModuleCatalogTests
     public void Order_OfNothing_IsTheWindowsModulesInMacOrder()
     {
         Assert.Equal(
-            new[] { "agents", "ci", "media", "timer", "shelf", "limits", "battery", "devices", "calls", "privacy", "network", "downloads", "health", "mirror" },
+            new[] { "agents", "ci", "media", "calendar", "timer", "shelf", "limits", "battery", "devices", "calls", "privacy", "network", "downloads", "health", "mirror" },
             ModuleCatalog.Order(Array.Empty<string>()));
     }
 
@@ -98,13 +106,13 @@ public sealed class ModuleCatalogTests
     [Fact]
     public void Reorder_KeepsHiddenIdsInPlace()
     {
-        // calendar, levels and bogus are hidden or unknown: they keep their positions; agents and timer swap.
-        var stored = new[] { "calendar", "timer", "levels", "agents", "bogus" };
+        // levels, fans and bogus are hidden or unknown: they keep their positions; agents and timer swap.
+        var stored = new[] { "levels", "timer", "fans", "agents", "bogus" };
 
         var result = ModuleCatalog.Reorder(stored, "agents", -1);
 
         Assert.Equal(
-            new[] { "calendar", "agents", "levels", "timer", "bogus", "ci", "media", "shelf", "limits", "battery", "devices", "calls", "privacy", "network", "downloads", "health", "mirror" },
+            new[] { "levels", "agents", "fans", "timer", "bogus", "ci", "media", "calendar", "shelf", "limits", "battery", "devices", "calls", "privacy", "network", "downloads", "health", "mirror" },
             result);
     }
 

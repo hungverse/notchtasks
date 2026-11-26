@@ -248,6 +248,33 @@ public sealed class L10nTests
         Assert.Empty(placeholders);
     }
 
+    // Phase 9's calendar card: the Join button, and the hint when the calendar store cannot be opened. Each one needs a text in every
+    // language, in the Mac table or in electron/l10n/windows.json.
+    private static readonly string[] Phase9Keys =
+    [
+        "Join", "Calendar can't be opened. Check Settings > Privacy & security > Calendar.",
+    ];
+
+    [Fact]
+    public void Phase9Keys_ExistInEveryLanguage()
+    {
+        var overlayFile = Path.Combine(RepoRoot(), "electron", "l10n", "windows.json");
+        var missing = new List<string>();
+        foreach (var (code, _) in L10n.Languages.Where(language => language.Code != "en"))
+        {
+            var mac = ReadStrings(Path.Combine(MacSources(), $"l10n-{code}.json"));
+            var windows = ReadOverlay(overlayFile, code);
+            foreach (var key in Phase9Keys)
+            {
+                if (!mac.ContainsKey(key) && !windows.ContainsKey(key))
+                {
+                    missing.Add($"{code}: {key}");
+                }
+            }
+        }
+        Assert.Empty(missing);
+    }
+
     // Every key the Windows build passes to L10n.L since 7663b8c (Phase 3b: agents, limits, the watch list editor),
     // plus the two Icon Library hints that had no Windows text. Each one needs a text in every language.
     private static readonly string[] Phase3bKeys =

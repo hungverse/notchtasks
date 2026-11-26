@@ -1,10 +1,12 @@
 using System.Collections.ObjectModel;
 using System.IO;
 using System.ComponentModel;
+using System.Text.Json.Nodes;
 using System.Windows.Threading;
 using NotchTasks.Core;
 using NotchTasks.Core.Agents;
 using NotchTasks.Core.Asks;
+using NotchTasks.Core.Calendars;
 using NotchTasks.Core.Ci;
 using NotchTasks.Core.Devices;
 using NotchTasks.Core.Limits;
@@ -16,6 +18,7 @@ using NotchTasks.Core.Shelf;
 using NotchTasks.Core.Sync;
 using NotchTasks.Core.Updates;
 using NotchTasks.Services;
+using NotchTasks.Services.Appointments;
 using NotchTasks.Services.Devices;
 using NotchTasks.Services.Media;
 using NotchTasks.Services.Modules;
@@ -46,6 +49,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
     private readonly CiSource _ciSource;
     private readonly MediaSource _mediaSource;
     private readonly DevicesSource _devicesSource;
+    private const string CalendarDismissedKey = "calendarDismissed";  // state.json: the calendar events the user hid
     private bool _shelfTargeted;  // a file is dragged over the pill: the shelf card shows its drop prompt
     private readonly RecentCache<System.Windows.Media.ImageSource> _mediaArt = new(8);  // the artwork of the last eight keys
     private const int WorkerLogTail = 2_000_000;   // the bytes of a GitHub worker's log the module reads
@@ -77,6 +81,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         Battery = new BatteryModule(this);
         _batterySource = new BatterySource(Battery, Publish, o.Power);
         Network = new NetworkModule(this);
+        Calendar = new CalendarModule(this, LoadCalendarDismissed, SaveCalendarDismissed);
         Downloads = new DownloadsModule(this, o.DownloadsFolder ?? DownloadFolder.Locate() ?? string.Empty);
         Health = new HealthModule(this);
         _healthSource = new HealthSource(Health, PublishLoad, settings, o.Health);
@@ -109,7 +114,8 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
             () => ActiveModules(settings).Contains("privacy"),
             () => ActiveModules(settings).Contains("calls"));
         _sensorsSource = new SensorsSource(Sensors, Publish, _clock, o.Sensors);
-        _host = new ModuleHost(CreateSources(o.Network), OnTurnedOff, (message, e) => ErrorLog.Write(new InvalidOperationException(message, e)));
+        _host = new ModuleHost(CreateSources(o.Network, o.Calendar ?? new AppointmentCalendarOpener()), OnTurnedOff,
+            (message, e) => ErrorLog.Write(new InvalidOperationException(message, e)));
         Helper.Start();  // no UAC here: the helper is only started by the user's click (SensorHelper)
         _host.Apply(ActiveModules(settings));
         Snapshot = BuildSnapshot();
@@ -222,6 +228,31 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
 
     /// The network: it only makes toasts (no snapshot field), so Publish is not needed.
     public NetworkModule Network { get; }
+
+    /// The calendar: its events and hint (the calendar card reads them), the event the chip shows (the snapshot's SoonEvent), and the
+    /// meeting toasts. Its source (CalendarSource) runs while calendar is on.
+    public CalendarModule Calendar { get; }
+
+    /// Hides a calendar event from the notch and keeps that across runs, then publishes so the card and the chip follow.
+    public void DismissCalendarEvent(string id)
+    {
+        Calendar.Dismiss(id);
+        if (!_disposed)
+        {
+            Publish();
+        }
+    }
+
+    /// The events the user hid (state.json "calendarDismissed"). A missing or invalid value is none.
+    private static IReadOnlyList<string> LoadCalendarDismissed() =>
+        (StateJson.Get(AppPaths.StateFile, CalendarDismissedKey) as JsonArray)?
+            .Select(node => node?.GetValue<string>())
+            .OfType<string>()
+            .ToList() ?? new List<string>();
+
+    /// Keeps the hidden event ids in state.json, so a hidden event stays hidden after a restart (the Mac's dismissedEvents).
+    private static void SaveCalendarDismissed(IReadOnlyList<string> ids) =>
+        StateJson.Set(AppPaths.StateFile, CalendarDismissedKey, new JsonArray(ids.Select(id => (JsonNode)JsonValue.Create(id)!).ToArray()));
 
     /// The downloads: it only makes toasts (no snapshot field), so Publish is not needed.
     public DownloadsModule Downloads { get; }
@@ -536,12 +567,14 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
 
     /// The module sources by module id, built once before the first Apply. Modules register their sources here: a module
     /// with no entry is active but runs nothing. Timer is made before this runs.
-    private IReadOnlyDictionary<string, IModuleSource> CreateSources(NetworkReaders? network) =>
+    private IReadOnlyDictionary<string, IModuleSource> CreateSources(NetworkReaders? network, ICalendarOpener calendar) =>
         new Dictionary<string, IModuleSource>(StringComparer.Ordinal)
         {
             ["timer"] = new TimerSource(Timer, _clock),
             ["battery"] = _batterySource,
             ["network"] = new NetworkSource(Network, network),
+            // the store is opened while the module is on: no access, or no store, shows the card's hint and nothing runs
+            ["calendar"] = new CalendarSource(Calendar, calendar, Publish),
             ["downloads"] = new DownloadsSource(Downloads),
             // one source for both: the temperature feed runs only while the health module runs and the pill is open
             ["health"] = new CompositeSource(_healthSource, _thermalSource),
@@ -575,6 +608,8 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
             Limits = modules.Contains("limits") ? LimitsModule.Limits : Array.Empty<ProviderLimits>(),
             LimitWarn = Settings.LimitWarn,
             Media = modules.Contains("media") ? this.Media.Current : null,
+            // the calendar's chip event, picked now: a timed event soon or running (none unless calendar is on)
+            SoonEvent = modules.Contains("calendar") ? this.Calendar.SoonEvent(DateTimeOffset.Now) : null,
             // the first ask's agent, whose icon leads the ask chip (Mac: asks.first)
             AskItem = modules.Contains("agents") && Asks.Count > 0 ? AgentItems.ItemOf(Asks[0], Settings.Items) : null,
         };
