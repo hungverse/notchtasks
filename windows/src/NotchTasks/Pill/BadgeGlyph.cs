@@ -150,7 +150,8 @@ public static class BadgeGlyph
         var plain = ReadBool(badge, "plain");
         var tint = ColorOf(ReadString(badge, "color")) ?? (accent == default ? FallbackFill : accent);
         var ink = ColorOf(ReadString(badge, "fg")) ?? Colors.White;
-        var corner = plain ? 0 : ReadString(badge, "shape") == "rounded" ? size * 0.28 : size / 2;
+        // the shape of the badge: its border follows it even when plain (a plain badge has no fill and no clip, only the border's shape)
+        var corner = ReadString(badge, "shape") == "rounded" ? size * 0.28 : size / 2;
 
         var pending = new List<Task>();
         var (sheet, still) = Art(badge, image, animated, size, pending);

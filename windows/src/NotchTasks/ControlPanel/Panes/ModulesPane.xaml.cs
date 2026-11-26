@@ -202,7 +202,7 @@ public partial class ModulesPane : SettingsPane
             Code = ModuleCatalog.Glyph(id),
             Filled = ModuleCatalog.GlyphFilled(id),
             Size = 16,
-            Foreground = (Brush)FindResource("TextOnAccentFillColorPrimaryBrush"),
+            Foreground = Brushes.White,  // a coloured chip carries a white glyph (the on-accent brush is black in dark mode)
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
         };
@@ -523,6 +523,13 @@ public partial class ModulesPane : SettingsPane
         Write("placements", ToObject(map));
     }
 
+    /// A line whose stroke is a theme resource that follows the theme live.
+    private static Line ThemedStroke(Line line, string resourceKey)
+    {
+        line.SetResourceReference(Shape.StrokeProperty, resourceKey);
+        return line;
+    }
+
     /// The "none" mark of an unset colour: a diagonal line across the 18 DIP swatch, in the secondary text colour.
     private static Canvas NoneMark() => new()
     {
@@ -530,11 +537,7 @@ public partial class ModulesPane : SettingsPane
         Height = 18,
         Children =
         {
-            new Line
-            {
-                X1 = 4, Y1 = 14, X2 = 14, Y2 = 4, StrokeThickness = 1.2,
-                Stroke = (Brush)Application.Current.FindResource("TextFillColorSecondaryBrush"),
-            },
+            ThemedStroke(new Line { X1 = 4, Y1 = 14, X2 = 14, Y2 = 4, StrokeThickness = 1.2 }, "TextFillColorSecondaryBrush"),
         },
     };
 

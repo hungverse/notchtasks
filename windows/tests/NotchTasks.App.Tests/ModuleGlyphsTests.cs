@@ -31,9 +31,9 @@ public sealed class ModuleGlyphsTests
         ["micoff"] = "ic_fluent_mic_off_20_filled",
         ["phonedown"] = "ic_fluent_call_end_20_filled",
         ["camera"] = "ic_fluent_camera_20_filled",
-        ["wifi"] = "ic_fluent_wifi_4_20_regular",
+        ["wifi"] = "ic_fluent_wifi_1_20_regular",  // U+F8AC: the full-strength Wi-Fi of the shipped font
         ["wifioff"] = "ic_fluent_wifi_off_20_regular",
-        ["network"] = "ic_fluent_wifi_4_20_regular",  // the Network module is the Fluent wifi icon (the same glyph as the wifi chip)
+        ["network"] = "ic_fluent_wifi_1_20_regular",  // the Network module is the Fluent wifi icon (the same glyph as the wifi chip)
         ["vpn"] = "ic_fluent_shield_lock_20_filled",
         ["vpnoff"] = "ic_fluent_lock_open_20_filled",
         ["battery"] = "ic_fluent_battery_5_20_regular",

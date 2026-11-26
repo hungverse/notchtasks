@@ -145,7 +145,7 @@ public partial class WatchingPane : SettingsPane
 
         var remove = new Button
         {
-            Content = new FluentGlyph { Code = DeleteGlyph, Size = 14, Foreground = (Brush)FindResource("TextFillColorPrimaryBrush") },
+            Content = new FluentGlyph { Code = DeleteGlyph, Size = 14 }.ThemedBy("TextFillColorPrimaryBrush"),
             ToolTip = L10n.L("Remove"),
             Margin = new Thickness(12, 0, 0, 0),
             VerticalAlignment = VerticalAlignment.Center,
@@ -297,7 +297,7 @@ public partial class WatchingPane : SettingsPane
         var unknown = ModuleGlyphs.Get(symbol).Glyph == ModuleGlyphs.Fallback;
         // a 20 DIP glyph in the text colour, centred in its box (FluentGlyph); the row centres the element in its column
         var glyph = FluentGlyph.Named(unknown ? "sparkles" : symbol, 20);
-        glyph.Foreground = (Brush)Application.Current.FindResource("TextFillColorPrimaryBrush");
+        glyph.SetResourceReference(FluentGlyph.ForegroundProperty, "TextFillColorPrimaryBrush");
         return glyph;
     }
 

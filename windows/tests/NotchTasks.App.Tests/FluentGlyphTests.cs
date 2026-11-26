@@ -1,5 +1,8 @@
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Media;
+using NotchTasks.Core.Settings;
+using NotchTasks.Pill;
 using Xunit;
 
 namespace NotchTasks.AppTests;
@@ -73,5 +76,53 @@ public sealed class FluentGlyphTests
             Assert.Same(first, FluentGlyph.CentredOutline("", false, 14));
             Assert.NotSame(first, FluentGlyph.CentredOutline("", false, 15));
         });
+    }
+
+    [Fact]
+    public void ArrangedInABiggerBox_IsDrawnCentredInThatBox()
+    {
+        Sta.Run(() =>
+        {
+            // the glyph is 12 DIP but the element is laid out 40 x 24: the drawn outline is centred in the arranged box
+            var glyph = new FluentGlyph { Code = "F8B2", Size = 12, Width = 40, Height = 24 };
+            glyph.Measure(new Size(100, 100));
+            glyph.Arrange(new Rect(0, 0, 100, 100));
+
+            var drawn = glyph.DrawnBounds;
+            Assert.InRange(drawn.X + drawn.Width / 2, 20 - 0.5, 20 + 0.5);
+            Assert.InRange(drawn.Y + drawn.Height / 2, 12 - 0.5, 12 + 0.5);
+        });
+    }
+
+    [Fact]
+    public void EveryModuleAndCatalogGlyph_DrawsAtLeastEightDipLongAndThreeShortAt16()
+    {
+        // A glyph that draws as a dot or a blank is a codepoint the font does not give a shape for: the Network icon was one.
+        Sta.Run(() =>
+        {
+            var failures = new List<string>();
+            foreach (var id in ModuleCatalog.All)
+            {
+                Check(failures, "module " + id, ModuleCatalog.Glyph(id), ModuleCatalog.GlyphFilled(id));
+            }
+            foreach (var name in ModuleGlyphs.Names)
+            {
+                Check(failures, "name " + name, ModuleGlyphs.Get(name).Glyph, ModuleGlyphs.IsFilled(name));
+            }
+            Assert.Empty(failures);
+        });
+    }
+
+    private static void Check(List<string> failures, string label, string code, bool filled)
+    {
+        var outline = FluentGlyph.CentredOutline(code, filled, 16);
+        var bounds = outline?.Bounds ?? Rect.Empty;
+        // a dot or a blank is caught: the longer side must be 8 DIP, the shorter 3 (a thermometer or a phone is narrow, not a dot)
+        if (bounds.IsEmpty || Math.Max(bounds.Width, bounds.Height) < 8 || Math.Min(bounds.Width, bounds.Height) < 3)
+        {
+            var family = filled ? "Filled" : "Regular";
+            var point = code.Length > 0 ? char.ConvertToUtf32(code, 0) : 0;
+            failures.Add(label + ": U+" + point.ToString("X4") + " (" + family + ") draws " + bounds.Width.ToString("0.0") + "x" + bounds.Height.ToString("0.0") + " DIP");
+        }
     }
 }

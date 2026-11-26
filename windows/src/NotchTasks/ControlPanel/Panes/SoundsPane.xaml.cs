@@ -126,7 +126,7 @@ public partial class SoundsPane : SettingsPane
         var play = new Button
         {
             // the Fluent play glyph, white and centred in the button (FluentGlyph centres it on its own box)
-            Content = new FluentGlyph { Code = ModuleGlyphs.Get("play").Glyph, Filled = ModuleGlyphs.IsFilled("play"), Size = 12, Foreground = (Brush)FindResource("TextFillColorPrimaryBrush") },
+            Content = new FluentGlyph { Code = ModuleGlyphs.Get("play").Glyph, Filled = ModuleGlyphs.IsFilled("play"), Size = 12 }.ThemedBy("TextFillColorPrimaryBrush"),
             Width = 32,
             Height = 28,
             VerticalAlignment = VerticalAlignment.Center,

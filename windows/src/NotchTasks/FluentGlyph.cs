@@ -7,13 +7,15 @@ using System.Windows.Media;
 
 namespace NotchTasks;
 
-/// One Fluent System Icons glyph, drawn as a path and centred in its box. A TextBlock sets a glyph on the font's baseline, so an
-/// icon sits low or off-centre; this control measures the glyph's own outline and moves it so the outline's bounds are centred in
-/// a Size by Size square, at the size asked for (Stretch None). The glyph is filled with Foreground, which inherits from the
-/// parent (a pill badge's ink, a Control Panel tile's text colour), and is white by default.
+/// One Fluent System Icons glyph, drawn as a path and centred. A TextBlock sets a glyph on the font's baseline, so an icon sits
+/// low or off-centre; this control moves the glyph's own outline so its bounds are centred in the box it is arranged in (its
+/// RenderSize), with the glyph at Size DIP. The fill is Foreground, which is the TextElement foreground: a glyph inside a Button
+/// or a TextBlock takes that colour as text does, and is white when no ancestor sets one.
 ///
-///   <local:FluentGlyph Code="&#xF72A;" Size="12" />          a Regular glyph
-///   <local:FluentGlyph Code="&#xF72A;" Size="12" Filled="True" />  the Filled twin
+/// The control draws only; it is not a hit target. A click, cursor or tooltip belongs to a Border or Button around it.
+///
+///   <fi:FluentGlyph Code="&#xF72A;" Size="12" />                    a Regular glyph
+///   <fi:FluentGlyph Code="&#xF72A;" Size="12" Filled="True" />      the Filled twin
 public sealed class FluentGlyph : FrameworkElement
 {
     /// The codepoint of the glyph, as its one-character string (ModuleGlyphs and the Mac-symbol maps hold these).
@@ -22,7 +24,7 @@ public sealed class FluentGlyph : FrameworkElement
         new FrameworkPropertyMetadata(string.Empty, FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsRender,
             (d, _) => ((FluentGlyph)d).Rebuild()));
 
-    /// The box the glyph is centred in, in DIP (a square).
+    /// The em size of the glyph, in DIP: the box it is centred in is this size, and the arranged box may be larger.
     public static readonly DependencyProperty SizeProperty = DependencyProperty.Register(
         nameof(Size), typeof(double), typeof(FluentGlyph), new FrameworkPropertyMetadata(16.0,
             FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsRender,
@@ -33,22 +35,26 @@ public sealed class FluentGlyph : FrameworkElement
         nameof(Filled), typeof(bool), typeof(FluentGlyph), new FrameworkPropertyMetadata(false,
             FrameworkPropertyMetadataOptions.AffectsRender, (d, _) => ((FluentGlyph)d).Rebuild()));
 
-    /// The fill of the glyph: the TextElement foreground, so a glyph inside a Button or a TextBlock takes its colour the way text does
-    /// (a Button's template sets it), and is white when no ancestor sets one.
+    /// The fill of the glyph: the TextElement foreground (white when no ancestor sets one).
     public static readonly DependencyProperty ForegroundProperty = TextElement.ForegroundProperty.AddOwner(
         typeof(FluentGlyph), new FrameworkPropertyMetadata(Brushes.White,
             FrameworkPropertyMetadataOptions.Inherits | FrameworkPropertyMetadataOptions.AffectsRender));
 
-    private static readonly ConcurrentDictionary<(string Code, bool Filled, double Size), Geometry?> Cache = new();
+    private static readonly ConcurrentDictionary<(string Code, bool Filled, double Size), Geometry> Cache = new();
 
     private Geometry? _geometry;
 
     public FluentGlyph()
     {
-        IsHitTestVisible = false;
-        HorizontalAlignment = HorizontalAlignment.Center;  // an icon is centred in its parent: a stretched element would move its drawing off the centre
+        HorizontalAlignment = HorizontalAlignment.Center;  // an icon is centred in its parent by default
         VerticalAlignment = VerticalAlignment.Center;
-        Rebuild();
+    }
+
+    /// Takes its colour from a theme resource that follows the theme live (a one-time FindResource would keep the first theme's brush).
+    public FluentGlyph ThemedBy(string resourceKey)
+    {
+        SetResourceReference(ForegroundProperty, resourceKey);
+        return this;
     }
 
     public string Code { get => (string)GetValue(CodeProperty); set => SetValue(CodeProperty, value); }
@@ -59,11 +65,47 @@ public sealed class FluentGlyph : FrameworkElement
 
     public Brush Foreground { get => (Brush)GetValue(ForegroundProperty); set => SetValue(ForegroundProperty, value); }
 
-    /// The outline of the glyph, moved so its bounds are centred in the Size square (null for an empty code). Frozen and cached.
+    /// The outline of the glyph, centred in a Size square at the origin (null for an empty code). Frozen and cached.
     public Geometry? Outline => _geometry;
 
-    /// The glyph of a ModuleGlyphs name, in its own family (Filled when the name is a filled icon), at `size` DIP. The one way the pill
-    /// and the Control Panel draw a named icon.
+    /// Where the glyph is drawn inside this element: the outline's bounds, moved by the offset that centres the Size square in
+    /// the arranged box (RenderSize). Empty when there is no glyph.
+    public Rect DrawnBounds
+    {
+        get
+        {
+            if (_geometry is null)
+            {
+                return Rect.Empty;
+            }
+            var offset = Offset();
+            var bounds = _geometry.Bounds;
+            return new Rect(bounds.X + offset.X, bounds.Y + offset.Y, bounds.Width, bounds.Height);
+        }
+    }
+
+    /// The centred outline of a glyph at `size` DIP, from the font it names. Cached by (code, family, size); null when the code is
+    /// empty or the font has no outline for it (a failed build is not cached, so a later call can try again).
+    public static Geometry? CentredOutline(string code, bool filled, double size)
+    {
+        if (string.IsNullOrEmpty(code) || size <= 0)
+        {
+            return null;
+        }
+        var key = (code, filled, size);
+        if (Cache.TryGetValue(key, out var cached))
+        {
+            return cached;
+        }
+        var built = Build(code, filled, size);
+        if (built is not null)
+        {
+            Cache[key] = built;
+        }
+        return built;
+    }
+
+    /// The glyph of a ModuleGlyphs name, in its own family (Filled when the name is a filled icon), at `size` DIP.
     public static FluentGlyph Named(string name, double size)
     {
         var glyph = new FluentGlyph { Size = size };
@@ -71,28 +113,30 @@ public sealed class FluentGlyph : FrameworkElement
         return glyph;
     }
 
-    /// The centred outline of a glyph at `size` DIP, from the font it names. Cached by (code, family, size); null when the code is
-    /// empty or the font has no outline for it.
-    public static Geometry? CentredOutline(string code, bool filled, double size) =>
-        Cache.GetOrAdd((code ?? string.Empty, filled, size), key => Build(key.Code, key.Filled, key.Size));
-
-    protected override Size MeasureOverride(Size availableSize) => new(Size, Size);
-
-    protected override void OnRender(DrawingContext drawingContext)
-    {
-        if (_geometry is not null)
-        {
-            drawingContext.DrawGeometry(Foreground, null, _geometry);
-        }
-    }
-
-    /// Draws the named ModuleGlyphs icon into this glyph (its code and family), as the Control Panel and the pill name their icons.
+    /// Draws the named ModuleGlyphs icon into this glyph (its code and family).
     public void SetNamed(string name)
     {
         var (family, code) = NotchTasks.Pill.ModuleGlyphs.Get(name);
         Filled = ReferenceEquals(family, FluentIcons.Filled);
         Code = code;
     }
+
+    protected override Size MeasureOverride(Size availableSize) => new(Size, Size);
+
+    protected override void OnRender(DrawingContext drawingContext)
+    {
+        if (_geometry is null)
+        {
+            return;
+        }
+        var offset = Offset();
+        drawingContext.PushTransform(new TranslateTransform(offset.X, offset.Y));
+        drawingContext.DrawGeometry(Foreground, null, _geometry);
+        drawingContext.Pop();
+    }
+
+    /// The offset of the Size square inside the arranged box: half of the spare room on each axis.
+    private Vector Offset() => new((RenderSize.Width - Size) / 2, (RenderSize.Height - Size) / 2);
 
     private void Rebuild()
     {
@@ -102,10 +146,6 @@ public sealed class FluentGlyph : FrameworkElement
 
     private static Geometry? Build(string code, bool filled, double size)
     {
-        if (string.IsNullOrEmpty(code) || size <= 0)
-        {
-            return null;
-        }
         var family = filled ? FluentIcons.Filled : FluentIcons.Regular;
         var typeface = new Typeface(family, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
         // The em box is the size itself: the glyph is drawn at the size the caller gave, then centred in that square.

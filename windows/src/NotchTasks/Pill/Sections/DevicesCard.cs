@@ -156,7 +156,7 @@ public sealed class DeviceCapsule : Border
             {
                 _content.Children.Remove(_glyph);
             }
-            _glyph = DeviceArtView.Glyph(device.Symbol, tint, GlyphSize);
+            _glyph = DeviceArtView.Glyph(device.Symbol, Brushes.White, GlyphSize);  // the device icon is white on the chip, not the device tint
             _glyph.VerticalAlignment = VerticalAlignment.Center;
             _content.Children.Insert(0, _glyph);
             _symbol = device.Symbol;

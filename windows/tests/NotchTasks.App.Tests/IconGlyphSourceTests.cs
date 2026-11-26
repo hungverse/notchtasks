@@ -107,10 +107,10 @@ public sealed class IconGlyphSourceTests
     [Fact]
     public void NetworkModule_DrawsTheFluentWifiGlyph_NotADot()
     {
-        // wifi_4 (Regular, U+F8B2): the Network module's icon in the Control Panel and in the pill's Network chip.
-        Assert.Equal("", ModuleCatalog.Glyph("network"));
-        Assert.Equal("", ModuleGlyphs.Get("network").Glyph);
-        Assert.Equal(0xF8B2, IconFonts.Regular["ic_fluent_wifi_4_20_regular"]);
+        // the full-strength Wi-Fi (U+F8AC): the Network module's icon in the Control Panel and in the pill's Network chip.
+        Assert.Equal("", ModuleCatalog.Glyph("network"));
+        Assert.Equal("", ModuleGlyphs.Get("network").Glyph);
+        Assert.Contains(0xF8AC, IconFonts.Regular.Values);  // the full-strength Wi-Fi (the JSON names it wifi_1, see ModuleGlyphs)
     }
 
     [Fact]
@@ -176,6 +176,44 @@ public sealed class IconGlyphSourceTests
             .Select(Path.GetFileName)
             .ToList();
         Assert.Empty(offenders);
+    }
+
+    [Fact]
+    public void CoulouredChipGlyphs_AreWhite_NotTheOnAccentBrush()
+    {
+        // The on-accent brush is black in dark mode: a glyph on a coloured chip is white (the module, Overview and permission chips).
+        foreach (var file in new[] { "ModulesPane.xaml.cs", "OverviewPane.xaml.cs", "PermissionsPane.xaml.cs" })
+        {
+            var text = File.ReadAllText(Path.Combine(IconFonts.SourceRoot, "NotchTasks", "ControlPanel", "Panes", file));
+            Assert.DoesNotContain("TextOnAccentFillColorPrimaryBrush", text);
+        }
+    }
+
+    [Fact]
+    public void ThemeGlyphs_FollowTheThemeLive_NotAOneTimeFindResource()
+    {
+        // A FindResource takes the brush once; a SetResourceReference follows a light and dark switch. Glyphs use the second.
+        foreach (var file in new[]
+                 {
+                     Path.Combine("ControlPanel", "BadgeEditorBody.cs"),
+                     Path.Combine("ControlPanel", "Panes", "SoundsPane.xaml.cs"),
+                     Path.Combine("ControlPanel", "Panes", "WatchingPane.xaml.cs"),
+                     Path.Combine("ControlPanel", "Panes", "ModulesPane.xaml.cs"),
+                 })
+        {
+            var text = File.ReadAllText(Path.Combine(IconFonts.SourceRoot, "NotchTasks", file));
+            Assert.DoesNotContain("FindResource(\"TextFillColorPrimaryBrush\")", text);
+            Assert.DoesNotContain("FindResource(\"TextFillColorSecondaryBrush\")", text);
+        }
+    }
+
+    [Fact]
+    public void PillIcons_AreWhiteUnlessTheyCarryAStatusColour()
+    {
+        // The quick-bar timer glyph was grey (#8E8E93): a grey icon is not a status, so it is white.
+        var quickBar = File.ReadAllText(Path.Combine(IconFonts.SourceRoot, "NotchTasks", "Pill", "QuickBar.xaml"));
+        Assert.Contains("x:Name=\"TimerGlyph\" Size=\"12\" Foreground=\"White\"", quickBar);
+        Assert.DoesNotContain("8E8E93", quickBar);
     }
 
     [Fact]

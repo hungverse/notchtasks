@@ -145,4 +145,55 @@ public sealed class ItemCardUpdateTests
         Assert.Equal("Antigravity", ItemCard.LaunchTarget(antigravity));
         Assert.Null(ItemCard.LaunchTarget(new WatchItem("none", "None", WatchKind.App, BundleID: "dev.unknown.app")));
     }
+
+    [Fact]
+    public void OpenLog_TargetIsWhatTheCursorHits_WithTheHandAndItsTooltip()
+    {
+        Sta.Run(() =>
+        {
+            // The job log is clickable: a point over its target hits the target (the glyph is not a hit target), and the target
+            // has the hand cursor and the "Open log" tooltip.
+            var cards = new AgentCards();
+            var running = new[]
+            {
+                Agent("claude", WatchKind.Claude, null,
+                    new Job("1001", "Task one", "3%", true, Symbol: "checkmark.circle"),
+                    new Job("1002", "Task two", "1%", false, Url: "https://example.com/log")),
+            };
+            cards.Sync(null, running, new[] { Claude(40) }, NoColours, null, null, Now);
+            var card = Assert.Single(cards.Panel.Children.OfType<ItemCard>());
+            cards.Panel.Children.Remove(card);  // the card moves from the panel into the window
+            var window = new System.Windows.Window { Content = card, Width = 400, Height = 300 };
+            Fixture.ShowOffScreen(window);
+            try
+            {
+                window.UpdateLayout();
+                var target = Descendants(card).OfType<System.Windows.Controls.Border>()
+                    .Single(b => b.ToolTip is string tip && tip == L10n.L("Open log") && b.IsVisible);
+                Assert.Equal(System.Windows.Input.Cursors.Hand, target.Cursor);
+
+                var centre = target.TranslatePoint(new System.Windows.Point(target.ActualWidth / 2, target.ActualHeight / 2), card);
+                var hit = System.Windows.Media.VisualTreeHelper.HitTest(card, centre)?.VisualHit as System.Windows.DependencyObject;
+                Assert.True(hit is not null && (ReferenceEquals(hit, target) || Descendants(target).Contains(hit)),
+                    "the point over the log target hits something else");
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    private static System.Collections.Generic.IEnumerable<System.Windows.DependencyObject> Descendants(System.Windows.DependencyObject root)
+    {
+        for (var i = 0; i < System.Windows.Media.VisualTreeHelper.GetChildrenCount(root); i++)
+        {
+            var child = System.Windows.Media.VisualTreeHelper.GetChild(root, i);
+            yield return child;
+            foreach (var nested in Descendants(child))
+            {
+                yield return nested;
+            }
+        }
+    }
 }

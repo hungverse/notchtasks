@@ -399,12 +399,20 @@ public partial class ItemCard : UserControl
             Code = ModuleGlyphs.Get("log").Glyph,
             Filled = ModuleGlyphs.IsFilled("log"),
             Size = 10,
-            Foreground = GreyBrush,
+            Foreground = Brushes.White,
+            Focusable = false,
+        };
+        // The log target is a transparent Border around the glyph: the glyph is not a hit target, so the click, the hand cursor
+        // and the tooltip belong to this element.
+        private readonly Border _logTarget = new()
+        {
+            Background = Brushes.Transparent,
             Margin = new Thickness(8, 0, 0, 0),
             VerticalAlignment = VerticalAlignment.Center,
             Cursor = Cursors.Hand,
             ToolTip = L10n.L("Open log"),
             Focusable = false,
+            Child = null,
         };
         // the status dot's ripple (Mac StatusDot): behind the lead, centred on the 7 px dot, while a dot-led job works
         private readonly Grid _ripple = new()
@@ -437,12 +445,12 @@ public partial class ItemCard : UserControl
             Grid.SetColumn(_lead, 0);
             Grid.SetColumn(_title, 1);
             Grid.SetColumn(_detail, 2);
-            Grid.SetColumn(_log, 3);
+            Grid.SetColumn(_logTarget, 3);
             _line.Children.Add(_ripple);  // first, so the ripple is behind the lead
             _line.Children.Add(_lead);
             _line.Children.Add(_title);
             _line.Children.Add(_detail);
-            _line.Children.Add(_log);
+            _line.Children.Add(_logTarget);
 
             // the progress line: the track, and on it the fill, whose width is set when the track is laid out
             _progress.Children.Add(new Border { Background = TrackBrush, Focusable = false });
@@ -455,7 +463,8 @@ public partial class ItemCard : UserControl
             Root.Margin = new Thickness(0, index == 0 ? 0 : 7, 0, 0);
             Root.Visibility = Visibility.Collapsed;
             _line.MouseLeftButtonUp += OnRowClick;
-            _log.MouseLeftButtonUp += OnLogClick;
+            _logTarget.Child = _log;
+            _logTarget.MouseLeftButtonUp += OnLogClick;
         }
 
         public StackPanel Root { get; }
@@ -502,7 +511,7 @@ public partial class ItemCard : UserControl
                 Recolour(_lead.Content, brush);
             }
             _url = job.Url;
-            _log.Visibility = job.Url is null ? Visibility.Collapsed : Visibility.Visible;
+            _logTarget.Visibility = job.Url is null ? Visibility.Collapsed : Visibility.Visible;
             SetProgress(job.Progress, tint);
         }
 

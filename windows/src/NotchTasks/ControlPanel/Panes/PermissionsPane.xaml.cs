@@ -242,7 +242,7 @@ public partial class PermissionsPane : SettingsPane
                 Code = item.Glyph,
                 Filled = item.Filled,
                 Size = 16,
-                Foreground = (Brush)FindResource("TextOnAccentFillColorPrimaryBrush"),
+                Foreground = Brushes.White,  // a coloured chip carries a white glyph (the on-accent brush is black in dark mode)
             },
         };
 

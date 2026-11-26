@@ -227,7 +227,8 @@ public partial class OverviewPane : SettingsPane
         }
         else
         {
-            icon.SetResourceReference(TextBlock.ForegroundProperty, "AccentFillColorDefaultBrush");
+            // no colour given: the primary text colour, which is legible on the card in both themes (the accent can be too dark)
+            icon.SetResourceReference(FluentGlyph.ForegroundProperty, "TextFillColorPrimaryBrush");
         }
         value = new TextBlock { FontSize = 24, FontWeight = FontWeights.Bold, Margin = new Thickness(0, 6, 0, 0) };
         var text = new StackPanel();
@@ -414,7 +415,7 @@ public partial class OverviewPane : SettingsPane
                 Code = ModuleCatalog.Glyph(id),
                 Filled = ModuleCatalog.GlyphFilled(id),
                 Size = 16,
-                Foreground = (Brush)FindResource("TextOnAccentFillColorPrimaryBrush"),
+                Foreground = Brushes.White,  // a coloured chip carries a white glyph (the on-accent brush is black in dark mode)
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,
             },

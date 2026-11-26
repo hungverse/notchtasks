@@ -27,7 +27,7 @@
     <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
       <StackPanel x:Name="TimerBar" Orientation="Horizontal" VerticalAlignment="Center">
         <!-- Grey, as the Mac's quick bar (.foregroundStyle(.gray)); the card and the chip take the timer's tint. -->
-        <fi:FluentGlyph x:Name="TimerGlyph" Size="12" Foreground="#8E8E93" VerticalAlignment="Center" Margin="0,0,8,0" />
+        <fi:FluentGlyph x:Name="TimerGlyph" Size="12" Foreground="White" VerticalAlignment="Center" Margin="0,0,8,0" />
         <StackPanel x:Name="TimerPills" Orientation="Horizontal" VerticalAlignment="Center">
           <Button Focusable="False" x:Name="Timer5" Tag="5" Style="{StaticResource ChoiceButton}" Padding="9,0" Margin="0,0,4,0" Content="5&#x2032;" />
           <Button Focusable="False" x:Name="Timer15" Tag="15" Style="{StaticResource ChoiceButton}" Padding="9,0" Margin="0,0,4,0" Content="15&#x2032;" />
@@ -55,12 +55,12 @@
       <!-- The gear with the update dot: a 5 DIP blue dot at its top-right corner, overhanging it by 2 DIP as the Mac's offset(x: 2, y: -2). -->
       <Grid Margin="0,0,6,0">
         <Button Focusable="False" x:Name="ControlPanelButton" Style="{StaticResource FooterButton}"
-                ToolTip="{l:L Control Panel}"><fi:FluentGlyph Code="&#xF6A9;" Size="12" /></Button>
+                ToolTip="{l:L Control Panel}"><fi:FluentGlyph Code="&#xF6A9;" Size="12" Foreground="White" /></Button>
         <Ellipse x:Name="UpdateDot" Width="5" Height="5" Fill="#0A84FF" HorizontalAlignment="Right" VerticalAlignment="Top"
                  Margin="0,-2,-2,0" IsHitTestVisible="False" Visibility="Collapsed" />
       </Grid>
       <Button Focusable="False" x:Name="QuitButton" Style="{StaticResource FooterButton}"
-              ToolTip="{l:L Quit}"><fi:FluentGlyph Code="&#xF60E;" Size="12" /></Button>
+              ToolTip="{l:L Quit}"><fi:FluentGlyph Code="&#xF60E;" Size="12" Foreground="White" /></Button>
     </StackPanel>
   </Grid>
 </UserControl>

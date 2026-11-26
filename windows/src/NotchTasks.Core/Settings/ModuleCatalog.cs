@@ -90,7 +90,7 @@ public static class ModuleCatalog
         "calls" => "\uF5EA",    // phone, filled (Mac phone.fill)
         "privacy" => "\uE807",  // mic, filled (Mac mic.fill): microphone
         "levels" => "\uEB4B",   // speaker_2, filled (Mac speaker.wave.2.fill): volume
-        "network" => "\uF8B2",  // wifi_4 (Mac wifi)
+        "network" => "\uF8AC",  // the full-strength Wi-Fi in the shipped font (its JSON name is wifi_1)
         "downloads" => "\uF12C", // arrow_circle_down, filled (Mac arrow.down.circle.fill)
         "health" => "\uF78F",   // temperature (Mac thermometer.medium): the computer's heat
         "mirror" => "\uF254",   // camera, filled (Mac video.fill): the camera mirror

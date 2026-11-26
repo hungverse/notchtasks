@@ -129,10 +129,9 @@ public partial class BadgeEditorBody : UserControl
                 {
                     Code = ModuleGlyphs.Legacy(code) ?? ModuleGlyphs.Fallback,
                     Size = 18,
-                    Foreground = (Brush)FindResource("TextFillColorPrimaryBrush"),
                     HorizontalAlignment = HorizontalAlignment.Center,
                     VerticalAlignment = VerticalAlignment.Center,
-                },
+                }.ThemedBy("TextFillColorPrimaryBrush"),
             };
             var button = new Button
             {

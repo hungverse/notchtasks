@@ -62,7 +62,7 @@ public sealed class NowPlayingCard : Border
             Code = ModuleGlyphs.Get("media").Glyph,
             Filled = ModuleGlyphs.IsFilled("media"),
             Size = 18,
-            Foreground = CaptionBrush,
+            Foreground = Brushes.White,  // the art placeholder glyph is white, as the other pill icons
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
             Focusable = false,
@@ -104,7 +104,6 @@ public sealed class NowPlayingCard : Border
         {
             FontFamily = TextFamily,
             FontSize = 11,
-            Foreground = CaptionBrush,
             TextTrimming = TextTrimming.CharacterEllipsis,
             VerticalAlignment = VerticalAlignment.Center,
             Focusable = false,

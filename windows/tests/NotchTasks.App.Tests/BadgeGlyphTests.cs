@@ -207,7 +207,7 @@ public sealed class BadgeGlyphTests
 
             var fill = Assert.IsType<Border>(glyph.Children[0]);
             Assert.Same(Brushes.Transparent, fill.Background);
-            Assert.Equal(0, fill.CornerRadius.TopLeft);
+            Assert.Equal(9, fill.CornerRadius.TopLeft);  // the circle of the badge, drawn even when plain (it only shows with a border)
             Assert.Null(glyph.Clip);
             var whole = Assert.IsType<System.Windows.Controls.Image>(glyph.Children[1]);
             Assert.Equal(Stretch.Uniform, whole.Stretch);

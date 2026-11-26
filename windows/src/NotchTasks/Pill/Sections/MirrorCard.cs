@@ -62,7 +62,7 @@ public sealed class MirrorCard : Border
         _frameHost.Children.Add(_image);
 
         _messageGlyph = FluentGlyph.Named(DeniedGlyph, 22);
-        _messageGlyph.Foreground = GreyBrush;
+        _messageGlyph.Foreground = Brushes.White;  // the denied mark is not a status colour: white, as the other pill icons
         _messageText = new TextBlock
         {
             FontFamily = TextFamily,
