@@ -31,6 +31,14 @@ public sealed record CalendarEvent(
         }
     }
 
+    /// The minutes the chip shows: until the start while it has not started, else until the end (the Mac's Int(seconds / 60) + 1).
+    public int MinutesShown(DateTimeOffset now)
+    {
+        var until = Start - now;
+        var seconds = until > TimeSpan.Zero ? until.TotalSeconds : (End - now).TotalSeconds;
+        return (int)(seconds / 60) + 1;
+    }
+
     /// The last day of an all-day event (its end less a second), in local time.
     public DateTimeOffset LastDay => End.AddSeconds(-1).ToLocalTime();
 }

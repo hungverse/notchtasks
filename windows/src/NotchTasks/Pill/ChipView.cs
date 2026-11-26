@@ -658,10 +658,9 @@ public static class ChipView
     private static TextBlock CalendarTrail(CalendarEvent soon, double size, Color tint, DateTimeOffset now)
     {
         var until = soon.Start - now;
-        var seconds = until > TimeSpan.Zero ? until.TotalSeconds : (soon.End - now).TotalSeconds;
         return new TextBlock
         {
-            Text = (int)(seconds / 60) + 1 + "′",
+            Text = soon.MinutesShown(now) + "′",
             Foreground = until > TimeSpan.Zero ? Brushes.White : new SolidColorBrush(tint),
             FontSize = size,
             FontWeight = FontWeights.SemiBold,

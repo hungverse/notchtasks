@@ -170,7 +170,7 @@ public partial class ControlPanelWindow : Window
             control = pane switch
             {
                 PaneId.Overview => new OverviewPane(State.Settings, State),
-                PaneId.Modules => new ModulesPane(State.Settings),
+                PaneId.Modules => new ModulesPane(State.Settings, null, State),
                 PaneId.Permissions => new PermissionsPane(State.Settings, State.Helper),
                 PaneId.Watching => new WatchingPane(State.Settings, State.Processes, AppFiles.Home),
                 PaneId.Pairing => new PairingPane(State.Bridge),

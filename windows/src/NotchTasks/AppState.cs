@@ -602,7 +602,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
             ["battery"] = _batterySource,
             ["network"] = new NetworkSource(Network, network),
             // the store is opened while the module is on: no access, or no store, shows the card's hint and nothing runs
-            ["calendar"] = new CalendarSource(Calendar, calendar, Publish),
+            ["calendar"] = new CalendarSource(Calendar, calendar, Publish, _clock),
             // the bar's feed: the default output and the panel, by events; a PC with no panel shows volume only
             ["levels"] = new LevelsSource(Levels, outputs, brightness),
             ["downloads"] = new DownloadsSource(Downloads),

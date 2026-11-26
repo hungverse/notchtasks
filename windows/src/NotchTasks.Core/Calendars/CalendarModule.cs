@@ -61,19 +61,28 @@ public sealed class CalendarModule
             Save();
         }
 
+        Remind(now);
+        if (changed)
+        {
+            Changed?.Invoke();
+        }
+    }
+
+    /// Makes the meeting toast of each visible timed event that starts within ReminderLead of `now`, once per event. The clock calls it
+    /// every second, so the toast comes at the Mac's exact lead time, not only when the store is read. Returns true when a toast was made.
+    public bool Remind(DateTimeOffset now)
+    {
+        var made = false;
         foreach (var e in Visible)
         {
             var until = e.Start - now;
             if (!e.AllDay && until >= TimeSpan.Zero && until <= ReminderLead && _reminded.Add(e.Id))
             {
-                Remind(e);
+                Announce(e);
+                made = true;
             }
         }
-
-        if (changed)
-        {
-            Changed?.Invoke();
-        }
+        return made;
     }
 
     /// The store could not be opened or read: no events, and the hint shows. No reminders are made until a store reads again.
@@ -127,7 +136,7 @@ public sealed class CalendarModule
     }
 
     /// The meeting toast: the event's title, "At" and its start time, the Open button to its video-call link when it has one.
-    private void Remind(CalendarEvent e) =>
+    private void Announce(CalendarEvent e) =>
         _announce.Announce(new Toast(
             Glyph: "calendar",
             Tint: e.Color,

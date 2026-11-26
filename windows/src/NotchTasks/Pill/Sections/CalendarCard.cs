@@ -47,30 +47,18 @@ public sealed class CalendarCard : Border
     /// Raised when an event's title opens Calendar: the pill closes, as the Mac's open() collapses it.
     public event Action? OpenRequested;
 
-    /// Refreshes the card from the calendar module and returns true. Returns false, and leaves the card empty, when there is no event
-    /// to list and no hint to show.
+    /// Refreshes the card from the calendar module and returns true. Returns false, and leaves the card empty, when no event is listed.
+    /// Without calendar access there is nothing to list, so the pill shows nothing for calendar (the Mac does the same); the Control
+    /// Panel's Modules pane shows the hint instead.
     public bool Update(AppState state)
     {
-        var calendar = state.Calendar;
-        var visible = calendar.Visible;
-        if (!calendar.Unavailable && visible.Count == 0)
+        var visible = state.Calendar.Visible;
+        if (visible.Count == 0)
         {
             return false;
         }
         _state = state;
         _rows.Children.Clear();
-        if (calendar.Unavailable)
-        {
-            _rows.Children.Add(new TextBlock
-            {
-                Text = L10n.L("Calendar can't be opened. Check Settings > Privacy & security > Calendar."),
-                Foreground = new SolidColorBrush(GreyColor),
-                FontFamily = TextFamily,
-                FontSize = 11,
-                TextWrapping = TextWrapping.Wrap,
-            });
-            return true;
-        }
 
         var now = DateTimeOffset.Now;
         var allDay = visible.Where(e => e.AllDay).ToList();
@@ -169,26 +157,40 @@ public sealed class CalendarCard : Border
     {
         var tint = Tint(e.Color);
         var running = e.Running(now);
-        var left = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 6) };
-        left.Children.Add(new Ellipse
-        {
-            Width = 7,
-            Height = 7,
-            Stroke = new SolidColorBrush(tint),
-            StrokeThickness = 1.2,
-            Fill = running ? new SolidColorBrush(tint) : Brushes.Transparent,
-            Margin = new Thickness(4, 0, 8, 0),
-            VerticalAlignment = VerticalAlignment.Center,
-        });
-        left.Children.Add(Text(e.Start.ToLocalTime().ToString("t", CultureInfo.CurrentCulture), 11, Grey(), FontWeights.SemiBold, margin: new Thickness(0, 0, 8, 0)));
-        left.Children.Add(Link(Text(e.Title, 12, new SolidColorBrush(Color.FromArgb(0xE6, 0xFF, 0xFF, 0xFF))), e, OpenCalendar));
-        left.Children.Add(Text(running ? L10n.L("happening now") : L10n.L("in ") + Ago.Text((e.Start - now).TotalSeconds), 10, Grey(), margin: new Thickness(8, 0, 0, 0)));
+        // the Mac's row: the dot, the time, the title, a spacer, then the status, the video icon and the x at the right
+        var row = new DockPanel { Margin = new Thickness(0, 0, 0, 6) };
+        var close = CloseButton(e, 8);
+        DockPanel.SetDock(close, Dock.Right);
+        row.Children.Add(close);
         if (e.Link is { } link)
         {
-            left.Children.Add(VideoButton(link));
+            var video = VideoButton(link);
+            DockPanel.SetDock(video, Dock.Right);
+            row.Children.Add(video);
         }
-        return Line(e, left);
+        var status = Text(running ? L10n.L("happening now") : L10n.L("in ") + Ago.Text((e.Start - now).TotalSeconds), 10, Grey(), margin: new Thickness(8, 0, 0, 0));
+        DockPanel.SetDock(status, Dock.Right);
+        row.Children.Add(status);
+
+        var left = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+        left.Children.Add(StatusDot(tint, running, 7, new Thickness(4, 0, 8, 0)));
+        left.Children.Add(Text(e.Start.ToLocalTime().ToString("t", CultureInfo.CurrentCulture), 11, Grey(), FontWeights.SemiBold, margin: new Thickness(0, 0, 8, 0)));
+        left.Children.Add(Link(Text(e.Title, 12, new SolidColorBrush(Color.FromArgb(0xE6, 0xFF, 0xFF, 0xFF))), e, OpenCalendar));
+        row.Children.Add(left);
+        return row;
     }
+
+    /// The Mac's status dot: a ring in the event's colour, filled while the event runs.
+    private static Ellipse StatusDot(Color tint, bool running, double size, Thickness margin) => new()
+    {
+        Width = size,
+        Height = size,
+        Stroke = new SolidColorBrush(tint),
+        StrokeThickness = 1.2,
+        Fill = running ? new SolidColorBrush(tint) : Brushes.Transparent,
+        Margin = margin,
+        VerticalAlignment = VerticalAlignment.Center,
+    };
 
     /// A row with the close button docked at its right, and its content filling the rest.
     private FrameworkElement Line(CalendarEvent e, FrameworkElement content)
@@ -201,8 +203,9 @@ public sealed class CalendarCard : Border
         return row;
     }
 
-    /// The status under a timed event's title: its start and end ("9:00–10:00"), then "Happening now · 25 min left" or "Coming up · in 5 min".
-    private static TextBlock StatusLine(CalendarEvent e, DateTimeOffset now, Color tint, double size)
+    /// The status under a main event's title, as the Mac's HStack: the dot, then the start and end ("9:00–10:00") and the status, "Happening
+    /// now · 25 min left" or "Coming up · in 5 min". Its colour is the event's while it runs or starts within ten minutes, else grey.
+    private static FrameworkElement StatusLine(CalendarEvent e, DateTimeOffset now, Color tint, double size)
     {
         var running = e.Running(now);
         var status = running
@@ -210,7 +213,10 @@ public sealed class CalendarCard : Border
             : L10n.L("Coming up · in {0}", Ago.Text((e.Start - now).TotalSeconds));
         var soon = running || (e.Start - now).TotalSeconds < SoonSeconds;
         var span = e.Start.ToLocalTime().ToString("t", CultureInfo.CurrentCulture) + "–" + e.End.ToLocalTime().ToString("t", CultureInfo.CurrentCulture);
-        return Text(span + " · " + status, size, soon ? new SolidColorBrush(tint) : Grey());
+        var line = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 3, 0, 0) };
+        line.Children.Add(StatusDot(tint, running, 6, new Thickness(0, 0, 5, 0)));
+        line.Children.Add(Text(span + " · " + status, size, soon ? new SolidColorBrush(tint) : Grey()));
+        return line;
     }
 
     /// The progress line of a running event: its share done, in the event's colour.

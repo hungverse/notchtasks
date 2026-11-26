@@ -59,8 +59,9 @@ public sealed class CalendarCardTests
     }
 
     [Fact]
-    public void Card_ShowsTheHint_WhenTheStoreCannotOpen()
+    public void Card_IsNothing_WhenTheStoreCannotOpen_TheHintIsInTheModulesPaneInstead()
     {
+        // Ruling: without calendar access the pill shows nothing for calendar, as the Mac does. The hint is the Modules pane's caption.
         Sta.Run(() =>
         {
             using var root = new TempRoot();
@@ -68,9 +69,7 @@ public sealed class CalendarCardTests
             state.Calendar.SetUnavailable();
             var card = new CalendarCard();
 
-            Assert.True(card.Update(state));
-
-            Assert.Contains(L10n.L("Calendar can't be opened. Check Settings > Privacy & security > Calendar."), Texts(card));
+            Assert.False(card.Update(state));
         });
     }
 

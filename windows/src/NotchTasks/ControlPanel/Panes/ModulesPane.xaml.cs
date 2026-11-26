@@ -29,6 +29,7 @@ public partial class ModulesPane : SettingsPane
 
     private readonly Dictionary<string, ModuleRow> _rows = new();
     private readonly bool _hasBattery;
+    private readonly AppState? _state;  // the calendar's state: its hint shows when the store cannot be opened
 
     /// The visible module ids in the order shown (set by Apply): a drag works on these indices.
     private List<string> _order = new();
@@ -41,10 +42,16 @@ public partial class ModulesPane : SettingsPane
 
     /// The pane. `hasBattery` says whether this PC has a battery: without one the battery row is hidden. The default asks
     /// Windows (PowerFacts.HasSystemBattery); tests pass their own answer.
-    public ModulesPane(SettingsStore store, Func<bool>? hasBattery = null) : base(store)
+    public ModulesPane(SettingsStore store, Func<bool>? hasBattery = null) : this(store, hasBattery, null)
+    {
+    }
+
+    /// The pane with the app state, which tells the calendar's hint (null: no hint is shown).
+    public ModulesPane(SettingsStore store, Func<bool>? hasBattery, AppState? state) : base(store)
     {
         InitializeComponent();
         _hasBattery = (hasBattery ?? PowerFacts.HasSystemBattery)();
+        _state = state;
         // A dragged row lands on the rows panel: the drop line and the drop are handled there.
         Rows.AllowDrop = true;
         Rows.DragOver += OnRowsDragOver;
@@ -87,6 +94,11 @@ public partial class ModulesPane : SettingsPane
             {
                 row.Tile.Background = OffTile;
             }
+            // the calendar's hint under its row when the store cannot be opened (the pill shows nothing for calendar)
+            row.Hint.Text = id == "calendar" && _state?.Calendar.Unavailable == true
+                ? L10n.L("Calendar can't be opened. Check Settings > Privacy & security > Calendar.")
+                : string.Empty;
+            row.Hint.Visibility = row.Hint.Text.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
             row.Up.IsEnabled = i > 0;
             row.Down.IsEnabled = i < order.Count - 1;
             row.On.IsChecked = on;
@@ -123,7 +135,14 @@ public partial class ModulesPane : SettingsPane
             Style = (Style)FindResource("CardNote"),
             Margin = new Thickness(0, 2, 0, 0),
         };
-        var text = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Children = { title, caption } };
+        // the calendar's hint, under its note, when the store cannot be opened (Apply shows it; the pill shows nothing for calendar)
+        var hint = new TextBlock
+        {
+            Style = (Style)FindResource("CardNote"),
+            Margin = new Thickness(0, 2, 0, 0),
+            Visibility = Visibility.Collapsed,
+        };
+        var text = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Children = { title, caption, hint } };
 
         var up = Arrow("", L10n.L("Move up"), () => Move(id, -1));
         var down = Arrow("", L10n.L("Move down"), () => Move(id, 1));
@@ -223,7 +242,7 @@ public partial class ModulesPane : SettingsPane
         Place(swatch, element, 0, 4);
         Place(on, element, 0, 5);
 
-        return new ModuleRow(element, up, down, tile, title, caption, placement, swatch, on, color, resetColor);
+        return new ModuleRow(element, up, down, tile, title, caption, hint, placement, swatch, on, color, resetColor);
     }
 
     private Button Arrow(string glyph, string tip, Action click)
@@ -498,6 +517,7 @@ public partial class ModulesPane : SettingsPane
         Border Tile,
         TextBlock Title,
         TextBlock Caption,
+        TextBlock Hint,
         ComboBox Placement,
         Button Swatch,
         CheckBox On,

@@ -65,6 +65,33 @@ public sealed class CalendarModuleTests
     }
 
     [Fact]
+    public void Remind_FiresAtExactlyFiveMinutesBeforeTheStart_WhenTheClockAsks()
+    {
+        // The clock calls Remind every second: the toast comes at 300 s before the start, not at the next store read.
+        var t0 = DateTimeOffset.Now;
+        var announce = new RecordingAnnouncer();
+        var module = Module(announce);
+        module.Apply(new[] { Timed("later", t0.AddSeconds(310), TimeSpan.FromMinutes(30)) }, t0);
+
+        Assert.False(module.Remind(t0.AddSeconds(9)));  // 301 s to go
+        Assert.Empty(announce.Toasts);
+
+        Assert.True(module.Remind(t0.AddSeconds(10)));  // 300 s to go
+        Assert.Single(announce.Toasts);
+        Assert.False(module.Remind(t0.AddSeconds(11)));  // once per event
+    }
+
+    [Fact]
+    public void MinutesShown_CountsTheWholeMinuteLikeTheMac()
+    {
+        var now = DateTimeOffset.Now;
+        var soon = CalendarEvents.Pick(new[] { Timed("a", now.AddSeconds(600), TimeSpan.FromMinutes(30)) }, now)[0];
+
+        Assert.Equal(11, soon.MinutesShown(now));  // 600 s: Int(10) + 1
+        Assert.Equal(10, soon.MinutesShown(now.AddSeconds(1)));  // 599 s: Int(9.98) + 1
+    }
+
+    [Fact]
     public void Apply_MakesNoToast_BeyondFiveMinutesOrAfterTheStart()
     {
         var now = DateTimeOffset.Now;
