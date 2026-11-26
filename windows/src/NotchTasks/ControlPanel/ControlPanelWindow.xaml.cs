@@ -174,7 +174,7 @@ public partial class ControlPanelWindow : Window
                 PaneId.Permissions => new PermissionsPane(State.Settings, State.Helper),
                 PaneId.Watching => new WatchingPane(State.Settings, State.Processes, AppFiles.Home),
                 PaneId.Pairing => new PairingPane(State.Bridge),
-                PaneId.Appearance => new AppearancePane(State.Settings),
+                PaneId.Appearance => new AppearancePane(State.Settings, State),
                 PaneId.Badges => new BadgesPane(State.Settings, State),
                 PaneId.Store => new IconLibraryPane(State.Settings),
                 PaneId.Sounds => new SoundsPane(State.Settings),

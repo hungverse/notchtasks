@@ -5,6 +5,7 @@ using System.Windows.Media;
 using System.Windows.Media.Effects;
 using System.Text.Json.Nodes;
 using NotchTasks.Core;
+using NotchTasks.Core.Notch;
 using NotchTasks.Core.Settings;
 using NotchTasks.Pill;
 using NotchTasks.Services;
@@ -14,10 +15,15 @@ namespace NotchTasks.ControlPanel.Panes;
 /// The Appearance pane (Preferences.swift appearance): the notch's look, the toast style and the accent, with a live preview.
 public partial class AppearancePane : SettingsPane
 {
+    /// The Mac's green (Color.green), the tint of a test alert when the accent is "Match app color" (the Mac has no colour then).
+    private const string GreenTint = "#30D158";
+
+    private readonly AppState _state;
     private readonly List<ThemeTileView> _tiles = new();
 
-    public AppearancePane(SettingsStore store) : base(store)
+    public AppearancePane(SettingsStore store, AppState state) : base(store)
     {
+        _state = state;
         InitializeComponent();
 
         foreach (var theme in Themes.All)
@@ -26,6 +32,7 @@ public partial class AppearancePane : SettingsPane
             _tiles.Add(tile);
             ThemeGrid.Children.Add(tile.Button);
         }
+        TestAlertButton.Click += (_, _) => TestAlert();
 
         BackgroundBox.ItemsSource = ChoiceItems.Backgrounds;
         SizeBox.ItemsSource = ChoiceItems.Sizes;
@@ -60,8 +67,22 @@ public partial class AppearancePane : SettingsPane
         CustomAccentRow.Visibility = Store.Accent == "custom" ? Visibility.Visible : Visibility.Collapsed;
 
         NotchNote.Text = L10n.L("This screen has no notch: shown as a floating Dynamic Island.");
+        TestAlertButton.Content = L10n.L("Test alert");
         UpdatePreview();
         RefreshThemes();
+    }
+
+    /// Shows a task-finished toast in the current style, as the Mac's testToast: it plays the task's sound and queues the
+    /// toast on the pill, and posts no system notification (the user is already looking at the pane).
+    private void TestAlert()
+    {
+        var tint = Store.Accent == "auto" ? GreenTint : Appearance.ResolveAccent(Store.Accent, Store.CustomAccent, null) ?? GreenTint;
+        _state.Announce(new Toast(
+            Glyph: "check",
+            Tint: tint,
+            Title: L10n.L("Task finished"),
+            Subtitle: L10n.L("Test alert"),
+            Event: "taskDone"), notify: false);
     }
 
     /// Shows the theme tiles as the store is now: the selected theme gets the accent border and the check, and the titles

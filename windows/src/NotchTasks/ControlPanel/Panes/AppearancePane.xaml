@@ -39,6 +39,10 @@
       </Grid>
     </Border>
 
+    <!-- The Mac's "Test alert": a task-finished toast in the current style, with the sound and no system notification. -->
+    <Button x:Name="TestAlertButton" HorizontalAlignment="Right" Margin="0,8,0,0" Padding="12,4"
+            Style="{StaticResource PrimaryButton}" />
+
     <!-- The one-click themes (the Mac's Theme.all): a tile per theme, built in code, three across as the Mac's grid. -->
     <UniformGrid x:Name="ThemeGrid" Columns="3" Margin="0,8,0,0" />
 
