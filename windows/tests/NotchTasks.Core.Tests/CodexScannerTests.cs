@@ -639,20 +639,59 @@ public sealed class CodexScannerTests : IDisposable
         Assert.True(job.Working);
     }
 
+    // ---- Windows keeps the write time of a rollout the writer holds open at its creation time, so the newest line decides
+
     [Fact]
-    public void Refine_TakesTheLaterTime_AndTheHandlesSize()
+    public void CodexScanner_PinnedMtime_AppendedTaskComplete_ShowsDoneThenLeaves()
     {
-        var listed = new DateTimeOffset(2026, 11, 27, 1, 19, 11, TimeSpan.Zero);
-        var written = new DateTimeOffset(2026, 11, 27, 1, 20, 35, TimeSpan.Zero);
+        AsksFixtures.InitEnglish();
+        var root = Path.Combine(Temp(), "sessions");
+        var now = DateTimeOffset.UtcNow;
+        var file = Rollout(root, "rollout-pinned.jsonl", "/x/pinned", "p", new[] { StartedLine(now.AddSeconds(-60)) }, now);
 
-        // the directory entry is stale (the creation time and size); the handle has the true write time and size
-        var (mtime, size) = CodexScanner.Refine(listed, written, 5000);
-        Assert.Equal(written, mtime);
-        Assert.Equal(5000, size);
+        var scanner = new CodexScanner(root);
+        Assert.True(Assert.Single(scanner.Jobs(now)).Working);
 
-        // a handle that reports an older time does not move the file back in time
-        var (kept, handleSize) = CodexScanner.Refine(written, listed, 4000);
-        Assert.Equal(written, kept);
-        Assert.Equal(4000, handleSize);
+        // the writer appends task_complete, and the write time stays where it was (the listing and the open handle both)
+        File.AppendAllText(file, DoneLine(now.AddSeconds(-5)) + "\n");
+        File.SetLastWriteTimeUtc(file, now.UtcDateTime);
+        var done = Assert.Single(scanner.Jobs(now));
+        Assert.False(done.Working);
+        Assert.Equal("Done · 5 sec ago", done.Detail);
+
+        Assert.Empty(scanner.Jobs(now.AddMinutes(11)));
+    }
+
+    [Fact]
+    public void CodexScanner_PinnedOldMtime_GrowingRollout_ShowsRunning()
+    {
+        AsksFixtures.InitEnglish();
+        var root = Path.Combine(Temp(), "sessions");
+        var now = DateTimeOffset.UtcNow;
+        var fourHoursAgo = now.AddHours(-4);
+        var file = Rollout(root, "rollout-grow-pinned.jsonl", "/x/growpinned", "gp", new[] { FillerLine(fourHoursAgo) }, fourHoursAgo);
+
+        var scanner = new CodexScanner(root);
+        Assert.Empty(scanner.Jobs(now));
+
+        // a task starts now and the file grows, but its write time is still the one from four hours ago
+        File.AppendAllText(file, StartedLine(now.AddMinutes(-1)) + "\n");
+        File.SetLastWriteTimeUtc(file, fourHoursAgo.UtcDateTime);
+        var job = Assert.Single(scanner.Jobs(now));
+        Assert.True(job.Working);
+    }
+
+    [Fact]
+    public void CodexScanner_NewestLineTwentyFiveMinutesOld_NotGrowing_NotShown()
+    {
+        AsksFixtures.InitEnglish();
+        var root = Path.Combine(Temp(), "sessions");
+        var now = DateTimeOffset.UtcNow;
+        var old = now.AddMinutes(-25);
+        Rollout(root, "rollout-idle.jsonl", "/x/idle", "i", new[] { StartedLine(old) }, old);
+
+        var scanner = new CodexScanner(root);
+        Assert.Empty(scanner.Jobs(now));
+        Assert.Empty(scanner.Jobs(now.AddSeconds(5)));
     }
 }

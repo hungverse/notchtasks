@@ -63,6 +63,26 @@ public static partial class CodexRollout
         return null;
     }
 
+    /// The newest "timestamp" of the lines in a read, parsed as ParseStatus parses it. Null when no line has one.
+    public static DateTimeOffset? NewestTimestamp(string text)
+    {
+        DateTimeOffset? newest = null;
+        foreach (var line in text.Split('\n'))
+        {
+            var r = line.IndexOf(TimestampMark, StringComparison.Ordinal);
+            if (r < 0)
+            {
+                continue;
+            }
+            var at = Providers.ParseIso(Slice(line, r + TimestampMark.Length, IsoLength));
+            if (at is { } t && (newest is null || t > newest.Value))
+            {
+                newest = t;
+            }
+        }
+        return newest;
+    }
+
     /// The newest rate_limits event: its time and windows. A window whose reset has passed has nothing used yet.
     /// A line without a timestamp is dated MinValue. Null when there is no rate_limits event.
     public static CodexLimitsFound? ParseLimits(string text, DateTimeOffset now)
@@ -283,18 +303,27 @@ public sealed class CodexScanner
 
     private readonly string _root;
     private readonly Dictionary<string, Entry> _cache = new(StringComparer.Ordinal);
+    /// The size of each rollout listed by the last Jobs walk. A size that grew since then means the rollout is being written now.
+    private Dictionary<string, long> _jobSizes = new(StringComparer.Ordinal);
     /// The raw limits of each rollout, keyed by path, for the mtime and size it had when it was read. An unchanged file is not read again.
     private readonly Dictionary<string, (DateTimeOffset Mtime, long Size, CodexLimitsRaw? Raw)> _limitsCache = new(StringComparer.Ordinal);
 
     private sealed class Entry
     {
         public DateTimeOffset Mtime { get; set; }
+        public long Size { get; set; }
         public long Offset { get; set; }
+        /// The newest timestamp of the complete lines read so far.
+        public DateTimeOffset LastAt { get; set; }
         public CodexStatus? Status { get; set; }
         public string Title { get; init; } = "Codex";
         public bool Child { get; init; }
         public string Thread { get; init; } = string.Empty;
         public CodexQuestion? Question { get; set; }
+
+        /// When the rollout was last written: the newer of its write time and its newest line. Windows keeps the write time
+        /// of a rollout its writer holds open at the creation time, so the lines are the truer clock.
+        public DateTimeOffset Activity => LastAt > Mtime ? LastAt : Mtime;
     }
 
     /// How much of a rollout is read at a time: 1 MB. A rollout is never read in one buffer, however large it is.
@@ -317,17 +346,23 @@ public sealed class CodexScanner
     public IReadOnlyList<Job> Jobs(DateTimeOffset now)
     {
         var jobs = new List<Job>();
-        foreach (var (path, mtime, _) in WalkJsonl(now))
+        var sizes = new Dictionary<string, long>(StringComparer.Ordinal);
+        foreach (var (path, mtime, size) in WalkJsonl(now))
         {
-            if (now - mtime >= JobWindow)
+            sizes[path] = size;
+            // a rollout is a candidate when its write time, its newest line or its growth since the last walk is recent
+            var grew = _jobSizes.TryGetValue(path, out var before) && before != size && now - mtime < LimitsWindow;
+            var recent = now - mtime < JobWindow
+                || (_cache.TryGetValue(path, out var known) && now - known.Activity < JobWindow);
+            if (!recent && !grew)
             {
                 continue;
             }
-            if (!_cache.TryGetValue(path, out var cur) || cur.Mtime != mtime)
+            if (!_cache.TryGetValue(path, out var cur) || cur.Mtime != mtime || cur.Size != size)
             {
-                Update(path, mtime);
+                Update(path, mtime, size);
             }
-            if (!_cache.TryGetValue(path, out var e) || now - mtime >= IdleLimit || e.Child || e.Status is null)
+            if (!_cache.TryGetValue(path, out var e) || now - e.Activity >= IdleLimit || e.Child || e.Status is null)
             {
                 continue;
             }
@@ -342,6 +377,7 @@ public sealed class CodexScanner
                 jobs.Add(new Job(id, e.Title, L10n.L("Done · {0} ago", Ago.Text(age)), false));
             }
         }
+        _jobSizes = sizes;
         return jobs;
     }
 
@@ -413,7 +449,7 @@ public sealed class CodexScanner
 
     /// Reads a rollout from where the last scan stopped, to its end, in chunks of ChunkBytes. A new rollout is read from its
     /// head. A file that was replaced (or cut short) is read from its start. A line that spans two chunks is carried over.
-    private void Update(string file, DateTimeOffset mtime)
+    private void Update(string file, DateTimeOffset mtime, long size)
     {
         if (!_cache.TryGetValue(file, out var entry))
         {
@@ -439,13 +475,13 @@ public sealed class CodexScanner
             try
             {
                 using var fs = Providers.OpenShared(file);
-                var size = fs.Length;
+                var length = fs.Length;
                 // the file was replaced or cut short: the saved offset is past its end, so start over
-                var pos = entry.Offset <= size ? entry.Offset : 0;
+                var pos = entry.Offset <= length ? entry.Offset : 0;
                 byte[] carry = Array.Empty<byte>();
-                while (pos < size)
+                while (pos < length)
                 {
-                    var len = (int)Math.Min(ChunkBytes, size - pos);
+                    var len = (int)Math.Min(ChunkBytes, length - pos);
                     _onRead?.Invoke(len);
                     var chunk = Providers.ReadRange(fs, pos, len);
                     if (chunk.Length == 0)
@@ -464,6 +500,10 @@ public sealed class CodexScanner
                         var text = Encoding.UTF8.GetString(data, 0, end);
                         entry.Status = CodexRollout.ParseStatus(text) ?? entry.Status;
                         entry.Question = CodexRollout.ParseQuestion(text, entry.Thread, entry.Question, DateTimeOffset.UtcNow);
+                        if (CodexRollout.NewestTimestamp(text) is { } newest && newest > entry.LastAt)
+                        {
+                            entry.LastAt = newest;
+                        }
                     }
                     // the offset is the byte after the last full line read, so a line still being written is read next time
                     entry.Offset = pos - (data.Length - end);
@@ -477,14 +517,14 @@ public sealed class CodexScanner
         }
 
         entry.Mtime = mtime;
+        entry.Size = size;
         _cache[file] = entry;
     }
 
-    /// The write time of a rollout as the listing gives it, and the time and size from an open handle (see Refine) for a rollout
-    /// written within LimitsWindow, since Windows keeps the listing stale while the writer holds the file. Callers filter by each
-    /// file's mtime. The listing's values stay when the handle cannot be opened. Every folder is entered, whatever its date: a
-    /// rollout is written in the folder of the day its thread started, so a thread resumed days later keeps writing there (the
-    /// Mac walks every folder too). Folders that cannot be read are skipped.
+    /// The write time and size of every rollout as the listing gives them. Callers filter by each file's mtime, and read the
+    /// newest lines for the true activity time. Every folder is entered, whatever its date: a rollout is written in the folder
+    /// of the day its thread started, so a thread resumed days later keeps writing there (the Mac walks every folder too).
+    /// Folders that cannot be read are skipped.
     private List<(string Path, DateTimeOffset Mtime, long Size)> WalkJsonl(DateTimeOffset now)
     {
         var found = new List<(string Path, DateTimeOffset Mtime, long Size)>();
@@ -506,13 +546,7 @@ public sealed class CodexScanner
                     {
                         try
                         {
-                            var mtime = new DateTimeOffset(file.LastWriteTimeUtc);
-                            var size = file.Length;
-                            if (now - mtime < LimitsWindow)
-                            {
-                                (mtime, size) = HandleStamp(file.FullName, mtime, size);
-                            }
-                            found.Add((file.FullName, mtime, size));
+                            found.Add((file.FullName, new DateTimeOffset(file.LastWriteTimeUtc), file.Length));
                         }
                         catch (IOException)
                         {
@@ -528,23 +562,4 @@ public sealed class CodexScanner
         }
         return found;
     }
-
-    /// The time and size of a rollout the writer may hold open: its write time from the open handle, which is current when the
-    /// directory entry is not. The listing's values when the handle cannot be opened.
-    private static (DateTimeOffset Mtime, long Size) HandleStamp(string path, DateTimeOffset listed, long listedSize)
-    {
-        try
-        {
-            using var handle = File.OpenHandle(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
-            return Refine(listed, new DateTimeOffset(File.GetLastWriteTimeUtc(handle)), RandomAccess.GetLength(handle));
-        }
-        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
-        {
-            return (listed, listedSize);
-        }
-    }
-
-    /// The stamp of a rollout from its listing and its open handle: the later of the two write times, and the handle's size.
-    internal static (DateTimeOffset Mtime, long Size) Refine(DateTimeOffset listed, DateTimeOffset handleTime, long handleSize) =>
-        (handleTime > listed ? handleTime : listed, handleSize);
 }
