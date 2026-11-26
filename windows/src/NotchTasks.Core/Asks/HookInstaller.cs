@@ -336,7 +336,7 @@ public static class HookInstaller
 
     /// The settings object to change. A missing or empty file gives {} (existed = false). A file that does not parse, or whose
     /// root is not an object, throws and is never written.
-    private static JsonObject ReadRootForWrite(string file, out bool existed)
+    internal static JsonObject ReadRootForWrite(string file, out bool existed)
     {
         var raw = AtomicFile.ReadAllTextOrNull(file);
         existed = !string.IsNullOrEmpty(raw);
@@ -359,7 +359,7 @@ public static class HookInstaller
     }
 
     /// The old file, saved beside it. Overwritten on every change, as asks.js does.
-    private static void Backup(string file) => File.Copy(file, file + BackupSuffix, overwrite: true);
+    internal static void Backup(string file) => File.Copy(file, file + BackupSuffix, overwrite: true);
 
     private static JsonNode? Sorted(JsonNode? node) => node switch
     {
