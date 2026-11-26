@@ -3,6 +3,21 @@
                        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                        xmlns:l="clr-namespace:NotchTasks.ControlPanel"
                        xmlns:local="clr-namespace:NotchTasks.ControlPanel">
+  <local:SettingsPane.Resources>
+    <!-- A sound picker's item: a rule for the separator, the title for the rest. -->
+    <DataTemplate x:Key="SoundItem" DataType="{x:Type l:Choice}">
+      <StackPanel>
+        <Separator x:Name="Rule" Visibility="Collapsed" Margin="0,4" />
+        <TextBlock x:Name="Text" Text="{Binding Title}" />
+      </StackPanel>
+      <DataTemplate.Triggers>
+        <DataTrigger Binding="{Binding IsSeparator}" Value="True">
+          <Setter TargetName="Rule" Property="Visibility" Value="Visible" />
+          <Setter TargetName="Text" Property="Visibility" Value="Collapsed" />
+        </DataTrigger>
+      </DataTemplate.Triggers>
+    </DataTemplate>
+  </local:SettingsPane.Resources>
   <StackPanel>
     <TextBlock Style="{StaticResource PaneTitle}" Text="{l:L Sound}" />
 
@@ -21,8 +36,16 @@
           <ComboBox x:Name="PackBox" DockPanel.Dock="Right" MinWidth="220" DisplayMemberPath="Title" />
           <TextBlock Style="{StaticResource RowLabel}" Text="{l:L Sound pack}" />
         </DockPanel>
+        <DockPanel Style="{StaticResource SettingRow}">
+          <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+            <Button x:Name="ExportButton" Margin="0,0,8,0" Padding="10,4" />
+            <Button x:Name="ImportButton" Padding="10,4" />
+          </StackPanel>
+          <TextBlock x:Name="BackupLabel" Style="{StaticResource RowLabel}" />
+        </DockPanel>
       </StackPanel>
     </Border>
+    <TextBlock x:Name="PackFooter" Style="{StaticResource CardNote}" Margin="4,8,0,0" TextWrapping="Wrap" />
 
     <TextBlock Style="{StaticResource SectionHeader}" Text="{l:L Events}" />
     <!-- One row per event, built in code: the event's title, its sound's picker and a button that plays the sound. The rows

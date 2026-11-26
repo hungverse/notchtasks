@@ -1,5 +1,7 @@
 using System.IO;
+using System.Text.Json.Nodes;
 using System.Windows.Controls;
+using NotchTasks.ControlPanel;
 using NotchTasks.ControlPanel.Panes;
 using NotchTasks.Core;
 using Xunit;
@@ -17,6 +19,87 @@ public sealed class SoundsPaneTests
             dir = Path.GetDirectoryName(dir);
         }
         return Path.Combine(dir ?? throw new DirectoryNotFoundException("mac/Sources"), "mac", "Sources");
+    }
+
+    [Fact]
+    public void ChooseYourFile_IsInEveryEventsList()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            var pane = Fixture.Create<SoundsPane>(state.Settings);
+            var rows = Fixture.Named<StackPanel>(pane, "EventRows");
+
+            Assert.Equal(ChoiceItems.SoundEvents.Count, rows.Children.Count);
+            foreach (DockPanel row in rows.Children)
+            {
+                var picker = (ComboBox)row.Children[1];
+                Assert.Contains(ChoiceItems.ChooseFile, picker.Items.Cast<Choice>());
+                Assert.Equal("Choose your file…", ChoiceItems.ChooseFile.Title);
+            }
+        });
+    }
+
+    [Fact]
+    public void PlayIsDisabled_ForASilentEvent()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            state.Settings.Set("soundMap", JsonNode.Parse("{\"taskDone\":\"\",\"agentAsk\":\"Ping\"}"));
+            var pane = Fixture.Create<SoundsPane>(state.Settings);
+            var rows = Fixture.Named<StackPanel>(pane, "EventRows");
+            pane.ShowStoredValues();
+
+            // The first row is taskDone (silent), the second agentAsk (Ping): the play button is the row's first child.
+            var silent = (DockPanel)rows.Children[0];
+            var sounding = (DockPanel)rows.Children[1];
+            Assert.False(((Button)silent.Children[0]).IsEnabled);
+            Assert.True(((Button)sounding.Children[0]).IsEnabled);
+        });
+    }
+
+    [Fact]
+    public void ImportPack_WritesTheSoundsAndVolume()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            var pane = Fixture.Create<SoundsPane>(state.Settings);
+            var file = Path.Combine(root.Folder, "pack.notchsounds");
+            File.WriteAllText(file, "{\"format\":\"notchtasks.sounds\",\"version\":1,\"volume\":0.35,"
+                + "\"sounds\":{\"taskDone\":\"Pop\",\"ciFailed\":\"Tink\"}}");
+
+            pane.ImportPackFrom(file);
+
+            Assert.Equal("Pop", state.Settings.SoundMap["taskDone"]);
+            Assert.Equal("Tink", state.Settings.SoundMap["ciFailed"]);
+            Assert.Equal(0.35, state.Settings.Volume, 2);
+        });
+    }
+
+    [Fact]
+    public void ImportPack_ANonPack_ShowsTheMessageAndChangesNothing()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            var before = state.Settings.Volume;
+            var pane = Fixture.Create<SoundsPane>(state.Settings);
+            string? shown = null;
+            pane.Message = (caption, text) => shown = caption + "|" + text;
+            var file = Path.Combine(root.Folder, "notes.json");
+            File.WriteAllText(file, "{\"hello\":1}");
+
+            pane.ImportPackFrom(file);
+
+            Assert.Equal("Couldn't import the sound pack|This file isn't a NotchTasks sound pack.", shown);
+            Assert.Equal(before, state.Settings.Volume);
+        });
     }
 
     [Fact]

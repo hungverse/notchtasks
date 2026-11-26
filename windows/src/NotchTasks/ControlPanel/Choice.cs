@@ -16,12 +16,13 @@ public sealed class Choice : INotifyPropertyChanged
     private readonly Func<string> _title;
     private readonly string? _blurbKey;
 
-    private Choice(string value, Func<string> title, bool localized, string? blurbKey, Brush? swatch)
+    private Choice(string value, Func<string> title, bool localized, string? blurbKey, Brush? swatch, bool separator = false)
     {
         Value = value;
         _title = title;
         _blurbKey = blurbKey;
         Swatch = swatch;
+        IsSeparator = separator;
         if (localized)
         {
             LocalizedStrings.Instance.PropertyChanged += (_, _) =>
@@ -44,6 +45,9 @@ public sealed class Choice : INotifyPropertyChanged
     /// A colour dot shown before the title (the accents), or null.
     public Brush? Swatch { get; }
 
+    /// True for the line between a picker's sounds and its extra items: drawn as a rule, never chosen.
+    public bool IsSeparator { get; }
+
     public event PropertyChangedEventHandler? PropertyChanged;
 
     /// A choice whose title is a key of the Mac's English texts.
@@ -53,6 +57,10 @@ public sealed class Choice : INotifyPropertyChanged
     /// A choice whose title is a text as it is (a sound name, a language's own name, a file name).
     public static Choice Literal(string value, string text) =>
         new(value, () => text, localized: false, blurbKey: null, swatch: null);
+
+    /// A rule between groups of a picker's items. It has no title and is never applied.
+    public static Choice Separator() =>
+        new("\u0001separator", () => string.Empty, localized: false, blurbKey: null, swatch: null, separator: true);
 
     /// A choice whose title is made by a function that reads the language (the Device language, which names the device's language too).
     public static Choice Computed(string value, Func<string> title) =>
@@ -95,7 +103,18 @@ public static class ChoiceItems
     public static IReadOnlyList<Choice> SoundPacks { get; } =
         NotchTasks.Core.Sounds.SoundPacks.All.Select(p => Choice.Key(p.Name, p.Name)).ToList();
 
-    public static Choice CustomPack { get; } = Choice.Key(string.Empty, "Custom");
+    /// The pack label of a custom map (Preferences.swift: "Yours").
+    public static Choice CustomPack { get; } = Choice.Key(string.Empty, "Yours");
+
+    /// The value of the "Choose your file…" item: the pane opens a file dialog instead of saving it.
+    public const string ChooseFileValue = "\u0001choose-file";
+
+    public static Choice ChooseFile { get; } = Choice.Key(ChooseFileValue, "Choose your file…");
+
+    public static Choice SoundSeparator { get; } = Choice.Separator();
+
+    /// An event's picker: "None", the 14 sounds, a rule, then "Choose your file…" (Preferences.swift SoundRow).
+    public static IReadOnlyList<Choice> SoundPickerItems { get; } = SoundNames.Concat(new[] { SoundSeparator, ChooseFile }).ToList();
 
     public static IReadOnlyList<Choice> SoundEvents { get; } =
         NotchTasks.Core.Sounds.SoundPacks.Events.Select(e => Choice.Key(e.Id, e.Title)).ToList();
