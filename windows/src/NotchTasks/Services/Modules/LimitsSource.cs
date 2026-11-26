@@ -14,8 +14,8 @@ public sealed record LimitReaders(IHttpPost Http, IClaudeCli Cli, string Home, s
 
 /// The limits module's feed (module "limits"). While it is started and Claude, Codex or Antigravity is enabled, a 10 s timer
 /// runs:
-/// - the claude CLI (`/usage`) runs at start and then every 30 min, one call at a time; it is given up after 30 s, and the
-///   statusline snapshot stands in until it answers;
+/// - the claude CLI (`/usage`) runs at start and then every 30 min, one call at a time, only while the Claude
+///   opt-in (claudeLimits) is on; it is given up after 30 s, and the statusline snapshot stands in until it answers;
 /// - the Claude statusline is read every tick, in the background;
 /// - Codex limits come from AgentsSource's scanner while the agents module runs with a Codex item, else from this source's own;
 /// - Antigravity's quota is fetched every 60 s, in the background.
@@ -35,6 +35,7 @@ public sealed class LimitsSource : IModuleSource
     private readonly TimeSpan _cliGiveUp;
     private readonly CodexScanner _codex;
     private readonly AntigravityLimits _antigravity;
+    private readonly ClaudeLimitsStatus? _status;
     private readonly DispatcherTimer _timer = new() { Interval = TickEvery };
     private bool _started;
     private bool _reading;
@@ -50,15 +51,17 @@ public sealed class LimitsSource : IModuleSource
     private ProviderLimits? _antigravityLimits;
 
     /// agents is the agents source whose Codex scanner this shares. cliGiveUp is how long the CLI may take before the statusline
-    /// stands in (30 s; a test passes less).
+    /// stands in (30 s; a test passes less). status receives each CLI reply (sign-in and the last reading), when given.
     public LimitsSource(
         LimitsModule module,
         SettingsStore settings,
         LimitReaders reads,
         AgentsSource agents,
         Action publish,
-        TimeSpan? cliGiveUp = null)
+        TimeSpan? cliGiveUp = null,
+        ClaudeLimitsStatus? status = null)
     {
+        _status = status;
         _module = module;
         _settings = settings;
         _reads = reads;
@@ -92,6 +95,25 @@ public sealed class LimitsSource : IModuleSource
         _ownCodex = null;
         _antigravityLimits = null;
         _module.Update(new LimitInputs(false, false, false, false, null, null, null, _settings.LimitWarn), DateTimeOffset.UtcNow);
+    }
+
+    /// The Claude opt-in changed. On: the CLI runs now, not at its next 30 min. Off: the CLI's reading is forgotten, so the
+    /// statusline (or nothing) stands in, and a call still in flight is dropped when it lands.
+    public void ClaudeLimitsChanged()
+    {
+        if (!_started)
+        {
+            return;
+        }
+        if (_settings.ClaudeLimits)
+        {
+            _nextCli = DateTimeOffset.MinValue;
+        }
+        else
+        {
+            _live = null;
+        }
+        Tick();
     }
 
     /// The watch list changed: the timer follows the enabled providers, and the limits are recomposed.
@@ -134,7 +156,7 @@ public sealed class LimitsSource : IModuleSource
         var codexOn = items.Any(i => i.Enabled && i.Kind == WatchKind.Codex);
         var agyOn = AgyOn(items);
 
-        if (claudeOn && !_cliBusy && now >= _nextCli)
+        if (claudeOn && _settings.ClaudeLimits && !_cliBusy && now >= _nextCli)
         {
             _nextCli = now + CliEvery;
             RunCli(now);
@@ -202,8 +224,9 @@ public sealed class LimitsSource : IModuleSource
                 Compose(DateTimeOffset.UtcNow);
             }
             var text = await call.ConfigureAwait(true);
-            if (text is not null && _started && generation == _generation)
+            if (text is not null && _started && generation == _generation && _settings.ClaudeLimits)
             {
+                _status?.Record(text, DateTimeOffset.UtcNow);
                 var windows = ClaudeUsage.Parse(text, DateTimeOffset.UtcNow);
                 if (windows.Count > 0)
                 {

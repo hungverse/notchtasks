@@ -5,8 +5,10 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using NotchTasks.ControlPanel;
 using NotchTasks.ControlPanel.Panes;
+using NotchTasks.Services;
 using NotchTasks.Core;
 using NotchTasks.Core.Agents;
+using NotchTasks.Core.Limits;
 using NotchTasks.Core.Settings;
 using Xunit;
 
@@ -460,84 +462,196 @@ public sealed class WatchingPaneTests
         });
     }
 
-    /// Claude's "Plan limits" row: the row under Claude's agent row that holds the note and the button, found by its title.
+    /// The Plan limits row under Claude's row: the one row found by its title.
     private static Grid PlanLimitsRow(FrameworkElement pane) =>
         Fixture.Named<StackPanel>(pane, "Rows").Children.OfType<Grid>()
             .Single(g => g.Children.OfType<StackPanel>().Any(s => s.Children.OfType<TextBlock>().Any(t => t.Text == L10n.L("Plan limits"))));
 
+    /// The note of the row (its second text line).
+    private static string PlanLimitsNote(FrameworkElement pane) =>
+        PlanLimitsRow(pane).Children.OfType<StackPanel>().Single().Children.OfType<TextBlock>().Last().Text;
+
+    /// The row's button, or null when it has none.
+    private static Button? PlanLimitsButton(FrameworkElement pane) =>
+        PlanLimitsRow(pane).Children.OfType<Button>().SingleOrDefault();
+
+    private static readonly string ExePath = "claude.exe";
+
+    /// A pane whose CLI is a bundled Claude in a temp folder when installed is true, and whose setup runs against a fake host.
+    private static (WatchingPane Pane, ClaudeLimitsSetupRunnerTests.FakeHost Host, ClaudeLimitsStatus Status) PlanPane(SettingsStore store, TempRoot root,
+        bool installed, string usage, bool confirmAnswer = true)
+    {
+        var exe = new CliCommand(CliKind.Direct, Path.Combine(root.Folder, "local", ExePath), Array.Empty<string>());
+        var host = new ClaudeLimitsSetupRunnerTests.FakeHost { Cli = installed ? exe : null, InstallsTo = exe, Usage = usage };
+        var status = new ClaudeLimitsStatus();
+        var setup = new ClaudeLimitsSetupRunner(host, status, TimeSpan.FromMilliseconds(5));
+        var pane = new WatchingPane(store, new FakeProcesses(), Path.Combine(root.Folder, "home"), path: "",
+            appData: Path.Combine(root.Folder, "appdata"), setup: setup)
+        {
+            Confirm = () => confirmAnswer,
+        };
+        return (pane, host, status);
+    }
+
+    private const string SignedInUsage =
+        "You are currently using your subscription to power your Claude Code usage\n\n"
+        + "Current session: 56% used · resets Nov 27, 5:09am (Asia/Ho_Chi_Minh)\n";
+
+    private const string CostOnlyUsage = "Total cost: $0.00\nUsage: 0 input, 0 output\n";
+
     [Fact]
-    public void PlanLimits_TurnOnWritesOurStatusLine_TurnOffRemovesIt()
+    public void PlanLimits_Off_NoteAndTurnOn()
     {
         Sta.Run(() =>
         {
             using var root = new TempRoot();
-            var oldClaudeDir = Environment.GetEnvironmentVariable("CLAUDE_CONFIG_DIR");
-            Environment.SetEnvironmentVariable("CLAUDE_CONFIG_DIR", null);  // the temp home's .claude, not this PC's
+            var (pane, _, _) = PlanPane(StoreWith("[]"), root, installed: true, usage: SignedInUsage);
+            var window = Show(pane);
             try
             {
-                var store = StoreWith("[]");
-                var pane = NewPane(store, new FakeProcesses(), root);
-                var window = Show(pane);
-                try
-                {
-                    var settings = Path.Combine(root.Folder, "home", ".claude", "settings.json");
-                    var row = PlanLimitsRow(pane);
-                    Assert.Equal(L10n.L("Turn on"), Assert.IsType<Button>(row.Children.OfType<Button>().Single()).Content);
-
-                    Click(row.Children.OfType<Button>().Single());
-
-                    Assert.Contains("--statusline", File.ReadAllText(settings));
-                    row = PlanLimitsRow(pane);
-                    Assert.Equal(L10n.L("On"), row.Children.OfType<StackPanel>().Single().Children.OfType<TextBlock>().Last().Text);
-                    Click(row.Children.OfType<Button>().Single());
-
-                    Assert.False(File.ReadAllText(settings).Contains("statusLine", StringComparison.Ordinal));
-                }
-                finally
-                {
-                    window.Close();
-                }
+                Assert.Equal(L10n.L("Show Claude's 5h and 7d limits on the notch and the phone"), PlanLimitsNote(pane));
+                Assert.Equal(L10n.L("Turn on"), Assert.IsType<Button>(PlanLimitsButton(pane)).Content);
             }
             finally
             {
-                Environment.SetEnvironmentVariable("CLAUDE_CONFIG_DIR", oldClaudeDir);
+                window.Close();
             }
         });
     }
 
     [Fact]
-    public void PlanLimits_AnotherStatusLine_HasNoButton()
+    public void PlanLimits_TurnOnAllowed_SetsTheSettingAndReadsTheLimits()
     {
         Sta.Run(() =>
         {
             using var root = new TempRoot();
-            var oldClaudeDir = Environment.GetEnvironmentVariable("CLAUDE_CONFIG_DIR");
-            Environment.SetEnvironmentVariable("CLAUDE_CONFIG_DIR", null);
+            var store = StoreWith("[]");
+            var (pane, host, status) = PlanPane(store, root, installed: true, usage: SignedInUsage, confirmAnswer: true);
+            var window = Show(pane);
             try
             {
-                var claudeDir = Path.Combine(root.Folder, "home", ".claude");
-                Directory.CreateDirectory(claudeDir);
-                const string before = "{\"statusLine\":{\"type\":\"command\",\"command\":\"my-line.sh\"}}";
-                File.WriteAllText(Path.Combine(claudeDir, "settings.json"), before);
-                var pane = NewPane(StoreWith("[]"), new FakeProcesses(), root);
-                var window = Show(pane);
-                try
-                {
-                    var row = PlanLimitsRow(pane);
+                Click(PlanLimitsButton(pane)!);
+                Fixture.PumpUntil(() => status.ReadAt is not null);
 
-                    Assert.Empty(row.Children.OfType<Button>());
-                    Assert.Contains(row.Children.OfType<StackPanel>().Single().Children.OfType<TextBlock>(),
-                        t => t.Text == L10n.L("Your own status line is set. NotchTasks won't replace it."));
-                    Assert.Equal(before, File.ReadAllText(Path.Combine(claudeDir, "settings.json")));
-                }
-                finally
-                {
-                    window.Close();
-                }
+                Assert.True(store.ClaudeLimits);
+                Assert.Empty(host.InstallerCalls);
+                Assert.Empty(host.SignInCalls);
+                var at = status.ReadAt!.Value.ToLocalTime().ToString("t", System.Globalization.CultureInfo.CurrentCulture);
+                Assert.Equal(L10n.L("On · updated {0}", at), PlanLimitsNote(pane));
+                Assert.Equal(L10n.L("Turn off"), Assert.IsType<Button>(PlanLimitsButton(pane)).Content);
             }
             finally
             {
-                Environment.SetEnvironmentVariable("CLAUDE_CONFIG_DIR", oldClaudeDir);
+                window.Close();
+            }
+        });
+    }
+
+    [Fact]
+    public void PlanLimits_TurnOnCancelled_ChangesNothing()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            var store = StoreWith("[]");
+            var (pane, host, _) = PlanPane(store, root, installed: true, usage: SignedInUsage, confirmAnswer: false);
+            var window = Show(pane);
+            try
+            {
+                Click(PlanLimitsButton(pane)!);
+
+                Assert.False(store.ClaudeLimits);
+                Assert.Empty(host.InstallerCalls);
+                Assert.Empty(host.SignInCalls);
+                Assert.Equal(0, host.Probes);
+                Assert.Equal(L10n.L("Turn on"), Assert.IsType<Button>(PlanLimitsButton(pane)).Content);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    [Fact]
+    public void PlanLimits_TurnOff_ClearsTheSettingWithoutAsking()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            var store = StoreWith("[]");
+            store.Set("claudeLimits", System.Text.Json.Nodes.JsonValue.Create(true));
+            var (pane, host, _) = PlanPane(store, root, installed: true, usage: SignedInUsage, confirmAnswer: false);
+            var window = Show(pane);
+            try
+            {
+                Click(PlanLimitsButton(pane)!);
+
+                Assert.False(store.ClaudeLimits);
+                Assert.Empty(host.SignInCalls);
+                Assert.Equal(L10n.L("Turn on"), Assert.IsType<Button>(PlanLimitsButton(pane)).Content);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    [Fact]
+    public void PlanLimits_CliMissing_InstallButtonRunsTheInstaller()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            var store = StoreWith("[]");
+            store.Set("claudeLimits", System.Text.Json.Nodes.JsonValue.Create(true));
+            var (pane, host, _) = PlanPane(store, root, installed: false, usage: SignedInUsage);
+            var window = Show(pane);
+            try
+            {
+                Assert.Equal(L10n.L("Claude Code isn't installed"), PlanLimitsNote(pane));
+                Assert.Equal(L10n.L("Install"), Assert.IsType<Button>(PlanLimitsButton(pane)).Content);
+
+                Click(PlanLimitsButton(pane)!);
+                Fixture.PumpUntil(() => host.InstallerCalls.Count == 1);
+
+                Assert.Equal("powershell|-NoProfile -ExecutionPolicy Bypass -Command \"irm https://claude.ai/install.ps1 | iex\"",
+                    host.InstallerCalls[0]);
+                Assert.Empty(host.SignInCalls);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    [Fact]
+    public void PlanLimits_SignedOut_SignInButtonOpensTheTerminal()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            var store = StoreWith("[]");
+            store.Set("claudeLimits", System.Text.Json.Nodes.JsonValue.Create(true));
+            var (pane, host, status) = PlanPane(store, root, installed: true, usage: CostOnlyUsage);
+            status.Record(CostOnlyUsage, DateTimeOffset.UtcNow);
+            var window = Show(pane);
+            try
+            {
+                Assert.Equal(L10n.L("Sign in to Claude Code once"), PlanLimitsNote(pane));
+                Assert.Equal(L10n.L("Sign in"), Assert.IsType<Button>(PlanLimitsButton(pane)).Content);
+
+                Click(PlanLimitsButton(pane)!);
+                Fixture.PumpUntil(() => host.SignInCalls.Count == 1);
+
+                Assert.Equal(Path.Combine(root.Folder, "local", ExePath), host.SignInCalls[0].FileName);
+                Assert.Empty(host.InstallerCalls);
+            }
+            finally
+            {
+                window.Close();
             }
         });
     }

@@ -103,7 +103,8 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         _cameraFactory = o.Camera ?? (() => new CameraSession());
         _notifier = o.Notifier ?? new SystemNotifier();
         _agentsSource = new AgentsSource(Agents, settings, agentReaders, Publish, SetCodexAsks);
-        _limitsSource = new LimitsSource(LimitsModule, settings, limitReaders, _agentsSource, Publish);
+        ClaudeSetup = new ClaudeLimitsSetupRunner(o.ClaudeHost ?? new ClaudeSetupHost(HomeOf(o)));
+        _limitsSource = new LimitsSource(LimitsModule, settings, limitReaders, _agentsSource, Publish, null, ClaudeSetup.Status);
         BuildAgents = new AgentsModule(this, build: true);
         Ci = new CiModule(this, CiState.Get, CiState.Set, settings.AddSeenTools,
             path => RunnerLogs.ReadTail(path, WorkerLogTail));
@@ -293,6 +294,9 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
 
     /// The temperature helper (Windows only, off by default). Its state drives the Permissions row and the header's reading.
     public SensorHelper Helper { get; }
+
+    /// The Plan limits setup (the Watching pane's Allow, Install and Sign in) and the sign-in status the limits source records.
+    public ClaudeLimitsSetupRunner ClaudeSetup { get; }
 
     /// The heat toast's levels (the Mac's thermalChanged). Its source (HeatSource) runs with the health module while the helper is On.
     public HeatModule Heat { get; }
@@ -889,6 +893,10 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
             if (!_disposed && keys.Any(k => k is "systemLoad" or "sensorHelper" or "sensorHelperAtSignIn"))
             {
                 _thermalSource.SettingsChanged();
+            }
+            if (!_disposed && keys.Any(k => k == "claudeLimits"))
+            {
+                _limitsSource.ClaudeLimitsChanged();
             }
         }));
 

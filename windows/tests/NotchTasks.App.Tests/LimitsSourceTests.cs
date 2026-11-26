@@ -36,6 +36,30 @@ public sealed class LimitsSourceTests
         }
     }
 
+    /// A CLI that counts its calls and answers with fixed text at once.
+    private sealed class TextCli : IClaudeCli
+    {
+        private readonly string _text;
+
+        public TextCli(string text) => _text = text;
+
+        public int Calls { get; private set; }
+
+        public Task<string?> UsageAsync(CancellationToken ct)
+        {
+            Calls++;
+            return Task.FromResult<string?>(_text);
+        }
+    }
+
+    /// The opt-in on or off, as the Watching pane writes it.
+    private static void ClaudeLimits(SettingsStore settings, bool on) =>
+        settings.Set("claudeLimits", System.Text.Json.Nodes.JsonValue.Create(on));
+
+    private const string SignedInUsage =
+        "You are currently using your subscription to power your Claude Code usage\n\n"
+        + "Current session: 56% used · resets Nov 27, 5:09am (Asia/Ho_Chi_Minh)\n";
+
     private static readonly WatchItem ClaudeItem = new("claude", "Claude", WatchKind.Claude);
 
     /// A temp home whose statusline says the 5 h window is 42 % used, and the readers that use it.
@@ -51,14 +75,14 @@ public sealed class LimitsSourceTests
     }
 
     private static (LimitsSource Source, LimitsModule Module) Source(TempRoot root, SettingsStore settings, IClaudeCli cli,
-        Action publish, TimeSpan giveUp)
+        Action publish, TimeSpan giveUp, ClaudeLimitsStatus? status = null)
     {
         var module = new LimitsModule(new QuietAnnouncer());
         var readers = Readers(root, cli);
         var agents = new AgentsSource(new AgentsModule(new QuietAnnouncer()), settings,
             new AgentReaders(new Fixture.NoProcesses(), new Fixture.NoSqlite(), new Fixture.NoHttp(), _ => null, readers.Home, readers.ClaudeDir),
             () => { }, _ => { });
-        return (new LimitsSource(module, settings, readers, agents, publish, giveUp), module);
+        return (new LimitsSource(module, settings, readers, agents, publish, giveUp, status), module);
     }
 
     [Fact]
@@ -86,6 +110,7 @@ public sealed class LimitsSourceTests
             using var root = new TempRoot();
             var settings = SettingsStore.Load(AppPaths.SettingsFile);
             settings.SetItems(new[] { ClaudeItem });
+            ClaudeLimits(settings, true);
             var cli = new HangingCli();
             var (source, module) = Source(root, settings, cli, () => { }, TimeSpan.FromMilliseconds(50));
 
@@ -108,6 +133,7 @@ public sealed class LimitsSourceTests
             using var root = new TempRoot();
             var settings = SettingsStore.Load(AppPaths.SettingsFile);
             settings.SetItems(new[] { ClaudeItem });
+            ClaudeLimits(settings, true);
             var cli = new HangingCli();
             var (source, module) = Source(root, settings, cli, () => { }, TimeSpan.FromMilliseconds(50));
             source.Start();
@@ -141,6 +167,91 @@ public sealed class LimitsSourceTests
 
             Assert.False(Fixture.Field<DispatcherTimer>(source, "_timer").IsEnabled);
             Assert.Empty(module.Limits);
+        });
+    }
+
+    [Fact]
+    public void ClaudeLimitsOff_NoCliCallAtAll_TheStatuslineStillShows()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            var settings = SettingsStore.Load(AppPaths.SettingsFile);
+            settings.SetItems(new[] { ClaudeItem });
+            ClaudeLimits(settings, false);
+            var cli = new TextCli(SignedInUsage);
+            var (source, module) = Source(root, settings, cli, () => { }, TimeSpan.FromMilliseconds(50));
+
+            source.Start();
+            Fixture.PumpUntil(() => module.Limits.Count > 0);
+
+            Assert.Equal(0, cli.Calls);
+            Assert.Equal(42, Assert.Single(module.Limits).Windows.Single(w => w.Label == "5h").Used);
+            source.Stop();
+        });
+    }
+
+    [Fact]
+    public void ClaudeLimitsOn_ClaudeItemOff_NoCliCall()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            var settings = SettingsStore.Load(AppPaths.SettingsFile);
+            settings.SetItems(new[] { ClaudeItem with { Enabled = false } });
+            ClaudeLimits(settings, true);
+            var cli = new TextCli(SignedInUsage);
+            var (source, _) = Source(root, settings, cli, () => { }, TimeSpan.FromMilliseconds(50));
+
+            source.Start();
+            Fixture.Call(source, "Tick");
+
+            Assert.Equal(0, cli.Calls);
+            source.Stop();
+        });
+    }
+
+    [Fact]
+    public void ClaudeLimitsOn_TheCliIsCalled_AndItsAnswerIsRecorded()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            var settings = SettingsStore.Load(AppPaths.SettingsFile);
+            settings.SetItems(new[] { ClaudeItem });
+            ClaudeLimits(settings, true);
+            var cli = new TextCli(SignedInUsage);
+            var status = new ClaudeLimitsStatus();
+            var (source, module) = Source(root, settings, cli, () => { }, TimeSpan.FromMilliseconds(50), status);
+
+            source.Start();
+            Fixture.PumpUntil(() => status.SignedIn == true);
+
+            Assert.True(cli.Calls >= 1);
+            Assert.NotNull(status.ReadAt);
+            Assert.Equal(56, Assert.Single(module.Limits).Windows.Single(w => w.Label == "5h").Used);
+            source.Stop();
+        });
+    }
+
+    [Fact]
+    public void ClaudeLimitsOn_SignedOutAnswer_IsRecordedAsSignedOut()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            var settings = SettingsStore.Load(AppPaths.SettingsFile);
+            settings.SetItems(new[] { ClaudeItem });
+            ClaudeLimits(settings, true);
+            var status = new ClaudeLimitsStatus();
+            var (source, _) = Source(root, settings, new TextCli("Total cost: $0.00\nUsage: 0 input, 0 output\n"), () => { },
+                TimeSpan.FromMilliseconds(50), status);
+
+            source.Start();
+            Fixture.PumpUntil(() => status.SignedIn == false);
+
+            Assert.Null(status.ReadAt);
+            source.Stop();
         });
     }
 

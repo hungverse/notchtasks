@@ -277,6 +277,10 @@ public sealed class SettingsStore : INotifyPropertyChanged, IDisposable
     /// The percentage of an AI limit that triggers a warning, 50 to 100 (Mac limitWarn).
     public double LimitWarn => Ranged("limitWarn", 80, 50, 100);
 
+    /// The opt-in to read Claude's 5 h and 7 d limits from the Claude Code CLI (`claude -p /usage`), set by the user's Allow in the
+    /// Watching pane. Off by default; never part of a profile, so importing one never starts the CLI.
+    public bool ClaudeLimits => Flag("claudeLimits", false);
+
     /// The tray icon is shown (Mac menuBarIcon).
     public bool MenuBarIcon => Flag("menuBarIcon", true);
 

@@ -172,7 +172,7 @@ public partial class ControlPanelWindow : Window
                 PaneId.Overview => new OverviewPane(State.Settings, State),
                 PaneId.Modules => new ModulesPane(State.Settings, null, State),
                 PaneId.Permissions => new PermissionsPane(State.Settings, State.Helper),
-                PaneId.Watching => new WatchingPane(State.Settings, State.Processes, AppFiles.Home),
+                PaneId.Watching => new WatchingPane(State.Settings, State.Processes, AppFiles.Home, setup: State.ClaudeSetup),
                 PaneId.Pairing => new PairingPane(State.Bridge),
                 PaneId.Temperatures => new TemperaturesPane(State.Settings, State.Helper),
                 PaneId.Appearance => new AppearancePane(State.Settings, State),

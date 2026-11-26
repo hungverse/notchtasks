@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.IO;
 using System.Text.Json.Nodes;
 using System.Windows;
@@ -7,6 +8,7 @@ using System.Windows.Media;
 using NotchTasks.Core;
 using NotchTasks.Core.Agents;
 using NotchTasks.Core.Asks;
+using NotchTasks.Core.Limits;
 using NotchTasks.Core.Settings;
 using NotchTasks.Pill;
 using NotchTasks.Services;
@@ -27,6 +29,7 @@ public partial class WatchingPane : SettingsPane
     private readonly string _home;
     private readonly string? _path;
     private readonly string? _appData;
+    private readonly ClaudeLimitsSetupRunner _setup;
 
     /// The error of the last switch that could not be saved, until the next one. Shown with the configuration error.
     private string? _actionError;
@@ -35,14 +38,21 @@ public partial class WatchingPane : SettingsPane
     private string? _configError;
 
     /// The pane for the settings store, the process table (for the running apps), the user's profile folder (where the agents'
-    /// settings and CLIs are), and for tests the PATH and %APPDATA% folder to search for CLIs (null: this PC's).
-    public WatchingPane(SettingsStore store, IProcessReader processes, string home, string? path = null, string? appData = null)
+    /// settings and CLIs are), and for tests the PATH and %APPDATA% folder to search for CLIs (null: this PC's). setup runs the Plan
+    /// limits steps (null: this PC's, over the same folders); the app passes its own, so the limits source and the row share one status.
+    public WatchingPane(SettingsStore store, IProcessReader processes, string home, string? path = null, string? appData = null,
+        ClaudeLimitsSetupRunner? setup = null)
         : base(store)
     {
         _processes = processes;
         _home = home;
         _path = path;
         _appData = appData;
+        _setup = setup ?? new ClaudeLimitsSetupRunner(new ClaudeSetupHost(home, path, appData));
+        Confirm = ConfirmAllow;
+        // the row follows the setup's replies while the pane is shown
+        Loaded += (_, _) => _setup.Status.Changed += OnStatusChanged;
+        Unloaded += (_, _) => _setup.Status.Changed -= OnStatusChanged;
         InitializeComponent();
         _buildTools = new BuildToolsBox(store);
         BuildHost.Content = _buildTools;
@@ -368,6 +378,12 @@ public partial class WatchingPane : SettingsPane
         ShowErrorLine();
     }
 
+    /// Asks for the Plan limits Turn on confirmation: true when allowed. A test replaces it, so no dialog opens in a test.
+    internal Func<bool> Confirm { get; set; }
+
+    /// The setup reported a reply: the rows are read again.
+    private void OnStatusChanged() => ApplyStored();
+
     /// Builds one row per agent, in the AgentKind order, with a separator between rows. An agent whose settings file cannot
     /// be edited shows its error at once, not only after a switch fails.
     private void Render()
@@ -389,7 +405,7 @@ public partial class WatchingPane : SettingsPane
             {
                 // Claude's plan limits: the opt-in status line, in the same card under Claude's row
                 Rows.Children.Add(new Separator { Margin = new Thickness(16, 0, 16, 0) });
-                Rows.Children.Add(BuildLimitsRow(home));
+                Rows.Children.Add(BuildLimitsRow());
             }
             if (!HookInstaller.CanEdit(kinds[i], home))
             {
@@ -503,11 +519,13 @@ public partial class WatchingPane : SettingsPane
         }
     }
 
-    /// Claude's "Plan limits" row: the opt-in status line that lets NotchTasks read the 5 h and 7 d limits. Off shows the note and
-    /// Turn on; ours shows On and Turn off; another status line is never replaced, so it shows only the note.
-    private UIElement BuildLimitsRow(string home)
+    /// Claude's "Plan limits" row, under Claude's row: the opt-in to read the 5 h and 7 d limits from Claude Code's CLI. Its state is
+    /// ClaudeLimitsSetup.State: off shows the note and Turn on (asks first); working shows the time of the last reading and Turn off;
+    /// the CLI missing shows Install; not signed in shows Sign in. The row is read again when the setup reports.
+    private UIElement BuildLimitsRow()
     {
-        var state = StatuslineInstaller.State(home);
+        var status = _setup.Status;
+        var state = ClaudeLimitsSetup.State(_setup.Cli() is not null, status.SignedIn != false, Store.ClaudeLimits);
 
         var text = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
         text.Children.Add(new TextBlock { Text = L10n.L("Plan limits"), FontWeight = FontWeights.Medium });
@@ -518,9 +536,12 @@ public partial class WatchingPane : SettingsPane
             TextWrapping = TextWrapping.Wrap,
             Text = state switch
             {
-                StatuslineState.Off => L10n.L("Show Claude's 5h and 7d limits from Claude Code's status line"),
-                StatuslineState.Ours => L10n.L("On"),
-                _ => L10n.L("Your own status line is set. NotchTasks won't replace it."),
+                ClaudeLimitsState.Off => L10n.L("Show Claude's 5h and 7d limits on the notch and the phone"),
+                ClaudeLimitsState.Working => status.ReadAt is { } at
+                    ? L10n.L("On · updated {0}", at.ToLocalTime().ToString("t", CultureInfo.CurrentCulture))
+                    : L10n.L("On"),
+                ClaudeLimitsState.NotInstalled => L10n.L("Claude Code isn't installed"),
+                _ => L10n.L("Sign in to Claude Code once"),
             },
         });
 
@@ -529,43 +550,74 @@ public partial class WatchingPane : SettingsPane
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         Place(text, grid, 0);
 
-        if (state != StatuslineState.Other)
+        var button = new Button
         {
-            var on = state == StatuslineState.Off;
-            var button = new Button
+            Content = L10n.L(state switch
             {
-                Content = L10n.L(on ? "Turn on" : "Turn off"),
-                Margin = new Thickness(12, 0, 0, 0),
-                VerticalAlignment = VerticalAlignment.Center,
-            };
-            button.Click += (_, _) => ChangeStatusline(on, home);
-            Place(button, grid, 1);
-        }
+                ClaudeLimitsState.Off => "Turn on",
+                ClaudeLimitsState.Working => "Turn off",
+                ClaudeLimitsState.NotInstalled => "Install",
+                _ => "Sign in",
+            }),
+            Margin = new Thickness(12, 0, 0, 0),
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        button.Click += (_, _) => OnLimitsButton(state);
+        Place(button, grid, 1);
         return grid;
     }
 
-    /// Adds or removes NotchTasks' status line. A settings file that cannot be edited shows its error, and the rows are read
-    /// again, so the row shows the real state.
-    private void ChangeStatusline(bool on, string home)
+    /// The row's button: Turn on asks first and then runs the setup; Turn off just clears the opt-in; Install and Sign in run their step.
+    private void OnLimitsButton(ClaudeLimitsState state)
+    {
+        switch (state)
+        {
+            case ClaudeLimitsState.Off:
+                if (Confirm())
+                {
+                    Write("claudeLimits", JsonValue.Create(true));
+                    RunSetup(() => _setup.AllowAsync());
+                }
+                break;
+            case ClaudeLimitsState.Working:
+                Write("claudeLimits", JsonValue.Create(false));
+                ApplyStored();
+                break;
+            case ClaudeLimitsState.NotInstalled:
+                RunSetup(() => _setup.InstallAsync());
+                break;
+            default:
+                RunSetup(() => _setup.SignInAsync());
+                break;
+        }
+    }
+
+    /// Runs one step of the setup, then reads the rows again. A failure is logged; the row keeps the state the setup reports.
+    private async void RunSetup(Func<Task> step)
     {
         try
         {
-            if (on)
-            {
-                StatuslineInstaller.Install(AppFiles.HookExe, home);
-            }
-            else
-            {
-                StatuslineInstaller.Uninstall(home);
-            }
-            _actionError = null;
+            await step();
         }
-        catch (Exception e) when (e is InvalidDataException or IOException or UnauthorizedAccessException)
+        catch (Exception e) when (e is not OutOfMemoryException)
         {
-            _actionError = L10n.L("Couldn't edit {0}'s settings: {1}", AgentKinds.Spec(AgentKind.Claude).Name, e.Message);
+            ErrorLog.Write(e);
         }
-
         ApplyStored();
+    }
+
+    /// The Turn on confirmation: the Fluent window owned by the Control Panel. True when the user allows it.
+    private bool ConfirmAllow()
+    {
+        var dialog = new ConfirmDialog(
+            L10n.L("Track Claude's plan limits?"),
+            L10n.L("NotchTasks will run Claude Code in the background every few minutes to read /usage. If Claude Code isn't installed, it installs it with Anthropic's installer. If you're not signed in, it opens Claude Code in a terminal so you can sign in once."),
+            L10n.L("Allow"),
+            L10n.L("Cancel"))
+        {
+            Owner = Window.GetWindow(this),
+        };
+        return dialog.ShowDialog() == true;
     }
 
     /// Shows the last switch's error, else the configuration error of an agent, else nothing.

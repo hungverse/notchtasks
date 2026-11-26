@@ -1,0 +1,19 @@
+<Window x:Class="NotchTasks.ControlPanel.ConfirmDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Width="420" SizeToContent="Height"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource ApplicationBackgroundBrush}"
+        Foreground="{DynamicResource TextFillColorPrimaryBrush}">
+  <!-- A Fluent yes-or-no window owned by the Control Panel: a title, the body, and Cancel (the default, and Esc) and the action. -->
+  <StackPanel Margin="20">
+    <TextBlock x:Name="TitleText" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap" />
+    <TextBlock x:Name="BodyText" Style="{StaticResource CardNote}" TextWrapping="Wrap" Margin="0,8,0,0" />
+    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+      <Button x:Name="CancelButton" Style="{StaticResource SecondaryButton}" MinWidth="96" IsCancel="True" />
+      <Button x:Name="AllowButton" Style="{StaticResource PrimaryButton}" MinWidth="96" Margin="12,0,0,0" />
+    </StackPanel>
+  </StackPanel>
+</Window>
