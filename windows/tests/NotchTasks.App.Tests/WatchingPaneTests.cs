@@ -416,7 +416,7 @@ public sealed class WatchingPaneTests
                 var rows = Rows(pane);
                 var plain = IconButton(rows[0]);
                 Assert.Equal(L10n.L("Change icon"), (string)plain.ToolTip);
-                Assert.IsType<TextBlock>(plain.Content);
+                Assert.IsType<FluentGlyph>(plain.Content);  // the symbol is a centred Fluent glyph
 
                 // an item with its own icon shows the badge (a Grid: fill and glyph)
                 Assert.IsType<Grid>(IconButton(rows[1]).Content);
@@ -451,7 +451,7 @@ public sealed class WatchingPaneTests
                 // the editor's reset: the icon is removed and the row shows the symbol again
                 Assert.Null(pane.SaveIcon("a1", null));
                 Assert.Null(store.Items.Single().Icon);
-                Assert.IsType<TextBlock>(IconButton(Rows(pane)[0]).Content);
+                Assert.IsType<FluentGlyph>(IconButton(Rows(pane)[0]).Content);
             }
             finally
             {

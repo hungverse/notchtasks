@@ -291,20 +291,18 @@ public partial class WatchingPane : SettingsPane
     }
 
     /// The item's symbol as its glyph when the glyph map has it, else the sparkles an agent without an app icon shows on the pill.
-    private static TextBlock SymbolGlyph(WatchItem item)
+    private static FrameworkElement SymbolGlyph(WatchItem item)
     {
         var (family, glyph) = ModuleGlyphs.Get(WatchItems.Symbol(item));
         var sparkles = ModuleGlyphs.Get("sparkles");
         var unknown = glyph == ModuleGlyphs.Fallback;
-        return new TextBlock
+        // a 20 DIP glyph in the text colour, centred in its box (FluentGlyph); the row centres the element in its column
+        return new FluentGlyph
         {
-            Text = unknown ? sparkles.Glyph : glyph,
-            FontFamily = unknown ? sparkles.Family : family,
-            FontSize = 18,
-            Width = 26,
-            Height = 26,
-            TextAlignment = TextAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center,
+            Code = unknown ? sparkles.Glyph : glyph,
+            Filled = ReferenceEquals(unknown ? sparkles.Family : family, FluentIcons.Filled),
+            Size = 20,
+            Foreground = (Brush)Application.Current.FindResource("TextFillColorPrimaryBrush"),
         };
     }
 

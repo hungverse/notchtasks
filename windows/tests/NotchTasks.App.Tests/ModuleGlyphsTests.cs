@@ -33,7 +33,7 @@ public sealed class ModuleGlyphsTests
         ["camera"] = "ic_fluent_camera_20_filled",
         ["wifi"] = "ic_fluent_wifi_4_20_regular",
         ["wifioff"] = "ic_fluent_wifi_off_20_regular",
-        ["network"] = "ic_fluent_globe_20_regular",
+        ["network"] = "ic_fluent_wifi_4_20_regular",  // the Network module is the Fluent wifi icon (the same glyph as the wifi chip)
         ["vpn"] = "ic_fluent_shield_lock_20_filled",
         ["vpnoff"] = "ic_fluent_lock_open_20_filled",
         ["battery"] = "ic_fluent_battery_5_20_regular",
@@ -56,8 +56,8 @@ public sealed class ModuleGlyphsTests
         ["sun"] = "ic_fluent_weather_sunny_20_filled",
     };
 
-    /// Pairs of names that share a code point on purpose. Empty: every name has its own glyph.
-    private static readonly (string A, string B)[] IntendedSharedGlyphs = Array.Empty<(string, string)>();
+    /// Pairs of names that share a code point on purpose: the Network module and the wifi chip draw the same wifi icon.
+    private static readonly (string A, string B)[] IntendedSharedGlyphs = { ("wifi", "network") };
 
     [Fact]
     public void EveryToastAndChipGlyphName_HasAGlyph()

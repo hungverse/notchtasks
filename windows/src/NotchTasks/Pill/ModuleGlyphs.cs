@@ -27,7 +27,7 @@ public static class ModuleGlyphs
         ["phonedown"] = new("", true),                   // call_end filled: the call ended (Mac phone.down.fill)
         ["camera"] = new("", true),                      // camera filled: the camera mirror (Mac video.fill)
         ["wifi"] = new(""),                              // wifi_4 (Mac wifi)
-        ["network"] = new(""),                           // globe (Mac network)
+        ["network"] = new("\uF8B2"),                           // wifi_4, Regular (Mac wifi): the Network module
         ["vpn"] = new("", true),                         // shield_lock filled (Mac lock.shield.fill)
         ["wifioff"] = new(""),                           // wifi_off: network disconnected (Mac wifi.slash)
         ["vpnoff"] = new("", true),                      // lock_open filled: VPN off (Mac lock.open.fill)

@@ -266,16 +266,17 @@ public partial class AppearancePane : SettingsPane
         preview.Children.Add(new Border { CornerRadius = new CornerRadius(10), Background = previewBackground });
         preview.Children.Add(pill);
 
+        // the selected theme's check: a 16 DIP glyph in the accent, centred on the title's line (FluentGlyph centres it)
         var glyph = ModuleGlyphs.Get("check");
-        var check = new TextBlock
+        var check = new FluentGlyph
         {
-            FontFamily = glyph.Family,
-            Text = glyph.Glyph,
-            FontSize = 16,
+            Code = glyph.Glyph,
+            Filled = ModuleGlyphs.IsFilled("check"),
+            Size = 16,
             Visibility = Visibility.Collapsed,
             VerticalAlignment = VerticalAlignment.Center,
         };
-        check.SetResourceReference(TextBlock.ForegroundProperty, "AccentFillColorDefaultBrush");
+        check.SetResourceReference(FluentGlyph.ForegroundProperty, "AccentFillColorDefaultBrush");
         var title = new TextBlock { FontWeight = FontWeights.SemiBold, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis };
         var labelRow = new DockPanel { Margin = new Thickness(2, 8, 2, 0) };
         DockPanel.SetDock(check, Dock.Right);
@@ -309,7 +310,7 @@ public partial class AppearancePane : SettingsPane
         theme.Accent == "auto" ? "#FF9F0A" : Appearance.ResolveAccent(theme.Accent, theme.CustomAccent, null) ?? "#FF9F0A";
 
     /// The controls of one theme tile, kept to show its selection and title.
-    private sealed record ThemeTileView(Theme Theme, Button Button, Border Frame, TextBlock Check, TextBlock Title);
+    private sealed record ThemeTileView(Theme Theme, Button Button, Border Frame, FluentGlyph Check, TextBlock Title);
 
     /// Draws the closed pill and the toast sample with the stored look (background, gradient, accent glow, toast style).
     private void UpdatePreview()
@@ -332,7 +333,7 @@ public partial class AppearancePane : SettingsPane
         PreviewGlow.Visibility = glow ? Visibility.Visible : Visibility.Collapsed;
         PreviewGlow.BorderBrush = accentBrush;
         PreviewGlow.Effect = glow ? new DropShadowEffect { Color = accent, BlurRadius = 6, ShadowDepth = 0, Opacity = 1 } : null;
-        PreviewGlyph.Foreground = accentBrush;
+        PreviewGlyph.Foreground = HexColor.Brush(GreenTint);  // the done toast is green, as the Mac's; an accent check can vanish on a dark pill
 
         // The toast sample takes the toast style's shape: island and banner hang from the pill, the compact one sits inside
         // it, the card floats below it. Every toast is a floating island below the pill's 4 px gap (the Mac's

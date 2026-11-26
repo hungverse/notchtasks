@@ -240,7 +240,7 @@ public sealed class ControlPanelWindowTests
     }
 
     [Fact]
-    public void SidebarRows_AreFortyEightDip()
+    public void SidebarRows_AreThirtySixDip()
     {
         Sta.Run(() =>
         {
@@ -253,11 +253,11 @@ public sealed class ControlPanelWindowTests
                 var sidebar = Fixture.Named<ListBox>(window, "Sidebar");
                 window.UpdateLayout();
 
-                // The Windows 11 Settings sidebar: every row is 48 DIP tall (the margin between rows is not part of it).
+                // The Windows 11 NavigationView sidebar: every row is 36 DIP tall (the margin between rows is not part of it).
                 for (var i = 0; i < sidebar.Items.Count; i++)
                 {
                     var row = Assert.IsType<ListBoxItem>(sidebar.ItemContainerGenerator.ContainerFromIndex(i));
-                    Assert.Equal(48, row.ActualHeight);
+                    Assert.Equal(36, row.ActualHeight);
                 }
             }
             finally

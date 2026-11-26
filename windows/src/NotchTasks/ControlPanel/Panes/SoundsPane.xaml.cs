@@ -5,10 +5,12 @@ using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Media;
 using Microsoft.Win32;
 using NotchTasks.Core;
 using NotchTasks.Core.Settings;
 using NotchTasks.Core.Sounds;
+using NotchTasks.Pill;
 using NotchTasks.Services;
 
 namespace NotchTasks.ControlPanel.Panes;
@@ -115,6 +117,7 @@ public partial class SoundsPane : SettingsPane
             ItemsSource = row.Items,
             ItemTemplate = (DataTemplate)FindResource("SoundItem"),
             Width = 200,
+            VerticalAlignment = VerticalAlignment.Center,
             Margin = new Thickness(0, 0, 8, 0),
         };
         DockPanel.SetDock(picker, Dock.Right);
@@ -122,9 +125,11 @@ public partial class SoundsPane : SettingsPane
 
         var play = new Button
         {
-            Content = new TextBlock { Text = "", FontFamily = FluentIcons.Regular, FontSize = 12 },
+            // the Fluent play glyph, white and centred in the button (FluentGlyph centres it on its own box)
+            Content = new FluentGlyph { Code = ModuleGlyphs.Get("play").Glyph, Filled = ModuleGlyphs.IsFilled("play"), Size = 12, Foreground = (Brush)FindResource("TextFillColorPrimaryBrush") },
             Width = 32,
             Height = 28,
+            VerticalAlignment = VerticalAlignment.Center,
         };
         // The tooltip follows the language at once, as the other texts do (LocalizedStrings raises Item[] on each change).
         play.SetBinding(FrameworkElement.ToolTipProperty, new Binding("[Play]") { Source = LocalizedStrings.Instance, Mode = BindingMode.OneWay });

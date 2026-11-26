@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using NotchTasks.Core.Asks;
 using NotchTasks.Core.Permissions;
 using NotchTasks.Core.Settings;
+using NotchTasks.Pill;
 using NotchTasks.ControlPanel;
 using Xunit;
 
@@ -88,6 +89,54 @@ public sealed class IconGlyphSourceTests
         {
             Assert.Contains(char.ConvertToUtf32(pane.Glyph(), 0), IconFonts.Regular.Values);
         }
+    }
+
+    [Fact]
+    public void EveryPillGlyphName_IsInTheFontItsFilledFlagNames()
+    {
+        // ModuleGlyphs is the map of the pill's chips, toasts and Control Panel's glyph names: each name must draw a glyph of its family.
+        foreach (var name in ModuleGlyphs.Names)
+        {
+            var table = ModuleGlyphs.IsFilled(name) ? IconFonts.Filled : IconFonts.Regular;
+            var (_, glyph) = ModuleGlyphs.Get(name);
+            Assert.Contains(char.ConvertToUtf32(glyph, 0), table.Values);
+        }
+    }
+
+    [Fact]
+    public void NetworkModule_DrawsTheFluentWifiGlyph_NotADot()
+    {
+        // wifi_4 (Regular, U+F8B2): the Network module's icon in the Control Panel and in the pill's Network chip.
+        Assert.Equal("", ModuleCatalog.Glyph("network"));
+        Assert.Equal("", ModuleGlyphs.Get("network").Glyph);
+        Assert.Equal(0xF8B2, IconFonts.Regular["ic_fluent_wifi_4_20_regular"]);
+    }
+
+    [Fact]
+    public void NoFluentIconIsDrawnWithEmptyText()
+    {
+        // A TextBlock in the Fluent family with an empty Text draws nothing: the Sound pane's play button was like this.
+        var empty = new Regex(@"Text\s*=\s*""""[\s\S]{0,80}?FontFamily\s*=\s*FluentIcons\.", RegexOptions.None, TimeSpan.FromSeconds(5));
+        foreach (var file in SourceFiles())
+        {
+            Assert.False(empty.IsMatch(File.ReadAllText(file)), $"{Path.GetFileName(file)} draws a Fluent icon with empty text");
+        }
+    }
+
+    [Fact]
+    public void EveryNavigationItem_IsNamedByItsPaneTitle()
+    {
+        // The Control Panel's nav rows are announced by their pane title, not by the item class name.
+        var window = File.ReadAllText(Path.Combine(IconFonts.SourceRoot, "NotchTasks", "ControlPanel", "ControlPanelWindow.xaml"));
+        Assert.Contains("<Setter Property=\"AutomationProperties.Name\" Value=\"{Binding Title}\" />", window);
+    }
+
+    [Fact]
+    public void NavigationRows_AreThe36DipNavigationViewSize_WithA16DipGlyph()
+    {
+        var window = File.ReadAllText(Path.Combine(IconFonts.SourceRoot, "NotchTasks", "ControlPanel", "ControlPanelWindow.xaml"));
+        Assert.Contains("<Setter Property=\"MinHeight\" Value=\"36\" />", window);
+        Assert.Contains("Size=\"16\"", window);
     }
 
     private static HashSet<int> Union()

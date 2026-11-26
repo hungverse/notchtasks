@@ -72,7 +72,11 @@ public partial class BadgeEditorBody : UserControl
             }
         };
         BorderBox.Click += (_, _) => Change(badge => badge["border"] = JsonValue.Create(BorderBox.IsChecked == true));
-        NoFillBox.Click += (_, _) => Change(badge => badge["plain"] = NoFillBox.IsChecked == true ? JsonValue.Create(true) : null);
+        NoFillBox.Click += (_, _) =>
+        {
+            FillColor.IsEnabled = NoFillBox.IsChecked != true;  // the colour does nothing while there is no background
+            Change(badge => badge["plain"] = NoFillBox.IsChecked == true ? JsonValue.Create(true) : null);
+        };
         FillColor.ValueChanged += (_, _) => Change(badge =>
         {
             // Picking a colour turns the fill back on, as the Mac does.
@@ -120,11 +124,12 @@ public partial class BadgeEditorBody : UserControl
                 Height = 36,
                 CornerRadius = new CornerRadius(7),
                 BorderThickness = new Thickness(0),
-                Child = new TextBlock
+                // the symbol in the text colour; FluentGlyph centres it in the face (the accent border marks the chosen one)
+                Child = new FluentGlyph
                 {
-                    Text = ModuleGlyphs.Legacy(code) ?? ModuleGlyphs.Fallback,
-                    FontFamily = FluentIcons.Regular,
-                    FontSize = 18,
+                    Code = ModuleGlyphs.Legacy(code) ?? ModuleGlyphs.Fallback,
+                    Size = 18,
+                    Foreground = (Brush)FindResource("TextFillColorPrimaryBrush"),
                     HorizontalAlignment = HorizontalAlignment.Center,
                     VerticalAlignment = VerticalAlignment.Center,
                 },
@@ -164,6 +169,7 @@ public partial class BadgeEditorBody : UserControl
             ShapeBox.SelectedItem = _shapes.First(choice => choice.Value == shape);
             BorderBox.IsChecked = FlagOf(badge, "border");
             NoFillBox.IsChecked = FlagOf(badge, "plain");
+            FillColor.IsEnabled = NoFillBox.IsChecked != true;
             FillColor.Hex = HexColor.TryNormalize(StringOf(badge, "color"), out var fill) ? fill : Hex(accent);
             SymbolColor.Hex = HexColor.TryNormalize(StringOf(badge, "fg"), out var ink) ? ink : "#FFFFFF";
 
