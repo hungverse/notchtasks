@@ -85,7 +85,7 @@ public partial class ToastView : UserControl
         _ => ask is null ? IslandWidth : PillGeometry.OpenWidth,
     };
 
-    /// A toast's glyph in its tint and size: the drawn path for a name the font does not have (gauge, hourglass), else the font glyph.
+    /// A toast's glyph in its tint and size: the drawn path for a Mac symbol the font does not have (the CI seal and octagon, the build marks), else the font glyph.
     public static FrameworkElement GlyphOf(string name, Brush tint, double size) =>
         ModuleGlyphs.Vector(name) is { } data
             ? new System.Windows.Shapes.Path

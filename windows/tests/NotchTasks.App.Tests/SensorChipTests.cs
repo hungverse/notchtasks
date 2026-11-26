@@ -83,7 +83,7 @@ public sealed class SensorChipTests
     public void Glyphs_ForTheCallEnd_AndTheMute_AreNotTheFallback()
     {
         Assert.NotEqual(ModuleGlyphs.Fallback, ModuleGlyphs.Get("phonedown"));
-        Assert.Equal("", ModuleGlyphs.Get("phonedown"));
-        Assert.Equal("", ModuleGlyphs.Get("micoff"));
+        Assert.Equal("", ModuleGlyphs.Get("phonedown"));
+        Assert.Equal("", ModuleGlyphs.Get("micoff"));
     }
 }

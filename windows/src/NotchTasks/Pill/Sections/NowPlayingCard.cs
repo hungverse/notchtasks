@@ -30,7 +30,7 @@ public sealed class NowPlayingCard : Border
     private static readonly Brush CardFill = Freeze(new SolidColorBrush(Color.FromArgb(0x0F, 0xFF, 0xFF, 0xFF)));
     private static readonly Brush ArtFill = Freeze(new SolidColorBrush(Color.FromArgb(0x1F, 0xFF, 0xFF, 0xFF)));
     private static readonly Brush CaptionBrush = Freeze(new SolidColorBrush(Color.FromRgb(0x8E, 0x8E, 0x93)));
-    private static readonly FontFamily SegoeFamily = new("Segoe Fluent Icons, Segoe MDL2 Assets");
+    private static readonly FontFamily GlyphFamily = FluentIcons.Regular;
     private static readonly FontFamily TextFamily = new("Segoe UI Variable Text, Segoe UI");
 
     private readonly Border _artFrame;
@@ -61,7 +61,7 @@ public sealed class NowPlayingCard : Border
         _artGlyph = new TextBlock
         {
             Text = ModuleGlyphs.Get("media"),
-            FontFamily = SegoeFamily,
+            FontFamily = GlyphFamily,
             FontSize = 18,
             Foreground = CaptionBrush,
             HorizontalAlignment = HorizontalAlignment.Center,
@@ -209,7 +209,7 @@ public sealed class NowPlayingCard : Border
     private static readonly Geometry NextSkip = Freeze(Geometry.Parse("M0,0 L8,5.5 L0,11 Z M8,0 L16,5.5 L8,11 Z"));
     private static readonly Geometry PreviousSkip = Freeze(Geometry.Parse("M16,0 L8,5.5 L16,11 Z M8,0 L0,5.5 L8,11 Z"));
 
-    /// A control's content: the filled triangles for previous and next (vector, as the Mac's), the Segoe glyph for play and pause.
+    /// A control's content: the filled triangles for previous and next (vector, as the Mac's), the Fluent glyph for play and pause.
     private static object ControlContent(string name) => name switch
     {
         "previous" => new System.Windows.Shapes.Path { Data = PreviousSkip, Fill = Brushes.White },
@@ -253,7 +253,7 @@ public sealed class NowPlayingCard : Border
         BorderThickness = new Thickness(0),
         Background = Brushes.Transparent,
         Foreground = Brushes.White,
-        FontFamily = SegoeFamily,
+        FontFamily = ModuleGlyphs.FamilyOf(glyph),
         FontSize = size,
         FontWeight = FontWeights.Bold,
         Content = ControlContent(glyph),

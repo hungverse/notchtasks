@@ -122,7 +122,7 @@ public partial class SoundsPane : SettingsPane
 
         var play = new Button
         {
-            Content = new TextBlock { Text = "", FontFamily = new System.Windows.Media.FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets"), FontSize = 12 },
+            Content = new TextBlock { Text = "", FontFamily = FluentIcons.Regular, FontSize = 12 },
             Width = 32,
             Height = 28,
         };

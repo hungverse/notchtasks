@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using NotchTasks.Core;
 using NotchTasks.Core.Settings;
+using NotchTasks.Pill;
 
 namespace NotchTasks.ControlPanel;
 
@@ -12,7 +13,6 @@ namespace NotchTasks.ControlPanel;
 /// to apply to the badge; the host applies it, saves it and shows the badge again. Values set by Show raise nothing.
 public partial class BadgeEditorBody : UserControl
 {
-    private const string SegoeFont = "Segoe Fluent Icons, Segoe MDL2 Assets";
 
     private readonly IReadOnlyList<Choice> _shapes = [Choice.Key("circle", "Circle"), Choice.Key("rounded", "Square")];
 
@@ -52,8 +52,8 @@ public partial class BadgeEditorBody : UserControl
                 BorderThickness = new Thickness(0),
                 Child = new TextBlock
                 {
-                    Text = char.ConvertFromUtf32(Convert.ToInt32(code, 16)),
-                    FontFamily = new FontFamily(SegoeFont),
+                    Text = ModuleGlyphs.Legacy(code) ?? ModuleGlyphs.Fallback,
+                    FontFamily = FluentIcons.Regular,
                     FontSize = 18,
                     HorizontalAlignment = HorizontalAlignment.Center,
                     VerticalAlignment = VerticalAlignment.Center,

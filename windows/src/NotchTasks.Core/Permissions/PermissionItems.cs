@@ -65,21 +65,21 @@ public static class PermissionItems
     {
         var items = new List<PermItem>
         {
-            new("notifications", L("Notifications"), L("Alerts when a task finishes or fails."), "", NoModules,
+            new("notifications", L("Notifications"), L("Alerts when a task finishes or fails."), "", NoModules,
                 facts.ToastsOn switch { true => PermState.Granted, false => PermState.Denied, null => PermState.Checking }),
-            new(LoginId, L("Open at login"), L("Starts when you log in."), "", NoModules,
+            new(LoginId, L("Open at login"), L("Starts when you log in."), "", NoModules,
                 facts.LoginOn ? PermState.Granted : PermState.NotAsked),
-            new("mic", L("Microphone"), L("Lets the notch show when an app uses the mic, and calls."), "", NoModules,
+            new("mic", L("Microphone"), L("Lets the notch show when an app uses the mic, and calls."), "", NoModules,
                 Consent(facts.MicAllowed)),
-            new("camera", L("Camera mirror"), L("Check the camera before joining a meeting"), "", CameraModules,
+            new("camera", L("Camera mirror"), L("Check the camera before joining a meeting"), "", CameraModules,
                 Consent(facts.CameraAllowed)),
         };
         items.Add(new PermItem(TemperaturesId, L("Temperatures"),
             L("Optional. Reading temperatures on Windows needs administrator, so a small helper runs with administrator rights only if you turn this on."),
-            "\uE9CA", NoModules, facts.Temperatures));
+            "\uF78F", NoModules, facts.Temperatures));
         if (FirewallRowShown)
         {
-            items.Add(new PermItem("firewall", L("Firewall rule"), L("Lets your phone reach the notch on this network."), "", NoModules,
+            items.Add(new PermItem("firewall", L("Firewall rule"), L("Lets your phone reach the notch on this network."), "", NoModules,
                 facts.FirewallRule switch { true => PermState.Granted, false => PermState.NotAsked, null => PermState.Checking }));
         }
 
@@ -92,7 +92,7 @@ public static class PermissionItems
                 "hook." + kind.Id(),
                 L("{0} permission prompts", name),
                 L("Answers {0}'s permission prompts from the notch.", name),
-                "",
+                "",
                 AgentModules,
                 hook switch { true => PermState.Granted, false => PermState.NotAsked, null => PermState.Checking },
                 Applies: here));

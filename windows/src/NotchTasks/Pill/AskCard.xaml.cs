@@ -12,9 +12,9 @@ namespace NotchTasks.Pill;
 /// The pill's timer calls UpdateWaiting once a second while the card is shown.
 public partial class AskCard : UserControl
 {
-    private const string ApprovalGlyph = "";
-    private const string QuestionGlyph = "";
-    private const string CheckGlyph = "";
+    private const string ApprovalGlyph = "";
+    private const string QuestionGlyph = "";
+    private const string CheckGlyph = "";
 
     private static readonly Brush OptionOff = Frozen(new SolidColorBrush(Color.FromArgb(0x1F, 0xFF, 0xFF, 0xFF)));
     private static readonly Brush Dim = Frozen(new SolidColorBrush(Color.FromArgb(0x99, 0xFF, 0xFF, 0xFF)));
@@ -184,7 +184,7 @@ public partial class AskCard : UserControl
             mark = new TextBlock
             {
                 Text = string.Empty,
-                FontFamily = new FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets"),
+                FontFamily = FluentIcons.Regular,
                 FontSize = 9,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,

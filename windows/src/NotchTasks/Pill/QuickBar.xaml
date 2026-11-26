@@ -26,7 +26,7 @@
     <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
       <StackPanel x:Name="TimerBar" Orientation="Horizontal" VerticalAlignment="Center">
         <!-- Grey, as the Mac's quick bar (.foregroundStyle(.gray)); the card and the chip take the timer's tint. -->
-        <TextBlock x:Name="TimerGlyph" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12"
+        <TextBlock x:Name="TimerGlyph" FontFamily="/NotchTasks;component/Resources/Fonts/#FluentSystemIcons-Regular" FontSize="12"
                    Foreground="#8E8E93" VerticalAlignment="Center" Margin="0,0,8,0" />
         <StackPanel x:Name="TimerPills" Orientation="Horizontal" VerticalAlignment="Center">
           <Button Focusable="False" x:Name="Timer5" Tag="5" Style="{StaticResource ChoiceButton}" Padding="9,0" Margin="0,0,4,0" Content="5&#x2032;" />
@@ -38,7 +38,7 @@
       <Button Focusable="False" x:Name="MirrorButton" Style="{StaticResource MirrorChip}" Padding="9,0" VerticalAlignment="Center"
               Visibility="Collapsed">
         <StackPanel Orientation="Horizontal">
-          <TextBlock x:Name="MirrorGlyph" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="11"
+          <TextBlock x:Name="MirrorGlyph" FontFamily="/NotchTasks;component/Resources/Fonts/#FluentSystemIcons-Regular" FontSize="11"
                      VerticalAlignment="Center" Margin="0,0,5,0" />
           <TextBlock x:Name="MirrorLabel" VerticalAlignment="Center" />
         </StackPanel>
@@ -49,15 +49,15 @@
     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
       <Button Focusable="False" x:Name="ShelfLink" Style="{StaticResource LinkChoice}" Margin="0,0,10,0" Visibility="Collapsed">
         <StackPanel Orientation="Horizontal">
-          <TextBlock x:Name="ShelfGlyph" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="11"
+          <TextBlock x:Name="ShelfGlyph" FontFamily="/NotchTasks;component/Resources/Fonts/#FluentSystemIcons-Regular" FontSize="11"
                      VerticalAlignment="Center" Margin="0,0,5,0" />
           <TextBlock x:Name="ShelfLabel" VerticalAlignment="Center" />
         </StackPanel>
       </Button>
       <Button Focusable="False" x:Name="ControlPanelButton" Style="{StaticResource FooterButton}" Margin="0,0,6,0"
-              Content="&#xE713;" ToolTip="{l:L Control Panel}" />
+              Content="&#xF6A9;" ToolTip="{l:L Control Panel}" />
       <Button Focusable="False" x:Name="QuitButton" Style="{StaticResource FooterButton}"
-              Content="&#xE7E8;" ToolTip="{l:L Quit}" />
+              Content="&#xF60E;" ToolTip="{l:L Quit}" />
     </StackPanel>
   </Grid>
 </UserControl>

@@ -23,8 +23,8 @@ public partial class QuickBar : UserControl
         MirrorButton.Click += (_, _) => _state?.OpenMirror();
     }
 
-    /// The shelf's tray glyph (Segoe Fluent Icons E8B7, the folder the shelf uses).
-    private const string ShelfGlyphText = "";
+    /// The shelf's tray glyph (Fluent System Icons, the folder the shelf uses).
+    private const string ShelfGlyphText = "";
 
     /// The gear: open the Control Panel.
     public event Action? ControlPanelRequested;

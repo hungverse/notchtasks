@@ -71,7 +71,7 @@
           <ListBox.ItemTemplate>
             <DataTemplate>
               <StackPanel Orientation="Horizontal">
-                <TextBlock Text="{Binding Glyph}" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                <TextBlock Text="{Binding Glyph}" FontFamily="/NotchTasks;component/Resources/Fonts/#FluentSystemIcons-Regular"
                            FontSize="16" Width="28" VerticalAlignment="Center" />
                 <TextBlock Text="{Binding Title}" FontSize="14" VerticalAlignment="Center" />
               </StackPanel>

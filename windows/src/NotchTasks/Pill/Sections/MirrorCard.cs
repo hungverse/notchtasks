@@ -16,7 +16,7 @@ public sealed class MirrorCard : Border
     private const double FrameHeight = 220;
     private const double MessageHeight = 150;
     private const double Radius = 14;
-    private const string CloseGlyph = "";  // Segoe Fluent cancel: the × of the card (Mac xmark)
+    private const string CloseGlyph = "";  // Fluent cancel: the × of the card (Mac xmark)
     private const string PrivacyUri = "ms-settings:privacy-webcam";
     private const string DeniedGlyph = "video.slash";  // a drawn camera with a slash (ModuleGlyphs.Vector): the font has none
 
@@ -24,7 +24,7 @@ public sealed class MirrorCard : Border
     private static readonly Brush CloseFill = Frozen(new SolidColorBrush(Color.FromArgb(0x80, 0x00, 0x00, 0x00)));
     private static readonly Brush FrameFill = Frozen(new SolidColorBrush(Colors.Black));
     private static readonly Brush GreyBrush = Frozen(new SolidColorBrush(Color.FromRgb(0x8E, 0x8E, 0x93)));
-    private static readonly FontFamily GlyphFamily = new("Segoe Fluent Icons, Segoe MDL2 Assets");
+    private static readonly FontFamily GlyphFamily = FluentIcons.Regular;
     private static readonly FontFamily TextFamily = new("Segoe UI Variable Text, Segoe UI");
     private static readonly Lazy<ResourceDictionary> AskStyles = new(() => new ResourceDictionary
     {

@@ -125,8 +125,8 @@ public partial class ModulesPane : SettingsPane
         };
         var text = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Children = { title, caption } };
 
-        var up = Arrow("", L10n.L("Move up"), () => Move(id, -1));
-        var down = Arrow("", L10n.L("Move down"), () => Move(id, 1));
+        var up = Arrow("", L10n.L("Move up"), () => Move(id, -1));
+        var down = Arrow("", L10n.L("Move down"), () => Move(id, 1));
         var arrows = new StackPanel
         {
             Orientation = Orientation.Horizontal,
@@ -234,7 +234,7 @@ public partial class ModulesPane : SettingsPane
             Content = new TextBlock
             {
                 Text = glyph,
-                FontFamily = new FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets"),
+                FontFamily = FluentIcons.Regular,
                 FontSize = 10,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,

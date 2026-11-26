@@ -86,13 +86,14 @@ public sealed class ToastGlyphTests
     }
 
     [Fact]
-    public void LimitToast_DrawsItsGaugeAsAPath()
+    public void LimitToast_DrawsItsGaugeAsTheFluentGlyph()
     {
         Sta.Run(() =>
         {
             var view = new ToastView();
             view.Show(new Toast("gauge", "#FF9F0A", "Claude 95%"), "compact", null, "bouncy");
-            Assert.IsType<Path>(Fixture.Named<ContentControl>(view, "CompactGlyph").Content);
+            var glyph = Assert.IsType<TextBlock>(Fixture.Named<ContentControl>(view, "CompactGlyph").Content);
+            Assert.Equal(ModuleGlyphs.Get("gauge"), glyph.Text);
         });
     }
 

@@ -17,8 +17,8 @@ namespace NotchTasks.ControlPanel.Panes;
 /// (the code is the key), and the poll stops when it is hidden.
 public partial class PairingPane : UserControl
 {
-    private const string PhoneGlyph = "";
-    private const string WarningGlyph = "";
+    private const string PhoneGlyph = "";
+    private const string WarningGlyph = "";
 
     /// The lifetime Pro: an "until" at or past this (ms since 1970) is shown as lifetime (Mac PhonePane.status).
     private const double LifetimeMs = 30_000_000_000_000;
@@ -407,7 +407,7 @@ public partial class PairingPane : UserControl
         row.Children.Add(new TextBlock
         {
             Text = PhoneGlyph,
-            FontFamily = new FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets"),
+            FontFamily = FluentIcons.Regular,
             FontSize = 14,
             Margin = new Thickness(0, 0, 10, 0),
             VerticalAlignment = VerticalAlignment.Center,

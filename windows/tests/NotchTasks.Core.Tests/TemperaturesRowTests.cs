@@ -24,7 +24,7 @@ public sealed class TemperaturesRowTests
         var row = Row(PermState.NotAsked);
 
         Assert.True(row.Applies);
-        Assert.Equal("", row.Glyph);
+        Assert.Equal("", row.Glyph);
         Assert.Equal(PermissionItems.TemperaturesId, row.Id);
     }
 

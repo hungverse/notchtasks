@@ -25,7 +25,7 @@ public partial class ItemCard : UserControl
     private const double IconSize = 20;
     private static readonly Brush GreyBrush = Frozen(new SolidColorBrush(Color.FromRgb(0x8E, 0x8E, 0x93)));  // the Mac's .gray
     private static readonly Brush TitleBrush = Frozen(new SolidColorBrush(Color.FromArgb(0xE6, 0xFF, 0xFF, 0xFF)));  // white at 90 %
-    private static readonly FontFamily SegoeFamily = new("Segoe Fluent Icons, Segoe MDL2 Assets");
+    private static readonly FontFamily GlyphFamily = FluentIcons.Regular;
 
     private readonly JobRow[] _rows = new JobRow[MaxRows];
     private ItemState? _state;
@@ -398,7 +398,7 @@ public partial class ItemCard : UserControl
         private readonly TextBlock _log = new()
         {
             Text = ModuleGlyphs.Get("log"),
-            FontFamily = SegoeFamily,
+            FontFamily = GlyphFamily,
             FontSize = 10,
             Foreground = GreyBrush,
             Margin = new Thickness(8, 0, 0, 0),

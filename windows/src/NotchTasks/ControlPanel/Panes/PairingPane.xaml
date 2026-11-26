@@ -45,7 +45,7 @@
                   Visibility="Collapsed" />
 
           <StackPanel x:Name="ProblemRow" Orientation="Horizontal" Margin="0,12,0,0" Visibility="Collapsed">
-            <TextBlock x:Name="ProblemGlyph" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14"
+            <TextBlock x:Name="ProblemGlyph" FontFamily="/NotchTasks;component/Resources/Fonts/#FluentSystemIcons-Regular" FontSize="14"
                        Foreground="#FF9F0A" Margin="0,0,8,0" VerticalAlignment="Center" />
             <TextBlock x:Name="ProblemText" Foreground="#FF9F0A" TextWrapping="Wrap" VerticalAlignment="Center" />
           </StackPanel>

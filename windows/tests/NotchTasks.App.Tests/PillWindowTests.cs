@@ -401,7 +401,7 @@ public sealed class PillWindowTests
     {
         Assert.Equal(ModuleGlyphs.Fallback, ModuleGlyphs.Get("no-such-glyph"));
         Assert.False(string.IsNullOrEmpty(ModuleGlyphs.Get("")));
-        Assert.Equal("", ModuleGlyphs.Get("timer"));
+        Assert.Equal("", ModuleGlyphs.Get("timer"));
     }
 
     [Fact]

@@ -10,15 +10,14 @@ using NotchTasks.Core.Settings;
 namespace NotchTasks.Pill;
 
 /// One badge as it sits on the notch, from settings "badges": an animated icon (SpriteView) when it names a sprite that exists,
-/// a Segoe Fluent glyph for a "seg:" symbol, and the star for any other symbol (the Mac's SF Symbol names). The fill, shape,
+/// a Fluent glyph for a "seg:" symbol, and the star for any other symbol (the Mac's SF Symbol names). The fill, shape,
 /// border and symbol colour follow the badge's own fields; a badge without a colour fills with the accent, as the Mac does.
 /// The pill and the Icons pane's preview draw badges with this, so they look the same.
 public static class BadgeGlyph
 {
-    /// The Segoe Fluent Icons code of the star (Favorite): what a symbol the Windows glyphs do not know draws as.
-    public const string StarCode = "E734";
+    /// The Fluent code of the star (star_20_regular): what a symbol the badge list does not know draws as.
+    public const string StarCode = "F70F";
 
-    private const string SegoeFont = "Segoe Fluent Icons, Segoe MDL2 Assets";
     private static readonly Color FallbackFill = Color.FromRgb(0x4D, 0x4D, 0x4D);
 
     /// The accent of the settings: what a badge without a colour fills with (the pill's own accent).
@@ -186,7 +185,7 @@ public static class BadgeGlyph
         return new TextBlock
         {
             Text = GlyphText(symbol),
-            FontFamily = new FontFamily(SegoeFont),
+            FontFamily = FluentIcons.Regular,
             FontSize = size * (plain ? 0.75 : 0.55),
             Foreground = Frozen(new SolidColorBrush(ink)),
             TextAlignment = TextAlignment.Center,
@@ -197,14 +196,14 @@ public static class BadgeGlyph
         };
     }
 
-    /// The character of a symbol: "seg:XXXX" is that Segoe glyph; anything else (an SF name) is the star.
+    /// The character of a symbol: "seg:XXXX" is the Fluent icon that code was stored as (ModuleGlyphs.Legacy), so a badge saved
+    /// before the Fluent icons keeps its look. Anything else (an SF name, or a code the list never offered) is the star.
     internal static string GlyphText(string? symbol)
     {
         if (symbol is not null && symbol.StartsWith("seg:", StringComparison.Ordinal)
-            && int.TryParse(symbol.AsSpan(4), NumberStyles.HexNumber, null, out var code)
-            && Rune.IsValid(code))
+            && ModuleGlyphs.Legacy(symbol[4..]) is { } glyph)
         {
-            return new Rune(code).ToString();
+            return glyph;
         }
         return new Rune(Convert.ToInt32(StarCode, 16)).ToString();
     }

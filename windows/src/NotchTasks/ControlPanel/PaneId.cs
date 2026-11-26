@@ -36,19 +36,19 @@ public static class PaneIds
         _ => throw new ArgumentOutOfRangeException(nameof(pane)),
     };
 
-    /// The Segoe Fluent Icons glyph of a pane.
+    /// The Fluent System Icons glyph of a pane.
     public static string Glyph(this PaneId pane) => pane switch
     {
-        PaneId.Overview => "",
-        PaneId.Modules => "",
-        PaneId.Permissions => "",
-        PaneId.Watching => "",
-        PaneId.Pairing => "",
-        PaneId.Appearance => "",
-        PaneId.Badges => "",
-        PaneId.Store => "",
-        PaneId.Sounds => "",
-        PaneId.Behavior => "",
+        PaneId.Overview => "",
+        PaneId.Modules => "",
+        PaneId.Permissions => "",
+        PaneId.Watching => "",
+        PaneId.Pairing => "",
+        PaneId.Appearance => "",
+        PaneId.Badges => "",
+        PaneId.Store => "",
+        PaneId.Sounds => "",
+        PaneId.Behavior => "",  // options: the Behavior pane
         _ => throw new ArgumentOutOfRangeException(nameof(pane)),
     };
 }

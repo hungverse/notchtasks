@@ -1,69 +1,91 @@
 namespace NotchTasks.Pill;
 
-/// The Segoe Fluent Icons glyph of each glyph name a toast or a chip carries (Toast.Glyph, the chip's lead). A name the map
-/// does not know draws the fallback, never nothing. The map covers every glyph name the modules and toasts use.
+/// The Fluent System Icons glyph of each glyph name a toast or a chip carries (Toast.Glyph, the chip's lead). A name the map
+/// does not know draws the fallback, never nothing. Each code is the one the bundled JSON names for the icon in its comment;
+/// the tests check every code against that JSON.
 public static class ModuleGlyphs
 {
-    /// What an unknown name draws (the Control Panel's "more" glyph).
-    public const string Fallback = "";
+    /// What an unknown name draws (the Control Panel's "more" glyph, more_horizontal).
+    public const string Fallback = "";
 
     private static readonly IReadOnlyDictionary<string, string> Map = new Dictionary<string, string>(StringComparer.Ordinal)
     {
-        ["hand"] = "",      // an agent's approval (AskCard): a pointing hand; E6BA is not in the font (it drew a box)
-        ["question"] = "",  // an agent's question (AskCard)
-        ["timer"] = "",
-        ["download"] = "",
-        ["drive"] = "",
-        ["phone"] = "",
-        ["video"] = "",
-        ["mic"] = "",
-        ["micoff"] = "",  // microphone with a slash: the mic is muted
-        ["phonedown"] = "",  // handset with a down arrow: the call ended
-        ["camera"] = "",
-        ["wifi"] = "",
-        ["network"] = "",
-        ["vpn"] = "",
-        ["wifioff"] = "",  // wifi arcs with a cross: network disconnected (Segoe Fluent Icons)
-        ["vpnoff"] = "",   // open padlock: VPN off
-        ["battery"] = "",
-        ["bolt"] = "",        // lightning bolt: charging
-        ["plug"] = "",        // power symbol, the stand-in for the plug: unplugged
-        ["batterylow"] = "",  // an almost empty battery: low battery
-        ["battery.25percent"] = "",  // a device's low battery (Devices module): the same almost empty battery glyph
-        ["warning"] = "",
-        ["thermometer"] = "\uE9CA",  // thermometer: the header temperature (Segoe Fluent Icons E9CA)
-        ["check"] = "\uE73E",        // check mark: a finished job's status (Segoe Fluent Icons E73E)
-        ["sparkles"] = "\uE794",     // sparkle: an agent's icon when it has no app icon (Segoe Fluent Icons E794)
-        ["log"] = "\uE8E2",          // text lines: a job's log, opened on click (Segoe Fluent Icons E8E2)
-        ["media"] = "\uE8D6",        // music note: Now Playing's chip and art when there is no app icon (Segoe Fluent Icons E8D6)
-        ["previous"] = "\uE892",     // previous track (Segoe Fluent Icons E892)
-        ["next"] = "\uE893",         // next track (Segoe Fluent Icons E893)
-        ["play"] = "\uF5B0",         // play, filled (Segoe Fluent Icons F5B0): the Mac's play.fill
-        ["pause"] = "\uF8AE",        // pause, filled (Segoe Fluent Icons F8AE): the Mac's pause.fill
-        // Devices (the Mac's device symbols): the Segoe glyphs where one exists. The AirPods use the headphones glyph, as the font has
-        // no AirPods. The codepoints are not rendered-checked on this PC; the controller's run shows them.
-        ["headphones"] = "\uE7F6",   // headphones (Segoe Fluent Icons E7F6, the devices module's own glyph)
-        ["airpods"] = "\uE7F6",
-        ["airpodspro"] = "\uE7F6",
-        ["airpodsmax"] = "\uE7F6",
-        ["keyboard"] = "\uE765",     // keyboard (Segoe Fluent Icons E765)
-        ["computermouse"] = "\uE962", // mouse (Segoe Fluent Icons E962)
-        ["rectangle.and.hand.point.up.left"] = "\uE7C9",  // touch pointer (Segoe Fluent Icons E7C9)
-        ["hifispeaker"] = "\uE7F5",  // speakers (Segoe Fluent Icons E7F5)
-        ["gamecontroller"] = "\uE7FC",  // game controller (Segoe Fluent Icons E7FC)
-        ["iphone"] = "\uE697",       // phone: the same glyph as "phone" (Segoe Fluent)
-        ["externaldrive"] = "\uE6A2",  // drive: the same glyph as "drive"
+        ["hand"] = "",                 // hand_right: an agent's approval (AskCard)
+        ["question"] = "",             // chat_help: an agent's question (AskCard)
+        ["timer"] = "",                // timer
+        ["download"] = "",             // arrow_download
+        ["drive"] = "",                // storage
+        ["phone"] = "",                // phone
+        ["video"] = "",                // video
+        ["mic"] = "",                  // mic
+        ["micoff"] = "",               // mic_off: the mic is muted
+        ["phonedown"] = "",            // call_end: the call ended
+        ["camera"] = "",               // camera
+        ["wifi"] = "",                 // wifi_4
+        ["network"] = "",              // globe
+        ["vpn"] = "",                  // shield_lock
+        ["wifioff"] = "",              // wifi_off: network disconnected
+        ["vpnoff"] = "",               // lock_open: VPN off
+        ["battery"] = "",              // battery_5
+        ["bolt"] = "",                 // flash: charging
+        ["plug"] = "",                 // power: unplugged
+        ["batterylow"] = "",           // battery_1: low battery
+        ["battery.25percent"] = "",    // battery_1: a device's low battery (Devices module)
+        ["warning"] = "",              // warning
+        ["thermometer"] = "",          // temperature: the header temperature
+        ["check"] = "",                // checkmark: a finished job's status
+        ["sparkles"] = "",             // sparkle: an agent's icon when it has no app icon
+        ["log"] = "",                  // text_bullet_list_ltr: a job's log, opened on click
+        ["media"] = "",                // music_note_2: Now Playing's chip and art when there is no app icon
+        ["previous"] = "",             // previous
+        ["next"] = "",                 // next
+        ["play"] = "",                 // play_20_filled (the Filled font): the Mac's play.fill
+        ["pause"] = "",                // pause_20_filled (the Filled font): the Mac's pause.fill
+        // Devices (the Mac's device symbols). The AirPods use the headphones glyph, as the font has no AirPods.
+        ["headphones"] = "",           // headphones
+        ["airpods"] = "",
+        ["airpodspro"] = "",
+        ["airpodsmax"] = "",
+        ["keyboard"] = "",             // keyboard
+        ["computermouse"] = "",        // cursor: the mouse
+        ["rectangle.and.hand.point.up.left"] = "",  // hand_left: touch pointer
+        ["hifispeaker"] = "",          // speaker_2
+        ["gamecontroller"] = "",       // games
+        ["iphone"] = "",               // phone: the same glyph as "phone"
+        ["externaldrive"] = "",        // hard_drive
+        ["gauge"] = "",                // gauge: a limit's chip below 100 % used (Mac gauge)
+        ["hourglass"] = "",            // hourglass: a limit's chip at 100 % used (Mac hourglass)
     };
 
-    /// Vector stand-ins for the names the font does not draw here: a gauge and an hourglass, the Mac's gauge and hourglass
-    /// symbols, and the CI results seal and octagon (Mac checkmark.seal.fill and xmark.octagon.fill). No Segoe Fluent Icons
-    /// glyph was found for them, so they are stroked paths in a 16 by 16 box, drawn in the toast's tint. Null for every other name.
+    /// The codes the badge symbols were stored as before the Fluent icons (a "seg:" + Segoe code in settings). They still
+    /// draw, as the Fluent icon each one was: a stored badge keeps its look. Only the codes BadgeEdits offers are here.
+    private static readonly IReadOnlyDictionary<string, string> LegacyBadgeSymbols = new Dictionary<string, string>(StringComparer.Ordinal)
+    {
+        ["E734"] = "",  // star
+        ["E735"] = "",  // heart
+        ["E006"] = "",  // flag
+        ["E80F"] = "",  // home
+        ["E713"] = "",  // settings
+        ["E721"] = "",  // search
+        ["E710"] = "",  // add
+        ["E74D"] = "",  // delete
+        ["E70F"] = "",  // edit
+        ["E72C"] = "",  // arrow_sync
+        ["E72E"] = "",  // lock_closed
+        ["E77B"] = "",  // person
+        ["E722"] = "",  // camera
+        ["E767"] = "",  // speaker_2
+        ["E7E8"] = "",  // power
+        ["E774"] = "",  // globe
+        ["E718"] = "",  // pin
+        ["E7C1"] = "",  // tag
+        ["E895"] = "",  // emoji
+    };
+
+    /// Vector stand-ins for the names the font does not draw here: the Mac's SF Symbols that have no Fluent icon, drawn as stroked
+    /// paths in a 16 by 16 box, in the toast's tint. Null for every other name.
     private static readonly IReadOnlyDictionary<string, string> Paths = new Dictionary<string, string>(StringComparer.Ordinal)
     {
-        // a half dial with its baseline, and a needle from the centre
-        ["gauge"] = "M2,12 A6,6 0 0 1 14,12 M2,12 H14 M8,12 L11.2,7.2",
-        // a top and a bottom bar, joined by the two halves of the glass that meet in the middle
-        ["hourglass"] = "M3,1.5 H13 M3,14.5 H13 M4.5,1.5 V3.5 L8,8 L11.5,3.5 V1.5 M4.5,14.5 V12.5 L8,8 L11.5,12.5 V14.5",
         // a scalloped seal: eight outward arcs around a circle, with a check mark inside
         ["seal"] = "M13.40,8.00 A2.4,2.4 0 0 1 11.82,11.82 A2.4,2.4 0 0 1 8.00,13.40 A2.4,2.4 0 0 1 4.18,11.82 A2.4,2.4 0 0 1 2.60,8.00 A2.4,2.4 0 0 1 4.18,4.18 A2.4,2.4 0 0 1 8.00,2.60 A2.4,2.4 0 0 1 11.82,4.18 A2.4,2.4 0 0 1 13.40,8.00 Z M5.2,8.2 L7.1,10.1 L10.9,6.3",
         // a stop-sign octagon with an x inside
@@ -97,6 +119,17 @@ public static class ModuleGlyphs
     /// The glyph for a name, or the fallback when the name is not in the map.
     public static string Get(string name) => Map.TryGetValue(name, out var code) ? code : Fallback;
 
-    /// The path data of a name the font does not draw (gauge, hourglass), or null.
+    /// The font a name's glyph is drawn in: Filled for play and pause, Regular for every other glyph.
+    public static System.Windows.Media.FontFamily FamilyOf(string name) =>
+        name is "play" or "pause" ? FluentIcons.Filled : FluentIcons.Regular;
+
+    /// The Fluent glyph of a badge symbol stored as a Segoe code (the "seg:" symbols), or null when the code is not one the
+    /// badge list offers.
+    public static string? Legacy(string segoeCode) => LegacyBadgeSymbols.TryGetValue(segoeCode, out var code) ? code : null;
+
+    /// The path data of a name the font does not draw (the Mac symbols above), or null.
     public static string? Vector(string name) => Paths.TryGetValue(name, out var data) ? data : null;
+
+    /// Every glyph name the map knows, for the tests that check each code against the bundled JSON.
+    public static IEnumerable<string> Names => Map.Keys;
 }

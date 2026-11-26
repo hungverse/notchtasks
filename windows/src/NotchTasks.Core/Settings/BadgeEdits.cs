@@ -10,14 +10,15 @@ public static class BadgeEdits
     /// Most icons on one side of the notch (the Mac's Badge.perSide; the Electron build's free limit).
     public const int PerSide = 3;
 
-    /// The Segoe Fluent Icons code points offered as symbols, as four hex digits (stored as "seg:" + code).
+    /// The badge symbols offered, as the Segoe code each was stored as, four hex digits (stored as "seg:" + code). They draw as
+    /// the Fluent icon ModuleGlyphs.Legacy names for the code, so a badge saved before the Fluent icons keeps its look.
     public static IReadOnlyList<string> SymbolCodes { get; } =
     [
         "E734", "E735", "E006", "E80F", "E713", "E721", "E710", "E74D", "E70F", "E72C",
         "E72E", "E77B", "E722", "E767", "E7E8", "E774", "E718", "E7C1", "E895",
     ];
 
-    /// The stored symbol of a Segoe glyph: "seg:" plus its code, so the Mac's SF Symbol names stay distinct.
+    /// The stored symbol of a badge icon: "seg:" plus its code, so the Mac's SF Symbol names stay distinct.
     public static string SymbolFor(string code) => "seg:" + code;
 
     /// How many badges sit on one side.

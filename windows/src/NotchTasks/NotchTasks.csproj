@@ -26,6 +26,16 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- The Fluent System Icons fonts (MIT; LICENSE and README.md beside them). The app draws its icon glyphs from these. -->
+    <Resource Include="Resources\Fonts\FluentSystemIcons-Regular.ttf" />
+    <Resource Include="Resources\Fonts\FluentSystemIcons-Filled.ttf" />
+    <!-- The name-to-codepoint maps of the two fonts: the tests check every glyph code the app uses is in them. -->
+    <EmbeddedResource Include="Resources\Fonts\FluentSystemIcons-Regular.json" LogicalName="FluentSystemIcons-Regular.json" />
+    <EmbeddedResource Include="Resources\Fonts\FluentSystemIcons-Filled.json" LogicalName="FluentSystemIcons-Filled.json" />
+    <None Include="Resources\Fonts\LICENSE;Resources\Fonts\README.md" CopyToOutputDirectory="Never" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- The pill's hit geometry (PillHitTest) is internal; its tests live in the App test project. -->
     <InternalsVisibleTo Include="NotchTasks.App.Tests" />
   </ItemGroup>

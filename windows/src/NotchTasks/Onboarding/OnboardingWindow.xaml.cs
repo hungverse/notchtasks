@@ -176,10 +176,10 @@ public partial class OnboardingWindow : Window
             Margin = new Thickness(0, 0, 0, 12),
             Text = L10n.L("Three things to remember:"),
         });
-        panel.Children.Add(Step([""], L10n.L("Opening the pill"), L10n.L("Point at the pill at the top of the screen.")));
-        panel.Children.Add(Step(["", ""], L10n.L("Control Panel"),
+        panel.Children.Add(Step([""], L10n.L("Opening the pill"), L10n.L("Point at the pill at the top of the screen.")));
+        panel.Children.Add(Step(["", ""], L10n.L("Control Panel"),
             L10n.L("The Control Panel and Quit buttons are at the bottom right of the open pill.")));
-        panel.Children.Add(Step([""], L10n.L("Tray icon"), L10n.L("The tray icon also opens the Control Panel.")));
+        panel.Children.Add(Step([""], L10n.L("Tray icon"), L10n.L("The tray icon also opens the Control Panel.")));
         return panel;
     }
 
@@ -213,7 +213,7 @@ public partial class OnboardingWindow : Window
                 Child = new TextBlock
                 {
                     Text = glyph,
-                    FontFamily = new FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets"),
+                    FontFamily = FluentIcons.Regular,
                     FontSize = 15,
                     Foreground = Brushes.White,
                     HorizontalAlignment = HorizontalAlignment.Center,

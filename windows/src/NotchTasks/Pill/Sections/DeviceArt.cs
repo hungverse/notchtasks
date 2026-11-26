@@ -21,7 +21,7 @@ public sealed class DeviceArtView : Grid
 
     private static readonly Color GreyColor = Color.FromRgb(0x8E, 0x8E, 0x93);
     private static readonly SolidColorBrush GreyBrush = Frozen(new SolidColorBrush(GreyColor));
-    private static readonly FontFamily SegoeFamily = new("Segoe Fluent Icons, Segoe MDL2 Assets");
+    private static readonly FontFamily GlyphFamily = FluentIcons.Regular;
 
     /// The spring's position, 0 (the start) to 1 (the settled look).
     public static readonly DependencyProperty ProgressProperty = DependencyProperty.Register(
@@ -128,7 +128,7 @@ public sealed class DeviceArtView : Grid
 
     private static void OnChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) => ((DeviceArtView)d).Apply();
 
-    /// A device's symbol in a brush at a size: the drawn path for a name the font lacks, else the Segoe Fluent glyph.
+    /// A device's symbol in a brush at a size: the drawn path for a name the font lacks, else the Fluent glyph.
     public static FrameworkElement Glyph(string symbol, Brush brush, double size) =>
         ModuleGlyphs.Vector(symbol) is { } data
             ? new Path
@@ -147,7 +147,7 @@ public sealed class DeviceArtView : Grid
             {
                 Text = ModuleGlyphs.Get(symbol),
                 Foreground = brush,
-                FontFamily = SegoeFamily,
+                FontFamily = GlyphFamily,
                 FontSize = size,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,

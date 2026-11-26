@@ -1,7 +1,7 @@
 namespace NotchTasks.Core.Settings;
 
 /// The modules of the notch, in the Mac's order (Settings.swift ModuleID): their English title and blurb keys (L10n reads
-/// them), their Segoe Fluent Icons glyph, and whether this PC has them. Levels, calendar and fans are not on Windows.
+/// them), their Fluent System Icons glyph, and whether this PC has them. Levels, calendar and fans are not on Windows.
 public static class ModuleCatalog
 {
     private static readonly IReadOnlyList<string> Ids =
@@ -73,26 +73,26 @@ public static class ModuleCatalog
         _ => string.Empty,
     };
 
-    /// The Segoe Fluent Icons glyph of a module (the Mac's SF Symbol, mapped to the closest Fluent icon).
+    /// The Fluent System Icons glyph of a module (the Mac's SF Symbol, mapped to the closest Fluent icon).
     public static string Glyph(string id) => id switch
     {
-        "agents" => "\uE8BD",   // sparkle-like: AI agent
-        "ci" => "\uE90F",       // wrench: build and CI
-        "media" => "\uE8D6",    // music note
-        "calendar" => "\uE787", // calendar
-        "timer" => "\uE916",    // timer
-        "shelf" => "\uE8B7",    // folder: file shelf
-        "limits" => "\uE9D9",   // gauge: AI limits
-        "battery" => "\uE83F",  // battery
-        "devices" => "\uE7F6",  // headphones
-        "calls" => "\uE717",    // phone
-        "privacy" => "\uE720",  // microphone
-        "levels" => "\uE767",   // volume
-        "network" => "\uE701",  // wifi
-        "downloads" => "\uE896", // download
-        "health" => "\uE9CA",   // health / thermometer-like
-        "mirror" => "\uE722",   // camera
-        _ => "\uE712",          // more
+        "agents" => "\uE1B8",   // sparkle-like: AI agent
+        "ci" => "\uEE86",       // wrench: build and CI
+        "media" => "\uE854",    // music note
+        "calendar" => "\uE24E", // calendar
+        "timer" => "\uED88",    // timer
+        "shelf" => "\uF418",    // folder: file shelf
+        "limits" => "\uF4C7",   // gauge: AI limits
+        "battery" => "\uF1C5",  // battery
+        "devices" => "\uE6EE",  // headphones
+        "calls" => "\uF5E0",    // phone
+        "privacy" => "\uE7F9",  // microphone
+        "levels" => "\uEB42",   // volume
+        "network" => "\uF8B2",  // wifi
+        "downloads" => "\uF150", // download
+        "health" => "\uF78F",   // health / thermometer-like
+        "mirror" => "\uF254",   // camera
+        _ => "\uE824",          // more
     };
 
     /// The stored list with `id` swapped with the previous (delta -1) or next (delta 1) visible Windows module. Only the

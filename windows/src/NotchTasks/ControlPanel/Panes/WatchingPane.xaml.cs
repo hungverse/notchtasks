@@ -19,8 +19,7 @@ namespace NotchTasks.ControlPanel.Panes;
 /// so a step done in the terminal shows at once.
 public partial class WatchingPane : SettingsPane
 {
-    private const string SegoeFont = "Segoe Fluent Icons, Segoe MDL2 Assets";
-    private const string DeleteGlyph = "";
+    private const string DeleteGlyph = "";
     private const int RunningAppLimit = 80;
 
     private readonly IProcessReader _processes;
@@ -146,7 +145,7 @@ public partial class WatchingPane : SettingsPane
 
         var remove = new Button
         {
-            Content = new TextBlock { Text = DeleteGlyph, FontFamily = new FontFamily(SegoeFont) },
+            Content = new TextBlock { Text = DeleteGlyph, FontFamily = FluentIcons.Regular },
             ToolTip = L10n.L("Remove"),
             Margin = new Thickness(12, 0, 0, 0),
             VerticalAlignment = VerticalAlignment.Center,
@@ -298,7 +297,7 @@ public partial class WatchingPane : SettingsPane
         return new TextBlock
         {
             Text = glyph == ModuleGlyphs.Fallback ? ModuleGlyphs.Get("sparkles") : glyph,
-            FontFamily = new FontFamily(SegoeFont),
+            FontFamily = FluentIcons.Regular,
             FontSize = 18,
             Width = 26,
             Height = 26,

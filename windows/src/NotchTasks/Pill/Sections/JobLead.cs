@@ -5,12 +5,11 @@ using System.Windows.Shapes;
 
 namespace NotchTasks.Pill.Sections;
 
-/// The lead of a job from its symbol (the Mac's job symbol names): a drawn path or a Segoe Fluent glyph, in one brush. Shared by a job
+/// The lead of a job from its symbol (the Mac's job symbol names): a drawn path or a Fluent glyph, in one brush. Shared by a job
 /// row in the agent and Build & CI cards and by a build chip, so both draw a symbol the same way.
 public static class JobLead
 {
-    private const string SegoeFont = "Segoe Fluent Icons, Segoe MDL2 Assets";
-    private static readonly FontFamily SegoeFamily = new(SegoeFont);
+    private static readonly FontFamily GlyphFamily = FluentIcons.Regular;
 
     /// The glyph or vector name of a job's symbol, or null for none (a plain status dot). A symbol that has its own drawn path is
     /// named by itself (hammer.fill, checkmark.diamond.fill, server.rack, ...); else the keyword rules: a checkmark, sparkles, a
@@ -66,7 +65,7 @@ public static class JobLead
         return new TextBlock
         {
             Text = ModuleGlyphs.Get(mark),
-            FontFamily = SegoeFamily,
+            FontFamily = GlyphFamily,
             FontSize = size,
             Foreground = brush,
             HorizontalAlignment = HorizontalAlignment.Center,

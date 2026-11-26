@@ -21,13 +21,13 @@ namespace NotchTasks.Pill.Sections;
 /// returns false (and shows nothing) while the shelf is off or empty and no file is dragged over the pill.
 public sealed class ShelfCard : Border
 {
-    private const string TrayGlyph = "";    // folder: the shelf's glyph (ModuleCatalog)
-    private const string OpenGlyph = "";    // open in a new window
-    private const string RevealGlyph = "";  // folder open: show the file in its folder
-    private const string ShareGlyph = "";   // share
-    private const string TrashGlyph = "";   // delete: remove all
-    private const string MinusGlyph = "";   // remove the selection
-    private const string AddGlyph = "";     // add files
+    private const string TrayGlyph = "";    // folder: the shelf's glyph (ModuleCatalog)
+    private const string OpenGlyph = "";    // open in a new window
+    private const string RevealGlyph = "";  // folder open: show the file in its folder
+    private const string ShareGlyph = "";   // share
+    private const string TrashGlyph = "";   // delete: remove all
+    private const string MinusGlyph = "";   // remove the selection
+    private const string AddGlyph = "";     // add files
     private const string HintText = "Click to select · double-click to open · drag out to drop into another app";
     private const string DropHere = "Drop here";
     private const string EmptyHint = "Drag files onto the notch, or click + to choose";
@@ -41,7 +41,7 @@ public sealed class ShelfCard : Border
     private static readonly Brush TargetedBrush = Frozen(new SolidColorBrush(TargetedFill));
     private static readonly Brush MenuBackground = Frozen(new SolidColorBrush(Color.FromRgb(0x1C, 0x1C, 0x1E)));
     private static readonly Brush MenuBorder = Frozen(new SolidColorBrush(Color.FromArgb(0x33, 0xFF, 0xFF, 0xFF)));
-    private static readonly FontFamily GlyphFamily = new("Segoe Fluent Icons, Segoe MDL2 Assets");
+    private static readonly FontFamily GlyphFamily = FluentIcons.Regular;
     private static readonly FontFamily TextFamily = new("Segoe UI Variable Text, Segoe UI");
     private static readonly Lazy<ResourceDictionary> PillStyles = new(() => new ResourceDictionary
     {
@@ -594,7 +594,7 @@ public sealed class ShelfCard : Border
 /// file that is gone shows dimmed. The tile is kept per path by the card.
 public sealed class ShelfTile : Border
 {
-    private const string CheckGlyph = "";  // a selected tile's badge
+    private const string CheckGlyph = "";  // a selected tile's badge
     private static readonly Brush NameBrush = Frozen(new SolidColorBrush(Color.FromArgb(0xD9, 0xFF, 0xFF, 0xFF)));
     private static readonly Brush MissingNameBrush = Frozen(new SolidColorBrush(Color.FromArgb(0x66, 0xFF, 0xFF, 0xFF)));
     private static readonly Brush PlainFill = Frozen(new SolidColorBrush(Color.FromArgb(0x0A, 0xFF, 0xFF, 0xFF)));
@@ -643,7 +643,7 @@ public sealed class ShelfTile : Border
         _check = new TextBlock
         {
             Text = CheckGlyph,
-            FontFamily = new FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets"),
+            FontFamily = FluentIcons.Regular,
             FontSize = 13,
             HorizontalAlignment = HorizontalAlignment.Right,
             VerticalAlignment = VerticalAlignment.Top,

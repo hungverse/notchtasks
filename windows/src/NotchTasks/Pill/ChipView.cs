@@ -21,8 +21,7 @@ namespace NotchTasks.Pill;
 /// percentage (or its wait). A sensor chip has its glyphs only.
 public static class ChipView
 {
-    private const string SegoeFont = "Segoe Fluent Icons, Segoe MDL2 Assets";
-    private static readonly FontFamily SegoeFamily = new(SegoeFont);  // made once: a FontFamily per glyph was a cost each rebuild
+    private static readonly FontFamily GlyphFamily = FluentIcons.Regular;  // made once: a FontFamily per glyph was a cost each rebuild
     private const string ChipTag = "chip";  // the Tag of a chip's panel in a wing: what a rebuild removes
     /// The chip and side a panel was made for (its key): a fill replaces a panel of the same key in place, with no motion.
     private static readonly DependencyProperty KeyProperty = DependencyProperty.RegisterAttached(
@@ -89,7 +88,7 @@ public static class ChipView
         }
         if (chip.Kind == ChipKind.Limit && chip.Limit is { } limit)
         {
-            return Vector(limit.W.Used >= 100 ? "hourglass" : "gauge", size, new SolidColorBrush(LimitColor(limit.W.Used)));
+            return Glyph(limit.W.Used >= 100 ? "hourglass" : "gauge", size, new SolidColorBrush(LimitColor(limit.W.Used)));
         }
         var brush = HexColor.Brush(ToHex(TintOf(chip, accent, moduleColors)));
         if (chip.Kind == ChipKind.Sensor)
@@ -176,25 +175,13 @@ public static class ChipView
         return ItemIcon.Element(build, size, tint, processes);
     }
 
-    /// A glyph in a brush, from the Segoe Fluent Icons font.
+    /// A glyph in a brush, from the Fluent System Icons font.
     private static TextBlock Glyph(string name, double size, Brush brush) => new()
     {
         Text = ModuleGlyphs.Get(name),
-        FontFamily = SegoeFamily,
+        FontFamily = GlyphFamily,
         FontSize = size,
         Foreground = brush,
-        VerticalAlignment = VerticalAlignment.Center,
-    };
-
-    /// A drawn glyph (the gauge and the hourglass, which the font does not have) in a brush, in a size by size box.
-    private static Path Vector(string name, double size, Brush brush) => new()
-    {
-        Data = Geometry.Parse(ModuleGlyphs.Vector(name) ?? string.Empty),
-        Stroke = brush,
-        StrokeThickness = 1.5,
-        Stretch = Stretch.Uniform,
-        Width = size,
-        Height = size,
         VerticalAlignment = VerticalAlignment.Center,
     };
 

@@ -14,7 +14,7 @@
       </Grid.ColumnDefinitions>
       <Ellipse Width="34" Height="34" Fill="#30D158" VerticalAlignment="Center" />
       <TextBlock x:Name="CallGlyph" Width="34" Height="34" TextAlignment="Center" VerticalAlignment="Center"
-                 FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="16" Foreground="White" />
+                 FontFamily="/NotchTasks;component/Resources/Fonts/#FluentSystemIcons-Regular" FontSize="16" Foreground="White" />
       <StackPanel Grid.Column="1" Margin="10,0,6,0" VerticalAlignment="Center">
         <TextBlock x:Name="TitleText" FontSize="12" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
         <TextBlock x:Name="TimeText" FontSize="11" FontWeight="Medium" />
@@ -25,7 +25,7 @@
         <StackPanel>
           <Border x:Name="MuteCircle" Width="32" Height="32" CornerRadius="16" Background="#2EFFFFFF">
             <TextBlock x:Name="MuteGlyph" HorizontalAlignment="Center" VerticalAlignment="Center"
-                       FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="13" Foreground="White" />
+                       FontFamily="/NotchTasks;component/Resources/Fonts/#FluentSystemIcons-Regular" FontSize="13" Foreground="White" />
           </Border>
           <TextBlock x:Name="MuteCaption" HorizontalAlignment="Center" FontSize="9" FontWeight="Medium" Foreground="#8E8E93" />
         </StackPanel>
@@ -36,7 +36,7 @@
         <StackPanel>
           <Border Width="32" Height="32" CornerRadius="16" Background="#2EFFFFFF">
             <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
-                       FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="13" Foreground="White" Text="&#xE8A7;" />
+                       FontFamily="/NotchTasks;component/Resources/Fonts/#FluentSystemIcons-Regular" FontSize="13" Foreground="White" Text="&#xF582;" />
           </Border>
           <TextBlock HorizontalAlignment="Center" FontSize="9" FontWeight="Medium" Foreground="#8E8E93" Text="{l:L Open}" />
         </StackPanel>

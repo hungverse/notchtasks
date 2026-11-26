@@ -31,7 +31,7 @@ public partial class OverviewPane : SettingsPane
     private const string AgentGlyph = "";
 
     /// The glyph of the phone step (the iPhone the Mac shows).
-    private const string PhoneGlyph = "";
+    private const string PhoneGlyph = "";
 
     /// The module groups of the Mac's overview (Settings.swift groups), in the Mac's order. The last group also takes every
     /// Windows module no other group names.
@@ -58,9 +58,9 @@ public partial class OverviewPane : SettingsPane
         _state = state;
         _hasBattery = PowerFacts.HasSystemBattery();
         InitializeComponent();
-        Stats.Children.Add(StatCard("", null, L10n.L("Running"), out _runningValue));
-        Stats.Children.Add(StatCard("", ControlPanelLook.Red, L10n.L("CI errors"), out _alertsValue));
-        Stats.Children.Add(StatCard("", ControlPanelLook.Green, L10n.L("Permissions"), out _permissionsValue));
+        Stats.Children.Add(StatCard("", null, L10n.L("Running"), out _runningValue));
+        Stats.Children.Add(StatCard("", ControlPanelLook.Red, L10n.L("CI errors"), out _alertsValue));
+        Stats.Children.Add(StatCard("", ControlPanelLook.Green, L10n.L("Permissions"), out _permissionsValue));
         GuideButton.Click += (_, _) => OnboardingWindow.Show(_state);
 
         // The running and error counts follow the notch while the pane is shown; the handler is removed when it is hidden.
@@ -141,8 +141,8 @@ public partial class OverviewPane : SettingsPane
         {
             var sparkle = new TextBlock
             {
-                Text = "",
-                FontFamily = new FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets"),
+                Text = "",
+                FontFamily = FluentIcons.Regular,
                 FontSize = 10,
                 Foreground = tint,
                 HorizontalAlignment = HorizontalAlignment.Center,
@@ -176,8 +176,8 @@ public partial class OverviewPane : SettingsPane
         {
             AlertPart.Children.Add(new TextBlock
             {
-                Text = "",
-                FontFamily = new FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets"),
+                Text = "",
+                FontFamily = FluentIcons.Regular,
                 FontSize = 12,
                 Foreground = tint,
                 VerticalAlignment = VerticalAlignment.Center,
@@ -220,7 +220,7 @@ public partial class OverviewPane : SettingsPane
         var icon = new TextBlock
         {
             Text = glyph,
-            FontFamily = new FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets"),
+            FontFamily = FluentIcons.Regular,
             FontSize = 16,
         };
         if (color is { } tint)
@@ -321,7 +321,7 @@ public partial class OverviewPane : SettingsPane
         var icon = new TextBlock
         {
             Text = glyph,
-            FontFamily = new FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets"),
+            FontFamily = FluentIcons.Regular,
             FontSize = 14,
             Margin = new Thickness(0, 0, 12, 0),
             VerticalAlignment = VerticalAlignment.Center,
