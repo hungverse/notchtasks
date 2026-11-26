@@ -5,12 +5,13 @@
                        xmlns:local="clr-namespace:NotchTasks.ControlPanel">
   <StackPanel>
     <TextBlock Style="{StaticResource PaneTitle}" Text="{l:L Behavior}" />
+    <TextBlock Style="{StaticResource PaneNote}" Text="{l:L How the notch opens and when it alerts you.}" />
 
-    <TextBlock Style="{StaticResource SectionHeader}" Margin="0,0,0,8" Text="{l:L Opening the notch}" />
+    <TextBlock Style="{StaticResource SectionHeader}" Text="{l:L Opening the notch}" />
     <Border Style="{StaticResource Card}">
       <StackPanel>
         <DockPanel Style="{StaticResource SettingRow}">
-          <ComboBox x:Name="ExpandBox" DockPanel.Dock="Right" MinWidth="220" DisplayMemberPath="Title" />
+          <ComboBox x:Name="ExpandBox" DockPanel.Dock="Right" Width="220" DisplayMemberPath="Title" />
           <TextBlock Style="{StaticResource RowLabel}" Text="{l:L How to open}" />
         </DockPanel>
         <DockPanel x:Name="DelayRow" Style="{StaticResource SettingRow}">
@@ -49,7 +50,7 @@
     <Border Style="{StaticResource Card}">
       <StackPanel>
         <DockPanel Style="{StaticResource SettingRow}">
-          <ComboBox x:Name="LanguageBox" DockPanel.Dock="Right" MinWidth="220" DisplayMemberPath="Title" />
+          <ComboBox x:Name="LanguageBox" DockPanel.Dock="Right" Width="220" DisplayMemberPath="Title" />
           <TextBlock Style="{StaticResource RowLabel}" Text="{l:L Language}" />
         </DockPanel>
         <DockPanel Style="{StaticResource SettingRow}">

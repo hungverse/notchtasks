@@ -85,6 +85,118 @@ public sealed class ControlPanelWindowTests
         });
     }
 
+    /// Every pane's content, as a column of blocks: the visible cards (Borders) in the pane's stacks, not inside another card.
+    private static IEnumerable<Border> Blocks(DependencyObject parent)
+    {
+        foreach (var child in LogicalTreeHelper.GetChildren(parent).OfType<DependencyObject>())
+        {
+            if (child is Border { Visibility: Visibility.Visible } border)
+            {
+                yield return border;
+            }
+            else if (child is StackPanel { Visibility: Visibility.Visible } stack)
+            {
+                foreach (var deeper in Blocks(stack))
+                {
+                    yield return deeper;
+                }
+            }
+        }
+    }
+
+    [Fact]
+    public void EveryPane_FillsTheSameColumn()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            var window = Fixture.Create<ControlPanelWindow>(state, PaneId.Overview);
+            try
+            {
+                Fixture.ShowOffScreen(window);
+                var host = Fixture.Named<ContentControl>(window, "PaneHost");
+                var widths = new Dictionary<PaneId, double>();
+                foreach (var pane in Enum.GetValues<PaneId>())
+                {
+                    Fixture.Call(window, "SelectPane", pane);
+                    window.UpdateLayout();
+                    widths[pane] = ((FrameworkElement)host.Content).ActualWidth;
+                }
+
+                // Overview (a hero, three stats and the module groups) and Behavior (three short cards) are very different,
+                // yet both are the host's full column.
+                Assert.True(host.ActualWidth > 0);
+                Assert.All(widths, pair => Assert.Equal(host.ActualWidth, pair.Value, 0.5));
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    [Fact]
+    public void EveryPane_ColumnIsCappedAt760OnAWideWindow()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            var window = Fixture.Create<ControlPanelWindow>(state, PaneId.Overview);
+            try
+            {
+                Fixture.ShowOffScreen(window);
+                window.Width = 1400;
+                window.UpdateLayout();
+                var host = Fixture.Named<ContentControl>(window, "PaneHost");
+
+                foreach (var pane in Enum.GetValues<PaneId>())
+                {
+                    Fixture.Call(window, "SelectPane", pane);
+                    window.UpdateLayout();
+                    Assert.Equal(760, ((FrameworkElement)host.Content).ActualWidth, 0.5);
+                }
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    [Fact]
+    public void EveryPane_CardsStretchToTheColumn()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            var window = Fixture.Create<ControlPanelWindow>(state, PaneId.Overview);
+            try
+            {
+                Fixture.ShowOffScreen(window);
+                var host = Fixture.Named<ContentControl>(window, "PaneHost");
+
+                foreach (var pane in Enum.GetValues<PaneId>())
+                {
+                    Fixture.Call(window, "SelectPane", pane);
+                    window.UpdateLayout();
+                    var content = (FrameworkElement)host.Content;
+                    foreach (var card in Blocks(content))
+                    {
+                        Assert.True(Math.Abs(card.ActualWidth - content.ActualWidth) < 0.5,
+                            $"{pane}: a card is {card.ActualWidth} DIP wide in a {content.ActualWidth} DIP column.");
+                    }
+                }
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
     [Fact]
     public void PaneHost_HasTheContentMargin()
     {

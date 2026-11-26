@@ -238,8 +238,8 @@ public partial class OverviewPane : SettingsPane
         return new Border
         {
             Style = (Style)FindResource("Card"),
-            Padding = new Thickness(14),
-            Margin = new Thickness(0, 0, 12, 0),
+            Padding = new Thickness(16),
+            Margin = new Thickness(0, 0, 12, 8),
             Child = text,
         };
     }
@@ -360,7 +360,7 @@ public partial class OverviewPane : SettingsPane
         {
             Style = (Style)Application.Current.FindResource("Card"),
             CornerRadius = new CornerRadius(10),
-            Padding = new Thickness(12, 8, 12, 8),
+            Padding = new Thickness(16, 8, 16, 8),
             Margin = new Thickness(0, 0, 0, 8),
             Child = grid,
         };

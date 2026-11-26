@@ -20,6 +20,7 @@
   </local:SettingsPane.Resources>
   <StackPanel>
     <TextBlock Style="{StaticResource PaneTitle}" Text="{l:L Sound}" />
+    <TextBlock Style="{StaticResource PaneNote}" Text="{l:L The sounds that play when a task finishes or needs you.}" />
 
     <Border Style="{StaticResource Card}">
       <StackPanel>
@@ -33,7 +34,7 @@
           <TextBlock Style="{StaticResource RowLabel}" Text="{l:L Volume}" />
         </DockPanel>
         <DockPanel Style="{StaticResource SettingRow}">
-          <ComboBox x:Name="PackBox" DockPanel.Dock="Right" MinWidth="220" DisplayMemberPath="Title" />
+          <ComboBox x:Name="PackBox" DockPanel.Dock="Right" Width="220" DisplayMemberPath="Title" />
           <TextBlock Style="{StaticResource RowLabel}" Text="{l:L Sound pack}" />
         </DockPanel>
         <DockPanel Style="{StaticResource SettingRow}">

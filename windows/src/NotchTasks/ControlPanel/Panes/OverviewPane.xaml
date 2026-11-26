@@ -40,8 +40,7 @@
 
     <!-- The next steps: shown after the first run, while something is still to do. Each step is a card of its own. -->
     <StackPanel x:Name="NextStepsSection" Visibility="Collapsed">
-      <TextBlock Text="{l:L Next steps}" FontSize="15" FontWeight="SemiBold" Margin="0,20,0,8"
-                 Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+      <TextBlock Style="{StaticResource SectionHeader}" Text="{l:L Next steps}" />
       <StackPanel x:Name="NextStepRows" />
     </StackPanel>
 

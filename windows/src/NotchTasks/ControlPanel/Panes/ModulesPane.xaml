@@ -40,7 +40,7 @@
     <TextBlock Style="{StaticResource PaneNote}" Text="{l:L Drag to reorder the modules on the notch.}" />
 
     <!-- The column names, over the controls of each row (the same columns as a row). -->
-    <Grid Margin="16,20,16,4">
+    <Grid Margin="16,0,16,4">
       <Grid.ColumnDefinitions>
         <ColumnDefinition Width="60" />
         <ColumnDefinition Width="Auto" />

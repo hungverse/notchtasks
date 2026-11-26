@@ -10,29 +10,32 @@
     <Setter Property="Visibility" Value="Collapsed" />
   </Style>
 
-  <!-- A short line under a pane's title. -->
+  <!-- A short line under a pane's title, and the first line of every pane: 8 DIP below it, so the first card or section
+       header sits at the same offset on every pane (a section header then follows it 20 DIP below: 8 + its 12 DIP top). -->
   <Style x:Key="PaneNote" TargetType="TextBlock">
     <Setter Property="FontSize" Value="14" />
     <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
     <Setter Property="TextWrapping" Value="Wrap" />
+    <Setter Property="Margin" Value="0,0,0,8" />
   </Style>
 
-  <!-- The heading of a section, above its card (Windows 11 Settings). -->
+  <!-- The heading of a section, above its card (Windows 11 Settings). A card ends 8 DIP above the next thing, so the gap
+       before a heading is 8 + 12 = 20 DIP, and the gap after it is 8 DIP, on every pane. -->
   <Style x:Key="SectionHeader" TargetType="TextBlock">
     <Setter Property="FontSize" Value="14" />
     <Setter Property="FontWeight" Value="SemiBold" />
-    <Setter Property="Margin" Value="0,20,0,8" />
+    <Setter Property="Margin" Value="0,12,0,8" />
     <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
   </Style>
 
-  <!-- A rounded card that holds the rows of a section: 8 DIP rounded, 1 DIP stroke, and 4 DIP below it, as the Windows 11
-       Settings cards (the cards of a pane are separated by that gap, not by a divider). -->
+  <!-- A rounded card that holds the rows of a section: 8 DIP rounded, 1 DIP stroke, and 8 DIP below it (the gap between
+       consecutive cards of a pane, as the Windows 11 Settings cards). Its content has 16 DIP inner padding. -->
   <Style x:Key="Card" TargetType="Border">
     <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}" />
     <Setter Property="BorderBrush" Value="{DynamicResource CardStrokeColorDefaultBrush}" />
     <Setter Property="BorderThickness" Value="1" />
     <Setter Property="CornerRadius" Value="8" />
-    <Setter Property="Margin" Value="0,0,0,4" />
+    <Setter Property="Margin" Value="0,0,0,8" />
   </Style>
 
   <!-- A card's title, inside the card (the Mac's "Needed now"): 15 semibold. -->

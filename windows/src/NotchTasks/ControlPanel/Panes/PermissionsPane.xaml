@@ -8,7 +8,7 @@
     <TextBlock Style="{StaticResource PaneNote}" Text="{l:L Only grant permissions for features you use. Turn a feature off completely on the Modules page.}" />
 
     <!-- The groups (Needed now, Granted, Not in use): each is one card, its title first; built by the pane. -->
-    <StackPanel x:Name="Groups" Margin="0,16,0,0" />
+    <StackPanel x:Name="Groups" />
 
     <TextBlock x:Name="ErrorText" Style="{StaticResource CardNote}" Margin="0,4,0,0"
                Foreground="{DynamicResource SystemFillColorCriticalBrush}" Visibility="Collapsed" />

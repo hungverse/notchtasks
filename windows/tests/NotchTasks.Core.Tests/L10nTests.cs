@@ -310,6 +310,34 @@ public sealed class L10nTests
         Assert.Empty(missing);
     }
 
+    // The first line of the Temperatures, Appearance, Behavior and Sound panes: each pane opens with a description line in the
+    // PaneNote style. These are Windows-only texts, so each one needs its text in electron/l10n/windows.json, in every language.
+    private static readonly string[] PaneDescriptionKeys =
+    [
+        "Temperatures read by the optional helper.", "How the notch and its alerts look.",
+        "How the notch opens and when it alerts you.", "The sounds that play when a task finishes or needs you.",
+    ];
+
+    [Fact]
+    public void PaneDescriptionKeys_ExistInEveryLanguage()
+    {
+        var overlayFile = Path.Combine(RepoRoot(), "electron", "l10n", "windows.json");
+        var missing = new List<string>();
+        foreach (var (code, _) in L10n.Languages.Where(language => language.Code != "en"))
+        {
+            var mac = ReadStrings(Path.Combine(MacSources(), $"l10n-{code}.json"));
+            var windows = ReadOverlay(overlayFile, code);
+            foreach (var key in PaneDescriptionKeys)
+            {
+                if (!mac.ContainsKey(key) && !windows.ContainsKey(key))
+                {
+                    missing.Add($"{code}: {key}");
+                }
+            }
+        }
+        Assert.Empty(missing);
+    }
+
     // Every key the Windows build passes to L10n.L since 7663b8c (Phase 3b: agents, limits, the watch list editor),
     // plus the two Icon Library hints that had no Windows text. Each one needs a text in every language.
     private static readonly string[] Phase3bKeys =

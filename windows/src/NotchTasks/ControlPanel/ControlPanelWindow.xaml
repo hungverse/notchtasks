@@ -91,10 +91,11 @@
     </Border>
 
     <!-- The detail area: the selected pane, scrolling when it is taller than the window. -->
-    <!-- The margin is on the host: ContentControl's template ignores Padding, so panes would touch the edges. The width is
-         capped so a pane reads as a column on a wide window, as the Mac's 640 DIP detail column. -->
+    <!-- The margin is on the host: ContentControl's template ignores Padding, so panes would touch the edges. Every pane fills
+         the same column: the host stretches to the viewport (the ScrollViewer gives it the viewport's width, with no horizontal
+         scrolling) and is capped at 760 DIP, left-aligned, so a pane's width never depends on its content. -->
     <ScrollViewer x:Name="PaneScroll" Grid.Column="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-      <ContentControl x:Name="PaneHost" Margin="32,24,32,32" MaxWidth="760" HorizontalAlignment="Left"
+      <ContentControl x:Name="PaneHost" Margin="32,24,32,32" MaxWidth="760" HorizontalAlignment="Stretch"
                       HorizontalContentAlignment="Stretch" />
     </ScrollViewer>
   </Grid>

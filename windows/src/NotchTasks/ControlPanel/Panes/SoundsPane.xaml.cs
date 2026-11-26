@@ -116,7 +116,7 @@ public partial class SoundsPane : SettingsPane
         {
             ItemsSource = row.Items,
             ItemTemplate = (DataTemplate)FindResource("SoundItem"),
-            Width = 200,
+            Width = 220,
             VerticalAlignment = VerticalAlignment.Center,
             Margin = new Thickness(0, 0, 8, 0),
         };

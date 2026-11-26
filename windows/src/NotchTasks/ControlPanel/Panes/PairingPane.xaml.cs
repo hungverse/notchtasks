@@ -103,7 +103,7 @@ public partial class PairingPane : UserControl
         LanSwitch.Content = L10n.L("Connect directly on the same Wi‑Fi");
         OnlyAwaySwitch.Content = L10n.L("Only alert my phone when I'm away");
         SettingsNote.Text = L10n.L("On the same Wi‑Fi your phone gets updates instantly; elsewhere, over the Internet. While you're using this computer, your phone stays quiet.");
-        PairedCaps.Text = L10n.L("Paired").ToUpper(CultureInfo.CurrentUICulture);
+        PairedCaps.Text = L10n.L("Paired");
         UnpairAllButton.Content = L10n.L("Unpair all");
         PairedNote.Text = L10n.L("Every device will disconnect from this computer. Pairing again uses a new code.");
     }

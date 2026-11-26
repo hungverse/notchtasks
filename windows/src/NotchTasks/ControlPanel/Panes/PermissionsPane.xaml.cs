@@ -117,8 +117,8 @@ public partial class PermissionsPane : SettingsPane
             Groups.Children.Add(new Border
             {
                 Style = (Style)FindResource("Card"),
+                // The rows' own 10 DIP margins and this 6 DIP padding make the card's 16 DIP inner inset.
                 Padding = new Thickness(6),
-                Margin = new Thickness(0, 0, 0, 12),
                 Child = rowsPanel,
             });
         }

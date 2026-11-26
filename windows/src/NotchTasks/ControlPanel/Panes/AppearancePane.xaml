@@ -6,60 +6,53 @@
                        xmlns:fi="clr-namespace:NotchTasks">
   <StackPanel>
     <TextBlock Style="{StaticResource PaneTitle}" Text="{l:L Appearance}" />
+    <TextBlock Style="{StaticResource PaneNote}" Text="{l:L How the notch and its alerts look.}" />
 
-    <!-- The top row, as the Mac's: the live preview (300 wide) on the left and the "Test alert" button at the pane's right edge. -->
-    <Grid UseLayoutRounding="True">
-      <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="300" />
-        <ColumnDefinition Width="*" />
-      </Grid.ColumnDefinitions>
+    <!-- The top card, as the Mac's: the live preview, full width, with the "Test alert" button at the card's right edge. -->
+    <Border Style="{StaticResource Card}" Padding="0" UseLayoutRounding="True">
+      <Grid Margin="0,0,0,16">
+        <!-- The screen's top edge: a 1 DIP rule flush with the card's top, across its full width. -->
+        <Border Height="1" VerticalAlignment="Top" Background="{DynamicResource DividerStrokeColorDefaultBrush}" />
+        <!-- The island floats 4 DIP below the edge, as on the Mac. -->
+        <Border x:Name="PreviewGlow" Width="200" Height="32" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,4,0,0"
+                CornerRadius="16" BorderThickness="1.5" Visibility="Collapsed" />
+        <Border x:Name="PreviewPill" Width="200" Height="32" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,4,0,0"
+                CornerRadius="16" Background="Black">
+          <Border.Effect>
+            <DropShadowEffect Color="Black" Opacity="0.3" BlurRadius="6" ShadowDepth="2" Direction="270" />
+          </Border.Effect>
+        </Border>
+        <Border x:Name="PreviewRing" Width="200" Height="32" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,4,0,0"
+                CornerRadius="16" BorderThickness="1.5" Visibility="Collapsed" SnapsToDevicePixels="True" />
+        <Border x:Name="PreviewToast" Width="260" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,44,0,0" Padding="14,10"
+                CornerRadius="18" Background="Black">
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <!-- the done toast's glyph: a 16 DIP glyph, centred (FluentGlyph); its colour is set by the pane -->
+            <fi:FluentGlyph x:Name="PreviewGlyph" Code="&#xF294;" Size="16" VerticalAlignment="Center" Margin="0,0,10,0" />
+            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+              <TextBlock x:Name="PreviewTitle" Text="{l:L Task finished}" Foreground="White" FontSize="13"
+                         FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+              <TextBlock Text="{l:L Test alert}" Foreground="#99FFFFFF" FontSize="11" />
+            </StackPanel>
+          </Grid>
+        </Border>
 
-      <!-- The live preview: the closed pill (200 x 32) with the current background and accent glow, and a toast sample under
-           it. The glow is a blurred layer behind the pill, and the crisp ring is on top of the pill, with no effect. -->
-      <Border Style="{StaticResource Card}" Padding="0" VerticalAlignment="Top">
-        <Grid Margin="0,0,0,12">
-          <!-- The screen's top edge: a 1 DIP rule flush with the card's top, across its full width. -->
-          <Border Height="1" VerticalAlignment="Top" Background="{DynamicResource DividerStrokeColorDefaultBrush}" />
-          <!-- The island floats 4 DIP below the edge, as on the Mac. -->
-          <Border x:Name="PreviewGlow" Width="200" Height="32" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,4,0,0"
-                  CornerRadius="16" BorderThickness="1.5" Visibility="Collapsed" />
-          <Border x:Name="PreviewPill" Width="200" Height="32" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,4,0,0"
-                  CornerRadius="16" Background="Black">
-            <Border.Effect>
-              <DropShadowEffect Color="Black" Opacity="0.3" BlurRadius="6" ShadowDepth="2" Direction="270" />
-            </Border.Effect>
-          </Border>
-          <Border x:Name="PreviewRing" Width="200" Height="32" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,4,0,0"
-                  CornerRadius="16" BorderThickness="1.5" Visibility="Collapsed" SnapsToDevicePixels="True" />
-          <Border x:Name="PreviewToast" Width="260" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,44,0,0" Padding="14,10"
-                  CornerRadius="18" Background="Black">
-            <Grid>
-              <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-              </Grid.ColumnDefinitions>
-              <!-- the done toast's glyph: a 16 DIP glyph, centred (FluentGlyph); its colour is set by the pane -->
-              <fi:FluentGlyph x:Name="PreviewGlyph" Code="&#xF294;" Size="16" VerticalAlignment="Center" Margin="0,0,10,0" />
-              <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                <TextBlock x:Name="PreviewTitle" Text="{l:L Task finished}" Foreground="White" FontSize="13"
-                           FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-                <TextBlock Text="{l:L Test alert}" Foreground="#99FFFFFF" FontSize="11" />
-              </StackPanel>
-            </Grid>
-          </Border>
-        </Grid>
-      </Border>
-
-      <!-- The Mac's "Test alert": a task-finished toast in the current style, with the sound and no system notification. -->
-      <Button x:Name="TestAlertButton" Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center" Padding="12,4"
-              Style="{StaticResource PrimaryButton}">
-        <StackPanel Orientation="Horizontal">
-          <!-- the bell, white, centred (FluentGlyph) -->
-          <fi:FluentGlyph Code="&#xF0F4;" Size="16" Foreground="White" Margin="0,0,8,0" />
-          <TextBlock x:Name="TestAlertLabel" VerticalAlignment="Center" />
-        </StackPanel>
-      </Button>
-    </Grid>
+        <!-- The Mac's "Test alert": a task-finished toast in the current style, with the sound and no system notification. It sits
+             in the card's top right corner, clear of the preview. -->
+        <Button x:Name="TestAlertButton" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,12,16,0" Padding="12,4"
+                Style="{StaticResource PrimaryButton}">
+          <StackPanel Orientation="Horizontal">
+            <!-- the bell, white, centred (FluentGlyph) -->
+            <fi:FluentGlyph Code="&#xF0F4;" Size="16" Foreground="White" Margin="0,0,8,0" />
+            <TextBlock x:Name="TestAlertLabel" VerticalAlignment="Center" />
+          </StackPanel>
+        </Button>
+      </Grid>
+    </Border>
 
     <!-- The one-click themes (the Mac's Theme.all): a tile per theme, built in code, three across with 12 DIP gaps. Each tile has
          6 DIP around it, and the grid reaches 6 DIP past the pane's edges, so the outer tiles sit flush with the pane. -->
@@ -69,7 +62,7 @@
     <Border Style="{StaticResource Card}">
       <StackPanel>
         <DockPanel Style="{StaticResource SettingRow}">
-          <ComboBox x:Name="BackgroundBox" DockPanel.Dock="Right" MinWidth="220" DisplayMemberPath="Title" />
+          <ComboBox x:Name="BackgroundBox" DockPanel.Dock="Right" Width="220" DisplayMemberPath="Title" />
           <TextBlock Style="{StaticResource RowLabel}" Text="{l:L Background}" />
         </DockPanel>
         <DockPanel x:Name="TopRow" Style="{StaticResource SettingRow}">
@@ -81,11 +74,11 @@
           <TextBlock Style="{StaticResource RowLabel}" Text="{l:L Bottom color}" />
         </DockPanel>
         <DockPanel Style="{StaticResource SettingRow}">
-          <ComboBox x:Name="SizeBox" DockPanel.Dock="Right" MinWidth="220" DisplayMemberPath="Title" />
+          <ComboBox x:Name="SizeBox" DockPanel.Dock="Right" Width="220" DisplayMemberPath="Title" />
           <TextBlock Style="{StaticResource RowLabel}" Text="{l:L Size}" />
         </DockPanel>
         <DockPanel Style="{StaticResource SettingRow}">
-          <ComboBox x:Name="MotionBox" DockPanel.Dock="Right" MinWidth="220" DisplayMemberPath="Title" />
+          <ComboBox x:Name="MotionBox" DockPanel.Dock="Right" Width="220" DisplayMemberPath="Title" />
           <TextBlock Style="{StaticResource RowLabel}" Text="{l:L Motion}" />
         </DockPanel>
       </StackPanel>
@@ -95,7 +88,7 @@
     <TextBlock Style="{StaticResource SectionHeader}" Text="{l:L Notifications}" />
     <Border Style="{StaticResource Card}">
       <DockPanel Style="{StaticResource SettingRow}">
-        <ComboBox x:Name="ToastBox" DockPanel.Dock="Right" MinWidth="220" DisplayMemberPath="Title" />
+        <ComboBox x:Name="ToastBox" DockPanel.Dock="Right" Width="220" DisplayMemberPath="Title" />
         <TextBlock Style="{StaticResource RowLabel}" Text="{l:L Style}" />
       </DockPanel>
     </Border>
@@ -105,7 +98,7 @@
     <Border Style="{StaticResource Card}">
       <StackPanel>
         <DockPanel Style="{StaticResource SettingRow}">
-          <ComboBox x:Name="AccentBox" DockPanel.Dock="Right" MinWidth="220"
+          <ComboBox x:Name="AccentBox" DockPanel.Dock="Right" Width="220"
                     ItemTemplate="{StaticResource AccentChoice}" />
           <TextBlock Style="{StaticResource RowLabel}" Text="{l:L Accent color}" />
         </DockPanel>

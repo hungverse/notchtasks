@@ -55,7 +55,7 @@
       </Border>
 
       <!-- The connection, once a phone is paired: the two switches, the connection row, and the footer (Mac's second section). -->
-      <Border x:Name="ConnectionCard" Style="{StaticResource Card}" Padding="16" Margin="0,12,0,0" Visibility="Collapsed">
+      <Border x:Name="ConnectionCard" Style="{StaticResource Card}" Padding="16" Visibility="Collapsed">
         <StackPanel>
           <CheckBox x:Name="LanSwitch" Style="{StaticResource Switch}" />
           <CheckBox x:Name="OnlyAwaySwitch" Style="{StaticResource Switch}" Margin="0,12,0,0" />
@@ -70,7 +70,7 @@
                  Visibility="Collapsed" />
 
       <!-- The paired phones, sorted by name, and Unpair all (Mac's third section). -->
-      <TextBlock x:Name="PairedCaps" Style="{StaticResource GroupCaps}" Visibility="Collapsed" />
+      <TextBlock x:Name="PairedCaps" Style="{StaticResource SectionHeader}" Visibility="Collapsed" />
       <Border x:Name="PairedCard" Style="{StaticResource Card}" Padding="16" Visibility="Collapsed">
         <StackPanel>
           <StackPanel x:Name="PhoneRows" />

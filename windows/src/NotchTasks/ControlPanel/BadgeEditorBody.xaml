@@ -7,7 +7,7 @@
        It holds no preview and no buttons of its own; the host (the Icons pane's editor, or the tool dialog) shows those around it. -->
   <StackPanel>
     <DockPanel Style="{StaticResource SettingRow}" Margin="0,8,0,0">
-      <ComboBox x:Name="KindBox" DockPanel.Dock="Right" MinWidth="220" DisplayMemberPath="Title" />
+      <ComboBox x:Name="KindBox" DockPanel.Dock="Right" Width="220" DisplayMemberPath="Title" />
       <TextBlock Style="{StaticResource RowLabel}" Text="{l:L Content}" />
     </DockPanel>
 
@@ -45,7 +45,7 @@
 
     <TextBlock Style="{StaticResource CardNote}" Margin="4,16,0,0" Text="{l:L Style}" />
     <DockPanel Style="{StaticResource SettingRow}" Margin="0,6,0,0">
-      <ComboBox x:Name="ShapeBox" DockPanel.Dock="Right" MinWidth="220" DisplayMemberPath="Title" />
+      <ComboBox x:Name="ShapeBox" DockPanel.Dock="Right" Width="220" DisplayMemberPath="Title" />
       <TextBlock Style="{StaticResource RowLabel}" Text="{l:L Shape}" />
     </DockPanel>
     <DockPanel Style="{StaticResource SettingRow}" Margin="0">

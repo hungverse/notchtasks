@@ -4,8 +4,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:l="clr-namespace:NotchTasks.ControlPanel">
   <StackPanel>
-    <!-- The pane heading, as the other panes have it: the title line, then the cards. -->
-    <TextBlock Style="{StaticResource SectionHeader}" Margin="0,0,0,8" Text="{l:L Temperatures}" />
+    <!-- The first line of the pane, as on every pane: a description, then the cards. -->
+    <TextBlock Style="{StaticResource PaneNote}" Text="{l:L Temperatures read by the optional helper.}" />
     <!-- The helper is not On: why, and the one button that turns it on (the Permissions pane's opt-in). Nothing is read until then. -->
     <Border x:Name="HelperCard" Style="{StaticResource Card}" Padding="16">
       <!-- The note runs the full width of the card; below it, a row: the sign-in toggle and its label at the left, Turn on at the right. -->
@@ -20,7 +20,7 @@
     </Border>
 
     <!-- The hottest reading, in its tint: the header's number, with its zone's name. -->
-    <Border x:Name="HottestCard" Style="{StaticResource Card}" Padding="16" Margin="0,12,0,0" Visibility="Collapsed">
+    <Border x:Name="HottestCard" Style="{StaticResource Card}" Padding="16" Visibility="Collapsed">
       <Grid>
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="Auto" />
@@ -35,7 +35,7 @@
     </Border>
 
     <!-- Every plausible zone, hottest first: one 48 DIP row each (the SettingRow style). Read-only: nothing here changes a setting. -->
-    <TextBlock x:Name="SensorsCaps" Style="{StaticResource GroupCaps}" Visibility="Collapsed" />
+    <TextBlock x:Name="SensorsCaps" Style="{StaticResource SectionHeader}" Visibility="Collapsed" />
     <Border x:Name="SensorsCard" Style="{StaticResource Card}" Padding="0" Visibility="Collapsed">
       <StackPanel x:Name="SensorRows" />
     </Border>
