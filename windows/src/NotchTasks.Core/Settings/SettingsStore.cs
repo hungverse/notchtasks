@@ -90,6 +90,22 @@ public sealed class SettingsStore : INotifyPropertyChanged, IDisposable
     public void Set(string key, JsonNode? value)
     {
         ArgumentException.ThrowIfNullOrEmpty(key);
+        SetMany(new Dictionary<string, JsonNode?>(StringComparer.Ordinal) { [key] = value });
+    }
+
+    /// Saves several keys in one atomic write and raises Changed once for them, so a theme or an imported profile reaches
+    /// every open pane in one step. Otherwise as Set: a locked file changes nothing and throws IOException.
+    public void SetMany(IReadOnlyDictionary<string, JsonNode?> values)
+    {
+        foreach (var key in values.Keys)
+        {
+            ArgumentException.ThrowIfNullOrEmpty(key);
+        }
+        if (values.Count == 0)
+        {
+            return;
+        }
+
         IReadOnlyList<string> reloaded;
         lock (_gate)
         {
@@ -101,7 +117,10 @@ public sealed class SettingsStore : INotifyPropertyChanged, IDisposable
                 MoveCorruptAside();
                 next = new JsonObject();
             }
-            next[key] = value?.DeepClone();
+            foreach (var (key, value) in values)
+            {
+                next[key] = value?.DeepClone();
+            }
             var text = next.ToJsonString(WriteOptions);
             AtomicFile.WriteAllText(_file, text);
             _root = next;
@@ -109,7 +128,7 @@ public sealed class SettingsStore : INotifyPropertyChanged, IDisposable
             _corrupt = false;
             SanitizeItems();
         }
-        Raise(reloaded.Append(key).Distinct(StringComparer.Ordinal).ToList());
+        Raise(reloaded.Concat(values.Keys).Distinct(StringComparer.Ordinal).ToList());
     }
 
     /// Adopts the file's keys when its text is not the text this store last saw. Caller holds _gate. Returns the keys that

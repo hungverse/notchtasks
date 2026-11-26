@@ -323,6 +323,28 @@ public sealed class SettingsStoreTests : IDisposable
         Assert.Empty(store.ToolIcons);
     }
 
+    [Fact]
+    public void SetMany_SavesEveryKeyInOneWriteAndRaisesOnce()
+    {
+        using var store = SettingsStore.Load(_file);
+        var raised = new List<IReadOnlyCollection<string>>();
+        store.Changed += keys => raised.Add(keys);
+        var values = new Dictionary<string, JsonNode?>
+        {
+            ["background"] = JsonValue.Create("glow"),
+            ["volume"] = JsonValue.Create(0.25),
+        };
+
+        store.SetMany(values);
+
+        Assert.Single(raised);
+        Assert.Equal(new[] { "background", "volume" }, raised[0].OrderBy(k => k, StringComparer.Ordinal));
+        Assert.Equal("glow", store.Background);
+        Assert.Equal(0.25, store.Volume, 2);
+        using var reloaded = SettingsStore.Load(_file);
+        Assert.Equal("glow", reloaded.Background);
+    }
+
     [Theory]
     [InlineData("auto", "#00F5D4", "#123456", "#123456")]
     [InlineData("auto", "#00F5D4", null, "#0A84FF")]

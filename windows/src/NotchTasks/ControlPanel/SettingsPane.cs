@@ -65,6 +65,25 @@ public abstract class SettingsPane : UserControl
         }
     }
 
+    /// Saves several keys in one write, so a theme or an imported profile reaches every open pane at once. Writes nothing while a
+    /// stored value is being applied; a failed save is logged, and the controls take the stored values back.
+    protected void WriteMany(IReadOnlyDictionary<string, JsonNode?> values)
+    {
+        if (_applying)
+        {
+            return;
+        }
+        try
+        {
+            Store.SetMany(values);
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            ErrorLog.Write(new IOException("NotchTasks: could not save the settings", e));
+            ApplyStored();
+        }
+    }
+
     /// Saves the value of the picker's selected item under `key`.
     protected void WriteChoice(ComboBox picker, string key)
     {

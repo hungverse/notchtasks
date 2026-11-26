@@ -39,6 +39,9 @@
       </Grid>
     </Border>
 
+    <!-- The one-click themes (the Mac's Theme.all): a tile per theme, built in code, three across as the Mac's grid. -->
+    <UniformGrid x:Name="ThemeGrid" Columns="3" Margin="0,8,0,0" />
+
     <TextBlock Style="{StaticResource SectionHeader}" Text="{l:L Notch}" />
     <Border Style="{StaticResource Card}">
       <StackPanel>
