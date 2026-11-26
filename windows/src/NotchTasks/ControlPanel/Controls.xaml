@@ -282,17 +282,20 @@
     </Setter>
   </Style>
 
-  <!-- The Mac's colour well: a 44x24 capsule filled with the colour, with a hairline. The colour is the button's background. -->
-  <Style x:Key="ColorWell" TargetType="Button">
-    <Setter Property="Width" Value="44" />
-    <Setter Property="Height" Value="24" />
+  <!-- The Modules pane's colour: a round 18 DIP swatch in the module's colour. Unset, it has no fill and a 1 DIP ring; its Content draws the
+       diagonal "none" line (ModulesPane sets it). The ring is the Border's own stroke, so the swatch never reads as a toggle. -->
+  <Style x:Key="ColorDot" TargetType="Button">
+    <Setter Property="Width" Value="18" />
+    <Setter Property="Height" Value="18" />
     <Setter Property="Padding" Value="0" />
     <Setter Property="FocusVisualStyle" Value="{x:Null}" />
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="Button">
-          <Border x:Name="Body" CornerRadius="12" Background="{TemplateBinding Background}"
-                  BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="1" />
+          <Border x:Name="Body" CornerRadius="9" Background="{TemplateBinding Background}"
+                  BorderBrush="{DynamicResource ControlStrongStrokeColorDefaultBrush}" BorderThickness="1">
+            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+          </Border>
           <ControlTemplate.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
               <Setter TargetName="Body" Property="BorderBrush" Value="{DynamicResource TextFillColorPrimaryBrush}" />

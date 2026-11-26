@@ -8,6 +8,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Shapes;
 using NotchTasks.Core;
 using NotchTasks.Core.Modules;
 using NotchTasks.Core.Settings;
@@ -145,7 +146,9 @@ public partial class ModulesPane : SettingsPane
             AutomationProperties.SetName(row.On, title);
             Select(row.Placement, ChoiceItems.Placements, placements.TryGetValue(id, out var placement) ? placement : "auto");
             row.Color.Hex = colors.TryGetValue(id, out var hex) ? hex : DefaultColor;
-            row.Swatch.Background = HexColor.Brush(row.Color.Hex);
+            // an unset colour is an outlined circle with the "none" line; a set one is filled with the colour
+            row.Swatch.Background = colors.ContainsKey(id) ? HexColor.Brush(row.Color.Hex) : Brushes.Transparent;
+            row.Swatch.Content = colors.ContainsKey(id) ? null : NoneMark();
             row.ResetColor.Header = L10n.L("Back to default color");
 
             if (i > 0)
@@ -193,11 +196,15 @@ public partial class ModulesPane : SettingsPane
             Children = { up, down },
         };
 
-        var glyph = new TextBlock
+        // the module tile: a 16 DIP white glyph, centred in the 28 DIP tile (FluentGlyph centres it on its own box)
+        var glyph = new FluentGlyph
         {
-            Text = ModuleCatalog.Glyph(id),
-            FontFamily = ModuleCatalog.GlyphFilled(id) ? FluentIcons.Filled : FluentIcons.Regular,
-            Style = (Style)FindResource("IconGlyph"),
+            Code = ModuleCatalog.Glyph(id),
+            Filled = ModuleCatalog.GlyphFilled(id),
+            Size = 16,
+            Foreground = (Brush)FindResource("TextOnAccentFillColorPrimaryBrush"),
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
         };
         var tile = new Border
         {
@@ -233,7 +240,7 @@ public partial class ModulesPane : SettingsPane
         resetColor.Click += (_, _) => ResetColor(id);
         var swatch = new Button
         {
-            Style = (Style)FindResource("ColorWell"),
+            Style = (Style)FindResource("ColorDot"),
             Margin = new Thickness(0),
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
@@ -244,6 +251,7 @@ public partial class ModulesPane : SettingsPane
         color.ValueChanged += (_, _) =>
         {
             swatch.Background = HexColor.Brush(color.Hex);
+            swatch.Content = null;
             ChangeColor(id, color.Hex);
         };
         var popup = new Popup
@@ -515,6 +523,21 @@ public partial class ModulesPane : SettingsPane
         }
         Write("placements", ToObject(map));
     }
+
+    /// The "none" mark of an unset colour: a diagonal line across the 18 DIP swatch, in the secondary text colour.
+    private static Canvas NoneMark() => new()
+    {
+        Width = 18,
+        Height = 18,
+        Children =
+        {
+            new Line
+            {
+                X1 = 4, Y1 = 14, X2 = 14, Y2 = 4, StrokeThickness = 1.2,
+                Stroke = (Brush)Application.Current.FindResource("TextFillColorSecondaryBrush"),
+            },
+        },
+    };
 
     private void ChangeColor(string id, string hex)
     {

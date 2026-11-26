@@ -408,17 +408,19 @@ public partial class OverviewPane : SettingsPane
 
         var tile = new Border
         {
-            Width = 24,
-            Height = 24,
-            CornerRadius = new CornerRadius(6),
+            Width = 28,
+            Height = 28,
+            CornerRadius = new CornerRadius(7),
             Margin = new Thickness(0, 0, 10, 0),
             VerticalAlignment = VerticalAlignment.Center,
-            Child = new TextBlock
+            Child = new FluentGlyph
             {
-                Text = ModuleCatalog.Glyph(id),
-                FontFamily = ModuleCatalog.GlyphFilled(id) ? FluentIcons.Filled : FluentIcons.Regular,
-                Style = (Style)FindResource("IconGlyph"),
-                FontSize = 12,
+                Code = ModuleCatalog.Glyph(id),
+                Filled = ModuleCatalog.GlyphFilled(id),
+                Size = 16,
+                Foreground = (Brush)FindResource("TextOnAccentFillColorPrimaryBrush"),
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
             },
         };
         tile.SetResourceReference(Border.BackgroundProperty, on ? "AccentFillColorDefaultBrush" : "ControlStrongFillColorDefaultBrush");

@@ -118,10 +118,11 @@ public sealed class ModulesPaneRowTests
             var swatch = SwatchOf(RowFor(pane, "media"));
             Assert.Equal(Color.FromRgb(0x11, 0x22, 0x33), ((SolidColorBrush)swatch.Background).Color);
 
-            // A reset (or any change made outside the pane) moves the swatch to the default grey.
+            // A reset (or any change made outside the pane) leaves the swatch unfilled, with the "none" mark.
             state.Settings.Set("moduleColors", new JsonObject());
             var reset = SwatchOf(RowFor(pane, "media"));
-            Assert.Equal(Color.FromRgb(0x80, 0x80, 0x80), ((SolidColorBrush)reset.Background).Color);
+            Assert.Same(Brushes.Transparent, reset.Background);  // an unset colour has no fill: the outlined "none" circle
+            Assert.IsType<System.Windows.Controls.Canvas>(reset.Content);
         });
     }
 }
