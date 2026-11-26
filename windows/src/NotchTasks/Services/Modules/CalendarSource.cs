@@ -47,8 +47,9 @@ public sealed class CalendarSource : IModuleSource, IClockUser
         _clock.Add(this);
     }
 
-    /// True while the store is open and a timed event is listed: the reminder and the chip's minutes need the clock then, and not otherwise.
-    public bool NeedsClock => _started && _store is not null && _module.Events.Any(e => !e.AllDay);
+    /// True while the store is open and a timed event is visible (not hidden): the reminder and the chip's minutes need the clock then, and
+    /// not otherwise.
+    public bool NeedsClock => _started && _store is not null && _module.Events.Any(e => !e.AllDay && !_module.Dismissed.Contains(e.Id));
 
     /// One second passed: makes the reminder of an event due now, and reports whether the chip's event or its minutes changed, so the app
     /// publishes once for either. Works on the cached events; no store read.

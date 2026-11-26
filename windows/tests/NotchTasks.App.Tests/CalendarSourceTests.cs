@@ -441,6 +441,34 @@ public sealed class CalendarSourceTests
     }
 
     [Fact]
+    public void NeedsClock_IsFalseWhenTheOnlyTimedEventIsDismissed()
+    {
+        Sta.Run(() =>
+        {
+            var store = new FakeStore();
+            store.Records.Add(Standup(DateTimeOffset.Now));
+            var module = new CalendarModule(new RecordingAnnouncer());
+            var source = Source(module, new FakeOpener(store));
+            var clock = (IClockUser)source;
+            try
+            {
+                source.Start();
+                Fixture.PumpUntil(() => module.Events.Count == 1);
+                Assert.True(clock.NeedsClock);
+
+                module.Dismiss(module.Events[0].Id);
+
+                Assert.Empty(module.Visible);
+                Assert.False(clock.NeedsClock);
+            }
+            finally
+            {
+                source.Stop();
+            }
+        });
+    }
+
+    [Fact]
     public void NeedsClock_OnlyWhileTheStoreIsOpenAndATimedEventIsListed()
     {
         Sta.Run(() =>
