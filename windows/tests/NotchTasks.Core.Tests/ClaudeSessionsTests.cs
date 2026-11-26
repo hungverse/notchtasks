@@ -60,6 +60,22 @@ public sealed class ClaudeSessionsTests : IDisposable
     }
 
     [Fact]
+    public void ClaudeSessions_RegistryFileHeldOpenByItsWriter_IsRead()
+    {
+        var dir = Temp();
+        Directory.CreateDirectory(Path.Combine(dir, "sessions"));
+        // Claude keeps the session file open for writing while it works
+        using var writer = new FileStream(Path.Combine(dir, "sessions", "77.json"), FileMode.Create, FileAccess.Write, FileShare.Read);
+        writer.Write(System.Text.Encoding.UTF8.GetBytes("""{"pid":77,"cwd":"C:\\x\\app","status":"busy","statusUpdatedAt":1}"""));
+        writer.Flush();
+
+        var only = Assert.Single(ClaudeSessions.Read(dir));
+
+        Assert.Equal(77, only.Pid);
+        Assert.Equal("busy", only.Status);
+    }
+
+    [Fact]
     public void Sessions_BadJson_Skipped()
     {
         var dir = Temp();

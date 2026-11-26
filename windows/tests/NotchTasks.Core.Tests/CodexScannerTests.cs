@@ -605,4 +605,54 @@ public sealed class CodexScannerTests : IDisposable
         // the reset has passed by then: nothing is used, although the file is cached
         Assert.Equal(0, scanner.Limits(now.AddHours(2))!.Windows[0].Used);
     }
+
+    // ---- Shared access: the rollout is open for writing while Codex works in it
+
+    /// Writes a line and flushes it, the way the Codex writer does, through its own handle.
+    private static void WriteLine(FileStream writer, string line)
+    {
+        writer.Write(System.Text.Encoding.UTF8.GetBytes(line + "\n"));
+        writer.Flush();
+    }
+
+    [Fact]
+    public void CodexScanner_RolloutHeldOpenByItsWriter_IsStillRead()
+    {
+        AsksFixtures.InitEnglish();
+        var root = Path.Combine(Temp(), "sessions");
+        Directory.CreateDirectory(root);
+        var now = DateTimeOffset.UtcNow;
+        var file = Path.Combine(root, "rollout-live.jsonl");
+        // the way Codex keeps its rollout: open for writing, sharing reads only
+        using var writer = new FileStream(file, FileMode.Create, FileAccess.Write, FileShare.Read);
+        WriteLine(writer, new JsonObject
+        {
+            ["timestamp"] = Ts(now.AddMinutes(-1)),
+            ["type"] = "session_meta",
+            ["payload"] = new JsonObject { ["id"] = "live", ["cwd"] = @"C:\Users\hung\Projects\notchtasks", ["session_id"] = "live" },
+        }.ToJsonString());
+        WriteLine(writer, StartedLine(now.AddMinutes(-1)));
+
+        var job = Assert.Single(new CodexScanner(root).Jobs(now));
+
+        Assert.Equal("notchtasks", job.Title);
+        Assert.True(job.Working);
+    }
+
+    [Fact]
+    public void Refine_TakesTheLaterTime_AndTheHandlesSize()
+    {
+        var listed = new DateTimeOffset(2026, 11, 27, 1, 19, 11, TimeSpan.Zero);
+        var written = new DateTimeOffset(2026, 11, 27, 1, 20, 35, TimeSpan.Zero);
+
+        // the directory entry is stale (the creation time and size); the handle has the true write time and size
+        var (mtime, size) = CodexScanner.Refine(listed, written, 5000);
+        Assert.Equal(written, mtime);
+        Assert.Equal(5000, size);
+
+        // a handle that reports an older time does not move the file back in time
+        var (kept, handleSize) = CodexScanner.Refine(written, listed, 4000);
+        Assert.Equal(written, kept);
+        Assert.Equal(4000, handleSize);
+    }
 }

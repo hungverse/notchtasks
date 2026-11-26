@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using NotchTasks.Core.Agents;
 
 namespace NotchTasks.Core.Limits;
 
@@ -30,7 +31,7 @@ public static partial class ClaudeUsage
         JsonDocument doc;
         try
         {
-            doc = JsonDocument.Parse(File.ReadAllText(file));
+            doc = JsonDocument.Parse(Providers.ReadAllTextShared(file));
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or JsonException)
         {

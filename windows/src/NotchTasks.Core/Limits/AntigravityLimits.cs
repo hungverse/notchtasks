@@ -154,7 +154,7 @@ public sealed class AntigravityLimits
         string text;
         try
         {
-            text = File.ReadAllText(file);
+            text = Providers.ReadAllTextShared(file);
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {

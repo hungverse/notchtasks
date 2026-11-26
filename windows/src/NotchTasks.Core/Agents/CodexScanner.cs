@@ -317,7 +317,7 @@ public sealed class CodexScanner
     public IReadOnlyList<Job> Jobs(DateTimeOffset now)
     {
         var jobs = new List<Job>();
-        foreach (var (path, mtime, _) in WalkJsonl())
+        foreach (var (path, mtime, _) in WalkJsonl(now))
         {
             if (now - mtime >= JobWindow)
             {
@@ -350,7 +350,7 @@ public sealed class CodexScanner
     {
         CodexLimitsFound? best = null;
         var listed = new HashSet<string>(StringComparer.Ordinal);
-        foreach (var (path, mtime, size) in WalkJsonl())
+        foreach (var (path, mtime, size) in WalkJsonl(now))
         {
             if (now - mtime >= LimitsWindow)
             {
@@ -438,7 +438,7 @@ public sealed class CodexScanner
         {
             try
             {
-                using var fs = File.OpenRead(file);
+                using var fs = Providers.OpenShared(file);
                 var size = fs.Length;
                 // the file was replaced or cut short: the saved offset is past its end, so start over
                 var pos = entry.Offset <= size ? entry.Offset : 0;
@@ -480,11 +480,12 @@ public sealed class CodexScanner
         _cache[file] = entry;
     }
 
-    /// Every .jsonl file under the root with its last write time and size, from the listing itself (no second stat per file).
-    /// Every folder is entered, whatever its date: a rollout is written in the folder of the day its thread started, so a
-    /// thread resumed days later keeps writing there (the Mac walks every folder too). Callers filter by each file's mtime.
-    /// Folders that cannot be read are skipped.
-    private List<(string Path, DateTimeOffset Mtime, long Size)> WalkJsonl()
+    /// The write time of a rollout as the listing gives it, and the time and size from an open handle (see Refine) for a rollout
+    /// written within LimitsWindow, since Windows keeps the listing stale while the writer holds the file. Callers filter by each
+    /// file's mtime. The listing's values stay when the handle cannot be opened. Every folder is entered, whatever its date: a
+    /// rollout is written in the folder of the day its thread started, so a thread resumed days later keeps writing there (the
+    /// Mac walks every folder too). Folders that cannot be read are skipped.
+    private List<(string Path, DateTimeOffset Mtime, long Size)> WalkJsonl(DateTimeOffset now)
     {
         var found = new List<(string Path, DateTimeOffset Mtime, long Size)>();
         var pending = new Stack<string>();
@@ -505,7 +506,13 @@ public sealed class CodexScanner
                     {
                         try
                         {
-                            found.Add((file.FullName, new DateTimeOffset(file.LastWriteTimeUtc), file.Length));
+                            var mtime = new DateTimeOffset(file.LastWriteTimeUtc);
+                            var size = file.Length;
+                            if (now - mtime < LimitsWindow)
+                            {
+                                (mtime, size) = HandleStamp(file.FullName, mtime, size);
+                            }
+                            found.Add((file.FullName, mtime, size));
                         }
                         catch (IOException)
                         {
@@ -521,4 +528,23 @@ public sealed class CodexScanner
         }
         return found;
     }
+
+    /// The time and size of a rollout the writer may hold open: its write time from the open handle, which is current when the
+    /// directory entry is not. The listing's values when the handle cannot be opened.
+    private static (DateTimeOffset Mtime, long Size) HandleStamp(string path, DateTimeOffset listed, long listedSize)
+    {
+        try
+        {
+            using var handle = File.OpenHandle(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            return Refine(listed, new DateTimeOffset(File.GetLastWriteTimeUtc(handle)), RandomAccess.GetLength(handle));
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            return (listed, listedSize);
+        }
+    }
+
+    /// The stamp of a rollout from its listing and its open handle: the later of the two write times, and the handle's size.
+    internal static (DateTimeOffset Mtime, long Size) Refine(DateTimeOffset listed, DateTimeOffset handleTime, long handleSize) =>
+        (handleTime > listed ? handleTime : listed, handleSize);
 }

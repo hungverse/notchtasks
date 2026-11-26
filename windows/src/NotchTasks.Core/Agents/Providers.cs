@@ -26,12 +26,25 @@ public static class Providers
             ? t
             : null;
 
+    /// Opens an agent's file for reading while the agent may hold it open for writing. Windows refuses a plain read of a file
+    /// that is open for writing unless the reader shares writes, so this shares reads, writes and deletes, as the writer does.
+    public static FileStream OpenShared(string file) =>
+        new(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+
+    /// The whole text of an agent's file, read with OpenShared (as File.ReadAllText, UTF-8 with a byte order mark honored).
+    public static string ReadAllTextShared(string file)
+    {
+        using var fs = OpenShared(file);
+        using var reader = new StreamReader(fs, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
+        return reader.ReadToEnd();
+    }
+
     /// The first `bytes` of a file as text; null when it cannot be read.
     public static string? ReadHead(string file, int bytes = HeadBytes)
     {
         try
         {
-            using var fs = File.OpenRead(file);
+            using var fs = OpenShared(file);
             var len = (int)Math.Min(bytes, fs.Length);
             return Encoding.UTF8.GetString(ReadRange(fs, 0, len));
         }
@@ -46,7 +59,7 @@ public static class Providers
     {
         try
         {
-            using var fs = File.OpenRead(file);
+            using var fs = OpenShared(file);
             var size = fs.Length;
             var from = size > bytes ? size - bytes : 0;
             var buf = ReadRange(fs, from, (int)(size - from));

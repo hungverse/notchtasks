@@ -103,6 +103,24 @@ public class ClaudeUsageTests : IDisposable
     }
 
     [Fact]
+    public void ClaudeLimits_StatuslineHeldOpenByItsWriter_IsRead()
+    {
+        var dir = Tmp();
+        var now = new DateTimeOffset(2026, 11, 14, 10, 0, 0, TimeSpan.Zero);
+        var future = now.ToUnixTimeSeconds() + 3600;
+        // Claude keeps its status file open for writing while it works
+        using var writer = new FileStream(Path.Combine(dir, "notchtasks-status.json"), FileMode.Create, FileAccess.Write, FileShare.Read);
+        writer.Write(System.Text.Encoding.UTF8.GetBytes(
+            "{\"rate_limits\":{\"five_hour\":{\"used_percentage\":42,\"resets_at\":" + future + "}}}"));
+        writer.Flush();
+
+        var p = ClaudeUsage.FromStatusline(dir, now);
+
+        Assert.NotNull(p);
+        Assert.Equal(new[] { ("5h", 42.0) }, p!.Windows.Select(w => (w.Label, w.Used)));
+    }
+
+    [Fact]
     public void Now_LiveReadingYoungerThan15Min_WinsAndPastResetsCountZero()
     {
         var at = new DateTimeOffset(2026, 11, 14, 10, 0, 0, TimeSpan.Zero);

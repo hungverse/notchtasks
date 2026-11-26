@@ -73,7 +73,7 @@ public static class ClaudeSessions
     {
         try
         {
-            using var doc = JsonDocument.Parse(File.ReadAllText(file));
+            using var doc = JsonDocument.Parse(Providers.ReadAllTextShared(file));
             var root = doc.RootElement;
             if (root.ValueKind != JsonValueKind.Object)
             {
