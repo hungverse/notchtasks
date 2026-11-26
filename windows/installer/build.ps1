@@ -125,12 +125,18 @@ $fluentLicense = Join-Path $windowsDir 'src\NotchTasks\Resources\Fonts\LICENSE'
 $licenses = Join-Path $stage 'licenses'
 New-Item -ItemType Directory -Path $licenses -Force | Out-Null
 Copy-Item -LiteralPath $fluentLicense -Destination (Join-Path $licenses 'FluentSystemIcons-LICENSE.txt') -Force
+# The notices of every other shipped component (QRCoder, H.NotifyIcon, Microsoft.Data.Sqlite, SQLitePCLRaw, SQLite, System.Management).
+$notices = Join-Path $installerDir 'THIRD-PARTY-NOTICES.txt'
+Copy-Item -LiteralPath $notices -Destination (Join-Path $licenses 'THIRD-PARTY-NOTICES.txt') -Force
 
 if (-not (Test-Path -LiteralPath (Join-Path $stage 'NotchTasks.exe') -PathType Leaf)) {
     throw "Stage is missing NotchTasks.exe: $stage"
 }
 if (-not (Test-Path -LiteralPath (Join-Path $licenses 'FluentSystemIcons-LICENSE.txt') -PathType Leaf)) {
     throw "Stage is missing the Fluent UI System Icons licence: $licenses"
+}
+if (-not (Test-Path -LiteralPath (Join-Path $licenses 'THIRD-PARTY-NOTICES.txt') -PathType Leaf)) {
+    throw "Stage is missing the third-party notices: $licenses"
 }
 Assert-StagedVersion -Dll (Join-Path $stage 'NotchTasks.dll') -Expected $Version
 

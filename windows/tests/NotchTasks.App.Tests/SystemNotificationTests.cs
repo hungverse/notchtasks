@@ -181,6 +181,27 @@ public sealed class SystemNotificationTests
         Assert.Contains($"AppUserModelID: \"{AppIdentity.UserModelId}\"", iss);
     }
 
+    [Fact]
+    public void ThirdPartyNotices_AreCopiedIntoTheStage_AndTheBuildChecksThem()
+    {
+        // The notices of every shipped component sit beside the installer; build.ps1 copies them into the stage's licenses
+        // folder and stops when they are not there, as it does for the Fluent licence.
+        var installer = Path.GetDirectoryName(FindInstallerScript())!;
+        var build = File.ReadAllText(Path.Combine(installer, "build.ps1"));
+        Assert.Contains("Copy-Item -LiteralPath $notices", build);
+        Assert.Contains("THIRD-PARTY-NOTICES.txt", build);
+        Assert.Contains("Stage is missing the third-party notices", build);
+
+        var notices = File.ReadAllText(Path.Combine(installer, "THIRD-PARTY-NOTICES.txt"));
+        foreach (var component in new[]
+                 {
+                     "Fluent UI System Icons", "QRCoder", "H.NotifyIcon", "Microsoft.Data.Sqlite", "SQLitePCLRaw", "SQLite",
+                 })
+        {
+            Assert.Contains(component, notices);
+        }
+    }
+
     /// The installer script sits beside the windows folder; the test output is somewhere below it.
     private static string FindInstallerScript()
     {
