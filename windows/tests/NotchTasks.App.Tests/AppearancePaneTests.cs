@@ -243,4 +243,37 @@ public sealed class AppearancePaneTests
             Assert.Equal("Couldn't import the profile|" + read.Error, shown);
         });
     }
+
+    [Fact]
+    public void SelectedThemeBorder_FollowsALiveThemeChange()
+    {
+        // The selected tile's border is the accent of the current theme: a change of the accent brush reaches it at once, without a
+        // rebuild of the pane.
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            var pane = Fixture.Create<AppearancePane>(state.Settings, state);
+            var window = new Window { Content = pane, ShowInTaskbar = false };
+            Fixture.ShowOffScreen(window);
+            try
+            {
+                var accent = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.Red);
+                pane.Resources["AccentFillColorDefaultBrush"] = accent;
+                Fixture.Flush();
+
+                var tiles = (System.Collections.IEnumerable)Fixture.Field<object>(pane, "_tiles");
+                var selected = tiles.Cast<object>()
+                    .Select(tile => (Border)tile.GetType().GetProperty("Frame")!.GetValue(tile)!)
+                    .Where(frame => frame.BorderBrush == accent)
+                    .ToList();
+
+                Assert.Single(selected);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
 }

@@ -194,7 +194,15 @@ public partial class AppearancePane : SettingsPane
         {
             var selected = Themes.IsSelected(tile.Theme, Store);
             tile.Check.Visibility = selected ? Visibility.Visible : Visibility.Collapsed;
-            tile.Frame.BorderBrush = selected ? (Brush)FindResource("AccentFillColorDefaultBrush") : Brushes.Transparent;
+            // A dynamic reference, so a live light/dark or accent change reaches the border (a FindResource would keep the old brush).
+            if (selected)
+            {
+                tile.Frame.SetResourceReference(Border.BorderBrushProperty, "AccentFillColorDefaultBrush");
+            }
+            else
+            {
+                tile.Frame.BorderBrush = Brushes.Transparent;
+            }
             tile.Title.Text = L10n.L(tile.Theme.TitleKey);
             AutomationProperties.SetName(tile.Button, tile.Title.Text);
         }
