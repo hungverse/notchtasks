@@ -425,6 +425,34 @@ public sealed class L10nTests
         Assert.Empty(placeholders);
     }
 
+    // The Watching pane's "Plan limits" row under Claude (the opt-in statusline). "On", "Turn on", "Turn off" and "Couldn't edit
+    // {0}'s settings: {1}" come from the Mac table or the earlier batches. Each one needs a text in every language.
+    private static readonly string[] StatuslineKeys =
+    [
+        "Plan limits", "Show Claude's 5h and 7d limits from Claude Code's status line",
+        "Your own status line is set. NotchTasks won't replace it.", "On", "Turn on", "Turn off",
+    ];
+
+    [Fact]
+    public void StatuslineKeys_ExistInEveryLanguage()
+    {
+        var overlayFile = Path.Combine(RepoRoot(), "electron", "l10n", "windows.json");
+        var missing = new List<string>();
+        foreach (var (code, _) in L10n.Languages.Where(language => language.Code != "en"))
+        {
+            var mac = ReadStrings(Path.Combine(MacSources(), $"l10n-{code}.json"));
+            var windows = ReadOverlay(overlayFile, code);
+            foreach (var key in StatuslineKeys)
+            {
+                if (!mac.ContainsKey(key) && !windows.ContainsKey(key))
+                {
+                    missing.Add($"{code}: {key}");
+                }
+            }
+        }
+        Assert.Empty(missing);
+    }
+
     private static IEnumerable<string> Placeholders(string key) =>
         System.Text.RegularExpressions.Regex.Matches(key, @"\{\d+\}").Select(m => m.Value).Distinct();
 
