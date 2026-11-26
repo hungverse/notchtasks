@@ -61,6 +61,49 @@ public partial class ModulesPane : SettingsPane
         {
             _rows[id] = BuildRow(id);
         }
+        // The calendar hint follows the calendar's state while the pane is open (the store opening or failing, a read that fails).
+        Loaded += OnPaneLoaded;
+        Unloaded += OnPaneUnloaded;
+    }
+
+    private void OnPaneLoaded(object sender, RoutedEventArgs e)
+    {
+        if (_state is not null)
+        {
+            _state.Calendar.Changed += OnCalendarChanged;
+            ShowCalendarHint();
+        }
+    }
+
+    private void OnPaneUnloaded(object sender, RoutedEventArgs e)
+    {
+        if (_state is not null)
+        {
+            _state.Calendar.Changed -= OnCalendarChanged;
+        }
+    }
+
+    private void OnCalendarChanged() => ShowCalendarHint();
+
+    /// Shows the calendar's hint under its row when the store cannot be opened, else hides it.
+    private void ShowCalendarHint()
+    {
+        if (_rows.TryGetValue("calendar", out var row))
+        {
+            SetHint(row, CalendarHint());
+        }
+    }
+
+    /// The calendar's hint text: the note that the store cannot be opened, or nothing.
+    private string CalendarHint() =>
+        _state?.Calendar.Unavailable == true
+            ? L10n.L("Calendar can't be opened. Check Settings > Privacy & security > Calendar.")
+            : string.Empty;
+
+    private static void SetHint(ModuleRow row, string text)
+    {
+        row.Hint.Text = text;
+        row.Hint.Visibility = text.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
     }
 
     protected override void Apply()
@@ -95,10 +138,7 @@ public partial class ModulesPane : SettingsPane
                 row.Tile.Background = OffTile;
             }
             // the calendar's hint under its row when the store cannot be opened (the pill shows nothing for calendar)
-            row.Hint.Text = id == "calendar" && _state?.Calendar.Unavailable == true
-                ? L10n.L("Calendar can't be opened. Check Settings > Privacy & security > Calendar.")
-                : string.Empty;
-            row.Hint.Visibility = row.Hint.Text.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
+            SetHint(row, id == "calendar" ? CalendarHint() : string.Empty);
             row.Up.IsEnabled = i > 0;
             row.Down.IsEnabled = i < order.Count - 1;
             row.On.IsChecked = on;

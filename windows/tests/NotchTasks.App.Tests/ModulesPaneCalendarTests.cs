@@ -67,4 +67,63 @@ public sealed class ModulesPaneCalendarTests
             Assert.Empty(RowsWithHint(pane));
         });
     }
+
+    /// The calendar row's hint is shown now, read from the rows without a rebuild (Apply is not called here).
+    private static bool CalendarHintShown(ModulesPane pane)
+    {
+        var rows = Fixture.Named<StackPanel>(pane, "Rows");
+        return rows.Children.OfType<Grid>()
+            .Where(row => Texts(row).Any(t => t.Text == Hint && t.Visibility == Visibility.Visible))
+            .Any();
+    }
+
+    [Fact]
+    public void Pane_UpdatesTheHintLive_WhenTheCalendarStateChangesWhileItIsOpen()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            state.Calendar.Apply(Array.Empty<CalendarRecord>(), DateTimeOffset.Now);
+            var pane = Fixture.Create<ModulesPane>(state.Settings, new Func<bool>(() => false), state);
+            var window = new Window { Content = pane, ShowInTaskbar = false };
+            try
+            {
+                Fixture.ShowOffScreen(window);
+                Fixture.Flush();
+                Assert.False(CalendarHintShown(pane));
+
+                state.Calendar.SetUnavailable();
+                Fixture.Flush();
+
+                Assert.True(CalendarHintShown(pane));
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    [Fact]
+    public void Pane_StopsFollowingTheCalendarState_WhenItIsClosed()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            state.Calendar.Apply(Array.Empty<CalendarRecord>(), DateTimeOffset.Now);
+            var pane = Fixture.Create<ModulesPane>(state.Settings, new Func<bool>(() => false), state);
+            var window = new Window { Content = pane, ShowInTaskbar = false };
+            Fixture.ShowOffScreen(window);
+            Fixture.Flush();
+            window.Close();
+            Fixture.Flush();
+
+            state.Calendar.SetUnavailable();
+            Fixture.Flush();
+
+            Assert.False(CalendarHintShown(pane));
+        });
+    }
 }
