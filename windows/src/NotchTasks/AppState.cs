@@ -598,7 +598,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         Func<string, string?> lms = o.LmsPsJson ?? (exe => LmsRunner.PsJson(exe));
         return (
             new AgentReaders(processes, sqlite, httpGet, lms, home, claudeDir),
-            new LimitReaders(http, cli, home, claudeDir, o.ClaudeAccount));
+            new LimitReaders(http, cli, home, claudeDir));
     }
 
     /// The module sources by module id, built once before the first Apply. Modules register their sources here: a module

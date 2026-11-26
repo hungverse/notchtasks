@@ -1,5 +1,4 @@
 using System.IO;
-using System.Net.Http;
 using System.Windows.Threading;
 using NotchTasks.Core;
 using NotchTasks.Core.Agents;
@@ -10,13 +9,11 @@ using NotchTasks.Core.Settings;
 namespace NotchTasks.Services.Modules;
 
 /// The OS readers of the limits source (AppStateOptions): the loopback POST (Antigravity's language server), the claude CLI, the
-/// user's profile folder (Home) and the Claude config folder (ClaudeDir). AccountHandler answers the Claude usage endpoint (null:
-/// the app's own handler; a test passes a fake).
-public sealed record LimitReaders(IHttpPost Http, IClaudeCli Cli, string Home, string ClaudeDir, HttpMessageHandler? AccountHandler = null);
+/// user's profile folder (Home) and the Claude config folder (ClaudeDir).
+public sealed record LimitReaders(IHttpPost Http, IClaudeCli Cli, string Home, string ClaudeDir);
 
 /// The limits module's feed (module "limits"). While it is started and Claude, Codex or Antigravity is enabled, a 10 s timer
 /// runs:
-/// - the Claude account's plan usage (ClaudeAccountSource) while Claude is on, in the background, on its own schedule;
 /// - the claude CLI (`/usage`) runs at start and then every 30 min, one call at a time; it is given up after 30 s, and the
 ///   statusline snapshot stands in until it answers;
 /// - the Claude statusline is read every tick, in the background;
@@ -38,14 +35,11 @@ public sealed class LimitsSource : IModuleSource
     private readonly TimeSpan _cliGiveUp;
     private readonly CodexScanner _codex;
     private readonly AntigravityLimits _antigravity;
-    private readonly ClaudeAccountSource _accountSource;
     private readonly DispatcherTimer _timer = new() { Interval = TickEvery };
     private bool _started;
     private bool _reading;
     private bool _cliBusy;
     private bool _antigravityBusy;
-    private bool _accountBusy;
-    private ProviderLimits? _accountLimits;
     private int _generation;  // every Start and Stop: a result of an older one is dropped when it lands
     private DateTimeOffset _nextCli = DateTimeOffset.MinValue;
     private DateTimeOffset _nextAntigravity = DateTimeOffset.MinValue;
@@ -73,9 +67,6 @@ public sealed class LimitsSource : IModuleSource
         _cliGiveUp = cliGiveUp ?? CliGiveUpAfter;
         _codex = new CodexScanner(Path.Combine(reads.Home, ".codex", "sessions"));
         _antigravity = new AntigravityLimits(PidAlive.Alive);
-        _accountSource = new ClaudeAccountSource(
-            Path.Combine(reads.ClaudeDir, ClaudeAccountSource.CredentialsName),
-            reads.AccountHandler ?? ClaudeAccountSource.SharedHandler);
         _timer.Tick += (_, _) => Tick();
     }
 
@@ -98,7 +89,6 @@ public sealed class LimitsSource : IModuleSource
         _timer.Stop();
         _statusline = null;
         _live = null;
-        _accountLimits = null;
         _ownCodex = null;
         _antigravityLimits = null;
         _module.Update(new LimitInputs(false, false, false, false, null, null, null, _settings.LimitWarn), DateTimeOffset.UtcNow);
@@ -153,10 +143,6 @@ public sealed class LimitsSource : IModuleSource
         {
             _nextAntigravity = now + AntigravityEvery;
             FetchAntigravity(now);
-        }
-        if (claudeOn && !_accountBusy && _accountSource.Due(now))
-        {
-            FetchAccount(now);
         }
         var ownCodex = codexOn && !_agents.SharesCodexLimits;
         if (!_reading && (claudeOn || ownCodex))
@@ -252,31 +238,6 @@ public sealed class LimitsSource : IModuleSource
         }
     }
 
-    /// The Claude account's plan usage, read in the background. A failed or empty ask keeps the last reading (it counts as stale
-    /// after 15 min, see ClaudeUsage.Now).
-    private async void FetchAccount(DateTimeOffset now)
-    {
-        _accountBusy = true;
-        var generation = _generation;
-        try
-        {
-            var found = await Task.Run(() => _accountSource.FetchAsync(now)).ConfigureAwait(true);
-            if (_started && generation == _generation && found is not null)
-            {
-                _accountLimits = found;
-                Compose(DateTimeOffset.UtcNow);
-            }
-        }
-        catch (Exception e)
-        {
-            ErrorLog.Write(e);
-        }
-        finally
-        {
-            _accountBusy = false;
-        }
-    }
-
     /// Antigravity's quota from its running language server; null (gone from the pill) when it is not running.
     private async void FetchAntigravity(DateTimeOffset now)
     {
@@ -311,7 +272,7 @@ public sealed class LimitsSource : IModuleSource
         var agyOn = AgyOn(items);
 
         var liveAt = _live is null ? (DateTimeOffset?)null : _liveAt;
-        var claude = claudeOn ? ClaudeUsage.Now(_accountLimits, _live, liveAt, _statusline, now) : null;
+        var claude = claudeOn ? ClaudeUsage.Now(_live, liveAt, _statusline, now) : null;
         ProviderLimits? codex = null;
         if (codexOn)
         {

@@ -1,4 +1,3 @@
-using System.Net.Http;
 using NotchTasks.Core;
 using NotchTasks.Core.Agents;
 using NotchTasks.Core.Calendars;
@@ -35,7 +34,6 @@ namespace NotchTasks;
 /// Calendar opens the calendar store (null: the appointment store of this PC; a test passes a fake, so no test reads the calendars).
 /// Outputs and Brightness make the default audio output and the panel's brightness (null: Core Audio and WMI on this PC; a test passes
 /// fakes, so no test touches the audio or the display).
-/// ClaudeAccount answers the Claude account's usage endpoint (null: the app's handler; a test passes a fake, so no test reaches the network).
 public sealed record AppStateOptions(
     string? DownloadsFolder = null,
     NetworkReaders? Network = null,
@@ -60,8 +58,7 @@ public sealed record AppStateOptions(
     INotifier? Notifier = null,
     ICalendarOpener? Calendar = null,
     Func<IOutputDevices>? Outputs = null,
-    Func<IBrightness>? Brightness = null,
-    HttpMessageHandler? ClaudeAccount = null)
+    Func<IBrightness>? Brightness = null)
 {
     /// This PC's readers: the options the app runs with (the same as passing none).
     public static AppStateOptions Production { get; } = new();
