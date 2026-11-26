@@ -32,7 +32,7 @@ public static class PaneIds
         PaneId.Pairing => "Pairing",
         PaneId.Temperatures => "Temperatures",
         PaneId.Appearance => "Appearance",
-        PaneId.Badges => "Icons & lock",
+        PaneId.Badges => "Icons",
         PaneId.Store => "Icon Library",
         PaneId.Sounds => "Sound",
         PaneId.Behavior => "Behavior",

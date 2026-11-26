@@ -4,7 +4,7 @@
                        xmlns:l="clr-namespace:NotchTasks.ControlPanel"
                        xmlns:local="clr-namespace:NotchTasks.ControlPanel">
   <StackPanel>
-    <TextBlock Style="{StaticResource PaneTitle}" Text="{l:L Icons &amp; lock}" />
+    <TextBlock Style="{StaticResource PaneTitle}" Text="{l:L Icons}" />
     <TextBlock Style="{StaticResource PaneNote}" Text="{l:L Icons always shown on the collapsed notch.}" />
 
     <TextBlock Style="{StaticResource SectionHeader}" Text="{l:L Main screen}" />

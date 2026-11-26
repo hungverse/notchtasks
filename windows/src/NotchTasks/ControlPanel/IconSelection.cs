@@ -1,6 +1,6 @@
 namespace NotchTasks.ControlPanel;
 
-/// The icon the Icons & lock pane has selected: the Icon Library assigns its animations to it. It is a badge id, or none.
+/// The icon the Icons pane has selected: the Icon Library assigns its animations to it. It is a badge id, or none.
 /// Cleared when the Control Panel closes.
 public static class IconSelection
 {

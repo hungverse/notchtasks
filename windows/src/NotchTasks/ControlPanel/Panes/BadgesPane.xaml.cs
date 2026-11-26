@@ -8,9 +8,9 @@ using NotchTasks.Pill;
 
 namespace NotchTasks.ControlPanel.Panes;
 
-/// The Icons & lock pane (BadgesPane.swift, the main screen): the icons on the two sides of the closed notch, drawn as the
+/// The Icons pane (BadgesPane.swift, the main screen): the icons on the two sides of the closed notch, drawn as the
 /// pill draws them, and the editor of the icon selected. A click on an icon selects it; + adds one; an animated icon comes
-/// from the Icon Library. The lock screen has no notch on Windows, so it is not here.
+/// from the Icon Library.
 public partial class BadgesPane : SettingsPane
 {
     private readonly AppState _state;

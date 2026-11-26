@@ -63,7 +63,7 @@ What Phase 3a adds:
 
 What Phase 2 adds:
 
-- **Control Panel**: the Mac's panes that Windows can show: Overview, Modules, Permissions, Watching (agents), Appearance, Icons & lock, Icon Library, Sound and Behavior.
+- **Control Panel**: the Mac's panes that Windows can show: Overview, Modules, Permissions, Watching (agents), Appearance, Icons, Icon Library, Sound and Behavior.
 - **First-run guide**: five pages (welcome, modules, agents, permissions, ready), shown on the first start and again from Overview or the tray.
 - **Permissions**: one row per permission the chosen modules need (notifications, start at login, microphone, camera, firewall rule, agent hooks), with its state.
 - **Start at login**: a row in Permissions, as the Mac's login item is in its own list.

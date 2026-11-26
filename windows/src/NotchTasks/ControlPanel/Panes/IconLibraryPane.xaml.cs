@@ -149,7 +149,7 @@ public partial class IconLibraryPane : SettingsPane
         return tile;
     }
 
-    /// With an icon selected on the Icons & lock pane, the animation is set on it. Else a menu at the tile says where it goes.
+    /// With an icon selected on the Icons pane, the animation is set on it. Else a menu at the tile says where it goes.
     private void OnTileClick(SpriteEntry entry, Button tile)
     {
         var badges = Store.Badges;

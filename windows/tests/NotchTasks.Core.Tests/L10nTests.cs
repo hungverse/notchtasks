@@ -442,4 +442,36 @@ public sealed class L10nTests
             Directory.Delete(folder, recursive: true);
         }
     }
+
+    // The Icons pane's title and its sidebar label (PaneIds.TitleKey). The Mac has no badges-only title (its pane is "Icons & lock"
+    // with the lock screen), so the key is "Icons": it needs a text in every language, in the Mac table or in windows.json.
+    [Fact]
+    public void IconsPaneTitle_IsTranslatedInEveryLanguage()
+    {
+        var folder = Path.Combine(Path.GetTempPath(), "nt-l10n-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(folder);
+        try
+        {
+            foreach (var file in Directory.GetFiles(MacSources(), "l10n-*.json"))
+            {
+                File.Copy(file, Path.Combine(folder, Path.GetFileName(file)));
+            }
+            File.Copy(Path.Combine(RepoRoot(), "electron", "l10n", "windows.json"), Path.Combine(folder, "windows.json"));
+
+            var overlayFile = Path.Combine(RepoRoot(), "electron", "l10n", "windows.json");
+            foreach (var (code, _) in L10n.Languages.Where(language => language.Code != "en"))
+            {
+                var mac = ReadStrings(Path.Combine(MacSources(), $"l10n-{code}.json"));
+                var windows = ReadOverlay(overlayFile, code);
+                Assert.True(mac.ContainsKey("Icons") || windows.ContainsKey("Icons"), $"No text for Icons in {code}");
+
+                L10n.Init(folder, code);
+                Assert.NotEqual("Icons", L10n.L("Icons"));
+            }
+        }
+        finally
+        {
+            Directory.Delete(folder, recursive: true);
+        }
+    }
 }
