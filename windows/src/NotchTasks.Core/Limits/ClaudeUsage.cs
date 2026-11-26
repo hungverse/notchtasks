@@ -10,7 +10,8 @@ namespace NotchTasks.Core.Limits;
 public static partial class ClaudeUsage
 {
     private const string BundleId = "com.anthropic.claudefordesktop";
-    private const string StatusFile = "notchtasks-status.json";
+    /// The statusline snapshot's file name in the Claude config folder (written by ClaudeStatusline.Save).
+    public const string StatusFile = "notchtasks-status.json";
     private static readonly string[] Months = { "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC" };
 
     [GeneratedRegex(@"(\d+(?:\.\d+)?)% used")]
