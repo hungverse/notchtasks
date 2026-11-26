@@ -222,7 +222,8 @@ public partial class App : System.Windows.Application
         base.OnExit(e);
     }
 
-    /// Moves agents' hooks from the old Electron exe to NotchTasksHook.exe. One broken agent config does not stop the others.
+    /// Moves agents' hooks from the old Electron exe to NotchTasksHook.exe, and our Claude status line to this exe when the
+    /// old one is gone. One broken agent config does not stop the others.
     private static void MigrateHooks()
     {
         var hookExe = Path.Combine(AppContext.BaseDirectory, "NotchTasksHook.exe");
@@ -240,6 +241,14 @@ public partial class App : System.Windows.Application
             {
                 ErrorLog.Write(new InvalidOperationException($"NotchTasks: hook migration failed for {kind.Id()}", e));
             }
+        }
+        try
+        {
+            StatuslineInstaller.Repoint(hookExe, home);
+        }
+        catch (Exception e)
+        {
+            ErrorLog.Write(new InvalidOperationException("NotchTasks: statusline migration failed", e));
         }
     }
 
