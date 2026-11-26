@@ -36,8 +36,8 @@ public sealed class BadgeGlyphTests
         {
             var glyph = Assert.IsType<Grid>(BadgeGlyph.Create(Badge("no.such.symbol"), 18, Colors.Gray));
 
-            var text = Assert.IsType<TextBlock>(glyph.Children[1]);
-            Assert.Equal(new Rune(Convert.ToInt32(BadgeGlyph.StarCode, 16)).ToString(), text.Text);
+            var star = Assert.IsType<FluentGlyph>(glyph.Children[1]);
+            Assert.Equal(new Rune(Convert.ToInt32(BadgeGlyph.StarCode, 16)).ToString(), star.Code);
         });
     }
 
@@ -107,8 +107,8 @@ public sealed class BadgeGlyphTests
 
             var fill = Assert.IsType<Border>(glyph.Children[0]);
             Assert.IsType<SolidColorBrush>(fill.Background);
-            var text = Assert.IsType<TextBlock>(glyph.Children[1]);
-            Assert.Equal(new Rune(Convert.ToInt32(BadgeGlyph.StarCode, 16)).ToString(), text.Text);
+            var star = Assert.IsType<FluentGlyph>(glyph.Children[1]);
+            Assert.Equal(new Rune(Convert.ToInt32(BadgeGlyph.StarCode, 16)).ToString(), star.Code);
         });
     }
 
@@ -126,8 +126,108 @@ public sealed class BadgeGlyphTests
             Assert.Equal(2, sprite.FrameCount);
             Assert.Equal(18, sprite.Width, precision: 6);
 
+            Assert.Null(plain.Clip);  // a plain animation is not cut to any shape
+
             var onFill = Assert.IsType<Grid>(BadgeGlyph.Create(new JsonObject { ["image"] = gif }, 18, Colors.Gray));
             Assert.Equal(18 * 0.78, Assert.IsType<SpriteView>(onFill.Children[1]).Width, precision: 6);
+            Assert.NotNull(onFill.Clip);  // a filled animation keeps its shape
+        });
+    }
+
+    [Fact]
+    public void PlainSymbol_HasNoBackground_AndWhiteInk()
+    {
+        Sta.Run(() =>
+        {
+            var badge = new JsonObject { ["symbol"] = "hammer.fill", ["color"] = "#30D158", ["plain"] = true };
+            var glyph = Assert.IsType<Grid>(BadgeGlyph.Create(badge, 18, Colors.Gray));
+
+            var fill = Assert.IsType<Border>(glyph.Children[0]);
+            Assert.Same(Brushes.Transparent, fill.Background);
+            Assert.Null(glyph.Clip);
+            var ink = Assert.IsType<Path>(glyph.Children[1]);
+            Assert.Equal(Colors.White, Assert.IsType<SolidColorBrush>(ink.Stroke).Color);
+        });
+    }
+
+    [Fact]
+    public void PlainSymbol_WithAFontGlyph_DrawsWhite()
+    {
+        Sta.Run(() =>
+        {
+            var badge = new JsonObject { ["symbol"] = "no.such.symbol", ["color"] = "#30D158", ["plain"] = true };
+            var glyph = Assert.IsType<Grid>(BadgeGlyph.Create(badge, 18, Colors.Gray));
+
+            Assert.Same(Brushes.Transparent, Assert.IsType<Border>(glyph.Children[0]).Background);
+            var star = Assert.IsType<FluentGlyph>(glyph.Children[1]);
+            Assert.Equal(Colors.White, Assert.IsType<SolidColorBrush>(star.Foreground).Color);
+        });
+    }
+
+    [Fact]
+    public void FilledSymbol_HasTheTintBackground_AndWhiteInk()
+    {
+        Sta.Run(() =>
+        {
+            var badge = new JsonObject { ["symbol"] = "no.such.symbol", ["color"] = "#30D158" };
+            var glyph = Assert.IsType<Grid>(BadgeGlyph.Create(badge, 18, Colors.Gray));
+
+            var fill = Assert.IsType<SolidColorBrush>(Assert.IsType<Border>(glyph.Children[0]).Background);
+            Assert.Equal(Color.FromRgb(0x30, 0xD1, 0x58), fill.Color);
+            var star = Assert.IsType<FluentGlyph>(glyph.Children[1]);
+            Assert.Equal(Colors.White, Assert.IsType<SolidColorBrush>(star.Foreground).Color);
+        });
+    }
+
+    [Fact]
+    public void ExplicitInk_WinsOverTheWhiteDefault()
+    {
+        Sta.Run(() =>
+        {
+            var badge = new JsonObject { ["symbol"] = "no.such.symbol", ["color"] = "#30D158", ["plain"] = true, ["fg"] = "#FF0000" };
+            var glyph = Assert.IsType<Grid>(BadgeGlyph.Create(badge, 18, Colors.Gray));
+
+            var star = Assert.IsType<FluentGlyph>(glyph.Children[1]);
+            Assert.Equal(Color.FromRgb(0xFF, 0, 0), Assert.IsType<SolidColorBrush>(star.Foreground).Color);
+        });
+    }
+
+    [Fact]
+    public async Task PlainPicture_IsDrawnWhole_OnATransparentBackground_WithNoClip()
+    {
+        using var root = new TempRoot();
+        var picture = BadgeMediaTests.WritePng(root.Folder, "plain.png", 400, 300);
+        await BadgeMedia.StillAsync(picture, 18);
+
+        Sta.Run(() =>
+        {
+            var badge = new JsonObject { ["image"] = picture, ["plain"] = true };
+            var glyph = Assert.IsType<Grid>(BadgeGlyph.Create(badge, 18, Colors.Gray));
+
+            var fill = Assert.IsType<Border>(glyph.Children[0]);
+            Assert.Same(Brushes.Transparent, fill.Background);
+            Assert.Equal(0, fill.CornerRadius.TopLeft);
+            Assert.Null(glyph.Clip);
+            var whole = Assert.IsType<System.Windows.Controls.Image>(glyph.Children[1]);
+            Assert.Equal(Stretch.Uniform, whole.Stretch);
+        });
+    }
+
+    [Fact]
+    public async Task PlainPicture_WithTheBorder_KeepsOnlyTheBorder()
+    {
+        using var root = new TempRoot();
+        var picture = BadgeMediaTests.WritePng(root.Folder, "bordered.png", 400, 300);
+        await BadgeMedia.StillAsync(picture, 18);
+
+        Sta.Run(() =>
+        {
+            var badge = new JsonObject { ["image"] = picture, ["plain"] = true, ["border"] = true };
+            var glyph = Assert.IsType<Grid>(BadgeGlyph.Create(badge, 18, Colors.Gray));
+
+            var fill = Assert.IsType<Border>(glyph.Children[0]);
+            Assert.Equal(1, fill.BorderThickness.Left);
+            Assert.Same(Brushes.Transparent, fill.Background);
         });
     }
 }

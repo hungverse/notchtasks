@@ -111,7 +111,7 @@ public sealed class ItemIconTests
             // a badge is a Grid: its fill, then its glyph
             var badge = Assert.IsType<Grid>(element);
             Assert.IsType<Border>(badge.Children[0]);
-            Assert.IsType<TextBlock>(badge.Children[1]);
+            Assert.IsType<FluentGlyph>(badge.Children[1]);  // the symbol is a centred Fluent glyph
         });
     }
 

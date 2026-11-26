@@ -145,11 +145,12 @@ public static class BadgeGlyph
     {
         var image = BadgeEdits.ImageOf(badge);
         var animated = BadgeEdits.IsAnimated(badge);
-        // a fill is turned off for an animation (it stands on the notch) and for a symbol or letters; a picture keeps its own fill
-        var plain = ReadBool(badge, "plain") && (image is null || animated);
+        // "No background" (plain) means none: no fill behind a symbol, no tint, and no shape cut for a picture or an animation.
+        // The border is a separate choice (the Border flag), so a plain badge keeps it only when it is ticked.
+        var plain = ReadBool(badge, "plain");
         var tint = ColorOf(ReadString(badge, "color")) ?? (accent == default ? FallbackFill : accent);
-        var ink = ColorOf(ReadString(badge, "fg")) ?? (plain ? tint : Colors.White);
-        var corner = ReadString(badge, "shape") == "rounded" ? size * 0.28 : size / 2;
+        var ink = ColorOf(ReadString(badge, "fg")) ?? Colors.White;
+        var corner = plain ? 0 : ReadString(badge, "shape") == "rounded" ? size * 0.28 : size / 2;
 
         var pending = new List<Task>();
         var (sheet, still) = Art(badge, image, animated, size, pending);
@@ -161,17 +162,19 @@ public static class BadgeGlyph
         grid.Width = text is not null ? double.NaN : size;
         grid.MinWidth = text is not null ? size : 0;
         grid.Height = size;
-        if (sheet is not null)
+
+        // A plain badge is drawn with no clip at all: its animation runs at full size, its picture is drawn whole (Uniform).
+        // A filled animation is clipped to the badge's shape (or its square when the fill is off).
+        if (sheet is not null && !plain)
         {
-            // an animation is clipped to the badge's shape, or to its square when it has no fill (as the Mac does)
-            var radius = plain ? 0 : corner;
-            grid.Clip = Frozen(new RectangleGeometry(new Rect(0, 0, size, size), radius, radius));
+            grid.Clip = Frozen(new RectangleGeometry(new Rect(0, 0, size, size), corner, corner));
         }
 
-        // a picture is the fill: the file scaled to cover the badge and cut to its shape, as the Mac's scaledToFill draws it
-        Brush fill = still is not null
-            ? Frozen(new ImageBrush(still) { Stretch = Stretch.UniformToFill })
-            : plain ? Brushes.Transparent : Frozen(new SolidColorBrush(tint));
+        // A picture is the fill. Filled, it covers the badge and is cut to its shape (the Mac's scaledToFill); plain, the whole
+        // file is drawn inside the square on a transparent background.
+        Brush fill = plain ? Brushes.Transparent
+            : still is not null ? Frozen(new ImageBrush(still) { Stretch = Stretch.UniformToFill })
+            : Frozen(new SolidColorBrush(tint));
         grid.Children.Add(new Border
         {
             CornerRadius = new CornerRadius(corner),
@@ -179,6 +182,19 @@ public static class BadgeGlyph
             BorderBrush = ReadBool(badge, "border") ? Frozen(new SolidColorBrush(Color.FromArgb(0x99, 0xFF, 0xFF, 0xFF))) : null,
             BorderThickness = new Thickness(ReadBool(badge, "border") ? 1 : 0),
         });
+        if (still is not null && plain)
+        {
+            // a plain picture is drawn whole in its own Image, not as the Border's brush, so the Border's shape never cuts it
+            grid.Children.Add(new System.Windows.Controls.Image
+            {
+                Source = still,
+                Stretch = Stretch.Uniform,
+                Width = size,
+                Height = size,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+            });
+        }
 
         if (sheet is not null)
         {
@@ -279,15 +295,12 @@ public static class BadgeGlyph
             };
         }
 
-        return new TextBlock
+        // the glyph is centred in its box by FluentGlyph (a TextBlock would sit it on the baseline)
+        return new FluentGlyph
         {
-            Text = GlyphText(symbol),
-            FontFamily = FluentIcons.Regular,
-            FontSize = size * (plain ? 0.75 : 0.55),
+            Code = GlyphText(symbol),
+            Size = size * (plain ? 0.75 : 0.55),
             Foreground = Frozen(new SolidColorBrush(ink)),
-            TextAlignment = TextAlignment.Center,
-            Width = size,
-            Height = size,
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
         };
