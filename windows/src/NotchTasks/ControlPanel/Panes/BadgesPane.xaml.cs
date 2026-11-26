@@ -79,7 +79,8 @@ public partial class BadgesPane : SettingsPane
             Width = 36,
             Height = 36,
             CornerRadius = new CornerRadius(8),
-            Background = Solid(Color.FromRgb(0x2C, 0x2C, 0x2E)),
+            // a plain badge (No background) has no grey box behind it: its slot shows only the accent ring when selected
+            Background = IsPlain(badge) ? Brushes.Transparent : Solid(Color.FromRgb(0x2C, 0x2C, 0x2E)),
             BorderThickness = new Thickness(selected ? 2 : 0),
             BorderBrush = Solid(accent),
             Child = glyph,
@@ -93,6 +94,9 @@ public partial class BadgesPane : SettingsPane
         button.Click += (_, _) => Toggle(id);
         return button;
     }
+
+    /// Whether a badge is No background (its plain flag is set).
+    private static bool IsPlain(JsonObject badge) => badge["plain"] is JsonValue value && value.TryGetValue(out bool plain) && plain;
 
     private Button AddSlot(bool right)
     {
