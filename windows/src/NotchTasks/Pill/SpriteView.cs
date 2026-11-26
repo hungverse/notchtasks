@@ -9,21 +9,83 @@ using NotchTasks.Core;
 
 namespace NotchTasks.Pill;
 
-/// The frames of one sprite: a horizontal strip cut into equal frames (Mac Frames.strip).
+/// The frames of one animation: a horizontal strip cut into equal frames (Mac Frames.strip), or the frames of a GIF with their own
+/// delays (Mac Frames.gif). Frames step at FrameSeconds each, or at Delays (seconds, one per frame) when those are set. The loop
+/// is the same as the Mac's Frames.image(at:): time wraps around the total.
 internal sealed class SpriteSheet
 {
-    public SpriteSheet(IReadOnlyList<ImageSource> frames, double frameSeconds, bool pixel)
+    private readonly double[]? _delaysMs;
+    private readonly double _loopMs;
+
+    public SpriteSheet(IReadOnlyList<ImageSource> frames, double frameSeconds, bool pixel, IReadOnlyList<double>? delays = null)
     {
         Frames = frames;
         FrameSeconds = frameSeconds;
         Pixel = pixel;
+        Delays = delays;
+        if (delays is not null)
+        {
+            _delaysMs = delays.Select(seconds => seconds * 1000).ToArray();
+            _loopMs = _delaysMs.Sum();
+        }
     }
 
     public IReadOnlyList<ImageSource> Frames { get; }
 
+    /// The frame time of a sheet with one speed (a strip); with Delays set, the first frame's time, for reference only.
     public double FrameSeconds { get; }
 
     public bool Pixel { get; }
+
+    /// Each frame's time in seconds (a GIF's own delays), or null when every frame takes FrameSeconds.
+    public IReadOnlyList<double>? Delays { get; }
+
+    public int Count => Frames.Count;
+
+    /// The frame that shows `elapsedMs` after the epoch (0 for a sheet with one frame or no speed).
+    public int IndexAt(double elapsedMs) => Locate(elapsedMs).Index;
+
+    /// Milliseconds from `elapsedMs` to the next frame change; double.MaxValue when the sheet does not change (one frame).
+    public double MsUntilNextFrame(double elapsedMs) => Locate(elapsedMs).UntilNextMs;
+
+    private (int Index, double UntilNextMs) Locate(double elapsedMs)
+    {
+        var count = Frames.Count;
+        if (count <= 1)
+        {
+            return (0, double.MaxValue);
+        }
+
+        if (_delaysMs is null)
+        {
+            if (!(FrameSeconds > 0))
+            {
+                return (0, double.MaxValue);
+            }
+            var period = FrameSeconds * 1000;
+            var frame = (long)Math.Floor(elapsedMs / period);
+            return ((int)(((frame % count) + count) % count), (Math.Floor(elapsedMs / period) + 1) * period - elapsedMs);
+        }
+
+        if (!(_loopMs > 0))
+        {
+            return (0, double.MaxValue);
+        }
+        var t = elapsedMs % _loopMs;
+        if (t < 0)
+        {
+            t += _loopMs;
+        }
+        for (var i = 0; i < _delaysMs.Length; i++)
+        {
+            if (t < _delaysMs[i])
+            {
+                return (i, _delaysMs[i] - t);
+            }
+            t -= _delaysMs[i];
+        }
+        return (_delaysMs.Length - 1, _delaysMs[^1]);
+    }
 }
 
 /// Loads sprites from Sprites\catalog.json and Sprites\<id>.png, once per id. Null when the sprite is unknown or missing.
@@ -153,16 +215,19 @@ internal static class SpriteCache
 /// One sprite on the pill (18 DIP square by default; the Icon Library draws bigger ones). It shows the frame that the shared
 /// clock (SpriteClock.EpochMs) puts at this moment, so every sprite that started at the same Sync motion moment is in step.
 /// It steps only while it is visible, and a step redraws the frame with InvalidateVisual, so no layout pass runs.
+/// A still sprite (reduced motion) is never put on the clock and shows its first frame.
 public sealed class SpriteView : FrameworkElement
 {
     private readonly SpriteSheet _sheet;
     private readonly double _size;
+    private readonly bool _still;
     private int _index;
 
-    internal SpriteView(SpriteSheet sheet, double size = 18)
+    internal SpriteView(SpriteSheet sheet, double size = 18, bool still = false)
     {
         _sheet = sheet;
         _size = size;
+        _still = still;
         Width = size;
         Height = size;
         if (sheet.Pixel)
@@ -172,7 +237,10 @@ public sealed class SpriteView : FrameworkElement
         Loaded += (_, _) =>
         {
             Step();
-            SpriteClock.Add(this);
+            if (!_still)
+            {
+                SpriteClock.Add(this);
+            }
         };
         Unloaded += (_, _) => SpriteClock.Remove(this);
         IsVisibleChanged += (_, _) => SpriteClock.Refresh();
@@ -180,25 +248,46 @@ public sealed class SpriteView : FrameworkElement
 
     internal double FrameSeconds => _sheet.FrameSeconds;
 
+    /// How many frames the sprite has.
+    internal int FrameCount => _sheet.Count;
+
+    /// The frame on screen now.
+    internal int CurrentIndex => _index;
+
+    /// Whether the sprite stands still on its first frame (reduced motion).
+    internal bool Still => _still;
+
+    /// Whether the shared clock is stepping this sprite: it is loaded, and it is not still.
+    internal bool Animating => SpriteClock.Has(this);
+
+    /// Milliseconds from `elapsedMs` (on the clock) to this sprite's next frame change; double.MaxValue when it does not change.
+    internal double MsUntilNextFrame(double elapsedMs) => _still ? double.MaxValue : _sheet.MsUntilNextFrame(elapsedMs);
+
     protected override void OnRender(DrawingContext drawingContext)
     {
-        drawingContext.DrawImage(_sheet.Frames[_index], new Rect(0, 0, _size, _size));
+        var frame = _sheet.Frames[_index];
+        // a frame keeps its shape inside the square, as the Mac's resizeAspect does (square sprites fill it, as before)
+        var width = frame.Width;
+        var height = frame.Height;
+        if (!(width > 0) || !(height > 0))
+        {
+            drawingContext.DrawImage(frame, new Rect(0, 0, _size, _size));
+            return;
+        }
+        var scale = Math.Min(_size / width, _size / height);
+        var drawnWidth = width * scale;
+        var drawnHeight = height * scale;
+        drawingContext.DrawImage(frame, new Rect((_size - drawnWidth) / 2, (_size - drawnHeight) / 2, drawnWidth, drawnHeight));
     }
 
     /// Moves to the frame of the current moment. Frame 0 falls on the epoch and every loop after it.
     internal void Step()
     {
-        if (!(FrameSeconds > 0))
+        if (_still)
         {
             return;
         }
-        var count = _sheet.Frames.Count;
-        if (count <= 1)
-        {
-            return;
-        }
-        var frame = (long)Math.Floor(SpriteClock.ElapsedMs() / (_sheet.FrameSeconds * 1000));
-        var index = (int)(((frame % count) + count) % count);
+        var index = _sheet.IndexAt(SpriteClock.ElapsedMs());
         if (index != _index)
         {
             _index = index;

@@ -3,6 +3,7 @@ using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using NotchTasks.Pill;
 using Xunit;
 using Path = System.Windows.Shapes.Path;
@@ -37,6 +38,110 @@ public sealed class BadgeGlyphTests
 
             var text = Assert.IsType<TextBlock>(glyph.Children[1]);
             Assert.Equal(new Rune(Convert.ToInt32(BadgeGlyph.StarCode, 16)).ToString(), text.Text);
+        });
+    }
+
+    private static JsonObject TextBadge(string text) => new() { ["text"] = text, ["color"] = "#30D158" };
+
+    private static Size Measure(FrameworkElement element)
+    {
+        element.Measure(new Size(1000, 1000));
+        return element.DesiredSize;
+    }
+
+    [Fact]
+    public void Text_ShowsTheLetters_NotTheStar()
+    {
+        Sta.Run(() =>
+        {
+            var glyph = Assert.IsType<Grid>(BadgeGlyph.Create(TextBadge("AB"), 18, Colors.Gray));
+
+            var text = Assert.IsType<TextBlock>(glyph.Children[1]);
+            Assert.Equal("AB", text.Text);
+        });
+    }
+
+    [Fact]
+    public void Text_OfTwoLetters_IsTheBadgeSize_AndMoreWidensIntoAPill()
+    {
+        Sta.Run(() =>
+        {
+            var two = Measure(BadgeGlyph.Create(TextBadge("AB"), 18, Colors.Gray));
+            var three = Measure(BadgeGlyph.Create(TextBadge("ABC"), 18, Colors.Gray));
+
+            Assert.Equal(18, two.Width, precision: 6);
+            Assert.Equal(18, three.Height, precision: 6);
+            Assert.True(three.Width > 18, "three letters widen the badge");
+        });
+    }
+
+    [Fact]
+    public void Picture_FillsTheBadge_AtTwiceTheSize_AndWinsOverText()
+    {
+        using var root = new TempRoot();
+        var picture = BadgeMediaTests.WritePng(root.Folder, "pic.png", 400, 300);
+
+        Sta.Run(() =>
+        {
+            var badge = new JsonObject { ["image"] = picture, ["text"] = "Hi" };
+            var glyph = Assert.IsType<Grid>(BadgeGlyph.Create(badge, 18, Colors.Gray));
+
+            var fill = Assert.IsType<Border>(glyph.Children[0]);
+            var brush = Assert.IsType<ImageBrush>(fill.Background);
+            Assert.Equal(36, Assert.IsAssignableFrom<BitmapSource>(brush.ImageSource).PixelWidth);
+            Assert.Single(glyph.Children);  // no letters and no star over the picture
+        });
+    }
+
+    [Fact]
+    public void Picture_MissingFile_ShowsTheSymbolInItsPlace()
+    {
+        Sta.Run(() =>
+        {
+            var badge = new JsonObject { ["image"] = @"C:\no\such\badge.png", ["symbol"] = "no.such.symbol" };
+            var glyph = Assert.IsType<Grid>(BadgeGlyph.Create(badge, 18, Colors.Gray));
+
+            var fill = Assert.IsType<Border>(glyph.Children[0]);
+            Assert.IsType<SolidColorBrush>(fill.Background);
+            var text = Assert.IsType<TextBlock>(glyph.Children[1]);
+            Assert.Equal(new Rune(Convert.ToInt32(BadgeGlyph.StarCode, 16)).ToString(), text.Text);
+        });
+    }
+
+    [Fact]
+    public void Gif_AnimatesWithItsFrames_AndFillsTheBadgeWhenNoFillIsChosen()
+    {
+        using var root = new TempRoot();
+        var gif = BadgeMediaTests.WriteGif(root.Folder, "cat.gif", Colors.Red, Colors.Blue);
+
+        Sta.Run(() =>
+        {
+            var plain = Assert.IsType<Grid>(BadgeGlyph.Create(new JsonObject { ["image"] = gif, ["plain"] = true }, 18, Colors.Gray));
+            var sprite = Assert.IsType<SpriteView>(plain.Children[1]);
+            Assert.Equal(2, sprite.FrameCount);
+            Assert.False(sprite.Still);
+            Assert.Equal(18, sprite.Width, precision: 6);
+
+            var onFill = Assert.IsType<Grid>(BadgeGlyph.Create(new JsonObject { ["image"] = gif }, 18, Colors.Gray));
+            Assert.Equal(18 * 0.78, Assert.IsType<SpriteView>(onFill.Children[1]).Width, precision: 6);
+        });
+    }
+
+    [Fact]
+    public void Gif_WithReducedMotion_ShowsTheFirstFrameAndDoesNotRun()
+    {
+        using var root = new TempRoot();
+        var gif = BadgeMediaTests.WriteGif(root.Folder, "cat.gif", Colors.Red, Colors.Blue);
+
+        Sta.Run(() =>
+        {
+            var glyph = Assert.IsType<Grid>(BadgeGlyph.Create(new JsonObject { ["image"] = gif, ["plain"] = true }, 18, Colors.Gray,
+                animate: false));
+
+            var sprite = Assert.IsType<SpriteView>(glyph.Children[1]);
+            Assert.True(sprite.Still);
+            Assert.False(sprite.Animating);
+            Assert.Equal(0, sprite.CurrentIndex);
         });
     }
 }

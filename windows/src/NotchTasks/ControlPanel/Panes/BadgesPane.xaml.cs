@@ -71,7 +71,7 @@ public partial class BadgesPane : SettingsPane
     {
         var id = BadgeEdits.IdOf(badge) ?? string.Empty;
         var selected = IconSelection.BadgeId == id;
-        var glyph = BadgeGlyph.Create(badge, 22, accent);
+        var glyph = BadgeGlyph.Create(badge, 22, accent, Animate);
         glyph.HorizontalAlignment = HorizontalAlignment.Center;
         glyph.VerticalAlignment = VerticalAlignment.Center;
         var face = new Border
@@ -143,7 +143,7 @@ public partial class BadgesPane : SettingsPane
         var side = all.Where(b => BadgeEdits.RightOf(b) == right).ToList();
         var index = side.FindIndex(b => BadgeEdits.IdOf(b) == id);
 
-        var preview = BadgeGlyph.Create(badge, 40, accent);
+        var preview = BadgeGlyph.Create(badge, 40, accent, Animate);
         preview.HorizontalAlignment = HorizontalAlignment.Center;
         preview.VerticalAlignment = VerticalAlignment.Center;
         EditorPreview.Child = preview;
@@ -215,18 +215,33 @@ public partial class BadgesPane : SettingsPane
             return;
         }
         IconSelection.Clear();
+        var picture = ImageOf(id);
         Write("badges", BadgeEdits.Remove(Store.Badges, id));
+        BadgeImages.Discard(picture, Store);  // a picture copy no icon uses any more goes
     }
 
-    /// Changes the selected icon with `change`, and saves the badges.
+    /// Changes the selected icon with `change`, and saves the badges. A picture the icon no longer shows is deleted, unless another
+    /// icon or a tool still uses it.
     private void Edit(Action<JsonObject> change)
     {
         if (Applying || IconSelection.BadgeId is not { } id)
         {
             return;
         }
+        var before = ImageOf(id);
         Write("badges", BadgeEdits.Update(Store.Badges, id, change));
+        if (ImageOf(id) != before)
+        {
+            BadgeImages.Discard(before, Store);
+        }
     }
+
+    /// The picture of the icon with this id, or null when it has none.
+    private string? ImageOf(string id) =>
+        Store.Badges.OfType<JsonObject>().FirstOrDefault(b => BadgeEdits.IdOf(b) == id) is { } badge ? BadgeEdits.ImageOf(badge) : null;
+
+    /// Whether badges animate: Windows animations are on and the motion is not "Minimal" (reduced). A GIF or a sprite stands still otherwise.
+    private bool Animate => SystemParameters.ClientAreaAnimation && Store.Motion != "reduced";
 
     private static SolidColorBrush Solid(Color color)
     {

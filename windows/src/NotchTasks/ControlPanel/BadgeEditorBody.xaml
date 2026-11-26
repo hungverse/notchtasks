@@ -3,13 +3,45 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:l="clr-namespace:NotchTasks.ControlPanel"
              xmlns:local="clr-namespace:NotchTasks.ControlPanel">
-  <!-- The editor of one badge: its symbol, and its style (shape, border, fill, symbol colour). It holds no preview and no
-       buttons of its own; the host (the Icons pane's editor, or the tool dialog) shows those around it. -->
+  <!-- The editor of one badge: what it shows (a symbol, letters, a picture or a GIF), and its style (shape, border, fill, ink).
+       It holds no preview and no buttons of its own; the host (the Icons pane's editor, or the tool dialog) shows those around it. -->
   <StackPanel>
-    <TextBlock Style="{StaticResource CardNote}" Margin="4,16,0,6" Text="{l:L Symbol}" />
-    <WrapPanel x:Name="SymbolGrid" />
-    <Button x:Name="LibraryButton" HorizontalAlignment="Left" Margin="0,10,0,0" Visibility="Collapsed"
-            Content="{l:L Choose an animated icon…}" />
+    <DockPanel Style="{StaticResource SettingRow}" Margin="0,8,0,0">
+      <ComboBox x:Name="KindBox" DockPanel.Dock="Right" MinWidth="220" DisplayMemberPath="Title" />
+      <TextBlock Style="{StaticResource RowLabel}" Text="{l:L Content}" />
+    </DockPanel>
+
+    <!-- A symbol: one of the tiles -->
+    <StackPanel x:Name="SymbolPanel">
+      <TextBlock Style="{StaticResource CardNote}" Margin="4,12,0,6" Text="{l:L Symbol}" />
+      <WrapPanel x:Name="SymbolGrid" />
+    </StackPanel>
+
+    <!-- Letters or an emoji: up to eight characters, with quick picks -->
+    <StackPanel x:Name="TextPanel" Visibility="Collapsed">
+      <TextBlock Style="{StaticResource CardNote}" Margin="4,12,0,6" Text="{l:L Type up to 8 characters}" />
+      <TextBox x:Name="LetterBox" FontSize="18" MaxWidth="320" HorizontalAlignment="Left" />
+      <TextBlock Style="{StaticResource CardNote}" Margin="4,12,0,6" Text="{l:L Quick picks}" />
+      <WrapPanel x:Name="EmojiGrid" />
+    </StackPanel>
+
+    <!-- A picture: a copy of the file the user picks -->
+    <StackPanel x:Name="PicturePanel" Visibility="Collapsed">
+      <Button x:Name="PictureButton" HorizontalAlignment="Left" Margin="0,12,0,0" Content="{l:L Choose picture…}" />
+      <TextBlock Style="{StaticResource CardNote}" Margin="4,8,0,0" Text="{l:L PNG\, JPG or GIF. Square pictures look best.}" />
+    </StackPanel>
+
+    <!-- An animated icon: a GIF the user picks, or one from the Icon Library -->
+    <StackPanel x:Name="AnimationPanel" Visibility="Collapsed">
+      <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+        <Button x:Name="GifButton" Content="{l:L Choose a GIF…}" />
+        <Button x:Name="LibraryButton" Margin="8,0,0,0" Visibility="Collapsed" Content="{l:L Choose an animated icon…}" />
+      </StackPanel>
+      <TextBlock Style="{StaticResource CardNote}" Margin="4,8,0,0" Text="{l:L Animated characters\, GIFs}" />
+    </StackPanel>
+
+    <TextBlock x:Name="ErrorText" Style="{StaticResource CardNote}" Margin="4,10,0,0" TextWrapping="Wrap"
+               Foreground="{DynamicResource SystemFillColorCriticalBrush}" Visibility="Collapsed" />
 
     <TextBlock Style="{StaticResource CardNote}" Margin="4,16,0,0" Text="{l:L Style}" />
     <DockPanel Style="{StaticResource SettingRow}" Margin="0,6,0,0">
@@ -28,9 +60,10 @@
       <local:ColorField x:Name="FillColor" DockPanel.Dock="Right" />
       <TextBlock Style="{StaticResource RowLabel}" Text="{l:L Background color}" />
     </DockPanel>
-    <DockPanel Style="{StaticResource SettingRow}" Margin="0">
+    <!-- the ink of a symbol or of letters; a picture or a GIF has none -->
+    <DockPanel x:Name="InkRow" Style="{StaticResource SettingRow}" Margin="0">
       <local:ColorField x:Name="SymbolColor" DockPanel.Dock="Right" />
-      <TextBlock Style="{StaticResource RowLabel}" Text="{l:L Symbol color}" />
+      <TextBlock x:Name="InkLabel" Style="{StaticResource RowLabel}" Text="{l:L Symbol color}" />
     </DockPanel>
   </StackPanel>
 </UserControl>

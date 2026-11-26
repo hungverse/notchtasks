@@ -43,6 +43,7 @@ public static class BadgeGlyph
     public static int FillWings(StackPanel left, StackPanel right, JsonArray badges, Color accent, double size = 18,
         string motion = "smooth", bool animationsOn = true)
     {
+        var animate = animationsOn && motion != "reduced";  // reduced motion: a GIF or sprite stands on its first frame
         var heldLeft = Held(left);
         var heldRight = Held(right);
         var known = new HashSet<string>(heldLeft.Keys.Concat(heldRight.Keys), StringComparer.Ordinal);
@@ -62,13 +63,13 @@ public static class BadgeGlyph
             var side = sides[ReadBool(badge, "right") ? 1 : 0];
             var key = ReadString(badge, "id") ?? "#" + count.ToString(CultureInfo.InvariantCulture);
             count++;
-            var signature = badge.ToJsonString() + "|" + size.ToString(CultureInfo.InvariantCulture) + "|" + accent;
+            var signature = badge.ToJsonString() + "|" + size.ToString(CultureInfo.InvariantCulture) + "|" + accent + "|" + (animate ? "a" : "s");
             if (side.Held.TryGetValue(key, out var held) && Equals(held.GetValue(SignatureProperty), signature))
             {
                 side.Items.Add(held);  // unchanged: kept as it is
                 continue;
             }
-            var glyph = Create(badge, size, accent);
+            var glyph = Create(badge, size, accent, animate);
             glyph.Margin = new Thickness(3, 0, 3, 0);
             glyph.VerticalAlignment = VerticalAlignment.Center;
             glyph.Tag = BadgeTag;
@@ -129,40 +130,119 @@ public static class BadgeGlyph
         return held;
     }
 
-    /// The badge at `size` DIP square, without margins (the caller places it).
-    public static FrameworkElement Create(JsonObject badge, double size, Color accent)
+    /// The badge at `size` DIP square, without margins (the caller places it). What it shows follows the Mac's NotchBadge: an
+    /// animation (a sprite, or a GIF or spritesheet) first, then a picture, then letters, then the symbol. A picture fills the badge
+    /// and wins over letters. An animation runs unless animate is false (reduced motion), when it stands on its first frame.
+    /// Letters widen the badge into a pill, so its width follows them; the other kinds are size by size.
+    public static FrameworkElement Create(JsonObject badge, double size, Color accent, bool animate = true)
     {
-        var plain = ReadBool(badge, "plain");
+        var image = BadgeEdits.ImageOf(badge);
+        var animated = BadgeEdits.IsAnimated(badge);
+        // a fill is turned off for an animation (it stands on the notch) and for a symbol or letters; a picture keeps its own fill
+        var plain = ReadBool(badge, "plain") && (image is null || animated);
         var tint = ColorOf(ReadString(badge, "color")) ?? (accent == default ? FallbackFill : accent);
         var ink = ColorOf(ReadString(badge, "fg")) ?? (plain ? tint : Colors.White);
         var corner = ReadString(badge, "shape") == "rounded" ? size * 0.28 : size / 2;
 
-        var grid = new Grid { Width = size, Height = size };
+        var (sheet, still) = Art(badge, image, animated, size);
+        var text = image is null ? TextOf(ReadString(badge, "text")) : null;
+
+        var grid = new Grid();
+        if (sheet is not null)
+        {
+            // an animation is clipped to the badge's shape, or to its square when it has no fill (as the Mac does)
+            grid.Width = size;
+            grid.Height = size;
+            var radius = plain ? 0 : corner;
+            grid.Clip = Frozen(new RectangleGeometry(new Rect(0, 0, size, size), radius, radius));
+        }
+        else if (still is not null)
+        {
+            grid.Width = size;
+            grid.Height = size;
+        }
+        else if (text is not null)
+        {
+            // letters keep the badge's height and never narrow below it: one or two letters sit in a round badge, more widen it
+            grid.MinWidth = size;
+            grid.Height = size;
+        }
+        else
+        {
+            grid.Width = size;
+            grid.Height = size;
+        }
+
+        // a picture is the fill: the file scaled to cover the badge and cut to its shape, as the Mac's scaledToFill draws it
+        Brush fill = still is not null
+            ? Frozen(new ImageBrush(still) { Stretch = Stretch.UniformToFill })
+            : plain ? Brushes.Transparent : Frozen(new SolidColorBrush(tint));
         grid.Children.Add(new Border
         {
             CornerRadius = new CornerRadius(corner),
-            Background = plain ? Brushes.Transparent : Frozen(new SolidColorBrush(tint)),
+            Background = fill,
             BorderBrush = ReadBool(badge, "border") ? Frozen(new SolidColorBrush(Color.FromArgb(0x99, 0xFF, 0xFF, 0xFF))) : null,
             BorderThickness = new Thickness(ReadBool(badge, "border") ? 1 : 0),
         });
-        grid.Children.Add(Content(badge, size, plain, ink));
-        return grid;
-    }
 
-    /// The icon inside the fill: a sprite, or a glyph. On a fill it sits a little smaller, as the Mac draws it.
-    private static UIElement Content(JsonObject badge, double size, bool plain, Color ink)
-    {
-        var sprite = ReadString(badge, "sprite");
-        var sheet = sprite is null ? null : SpriteCache.Get(sprite);
         if (sheet is not null)
         {
-            return new SpriteView(sheet, plain ? size : size * 0.78)
+            // on a fill the animation sits a little smaller, as the Mac draws it
+            grid.Children.Add(new SpriteView(sheet, plain ? size : size * 0.78, still: !animate)
             {
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,
-            };
+            });
         }
+        else if (still is null)
+        {
+            grid.Children.Add(text is not null ? Letters(text, size, ink) : Content(badge, size, plain, ink));
+        }
+        return grid;
+    }
 
+    /// The animation or picture a badge shows: a built-in sprite; else its GIF or spritesheet when it animates; else its picture
+    /// still. Each is null when it is not there or cannot be read, and the badge then falls through to letters or the symbol.
+    private static (SpriteSheet? Sheet, ImageSource? Still) Art(JsonObject badge, string? image, bool animated, double size)
+    {
+        var sprite = ReadString(badge, "sprite");
+        if (sprite is not null && SpriteCache.Get(sprite) is { } builtIn)
+        {
+            return (builtIn, null);
+        }
+        if (image is null)
+        {
+            return (null, null);
+        }
+        if (animated && BadgeMedia.Animation(image, ReadInt(badge, "frames"), ReadDouble(badge, "fps"), size) is { } frames)
+        {
+            return (frames, null);
+        }
+        return (null, BadgeMedia.Still(image, size));
+    }
+
+    /// Letters in the badge's ink. One or two letters sit centred; more get side room, so the badge widens into a pill.
+    private static FrameworkElement Letters(string text, double size, Color ink)
+    {
+        var wide = new StringInfo(text).LengthInTextElements > 2;
+        var side = wide ? size * 0.25 : 0;
+        return new TextBlock
+        {
+            Text = text,
+            FontWeight = FontWeights.Bold,
+            FontSize = size * 0.5,
+            Foreground = Frozen(new SolidColorBrush(ink)),
+            TextAlignment = TextAlignment.Center,
+            TextWrapping = TextWrapping.NoWrap,
+            Margin = new Thickness(side, 0, side, 0),
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+    }
+
+    /// The icon inside the fill: a glyph, or a drawn mark. On a fill it sits a little smaller, as the Mac draws it.
+    private static UIElement Content(JsonObject badge, double size, bool plain, Color ink)
+    {
         // A Mac symbol name that has a drawn mark (the Build & CI tools' defaults: hammer.fill, server.rack, ...) draws that mark,
         // as the Build & CI rows draw it, rather than the star.
         var symbol = ReadString(badge, "symbol");
@@ -207,6 +287,15 @@ public static class BadgeGlyph
         }
         return new Rune(Convert.ToInt32(StarCode, 16)).ToString();
     }
+
+    private static string? TextOf(string? text) => string.IsNullOrEmpty(text) ? null : text;
+
+    /// A number field as an int (the Mac writes frames as a whole number; Windows may store it as a double).
+    private static int? ReadInt(JsonObject o, string key) =>
+        o[key] is JsonValue v && v.TryGetValue(out double d) ? (int)Math.Round(d) : null;
+
+    private static double? ReadDouble(JsonObject o, string key) =>
+        o[key] is JsonValue v && v.TryGetValue(out double d) ? d : null;
 
     private static Color? ColorOf(string? hex) =>
         HexColor.TryNormalize(hex, out var normalized) ? HexColor.ToColor(normalized) : null;

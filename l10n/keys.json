@@ -1125,5 +1125,16 @@
 "Couldn't use this sound",
 "Audio files",
 "NotchTasks sounds",
-"Reports go through sync, which is off. Turn sync on in Pairing to send one."
+"Reports go through sync, which is off. Turn sync on in Pairing to send one.",
+"Content",
+"Picture",
+"Choose a GIF…",
+"Choose an animated icon…",
+"PNG, JPG or GIF. Square pictures look best.",
+"Choose a GIF.",
+"That picture is over 8 MB.",
+"That file is not a picture.",
+"That file can't be read.",
+"Picture files",
+"GIF files"
 ]

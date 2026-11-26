@@ -72,6 +72,9 @@ internal static class SpriteClock
         };
     }
 
+    /// Whether the clock steps this sprite (it was added and not removed since).
+    internal static bool Has(SpriteView sprite) => Sprites.Contains(sprite);
+
     public static void Add(SpriteView sprite)
     {
         if (!Sprites.Contains(sprite))
@@ -108,13 +111,7 @@ internal static class SpriteClock
         var wait = double.MaxValue;
         foreach (var sprite in visible)
         {
-            var period = sprite.FrameSeconds * 1000;
-            if (!(period > 0))
-            {
-                continue;
-            }
-            var untilNext = (Math.Floor(elapsed / period) + 1) * period - elapsed;
-            wait = Math.Min(wait, untilNext);
+            wait = Math.Min(wait, sprite.MsUntilNextFrame(elapsed));  // a GIF's frames can differ in time, so each sprite says its own
         }
         if (wait == double.MaxValue)
         {
