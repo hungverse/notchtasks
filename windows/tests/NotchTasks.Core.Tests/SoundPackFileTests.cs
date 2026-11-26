@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using NotchTasks.Core.Sounds;
 using Xunit;
 
@@ -107,9 +108,81 @@ public sealed class SoundPackFileTests : IDisposable
         var stored = pack.Store(Wav, "..\\..\\evil.wav");
 
         Assert.NotNull(stored);
-        Assert.StartsWith(Path.Combine(_folder, "Sounds"), stored);
+        Assert.Equal(Path.Combine(_folder, "Sounds", "evil.wav"), stored);
         Assert.Equal(Path.Combine(_folder, "Sounds", "hidden.wav"), pack.Store(Wav, ".hidden.wav"));
         Assert.Null(pack.Store(Wav, "song.aiff"));
+    }
+
+    [Theory]
+    [InlineData("CON.wav")]
+    [InlineData("nul.mp3")]
+    [InlineData("COM1.wav")]
+    [InlineData("lpt9.m4a")]
+    [InlineData("aux.wma")]
+    public void Store_RefusesWindowsDeviceNames(string name)
+    {
+        Assert.Null(Pack().Store(Wav, name));
+    }
+
+    [Fact]
+    public void Store_AllowsNamesThatOnlyLookLikeDevices()
+    {
+        Assert.Equal(Path.Combine(_folder, "Sounds", "COM10.wav"), Pack().Store(Wav, "COM10.wav"));
+    }
+
+    [Fact]
+    public void Import_RefusesAFileOverTheLimit_AndKeepsTheRest()
+    {
+        var big = Convert.ToBase64String(new byte[SoundPackFile.MaxFile + 1]);
+        var json = new JsonObject
+        {
+            ["format"] = SoundPackFile.Format,
+            ["version"] = 1,
+            ["sounds"] = new JsonObject { ["open"] = "file:big.wav", ["close"] = "file:small.wav" },
+            ["files"] = new JsonObject { ["big.wav"] = big, ["small.wav"] = Convert.ToBase64String(Wav) },
+        }.ToJsonString();
+
+        var result = Pack().Import(json, System14);
+
+        Assert.Null(result.Error);
+        Assert.False(result.Map.ContainsKey("open"));
+        Assert.True(File.Exists(result.Map["close"]));
+    }
+
+    [Fact]
+    public void Import_SkipsMalformedBase64_AndKeepsTheRest()
+    {
+        var json = new JsonObject
+        {
+            ["format"] = SoundPackFile.Format,
+            ["version"] = 1,
+            ["sounds"] = new JsonObject { ["open"] = "file:bad.wav", ["close"] = "file:good.wav" },
+            ["files"] = new JsonObject { ["bad.wav"] = "!!! not base64 !!!", ["good.wav"] = Convert.ToBase64String(Wav) },
+        }.ToJsonString();
+
+        var result = Pack().Import(json, System14);
+
+        Assert.Null(result.Error);
+        Assert.False(result.Map.ContainsKey("open"));
+        Assert.Equal(Wav, File.ReadAllBytes(result.Map["close"]));
+    }
+
+    [Fact]
+    public void Import_TraversalName_StaysInsideTheFolder()
+    {
+        var json = new JsonObject
+        {
+            ["format"] = SoundPackFile.Format,
+            ["version"] = 1,
+            ["sounds"] = new JsonObject { ["open"] = "file:../../evil.wav" },
+            ["files"] = new JsonObject { ["../../evil.wav"] = Convert.ToBase64String(Wav) },
+        }.ToJsonString();
+
+        var result = Pack().Import(json, System14);
+
+        Assert.Null(result.Error);
+        Assert.Equal(Path.Combine(_folder, "Sounds", "evil.wav"), result.Map["open"]);
+        Assert.Equal(Path.Combine(_folder, "Sounds"), Path.GetDirectoryName(result.Map["open"]));
     }
 
     [Fact]

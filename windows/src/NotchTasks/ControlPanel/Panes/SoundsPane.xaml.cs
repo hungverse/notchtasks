@@ -30,8 +30,9 @@ public partial class SoundsPane : SettingsPane
         _packs = new ObservableCollection<Choice>(ChoiceItems.SoundPacks);
         PackBox.ItemsSource = _packs;
         PackBox.SelectionChanged += (_, _) => OnPackSelected();
-        ExportButton.Click += (_, _) => ExportPack();
-        ImportButton.Click += (_, _) => ImportPack();
+        ExportButton.Click += async (_, _) => await ExportPack();
+        ImportButton.Click += async (_, _) => await ImportPack();
+        Message = ShowDialogMessage;
 
         foreach (var choice in ChoiceItems.SoundEvents)
         {
@@ -50,7 +51,7 @@ public partial class SoundsPane : SettingsPane
     }
 
     /// Where a message box shows its text. Tests replace it, so no dialog opens.
-    internal Action<string, string> Message { get; set; } = ShowMessage;
+    internal Action<string, string> Message { get; set; } = (_, _) => { };
 
     /// Gives the controls the stored values now (the pane does this when it is shown and when the store changes).
     internal void ShowStoredValues() => ApplyStored();
@@ -168,7 +169,7 @@ public partial class SoundsPane : SettingsPane
     /// that cannot be kept (too large, or not an audio type), leaves the picker at the event's sound.
     private void ChooseFile(EventRow row)
     {
-        var dialog = new OpenFileDialog { Filter = "Audio files|*.wav;*.mp3;*.m4a;*.aac;*.wma" };
+        var dialog = new OpenFileDialog { Filter = $"{L10n.L("Audio files")}|*.wav;*.mp3;*.m4a;*.aac;*.wma" };
         if (dialog.ShowDialog(Window.GetWindow(this)) != true)
         {
             ApplyStored();
@@ -195,89 +196,116 @@ public partial class SoundsPane : SettingsPane
     }
 
     /// Writes the pack to a file the user picks (Preferences.swift exportSounds).
-    private void ExportPack()
+    private async Task ExportPack()
     {
         var dialog = new SaveFileDialog
         {
             FileName = L10n.L("NotchTasks Sounds.notchsounds"),
-            Filter = "NotchTasks sounds|*.notchsounds",
+            Filter = $"{L10n.L("NotchTasks sounds")}|*.notchsounds",
         };
         if (dialog.ShowDialog(Window.GetWindow(this)) == true)
         {
-            ExportPackTo(dialog.FileName);
+            await ExportPackTo(dialog.FileName);
         }
     }
 
-    /// Writes the pack of the stored sounds and volume to `path`. A failed write is shown in a message box.
-    internal void ExportPackTo(string path)
+    /// Writes the pack of the stored sounds and volume to `path`. The file work runs off the UI thread; a failed write is shown
+    /// in a message box with the exception's message.
+    internal async Task ExportPackTo(string path)
+    {
+        var files = PackFiles;
+        var map = Store.SoundMap;  // read here, on the UI thread: the store is not read from the pool
+        var volume = Store.Volume;
+        var problem = await Task.Run(() => WritePack(files, map, volume, path));
+        if (problem is not null)
+        {
+            Message(L10n.L("Couldn't export the sound pack"), problem);
+        }
+    }
+
+    /// The pack's text written to `path`; returns the problem (the exception's message) when the write fails, else null.
+    internal static string? WritePack(SoundPackFile files, IReadOnlyDictionary<string, string> map, double volume, string path)
     {
         try
         {
-            File.WriteAllText(path, PackFiles.Export(Store.SoundMap, Store.Volume), new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+            File.WriteAllText(path, files.Export(map, volume), new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+            return null;
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
-            Message(L10n.L("Couldn't export the sound pack"), e.Message);
+            return e.Message;
         }
     }
 
     /// Picks a pack file and merges its sounds into the map (Preferences.swift importSounds).
-    private void ImportPack()
+    private async Task ImportPack()
     {
         var dialog = new OpenFileDialog
         {
-            Filter = "NotchTasks sounds|*.notchsounds;*.json",
+            Filter = $"{L10n.L("NotchTasks sounds")}|*.notchsounds;*.json",
             Title = L10n.L("Choose a sound pack file (.notchsounds)"),
         };
         if (dialog.ShowDialog(Window.GetWindow(this)) == true)
         {
-            ImportPackFrom(dialog.FileName);
+            await ImportPackFrom(dialog.FileName);
         }
     }
 
-    /// Uses the sounds and volume of a pack file: the sounds are merged into the map, the volume is set. A file that is not
-    /// a pack, or has nothing usable, is shown in a message box and changes nothing.
-    internal void ImportPackFrom(string path)
+    /// Reads a pack file off the UI thread, then applies it on the UI thread (ApplyImport).
+    internal async Task ImportPackFrom(string path)
     {
-        string? error = null;
+        var files = PackFiles;
+        var outcome = await Task.Run(() => ReadPack(files, path));
+        ApplyImport(outcome);
+    }
+
+    /// The outcome of reading a pack: the sounds and volume when it can be used, else the problem to show.
+    internal sealed record PackRead(SoundPackImport? Pack, string? Problem);
+
+    /// Reads and parses a pack file. Runs on a pool thread: it does not touch the store or the controls. A disk or IO error
+    /// is a problem of its own, with the exception's message.
+    internal static PackRead ReadPack(SoundPackFile files, string path)
+    {
         try
         {
             if (new FileInfo(path).Length >= SoundPackFile.MaxPackFile)
             {
-                error = L10n.L("This file isn't a NotchTasks sound pack.");
+                return new PackRead(null, L10n.L("This file isn't a NotchTasks sound pack."));
             }
-            else
-            {
-                var result = PackFiles.Import(File.ReadAllText(path), SoundFiles.Names);
-                error = result.Error;
-                if (error is null)
-                {
-                    var map = Store.SoundMap.ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal);
-                    foreach (var (eventId, sound) in result.Map)
-                    {
-                        map[eventId] = sound;
-                    }
-                    Write("soundMap", MapJson(map));
-                    if (result.Volume is { } volume)
-                    {
-                        Write("volume", JsonValue.Create(Math.Round(volume, 2)));
-                    }
-                }
-            }
+            var result = files.Import(File.ReadAllText(path), SoundFiles.Names);
+            return result.Error is null ? new PackRead(result, null) : new PackRead(null, result.Error);
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
-            error = L10n.L("This file isn't a NotchTasks sound pack.");
-        }
-
-        if (error is not null)
-        {
-            Message(L10n.L("Couldn't import the sound pack"), error);
+            return new PackRead(null, e.Message);
         }
     }
 
-    private static void ShowMessage(string caption, string text) =>
-        MessageBox.Show(text, caption, MessageBoxButton.OK, MessageBoxImage.Warning);
+    /// Applies a read pack on the UI thread: its sounds are merged into the map and its volume set. A problem is shown in a
+    /// message box and changes nothing in the store.
+    internal void ApplyImport(PackRead outcome)
+    {
+        if (outcome.Problem is not null || outcome.Pack is not { } pack)
+        {
+            Message(L10n.L("Couldn't import the sound pack"), outcome.Problem ?? string.Empty);
+            return;
+        }
+
+        var map = Store.SoundMap.ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal);
+        foreach (var (eventId, sound) in pack.Map)
+        {
+            map[eventId] = sound;
+        }
+        Write("soundMap", MapJson(map));
+        if (pack.Volume is { } volume)
+        {
+            Write("volume", JsonValue.Create(Math.Round(volume, 2)));
+        }
+    }
+
+    /// Shows a message box owned by the Control Panel window.
+    private void ShowDialogMessage(string caption, string text) =>
+        MessageBox.Show(Window.GetWindow(this), text, caption, MessageBoxButton.OK, MessageBoxImage.Warning);
 
     private static JsonObject MapJson(IReadOnlyDictionary<string, string> map)
     {

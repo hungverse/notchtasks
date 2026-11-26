@@ -1121,5 +1121,8 @@
 "Could not send the report. Try again when online.",
 "Your description and contact; anonymous device ID, group ID, pairing status, number of phones, app version, OS, device model, language, Pro status and transaction if available. Commands, source code, file paths, task titles and project names are not attached automatically.",
 "Send anonymous usage statistics",
-"{0} done"
+"{0} done",
+"Couldn't use this sound",
+"Audio files",
+"NotchTasks sounds"
 ]

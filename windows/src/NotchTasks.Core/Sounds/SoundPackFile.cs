@@ -59,7 +59,7 @@ public sealed class SoundPackFile
     {
         var clean = CleanName(name);
         var ext = Path.GetExtension(clean).TrimStart('.').ToLowerInvariant();
-        if (clean.Length == 0 || data.Length > MaxFile || !AudioTypes.Contains(ext))
+        if (clean.Length == 0 || data.Length > MaxFile || !AudioTypes.Contains(ext) || IsDeviceName(clean))
         {
             return null;
         }
@@ -171,6 +171,16 @@ public sealed class SoundPackFile
         var invalid = Path.GetInvalidFileNameChars();
         return new string(last.Select(c => invalid.Contains(c) ? '_' : c).ToArray()).TrimStart('.');
     }
+
+    private static readonly HashSet<string> DeviceNames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "CON", "PRN", "AUX", "NUL",
+        "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
+        "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9",
+    };
+
+    /// True for a name Windows reads as a device (CON, NUL, COM1…), with any extension: a file of that name is never written.
+    private static bool IsDeviceName(string clean) => DeviceNames.Contains(clean.Split('.')[0].TrimEnd(' '));
 
     private static bool SameBytes(string path, byte[] data)
     {

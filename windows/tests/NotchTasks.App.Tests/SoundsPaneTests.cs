@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using NotchTasks.ControlPanel;
 using NotchTasks.ControlPanel.Panes;
 using NotchTasks.Core;
+using NotchTasks.Core.Sounds;
 using Xunit;
 
 namespace NotchTasks.AppTests;
@@ -73,7 +74,7 @@ public sealed class SoundsPaneTests
             File.WriteAllText(file, "{\"format\":\"notchtasks.sounds\",\"version\":1,\"volume\":0.35,"
                 + "\"sounds\":{\"taskDone\":\"Pop\",\"ciFailed\":\"Tink\"}}");
 
-            pane.ImportPackFrom(file);
+            pane.ApplyImport(SoundsPane.ReadPack(new SoundPackFile(Path.Combine(root.Folder, "Sounds")), file));
 
             Assert.Equal("Pop", state.Settings.SoundMap["taskDone"]);
             Assert.Equal("Tink", state.Settings.SoundMap["ciFailed"]);
@@ -95,10 +96,49 @@ public sealed class SoundsPaneTests
             var file = Path.Combine(root.Folder, "notes.json");
             File.WriteAllText(file, "{\"hello\":1}");
 
-            pane.ImportPackFrom(file);
+            pane.ApplyImport(SoundsPane.ReadPack(new SoundPackFile(Path.Combine(root.Folder, "Sounds")), file));
 
             Assert.Equal("Couldn't import the sound pack|This file isn't a NotchTasks sound pack.", shown);
             Assert.Equal(before, state.Settings.Volume);
+        });
+    }
+
+    [Fact]
+    public void ImportPack_AnIoError_ShowsTheExceptionMessage()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            var pane = Fixture.Create<SoundsPane>(state.Settings);
+            string? shown = null;
+            pane.Message = (caption, text) => shown = caption + "|" + text;
+            var missing = Path.Combine(root.Folder, "gone.notchsounds");
+
+            var outcome = SoundsPane.ReadPack(new SoundPackFile(Path.Combine(root.Folder, "Sounds")), missing);
+            pane.ApplyImport(outcome);
+
+            Assert.NotNull(outcome.Problem);
+            Assert.DoesNotContain("isn't a NotchTasks sound pack", outcome.Problem);
+            Assert.Equal("Couldn't import the sound pack|" + outcome.Problem, shown);
+        });
+    }
+
+    [Fact]
+    public void ExportPack_WritesThePackFile_AndAFailedWriteReportsIt()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            var files = new SoundPackFile(Path.Combine(root.Folder, "Sounds"));
+            var map = new Dictionary<string, string> { ["taskDone"] = "Glass" };
+            var good = Path.Combine(root.Folder, "pack.notchsounds");
+
+            Assert.Null(SoundsPane.WritePack(files, map, 0.5, good));
+            Assert.Contains("\"taskDone\":\"Glass\"", File.ReadAllText(good).Replace(" ", string.Empty).Replace("\n", string.Empty));
+
+            var bad = Path.Combine(root.Folder, "no-such-folder", "pack.notchsounds");
+            Assert.NotNull(SoundsPane.WritePack(files, map, 0.5, bad));
         });
     }
 
