@@ -2,8 +2,10 @@ using System.IO;
 using System.Net.Http;
 using System.Reflection;
 using System.Runtime.ExceptionServices;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows;
+using System.Windows.Markup;
 using System.Windows.Threading;
 using NotchTasks.Core;
 using NotchTasks.Core.Updates;
@@ -58,13 +60,25 @@ internal static class Sta
     private static Dispatcher StartUiThread()
     {
         Dispatcher? dispatcher = null;
+        Exception? startFailure = null;
         using var ready = new ManualResetEventSlim();
         var thread = new Thread(() =>
         {
-            WpfHost.EnsureApplication();
-            dispatcher = Dispatcher.CurrentDispatcher;
+            try
+            {
+                WpfHost.EnsureApplication();
+                dispatcher = Dispatcher.CurrentDispatcher;
+            }
+            catch (Exception e)
+            {
+                // An unhandled exception on a background thread would end the test process; the failure goes to the tests instead.
+                startFailure = e;
+            }
             ready.Set();
-            Dispatcher.Run();
+            if (startFailure is null)
+            {
+                Dispatcher.Run();
+            }
         })
         {
             IsBackground = true,
@@ -75,14 +89,21 @@ internal static class Sta
         {
             throw new TimeoutException("The WPF test thread did not start within one minute.");
         }
+        if (startFailure is not null)
+        {
+            ExceptionDispatchInfo.Capture(startFailure).Throw();
+        }
         return dispatcher!;
     }
 }
 
-/// The application the real App.xaml makes, without the App class. App.xaml is an Application definition: loading it
-/// would create NotchTasks.App, which these tests never do. So the resources it merges are loaded by pack URI instead:
-/// ThemeMode System, the Fluent families (App.xaml's FluentRegular and FluentFilled), and ControlPanel/Controls.xaml (the shared
-/// styles every window and pane uses).
+/// The application with the real App.xaml's resources: ThemeMode System, the Fluent families (App.xaml's FluentRegular and
+/// FluentFilled) and ControlPanel/Controls.xaml (the shared styles). The XAML is App.xaml's own text, so a broken App.xaml fails
+/// every App test rather than being masked by resources the tests set by hand.
+///
+/// The root is a plain Application, not NotchTasks.App: loading App.xaml as its x:Class (Application.LoadComponent, or instantiating
+/// App) makes WPF run App.OnStartup in the test process, which starts the app (tray, pill, the user's hook and login settings). So the
+/// x:Class attribute is left out of the text, and everything else is parsed as written.
 internal static class WpfHost
 {
     private static readonly object Gate = new();
@@ -95,15 +116,12 @@ internal static class WpfHost
             {
                 return;
             }
-            var app = new Application { ShutdownMode = ShutdownMode.OnExplicitShutdown };
-            app.ThemeMode = ThemeMode.System;
-            app.Resources.MergedDictionaries.Add(new ResourceDictionary
-            {
-                Source = new Uri("pack://application:,,,/NotchTasks;component/ControlPanel/Controls.xaml", UriKind.Absolute),
-            });
-            // The two Fluent families App.xaml defines (x:Static to FluentIcons): the same objects under the same keys.
-            app.Resources["FluentRegular"] = NotchTasks.FluentIcons.Regular;
-            app.Resources["FluentFilled"] = NotchTasks.FluentIcons.Filled;
+            var xaml = File.ReadAllText(Path.Combine(IconFonts.SourceRoot, "NotchTasks", "App.xaml"));
+            xaml = Regex.Replace(xaml, "\\s+x:Class=\"[^\"]*\"", string.Empty, RegexOptions.None, TimeSpan.FromSeconds(5));
+            // A clr-namespace without an assembly is looked up in the test assembly; the app's own XAML means NotchTasks.
+            xaml = xaml.Replace("clr-namespace:NotchTasks\"", "clr-namespace:NotchTasks;assembly=NotchTasks\"", StringComparison.Ordinal);
+            var context = new ParserContext { BaseUri = new Uri("pack://application:,,,/NotchTasks;component/App.xaml", UriKind.Absolute) };
+            XamlReader.Parse(xaml, context);
         }
     }
 }

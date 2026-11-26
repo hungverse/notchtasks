@@ -50,8 +50,9 @@ public sealed class IconGlyphSourceTests
     {
         // The pack URI of the fonts is in FluentIcons.cs only; the XAML names the families through App.xaml's resources.
         var app = File.ReadAllText(Path.Combine(IconFonts.SourceRoot, "NotchTasks", "App.xaml"));
-        Assert.Contains("x:Key=\"FluentRegular\" Member=\"NotchTasks.FluentIcons.Regular\"", app);
-        Assert.Contains("x:Key=\"FluentFilled\" Member=\"NotchTasks.FluentIcons.Filled\"", app);
+        Assert.Contains("x:Key=\"FluentRegular\" Member=\"local:FluentIcons.Regular\"", app);
+        Assert.Contains("x:Key=\"FluentFilled\" Member=\"local:FluentIcons.Filled\"", app);
+        Assert.Contains("xmlns:local=\"clr-namespace:NotchTasks\"", app);
         var uriFragments = Directory.EnumerateFiles(IconFonts.SourceRoot, "*.xaml", SearchOption.AllDirectories)
             .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
             .Where(f => File.ReadAllText(f).Contains("Resources/Fonts/", StringComparison.Ordinal));

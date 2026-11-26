@@ -1,13 +1,14 @@
 <Application x:Class="NotchTasks.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:NotchTasks"
              ShutdownMode="OnExplicitShutdown"
              ThemeMode="System">
   <Application.Resources>
     <ResourceDictionary>
       <!-- The Fluent System Icons families. FluentIcons.cs holds the one pack URI of each; XAML and C# use the same objects. -->
-      <x:Static x:Key="FluentRegular" Member="NotchTasks.FluentIcons.Regular" />
-      <x:Static x:Key="FluentFilled" Member="NotchTasks.FluentIcons.Filled" />
+      <x:Static x:Key="FluentRegular" Member="local:FluentIcons.Regular" />
+      <x:Static x:Key="FluentFilled" Member="local:FluentIcons.Filled" />
       <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="ControlPanel/Controls.xaml" />
       </ResourceDictionary.MergedDictionaries>
