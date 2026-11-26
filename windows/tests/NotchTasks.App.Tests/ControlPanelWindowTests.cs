@@ -11,7 +11,7 @@ public sealed class ControlPanelWindowTests
     public static IEnumerable<object[]> Panes() => Enum.GetValues<PaneId>().Select(pane => new object[] { pane });
 
     [Fact]
-    public void Accent_IsTheMacsSystemBlue()
+    public void Accent_IsTheWindowsSystemAccent()
     {
         Sta.Run(() =>
         {
@@ -22,9 +22,9 @@ public sealed class ControlPanelWindowTests
             {
                 Fixture.ShowOffScreen(window);
 
-                // The Mac's blue, not the Windows accent: the window's own MacAccent.xaml wins over the theme's brush.
+                // The Windows accent: the window's accent brush is the theme's own (the application's), not a Mac override.
                 var brush = Assert.IsType<System.Windows.Media.SolidColorBrush>(window.FindResource("AccentFillColorDefaultBrush"));
-                Assert.Equal(System.Windows.Media.Color.FromRgb(0x0A, 0x84, 0xFF), brush.Color);
+                Assert.Same(Application.Current.FindResource("AccentFillColorDefaultBrush"), brush);
             }
             finally
             {
@@ -142,7 +142,7 @@ public sealed class ControlPanelWindowTests
     }
 
     [Fact]
-    public void Slider_GetsTheMacsBlueTrack()
+    public void Slider_UsesTheFluentTemplateAndIsLaidOut()
     {
         Sta.Run(() =>
         {
@@ -156,49 +156,12 @@ public sealed class ControlPanelWindowTests
                 var slider = Fixture.Named<Slider>(pane, "DelaySlider");
                 window.UpdateLayout();
 
-                // The MacSlider template: its Track is PART_Track, and the filled part (the decrease button) is the Mac's blue.
-                var track = Assert.IsType<System.Windows.Controls.Primitives.Track>(slider.Template.FindName("PART_Track", slider));
-                var fill = Assert.IsType<System.Windows.Controls.Primitives.RepeatButton>(track.DecreaseRepeatButton);
-                Assert.False(fill.Focusable);
-                fill.ApplyTemplate();
-                var border = Assert.IsType<Border>(System.Windows.Media.VisualTreeHelper.GetChild(fill, 0));
-                var brush = Assert.IsType<System.Windows.Media.SolidColorBrush>(border.Background);
-                Assert.Equal(System.Windows.Media.Color.FromRgb(0x0A, 0x84, 0xFF), brush.Color);
-            }
-            finally
-            {
-                window.Close();
-            }
-        });
-    }
-
-    [Fact]
-    public void Slider_FilledPartIsLaidOutAndVisible()
-    {
-        Sta.Run(() =>
-        {
-            using var root = new TempRoot();
-            using var state = Fixture.NewState();
-            var window = Fixture.Create<ControlPanelWindow>(state, PaneId.Behavior);
-            try
-            {
-                Fixture.ShowOffScreen(window);
-                var pane = Assert.IsAssignableFrom<FrameworkElement>(Fixture.Named<ContentControl>(window, "PaneHost").Content);
-                var slider = Fixture.Named<Slider>(pane, "DelaySlider");
-                window.UpdateLayout();
-
+                // The Windows theme's slider (no Mac override): its track is laid out, and the filled part has a width.
                 var track = Assert.IsType<System.Windows.Controls.Primitives.Track>(slider.Template.FindName("PART_Track", slider));
                 var fill = Assert.IsType<System.Windows.Controls.Primitives.RepeatButton>(track.DecreaseRepeatButton);
                 window.UpdateLayout();
-
                 Assert.True(fill.ActualWidth > 0, $"The filled part must have a width (was {fill.ActualWidth}).");
                 Assert.True(fill.IsVisible, "The filled part must be visible.");
-
-                var border = Assert.IsType<Border>(System.Windows.Media.VisualTreeHelper.GetChild(fill, 0));
-                Assert.True(border.ActualWidth > 0, $"The filled border must have a width (was {border.ActualWidth}).");
-                Assert.Equal(4, border.ActualHeight);
-                var brush = Assert.IsType<System.Windows.Media.SolidColorBrush>(border.Background);
-                Assert.Equal(System.Windows.Media.Color.FromRgb(0x0A, 0x84, 0xFF), brush.Color);
             }
             finally
             {

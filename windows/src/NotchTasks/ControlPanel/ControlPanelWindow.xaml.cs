@@ -69,12 +69,13 @@ public partial class ControlPanelWindow : Window
         SystemEvents.UserPreferenceChanged += OnUserPreferenceChanged;
     }
 
-    /// The system's theme changed (General covers light and dark mode): the title bar's dark mode is applied again.
+    /// The system's theme changed (General covers light and dark mode). SystemEvents raises this off the UI thread, so the
+    /// window's handle and DWM are touched on the dispatcher, after the change has been written to the registry.
     private void OnUserPreferenceChanged(object sender, UserPreferenceChangedEventArgs e)
     {
         if (e.Category == UserPreferenceCategory.General)
         {
-            Backdrop.UpdateDarkMode(this);
+            Dispatcher.BeginInvoke(() => Backdrop.UpdateDarkMode(this), System.Windows.Threading.DispatcherPriority.Background);
         }
     }
 

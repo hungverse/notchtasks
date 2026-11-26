@@ -10,14 +10,9 @@
         Foreground="{DynamicResource TextFillColorPrimaryBrush}">
   <Window.Resources>
     <ResourceDictionary>
-      <!-- The Mac's blue accent for every accent-filled control (MacAccent.xaml). -->
-      <ResourceDictionary.MergedDictionaries>
-        <ResourceDictionary Source="MacAccent.xaml" />
-      </ResourceDictionary.MergedDictionaries>
-      <!-- Every CheckBox in the Control Panel is a Windows 11 toggle switch (Controls.xaml). Other windows keep the Fluent box. -->
+      <!-- Every CheckBox in the Control Panel is a Windows 11 toggle switch (Controls.xaml). Other windows keep the Fluent box.
+           The accent and the sliders are the Windows theme's own: the Control Panel follows the system accent. -->
       <Style TargetType="CheckBox" BasedOn="{StaticResource Switch}" />
-      <!-- Every Slider in the Control Panel is the Mac's blue slider (Controls.xaml): the Fluent one ignores the accent. -->
-      <Style TargetType="Slider" BasedOn="{StaticResource MacSlider}" />
     </ResourceDictionary>
   </Window.Resources>
   <Grid>

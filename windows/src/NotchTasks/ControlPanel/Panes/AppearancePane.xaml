@@ -11,7 +11,7 @@
     <Border Style="{StaticResource Card}" Padding="0,20">
       <Grid Height="150">
         <!-- The screen's top edge: the island floats below it, 4 px down, as on the Mac. -->
-        <Border Height="1" VerticalAlignment="Top" Background="#33FFFFFF" />
+        <Border Height="1" VerticalAlignment="Top" Background="{DynamicResource DividerStrokeColorDefaultBrush}" />
         <Border x:Name="PreviewGlow" Width="200" Height="32" VerticalAlignment="Top" Margin="0,4,0,0" CornerRadius="16"
                 BorderThickness="1.5" Visibility="Collapsed" />
         <Border x:Name="PreviewPill" Width="200" Height="32" VerticalAlignment="Top" Margin="0,4,0,0" CornerRadius="16"
