@@ -119,8 +119,18 @@ if ($aotOk) {
 }
 if (Test-Path -LiteralPath $hookAot) { Remove-Item -LiteralPath $hookAot -Recurse -Force }
 
+# 3b. The Fluent UI System Icons licence (MIT). Its fonts are embedded in NotchTasks.dll, not shipped as files, so the notice goes beside
+# the app under licenses\ and the installer copies the stage recursively.
+$fluentLicense = Join-Path $windowsDir 'src\NotchTasks\Resources\Fonts\LICENSE'
+$licenses = Join-Path $stage 'licenses'
+New-Item -ItemType Directory -Path $licenses -Force | Out-Null
+Copy-Item -LiteralPath $fluentLicense -Destination (Join-Path $licenses 'FluentSystemIcons-LICENSE.txt') -Force
+
 if (-not (Test-Path -LiteralPath (Join-Path $stage 'NotchTasks.exe') -PathType Leaf)) {
     throw "Stage is missing NotchTasks.exe: $stage"
+}
+if (-not (Test-Path -LiteralPath (Join-Path $licenses 'FluentSystemIcons-LICENSE.txt') -PathType Leaf)) {
+    throw "Stage is missing the Fluent UI System Icons licence: $licenses"
 }
 Assert-StagedVersion -Dll (Join-Path $stage 'NotchTasks.dll') -Expected $Version
 
