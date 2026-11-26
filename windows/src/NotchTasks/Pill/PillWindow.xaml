@@ -130,6 +130,8 @@
         <!-- The toast: the pill's top shape while a toast shows. Hit-testable only while it shows. -->
         <!-- Hidden until a toast shows: it is measured while hidden, so the toast's height is still known. -->
         <pill:ToastView x:Name="ToastBox" Opacity="0" Visibility="Hidden" IsHitTestVisible="False" />
+        <!-- The volume or brightness bar: the same place as the toast, shown instead of it while a level changes (SyncLevel). -->
+        <pill:LevelView x:Name="LevelBox" Opacity="0" Visibility="Hidden" IsHitTestVisible="False" />
         <Path x:Name="GlowRing" Visibility="Collapsed" IsHitTestVisible="False" StrokeThickness="2.4"
               HorizontalAlignment="Left" VerticalAlignment="Top" Stretch="None" />
       </Grid>

@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <!-- Framework-dependent, not AOT: System.Management (WMI) is allowed here and only here. Never referenced by Core or the app. -->
+    <!-- Framework-dependent, not AOT: System.Management (WMI) is allowed here, and in the app only for the brightness feed (Levels). Never Core. -->
     <TargetFramework>net10.0-windows</TargetFramework>
     <RootNamespace>NotchTasksSensors</RootNamespace>
     <AssemblyName>NotchTasksSensors</AssemblyName>
@@ -15,7 +15,7 @@
     <ProjectReference Include="..\NotchTasks.Core\NotchTasks.Core.csproj" />
   </ItemGroup>
 
-  <!-- WMI (root\WMI, the thermal zones). Only the helper references it: never Core or the app. -->
+  <!-- WMI (root\WMI, the thermal zones). The helper and the app (its brightness feed) reference it: never Core. -->
   <ItemGroup>
     <PackageReference Include="System.Management" Version="10.0.0" />
   </ItemGroup>

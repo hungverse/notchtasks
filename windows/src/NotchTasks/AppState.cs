@@ -8,6 +8,7 @@ using NotchTasks.Core.Agents;
 using NotchTasks.Core.Asks;
 using NotchTasks.Core.Calendars;
 using NotchTasks.Core.Ci;
+using NotchTasks.Core.Levels;
 using NotchTasks.Core.Devices;
 using NotchTasks.Core.Limits;
 using NotchTasks.Core.Media;
@@ -20,6 +21,7 @@ using NotchTasks.Core.Updates;
 using NotchTasks.Services;
 using NotchTasks.Services.Appointments;
 using NotchTasks.Services.Devices;
+using NotchTasks.Services.Levels;
 using NotchTasks.Services.Media;
 using NotchTasks.Services.Modules;
 using NotchTasks.Services.Notifications;
@@ -82,6 +84,8 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         _batterySource = new BatterySource(Battery, Publish, o.Power);
         Network = new NetworkModule(this);
         Calendar = new CalendarModule(this, LoadCalendarDismissed, SaveCalendarDismissed);
+        Levels = new LevelsModule();
+        Levels.Changed += OnLevelsChanged;
         Downloads = new DownloadsModule(this, o.DownloadsFolder ?? DownloadFolder.Locate() ?? string.Empty);
         Health = new HealthModule(this);
         _healthSource = new HealthSource(Health, PublishLoad, settings, o.Health);
@@ -114,7 +118,9 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
             () => ActiveModules(settings).Contains("privacy"),
             () => ActiveModules(settings).Contains("calls"));
         _sensorsSource = new SensorsSource(Sensors, Publish, _clock, o.Sensors);
-        _host = new ModuleHost(CreateSources(o.Network, o.Calendar ?? new AppointmentCalendarOpener()), OnTurnedOff,
+        _host = new ModuleHost(
+            CreateSources(o.Network, o.Calendar ?? new AppointmentCalendarOpener(), o.Outputs ?? (() => new CoreAudioOutputs()), o.Brightness ?? (() => new WmiBrightness())),
+            OnTurnedOff,
             (message, e) => ErrorLog.Write(new InvalidOperationException(message, e)));
         Helper.Start();  // no UAC here: the helper is only started by the user's click (SensorHelper)
         _host.Apply(ActiveModules(settings));
@@ -232,6 +238,24 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
     /// The calendar: its events and hint (the calendar card reads them), the event the chip shows (the snapshot's SoonEvent), and the
     /// meeting toasts. Its source (CalendarSource) runs while calendar is on.
     public CalendarModule Calendar { get; }
+
+    /// The volume and brightness bar (the Mac's level HUD): the bar the notch shows, and its state. Its source (LevelsSource) runs while
+    /// levels is on. Nothing is announced: the bar is drawn on the pill only.
+    public LevelsModule Levels { get; }
+
+    /// The bar the pill shows now (the Mac's shownLevel), or null when none. It is null while the pill is open.
+    public LevelHud? Level => Levels.Hud;
+
+    /// Raised when the level bar shows or hides; the pill follows it.
+    public event Action? LevelChanged;
+
+    private void OnLevelsChanged()
+    {
+        if (!_disposed)
+        {
+            LevelChanged?.Invoke();
+        }
+    }
 
     /// Hides a calendar event from the notch and keeps that across runs, then publishes so the card and the chip follow.
     public void DismissCalendarEvent(string id)
@@ -567,7 +591,11 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
 
     /// The module sources by module id, built once before the first Apply. Modules register their sources here: a module
     /// with no entry is active but runs nothing. Timer is made before this runs.
-    private IReadOnlyDictionary<string, IModuleSource> CreateSources(NetworkReaders? network, ICalendarOpener calendar) =>
+    private IReadOnlyDictionary<string, IModuleSource> CreateSources(
+        NetworkReaders? network,
+        ICalendarOpener calendar,
+        Func<IOutputDevices> outputs,
+        Func<IBrightness> brightness) =>
         new Dictionary<string, IModuleSource>(StringComparer.Ordinal)
         {
             ["timer"] = new TimerSource(Timer, _clock),
@@ -575,6 +603,8 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
             ["network"] = new NetworkSource(Network, network),
             // the store is opened while the module is on: no access, or no store, shows the card's hint and nothing runs
             ["calendar"] = new CalendarSource(Calendar, calendar, Publish),
+            // the bar's feed: the default output and the panel, by events; a PC with no panel shows volume only
+            ["levels"] = new LevelsSource(Levels, outputs, brightness),
             ["downloads"] = new DownloadsSource(Downloads),
             // one source for both: the temperature feed runs only while the health module runs and the pill is open
             ["health"] = new CompositeSource(_healthSource, _thermalSource),

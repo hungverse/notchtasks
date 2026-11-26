@@ -58,6 +58,9 @@
   <ItemGroup>
     <PackageReference Include="H.NotifyIcon.Wpf" Version="2.4.1" />
     <PackageReference Include="QRCoder" Version="1.6.0" />
+    <!-- The app reads the laptop panel's brightness from WMI (root\WMI: Services\Levels\WmiBrightness). Only that class uses it; the
+         sensors helper is still the only process that reads the temperatures. Never referenced by Core. -->
+    <PackageReference Include="System.Management" Version="10.0.0" />
   </ItemGroup>
 
   <!-- Lists the hook's and the sensors helper's files once; the Build copy and the publish step both use them. -->

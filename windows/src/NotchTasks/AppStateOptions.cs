@@ -1,6 +1,7 @@
 using NotchTasks.Core;
 using NotchTasks.Core.Agents;
 using NotchTasks.Core.Calendars;
+using NotchTasks.Core.Levels;
 using NotchTasks.Core.Limits;
 using NotchTasks.Core.Modules;
 using NotchTasks.Core.Sync;
@@ -31,6 +32,8 @@ namespace NotchTasks;
 /// the feed. Nothing is read at construction: the service checks only when the app starts it, or when the Control Panel opens).
 /// Notifier posts the Windows toasts (null: SystemNotifier; a test passes a fake, so no test shows a real notification).
 /// Calendar opens the calendar store (null: the appointment store of this PC; a test passes a fake, so no test reads the calendars).
+/// Outputs and Brightness make the default audio output and the panel's brightness (null: Core Audio and WMI on this PC; a test passes
+/// fakes, so no test touches the audio or the display).
 public sealed record AppStateOptions(
     string? DownloadsFolder = null,
     NetworkReaders? Network = null,
@@ -53,7 +56,9 @@ public sealed record AppStateOptions(
     Func<SyncDeps, SyncHub>? Sync = null,
     UpdateClient? Update = null,
     INotifier? Notifier = null,
-    ICalendarOpener? Calendar = null)
+    ICalendarOpener? Calendar = null,
+    Func<IOutputDevices>? Outputs = null,
+    Func<IBrightness>? Brightness = null)
 {
     /// This PC's readers: the options the app runs with (the same as passing none).
     public static AppStateOptions Production { get; } = new();

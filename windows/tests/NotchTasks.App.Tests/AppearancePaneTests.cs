@@ -124,13 +124,13 @@ public sealed class AppearancePaneTests
         });
     }
 
-    /// A profile as the Mac writes it, with a key Windows lacks (haptics) and a Mac module Windows does not have (levels).
+    /// A profile as the Mac writes it, with a key Windows lacks (haptics) and a module Windows does not have (fans).
     private const string MacProfile = """
     {
       "accent" : "custom",
       "background" : "glass",
       "customAccent" : "#00F5D4",
-      "disabled" : [ "timer", "levels" ],
+      "disabled" : [ "timer", "fans" ],
       "doneAfter" : 45,
       "expandMode" : "hover",
       "gradientA" : "#1E1B4B",
@@ -140,7 +140,7 @@ public sealed class AppearancePaneTests
       "limitWarn" : 80,
       "menuBarIcon" : true,
       "moduleColors" : {},
-      "modules" : [ "agents", "levels", "timer" ],
+      "modules" : [ "agents", "fans", "timer" ],
       "motion" : "snappy",
       "placements" : {},
       "size" : "compact",

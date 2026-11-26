@@ -16,13 +16,13 @@ public sealed class SettingsProfileTests : IDisposable
     };
 
     /// A profile as the Mac writes it (sorted keys, Profile in Customize.swift): a few keys Windows lacks (haptics, menuBarIcon
-    /// is kept), a Mac-only module (levels), a Mac file path as a sound, and a key from a later version.
+    /// is kept), a module this PC lacks (fans), a Mac file path as a sound, and a key from a later version.
     private const string MacProfile = """
     {
       "accent" : "custom",
       "background" : "gradient",
       "customAccent" : "#00F5D4",
-      "disabled" : [ "timer", "levels" ],
+      "disabled" : [ "timer", "fans" ],
       "doneAfter" : 45,
       "expandMode" : "click",
       "futureKey" : { "anything" : 1 },
@@ -33,7 +33,7 @@ public sealed class SettingsProfileTests : IDisposable
       "limitWarn" : 90,
       "menuBarIcon" : false,
       "moduleColors" : { "agents" : "#FF375F", "ci" : "orange" },
-      "modules" : [ "agents", "levels", "ci", "timer", "shelf", "limits", "battery", "network", "downloads", "health" ],
+      "modules" : [ "agents", "fans", "ci", "timer", "shelf", "limits", "battery", "network", "downloads", "health" ],
       "motion" : "snappy",
       "placements" : { "ci" : "left", "media" : "auto" },
       "size" : "regular",
@@ -128,7 +128,7 @@ public sealed class SettingsProfileTests : IDisposable
         Assert.False((bool?)read.Values["menuBarIcon"]);
         Assert.True((bool?)read.Values["sounds"]);
 
-        // Windows calls the disabled set "disabled", as the Mac's profile does: the key is the same, and levels is not on Windows.
+        // Windows calls the disabled set "disabled", as the Mac's profile does: the key is the same, and fans is not on Windows.
         Assert.Equal(new[] { "timer" }, ((JsonArray)read.Values["disabled"]!).Select(n => (string?)n));
         Assert.Equal(
             new[] { "agents", "ci", "timer", "shelf", "limits", "battery", "network", "downloads", "health" },

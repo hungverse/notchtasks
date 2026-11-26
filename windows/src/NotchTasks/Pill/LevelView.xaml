@@ -1,0 +1,37 @@
+<UserControl x:Class="NotchTasks.Pill.LevelView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Width="248" Height="32" HorizontalAlignment="Center" VerticalAlignment="Top"
+             FontFamily="Segoe UI Variable Text, Segoe UI" Foreground="White">
+  <!-- The volume or brightness bar that takes the pill's line while a level changes (the Mac's levelView): the symbol at the left, the
+       notch's gap in the middle, and the bar with its percentage at the right. The 14 DIP sides are the Mac's padding. -->
+  <Grid x:Name="Root" Margin="14,0,14,0" Background="Transparent">
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="64" />
+      <ColumnDefinition Width="12" />
+      <ColumnDefinition Width="144" />
+    </Grid.ColumnDefinitions>
+    <TextBlock x:Name="IconText" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center"
+               FontSize="18" Foreground="White" />
+    <Grid Grid.Column="2" VerticalAlignment="Center">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="110" />
+        <ColumnDefinition Width="8" />
+        <ColumnDefinition Width="26" />
+      </Grid.ColumnDefinitions>
+      <!-- The track (white at a fifth) and its fill: the fill's column takes the value's share of the track. -->
+      <Grid Grid.Column="0" Height="5" VerticalAlignment="Center">
+        <Border CornerRadius="2.5" Background="#33FFFFFF" />
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition x:Name="FillColumn" Width="0*" />
+            <ColumnDefinition x:Name="RestColumn" Width="1*" />
+          </Grid.ColumnDefinitions>
+          <Border x:Name="Fill" Grid.Column="0" CornerRadius="2.5" Background="White" />
+        </Grid>
+      </Grid>
+      <TextBlock x:Name="PercentText" Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Center"
+                 FontSize="11" FontWeight="Bold" TextAlignment="Right" />
+    </Grid>
+  </Grid>
+</UserControl>

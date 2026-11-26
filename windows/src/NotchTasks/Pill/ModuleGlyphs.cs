@@ -61,6 +61,13 @@ public static class ModuleGlyphs
         ["gauge"] = new(""),                             // gauge (Mac gauge.with.dots.needle.67percent): a limit below 100 %
         ["hourglass"] = new(""),                         // hourglass (Mac hourglass): a limit at 100 %
         ["calendar"] = new(""),                    // calendar_ltr (Mac calendar): the calendar chip and module
+        // The volume and brightness bar (LevelsModule.SymbolName): the Mac's speaker and sun symbols, filled, by level.
+        ["volume.off"] = new("", true),      // speaker_off filled (Mac speaker.slash.fill): muted or at zero
+        ["volume.low"] = new("", true),      // speaker_0 filled: below a third
+        ["volume.mid"] = new("", true),      // speaker_1 filled: below two thirds
+        ["volume.high"] = new("", true),     // speaker_2 filled (Mac speaker.wave.3.fill): the loudest step
+        ["brightness.low"] = new("", true),  // brightness_low filled (Mac sun.min.fill): below half
+        ["brightness.high"] = new("", true), // brightness_high filled (Mac sun.max.fill): half and up
         ["sun"] = new("", true),                   // weather_sunny filled (Mac sun.max.fill): an all-day event
     };
 

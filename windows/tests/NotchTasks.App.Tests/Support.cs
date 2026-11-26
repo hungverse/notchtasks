@@ -12,6 +12,7 @@ using NotchTasks.Core.Calendars;
 using NotchTasks.Core.Asks;
 using NotchTasks.Core.Ci;
 using NotchTasks.Core.Devices;
+using NotchTasks.Core.Levels;
 using NotchTasks.Core.Limits;
 using NotchTasks.Core.Media;
 using NotchTasks.Core.Modules;
@@ -179,6 +180,8 @@ internal static class Fixture
         Media: new NoMedia(),
         Devices: new NoDevices(),
         Calendar: new NoCalendar(),
+        Outputs: () => new NoOutputs(),
+        Brightness: () => new NoBrightness(),
         Camera: () => new NoCamera(),
         Update: new UpdateClient(new NoFeed()),
         Notifier: new NoNotifier());
@@ -214,6 +217,42 @@ internal static class Fixture
             public void Dispose()
             {
             }
+        }
+    }
+
+    /// The output devices with no audio device: no endpoint, and no default change. No test touches Core Audio.
+    public sealed class NoOutputs : IOutputDevices
+    {
+        public IOutputEndpoint? OpenDefault() => null;
+
+        public event Action? DefaultChanged
+        {
+            add { }
+            remove { }
+        }
+
+        public void Dispose()
+        {
+        }
+    }
+
+    /// The panel with none: a desktop's brightness is null and nothing is watched. No test touches WMI.
+    public sealed class NoBrightness : IBrightness
+    {
+        public double? Read() => null;
+
+        public event Action<double>? Changed
+        {
+            add { }
+            remove { }
+        }
+
+        public void Watch(bool on)
+        {
+        }
+
+        public void Dispose()
+        {
         }
     }
 

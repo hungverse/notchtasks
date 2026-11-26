@@ -38,7 +38,7 @@ public partial class OverviewPane : SettingsPane
     private static readonly (string Title, string[] Ids)[] Groups =
     [
         ("Work", ["agents", "ci", "limits", "calendar", "timer"]),
-        ("Music & devices", ["media", "devices", "battery"]),
+        ("Music & devices", ["media", "devices", "battery", "levels"]),
         ("Calls & privacy", ["calls", "privacy", "mirror"]),
         ("System", ["network", "downloads", "health", "shelf"]),
     ];

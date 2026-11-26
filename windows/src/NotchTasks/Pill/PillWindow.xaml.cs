@@ -112,6 +112,7 @@ public partial class PillWindow : Window
     private readonly LoadMeter _cpuMeter = new("CPU", LoadMeterKind.Cpu, 0);  // the header's CPU meter, shown while SystemLoad is on
     private readonly LoadMeter _ramMeter = new("RAM", LoadMeterKind.Memory, 0) { Margin = new Thickness(10, 0, 0, 0) };  // 10 DIP after the CPU
     private Toast? _shownToast;  // the toast the pill shows now; null when none
+    private bool _levelShown;  // the volume or brightness bar shows in the overlay's place (SyncLevel); the toast waits behind it
     private int _animation;  // counts the animations; only the last one's completion clears _closing
     private bool _animating;  // a shape animation runs: the poll evaluates click-through on every tick
     private double _targetWidth, _targetHeight, _targetRadius;  // the shape the running animation springs to
@@ -244,6 +245,7 @@ public partial class PillWindow : Window
         _state.PropertyChanged += OnStateChanged;
         _state.Asks.CollectionChanged += OnAsksChanged;
         _state.NotchChanged += OnNotchChanged;
+        _state.LevelChanged += SyncLevel;  // a volume or brightness bar shows or hides
         _state.LoadChanged += SyncHeader;  // a load tick moves the meters only
         _state.ThermalChanged += SyncHeader;  // a temperature reading moves the header's temperature only
         _state.Toasts.Changed += OnToastsChanged;
@@ -255,6 +257,7 @@ public partial class PillWindow : Window
         _asks.Sync(_state.Asks, _state.Answer);
         SyncSections();
         SyncToast();
+        SyncLevel();
     }
 
     private double Scale => _hwnd == nint.Zero ? 1 : Win32.GetDpiForWindow(_hwnd) / 96.0;
@@ -542,6 +545,7 @@ public partial class PillWindow : Window
         _state.Toasts.Clear();
         Animate(Mode.Open);
         ApplyAppearance();
+        SyncLevel();  // the open pill takes over the level bar (the Mac shows the sections instead)
         _closeTimer.Start();
         // Only a real open plays: a toast or an open already under way does not reach here (the guard above). The Mac plays it on expanded.
         PlayEvent("open");
@@ -596,6 +600,7 @@ public partial class PillWindow : Window
         Animate(Mode.Closed);  // the pill fades out while its shape settles to the closed width (SetShapeShown)
         ApplyAppearance();
         SyncToast();  // a toast that came in while the pill was open shows now
+        SyncLevel();  // and so does a level bar that changed while it was open
         _state.PillOpened(false);  // no load is sampled while the pill is closed; the meters are forgotten
     }
 
@@ -644,6 +649,64 @@ public partial class PillWindow : Window
         TempReading.Visibility = Visibility.Visible;
     }
 
+    /// Whether a toast or the level bar fills the pill's overlay: the shape a closed pill springs to while one of them shows.
+    private bool ShowingOverlay => _shownToast is not null || _levelShown;
+
+    /// The mode the shape is in when nothing is changing: open while the pill is open, a toast-sized shape while the overlay shows,
+    /// else closed.
+    private Mode SteadyMode() => _open ? Mode.Open : ShowingOverlay ? Mode.Toast : Mode.Closed;
+
+    /// Only the overlay that is up is visible: the level bar takes the toast's place while it shows.
+    private void SetOverlayVisibility()
+    {
+        ToastBox.Visibility = _levelShown ? Visibility.Hidden : Visibility.Visible;
+        LevelBox.Visibility = _levelShown ? Visibility.Visible : Visibility.Hidden;
+    }
+
+    /// The bar and the toast trade places with no fade, for a pill that is already toast-sized: the shape does not change mode, so only the
+    /// overlay's content does. The toast's opacity stays 0 when no toast is up, so an empty toast never shows.
+    private void SwapOverlayAtOnce()
+    {
+        ToastBox.BeginAnimation(OpacityProperty, null);
+        LevelBox.BeginAnimation(OpacityProperty, null);
+        ToastBox.Opacity = !_levelShown && _shownToast is not null ? 1 : 0;
+        LevelBox.Opacity = _levelShown ? 1 : 0;
+    }
+
+    /// Brings the level bar in line with the module (the Mac's shownLevel): while a volume or brightness change is up and the pill is closed,
+    /// the bar takes the toast's place in the shape, and the toast waits behind it. When the bar hides, the shape goes back to a toast still
+    /// up, or closes. An open pill shows no bar, as on the Mac.
+    private void SyncLevel()
+    {
+        var level = _open ? null : _state.Level;
+        if (level is null && !_levelShown)
+        {
+            return;
+        }
+        if (level is { } bar)
+        {
+            LevelBox.Show(bar);
+            if (_levelShown)
+            {
+                return;  // the bar is up already: its figure and fill are all that changed
+            }
+            _levelShown = true;
+            Win32.SetWindowPos(_hwnd, Win32.HwndTopmost, 0, 0, 0, 0, Win32.SWP_NOMOVE | Win32.SWP_NOSIZE | Win32.SWP_NOACTIVATE);
+        }
+        else
+        {
+            _levelShown = false;
+        }
+        var swap = _targetMode == Mode.Toast;  // already toast-sized: the overlay swaps in place
+        SetOverlayVisibility();
+        if (swap)
+        {
+            SwapOverlayAtOnce();
+        }
+        Animate(SteadyMode());
+        ApplyAppearance();
+    }
+
     /// Brings the pill's toast in line with the queue: the pill springs into the toast's shape while one is up and the pill is
     /// closed, and springs back when none is. The toast timer runs only while a toast is current, so an idle pill costs nothing.
     private void SyncToast()
@@ -667,7 +730,7 @@ public partial class PillWindow : Window
         }
         else if (wasShowing)
         {
-            Animate(_open ? Mode.Open : Mode.Closed);
+            Animate(SteadyMode());  // a level bar still up keeps the shape a toast-sized one
         }
         ApplyAppearance();
     }
@@ -735,7 +798,7 @@ public partial class PillWindow : Window
         }
         if (mode == Mode.Toast)
         {
-            ToastBox.Visibility = Visibility.Visible;
+            SetOverlayVisibility();
         }
 
         // The shape, its corners and the wings all spring with the same curve from their current values (no From), so a
@@ -756,7 +819,8 @@ public partial class PillWindow : Window
         if (changesMode)
         {
             Fade(CardLayer, OpacityProperty, mode == Mode.Open ? 1 : 0, duration, fade);
-            Fade(ToastBox, OpacityProperty, mode == Mode.Toast ? 1 : 0, duration, fade);
+            Fade(ToastBox, OpacityProperty, mode == Mode.Toast && !_levelShown ? 1 : 0, duration, fade);
+            Fade(LevelBox, OpacityProperty, mode == Mode.Toast && _levelShown ? 1 : 0, duration, fade);
             Fade(TopRow, OpacityProperty, mode == Mode.Toast ? 0 : 1, duration, fade);
             // The card blurs only while it closes, and the blur is attached only while it moves: an open (and reduced motion) fades on
             // opacity alone, so no effect pass runs for it.
@@ -790,6 +854,7 @@ public partial class PillWindow : Window
                 if (mode != Mode.Toast)
                 {
                     ToastBox.Visibility = Visibility.Hidden;
+                    LevelBox.Visibility = Visibility.Hidden;
                 }
                 ApplyAppearance();
                 ReevaluateClickThrough();
@@ -847,7 +912,9 @@ public partial class PillWindow : Window
     private ShapeTarget Target(Mode mode) => mode switch
     {
         Mode.Open => EdgeTarget(PillGeometry.OpenWidth, OpenHeight(), PillGeometry.OpenRadius),
-        Mode.Toast => EdgeTarget(ToastBox.Width, ToastHeight(), ToastBox.ShapeRadius),
+        Mode.Toast => _levelShown
+            ? EdgeTarget(LevelView.Span, PillGeometry.ClosedHeight, PillGeometry.ClosedRadius)
+            : EdgeTarget(ToastBox.Width, ToastHeight(), ToastBox.ShapeRadius),
         _ => ClosedTarget(),
     };
 
@@ -894,7 +961,7 @@ public partial class PillWindow : Window
     /// shapes are their own, and a closed pill is retargeted when they close.
     private void RetargetClosed()
     {
-        if (_open || _shownToast is not null)
+        if (_open || ShowingOverlay)
         {
             return;
         }
@@ -903,7 +970,7 @@ public partial class PillWindow : Window
 
     /// Whether the pill has something to show: it is open, a toast shows, a badge or a chip is in a wing, or an ask waits. Without it the
     /// pill is invisible and only its ClosedWidth hover strip is live.
-    private bool ShowsContent => _open || _shownToast is not null || _hasCollapsed || _state.Snapshot.AskCount > 0;
+    private bool ShowsContent => _open || ShowingOverlay || _hasCollapsed || _state.Snapshot.AskCount > 0;
 
     /// Sets the pill's visibility: the shape and its shadow (and the glow) fade over the grow curve's fade, from where they are.
     private void SetShapeShown(bool shown)
@@ -1376,6 +1443,7 @@ public partial class PillWindow : Window
         _state.PropertyChanged -= OnStateChanged;
         _state.Asks.CollectionChanged -= OnAsksChanged;
         _state.NotchChanged -= OnNotchChanged;
+        _state.LevelChanged -= SyncLevel;
         _state.LoadChanged -= SyncHeader;
         _state.ThermalChanged -= SyncHeader;
         _state.Toasts.Changed -= OnToastsChanged;
