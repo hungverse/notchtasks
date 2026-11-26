@@ -24,14 +24,20 @@ public static class ToastXml
     /// The text as XML character data: the characters XML cannot hold are removed first, then markup is escaped.
     private static string Escape(string text) => SecurityElement.Escape(WithoutInvalidCharacters(text)) ?? string.Empty;
 
-    /// XML 1.0 holds tab, line feed, carriage return and everything from space up, except the two non-characters.
+    /// XML 1.0 holds tab, line feed, carriage return and everything from space up, except the two non-characters and the
+    /// surrogates. A surrogate pair (an emoji) is kept; a lone surrogate is dropped, since XmlDocument rejects it.
     private static string WithoutInvalidCharacters(string text)
     {
         var clean = new StringBuilder(text.Length);
-        foreach (var c in text)
+        for (var i = 0; i < text.Length; i++)
         {
-            var valid = c is '\t' or '\n' or '\r' || (c >= ' ' && c is not '￾' and not '￿');
-            if (valid)
+            var c = text[i];
+            if (char.IsHighSurrogate(c) && i + 1 < text.Length && char.IsLowSurrogate(text[i + 1]))
+            {
+                clean.Append(c).Append(text[i + 1]);
+                i++;
+            }
+            else if (c is '\t' or '\n' or '\r' || (c >= ' ' && c is not '￾' and not '￿' && !char.IsSurrogate(c)))
             {
                 clean.Append(c);
             }

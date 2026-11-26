@@ -188,7 +188,6 @@ internal static class Fixture
             Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.NotFound));
     }
 
-    /// The camera seam with no camera: a start finds none, and nothing is captured.
     /// The OS notifier of every App test that is not about toasts: it posts nothing, so no test shows a real Windows toast.
     public sealed class NoNotifier : INotifier
     {
@@ -197,6 +196,7 @@ internal static class Fixture
         }
     }
 
+    /// The camera seam with no camera: a start finds none, and nothing is captured.
     public sealed class NoCamera : ICameraSession
     {
         public Task<CameraStart> Start(Action<int, int, byte[]> frame) => Task.FromResult(CameraStart.NoCamera);

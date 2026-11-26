@@ -1,6 +1,7 @@
 using System.IO;
 using System.Linq;
 using System.Text.Json.Nodes;
+using System.Threading.Tasks;
 using System.Xml.Linq;
 using NotchTasks.Core;
 using NotchTasks.Core.Asks;
@@ -126,6 +127,42 @@ public sealed class SystemNotificationTests
         var doc = XDocument.Parse(ToastXml.Build("Time's up", ""));
 
         Assert.Equal("Time's up", Assert.Single(doc.Descendants("text")).Value);
+    }
+
+    [Fact]
+    public void Build_DropsUnpairedSurrogates_AndKeepsPairedOnes()
+    {
+        // A lone surrogate is not XML 1.0 text: XmlDocument rejects the whole toast. A pair (an emoji) is valid and stays.
+        var doc = XDocument.Parse(ToastXml.Build("ok 😀 bad\uD800 \uDC00end", ""));
+
+        Assert.Equal("ok 😀 bad end", Assert.Single(doc.Descendants("text")).Value);
+    }
+
+    [Fact]
+    public async Task Post_ShowsTheEscapedToastXml_OffTheCaller()
+    {
+        var shown = new List<string>();
+        var notifier = new SystemNotifier(xml => shown.Add(xml), _ => { });
+        var toast = new Toast("bell", "#FF9F0A", "A < B & C", "\"quoted\"", Event: null);
+
+        await notifier.PostAsync(toast);
+
+        Assert.Equal(ToastXml.Build(toast.Title, toast.Subtitle), Assert.Single(shown));
+    }
+
+    [Fact]
+    public async Task Post_AFailingShow_IsLoggedOnce_AndNeverThrows()
+    {
+        var logged = new List<Exception>();
+        var notifier = new SystemNotifier(_ => throw new InvalidOperationException("no shortcut"), logged.Add);
+        var toast = Sample();
+
+        await notifier.PostAsync(toast);
+        await notifier.PostAsync(toast);
+        await notifier.PostAsync(toast);
+
+        Assert.Single(logged);
+        Assert.IsType<InvalidOperationException>(logged[0]);
     }
 
     [Fact]
