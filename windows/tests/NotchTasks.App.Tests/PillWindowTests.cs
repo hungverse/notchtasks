@@ -606,6 +606,39 @@ public sealed class PillWindowTests
         });
     }
 
+    [Fact]
+    public void UpdateDot_FollowsAChangeRaisedOffTheUiThread()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            var build = UpdateService.CurrentBuild + 1;
+            using var state = Fixture.NewState(new UpdateClient(new FakeUpdateServer(_ => Task.FromResult(
+                new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(FeedManifest(build), Encoding.UTF8, "application/json"),
+                }))));
+            var pill = new PillWindow(state);
+            try
+            {
+                var dot = Fixture.Named<System.Windows.Shapes.Ellipse>(Fixture.Named<QuickBar>(pill, "Bar"), "UpdateDot");
+                state.Updates.Check(manual: false);
+                Fixture.PumpUntil(() => !state.Updates.Checking);
+                Assert.Equal(Visibility.Visible, dot.Visibility);
+
+                dot.Visibility = Visibility.Collapsed;  // the dot is out of step with the offer
+                var changed = Fixture.Field<Action?>(state.Updates, "Changed");
+                Task.Run(() => changed?.Invoke()).Wait();  // a raise off the UI thread must not touch the dot there
+                Fixture.PumpUntil(() => dot.Visibility == Visibility.Visible);
+                Assert.Equal(Visibility.Visible, dot.Visibility);
+            }
+            finally
+            {
+                pill.Close();
+            }
+        });
+    }
+
     /// True when a text block under `node` shows `text`.
     private static bool HasText(DependencyObject node, string text)
     {

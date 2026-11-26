@@ -1166,8 +1166,16 @@ public partial class PillWindow : Window
     /// The queue changed: the toast shown follows it.
     private void OnToastsChanged() => SyncToast();
 
-    /// The update feed changed: the Control Panel button's dot shows while a build is offered (the Mac's pendingChanged).
-    private void OnUpdatesChanged() => Bar.SetUpdatePending(_state.Updates.Offered is not null);
+    /// The update feed changed: the dot follows the offer, and is set on the UI thread because the service may raise Changed from any thread.
+    private void OnUpdatesChanged()
+    {
+        if (!Dispatcher.CheckAccess())
+        {
+            Dispatcher.BeginInvoke(new Action(OnUpdatesChanged));  // reads Offered on the UI thread, when it runs
+            return;
+        }
+        Bar.SetUpdatePending(_state.Updates.Offered is not null);
+    }
 
     /// The app state's snapshot was rebuilt: the chips and the sections follow it.
     private void OnNotchChanged()
