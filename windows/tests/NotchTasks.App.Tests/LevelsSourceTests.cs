@@ -64,15 +64,29 @@ public sealed class LevelsSourceTests
         public ManualResetEventSlim? Gate { get; set; }
         public event Action<double>? Changed;
 
+        /// When set, Read throws it (a panel that fails while it is opened).
+        public Exception? ReadThrows { get; set; }
+
+        /// When set, Watch(true) throws it.
+        public Exception? WatchThrows { get; set; }
+
         public double? Read()
         {
             Gate?.Wait();
+            if (ReadThrows is not null)
+            {
+                throw ReadThrows;
+            }
             return Level;
         }
 
         public void Watch(bool on)
         {
             WatchCalls++;
+            if (on && WatchThrows is not null)
+            {
+                throw WatchThrows;
+            }
             Watching = on;
         }
 
@@ -191,6 +205,36 @@ public sealed class LevelsSourceTests
 
                 Assert.False(panel.Watching);
                 Assert.Equal(0, panel.WatchCalls);
+            }
+            finally
+            {
+                source.Stop();
+            }
+        });
+    }
+
+    [Theory]
+    [InlineData(true, false)]  // Read throws
+    [InlineData(false, true)]  // Watch throws
+    public void OpenPanel_DisposesThePanel_WhenReadOrWatchThrows(bool readThrows, bool watchThrows)
+    {
+        // A panel that fails while it is opened is given back: nothing is adopted and nothing is leaked.
+        Sta.Run(() =>
+        {
+            var panel = new FakePanel(0.4)
+            {
+                ReadThrows = readThrows ? new InvalidOperationException("panel read failed") : null,
+                WatchThrows = watchThrows ? new InvalidOperationException("panel watch failed") : null,
+            };
+            var source = Source(new LevelsModule(), new FakeOutputs(), panel);
+            try
+            {
+                source.Start();
+                Fixture.PumpUntil(() => panel.Disposed);
+
+                Assert.True(panel.Disposed);
+                Assert.False(panel.Watching);
+                Assert.False(Adopted(source));
             }
             finally
             {

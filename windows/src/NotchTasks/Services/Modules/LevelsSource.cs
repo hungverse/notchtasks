@@ -88,11 +88,12 @@ public sealed class LevelsSource : IModuleSource
     private void OpenPanel(int generation)
     {
         PanelOpening? opened = null;
+        IBrightness? panel = null;
+        Action<double>? handler = null;
         try
         {
-            var panel = _brightness();
+            panel = _brightness();
             var level = panel.Read();
-            Action<double>? handler = null;
             if (level is not null)
             {
                 handler = value => _dispatcher.BeginInvoke(new Action(() => OnBrightness(value)));
@@ -104,8 +105,35 @@ public sealed class LevelsSource : IModuleSource
         catch (Exception e)
         {
             ErrorLog.Write(e);
+            // A panel that failed while it was opened is given back here, whatever the exception: its feed off, then disposed.
+            if (panel is not null)
+            {
+                GiveBack(panel, handler);
+            }
         }
         _dispatcher.BeginInvoke(new Action(() => AdoptPanel(generation, opened)));
+    }
+
+    /// Releases a panel the source does not keep: its change feed is removed, it stops watching and it is disposed. A failure here is
+    /// logged, so the cleanup never takes the worker down.
+    private static void GiveBack(IBrightness panel, Action<double>? handler)
+    {
+        try
+        {
+            if (handler is not null)
+            {
+                panel.Changed -= handler;
+            }
+            panel.Watch(false);
+        }
+        catch (Exception e)
+        {
+            ErrorLog.Write(e);
+        }
+        finally
+        {
+            panel.Dispose();
+        }
     }
 
     /// On the UI thread: the opened panel becomes the source's, and its brightness the baseline. A panel from a start that was stopped (or
