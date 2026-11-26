@@ -3,6 +3,7 @@ using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 using NotchTasks.ControlPanel;
 using NotchTasks.Core;
@@ -40,6 +41,10 @@ public static class ChipView
     /// (its words are drawn again on a switch) and the second: a timer, a call or a limit shows the time, so the panel is rebuilt once a
     /// second at most.
     private sealed record ChipSignature(Chip Chip, Color Tint, string Language, long Second, bool Lead, bool Trail, string Side, double LeadSize);
+
+    /// An ask chip's content signature: the chip (its count and the asking agent's item), its tint, the language, the sides and the
+    /// program icon's path. No second: the ask's words do not change with time, so the lead is not rebuilt every second.
+    private sealed record AskSignature(Chip Chip, Color Tint, string Language, string? IconPath, bool Lead, bool Trail, string Side, double LeadSize);
     private static readonly Color AskOrange = Color.FromRgb(0xFF, 0x9F, 0x0A);
     private static readonly Color CallGreen = Color.FromRgb(0x30, 0xD1, 0x58);  // the Mac's green: a call's time
     private static readonly Color CallRed = Color.FromRgb(0xFF, 0x45, 0x3A);    // the Mac's red: a call's time while muted
@@ -49,10 +54,10 @@ public static class ChipView
     /// badges by tool, which a build chip's lead uses.
     public static FrameworkElement? Panel(Chip chip, Color? accent, IReadOnlyDictionary<string, string> moduleColors,
         DateTimeOffset now, bool lead, bool trail, IProcessReader? processes = null, IReadOnlyDictionary<string, JsonObject>? toolIcons = null,
-        Func<string, ImageSource?>? art = null, double leadSize = 18)
+        Func<string, ImageSource?>? art = null, double leadSize = 18, bool animate = false)
     {
         var panel = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(3, 0, 3, 0) };
-        if (lead && Lead(chip, leadSize, accent, moduleColors, processes, toolIcons, art) is { } leadElement)
+        if (lead && Lead(chip, leadSize, accent, moduleColors, processes, toolIcons, art, animate) is { } leadElement)
         {
             panel.Children.Add(leadElement);
         }
@@ -67,7 +72,8 @@ public static class ChipView
     /// An agent's lead is its item icon; a build chip's is its job's (BuildLead). The alerts chip has the warning glyph. A limit's is
     /// a gauge, or an hourglass at 100 %, in its own colour. An ask has no glyph here: its trail is its text.
     public static FrameworkElement? Lead(Chip chip, double size, Color? accent, IReadOnlyDictionary<string, string> moduleColors,
-        IProcessReader? processes = null, IReadOnlyDictionary<string, JsonObject>? toolIcons = null, Func<string, ImageSource?>? art = null)
+        IProcessReader? processes = null, IReadOnlyDictionary<string, JsonObject>? toolIcons = null, Func<string, ImageSource?>? art = null,
+        bool animate = false)
     {
         if (chip.Kind == ChipKind.Media && chip.Media is { } playing)
         {
@@ -87,7 +93,7 @@ public static class ChipView
         }
         if (chip.Kind == ChipKind.Ask)
         {
-            return AskLead(chip.AskItem, size, processes);
+            return AskLead(chip.AskItem, size, processes, animate);
         }
         if (chip.Kind == ChipKind.Limit && chip.Limit is { } limit)
         {
@@ -152,7 +158,10 @@ public static class ChipView
 
     /// The ask chip's lead (Mac ask chip): the asking agent's icon with an orange hand badge at its corner, so the chip says who waits.
     /// With no item for the agent, the orange hand alone. The badge is what tells the user it is an ask, not a running agent.
-    private static FrameworkElement AskLead(WatchItem? item, double size, IProcessReader? processes)
+    /// The badge is the Mac's: the hand at 0.3 of the size, 2.5 of padding, a black 1.5 ring, pushed 0.2 right and 0.14 down past the
+    /// icon's corner. Its opacity pulses while `animate` (the Mac's symbol pulse; the Mac sets no values, so these are chosen: 1 to
+    /// 0.4 and back in 2 s). Reduced motion or animations off leave it still, as the Mac's Reduce Motion does.
+    private static FrameworkElement AskLead(WatchItem? item, double size, IProcessReader? processes, bool animate)
     {
         if (item is null)
         {
@@ -178,11 +187,26 @@ public static class ChipView
             BorderThickness = new Thickness(1.5),
             HorizontalAlignment = HorizontalAlignment.Right,
             VerticalAlignment = VerticalAlignment.Bottom,
+            // a negative right and bottom margin pushes the badge past the icon's corner, as the Mac's offset does
+            Margin = new Thickness(0, 0, -size * 0.2, -size * 0.14),
             Child = hand,
         };
         var lead = new Grid { Width = size, Height = size, VerticalAlignment = VerticalAlignment.Center };
         lead.Children.Add(ItemIcon.Element(new ItemState(item, Array.Empty<Job>()), size, AskOrange, processes));
         lead.Children.Add(disc);
+        if (animate)
+        {
+            var pulse = new DoubleAnimation
+            {
+                From = 1,
+                To = 0.4,
+                Duration = TimeSpan.FromSeconds(1),
+                AutoReverse = true,
+                EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut },
+            };
+            // Loops stops it when the lead is unloaded or hidden, so an ask that is answered costs nothing
+            Loops.Run(lead, disc, UIElement.OpacityProperty, pulse);
+        }
         return lead;
     }
 
@@ -339,18 +363,20 @@ public static class ChipView
         var (leftChips, rightChips, single) = ChipBoard.Sides(chips, placements);
         var leftPanels = new List<ChipSlot>();
         var rightPanels = new List<ChipSlot>();
+        // the badge pulses only while animations run: reduced motion (the Motion setting or the system's) leaves it still
+        var animate = animationsOn && motion != "reduced";
         if (single is { } lone)
         {
-            Collect(left, leftPanels, lone, accent, colors, now, lead: true, trail: false, side: "L", processes, toolIcons, art, leadSize);
-            Collect(right, rightPanels, lone, accent, colors, now, lead: false, trail: true, side: "R", processes, toolIcons, art, leadSize);
+            Collect(left, leftPanels, lone, accent, colors, now, lead: true, trail: false, side: "L", processes, toolIcons, art, leadSize, animate);
+            Collect(right, rightPanels, lone, accent, colors, now, lead: false, trail: true, side: "R", processes, toolIcons, art, leadSize, animate);
         }
         foreach (var chip in leftChips)
         {
-            Collect(left, leftPanels, chip, accent, colors, now, lead: true, trail: true, side: "L", processes, toolIcons, art, leadSize);
+            Collect(left, leftPanels, chip, accent, colors, now, lead: true, trail: true, side: "L", processes, toolIcons, art, leadSize, animate);
         }
         foreach (var chip in rightChips)
         {
-            Collect(right, rightPanels, chip, accent, colors, now, lead: true, trail: true, side: "R", processes, toolIcons, art, leadSize);
+            Collect(right, rightPanels, chip, accent, colors, now, lead: true, trail: true, side: "R", processes, toolIcons, art, leadSize, animate);
         }
         Reconcile(left, leftPanels, rightWing: false, motion, animationsOn, removed);
         Reconcile(right, rightPanels, rightWing: true, motion, animationsOn, removed);
@@ -365,7 +391,7 @@ public static class ChipView
     /// already holds for that chip is kept, with no new panel, when its signature is unchanged.
     private static void Collect(StackPanel wing, List<ChipSlot> panels, Chip chip, Color? accent,
         IReadOnlyDictionary<string, string> colors, DateTimeOffset now, bool lead, bool trail, string side,
-        IProcessReader? processes, IReadOnlyDictionary<string, JsonObject>? toolIcons, Func<string, ImageSource?>? art, double leadSize)
+        IProcessReader? processes, IReadOnlyDictionary<string, JsonObject>? toolIcons, Func<string, ImageSource?>? art, double leadSize, bool animate)
     {
         var key = $"{chip.Kind}|{chip.Module}|{chip.Id}|{side}";
         var signature = SignatureOf(chip, accent, colors, now, lead, trail, side, art, leadSize);
@@ -374,7 +400,7 @@ public static class ChipView
             panels.Add(new ChipSlot(key, held, signature));
             return;
         }
-        if (Panel(chip, accent, colors, now, lead, trail, processes, toolIcons, art, leadSize) is { } panel)
+        if (Panel(chip, accent, colors, now, lead, trail, processes, toolIcons, art, leadSize, animate) is { } panel)
         {
             panel.Tag = ChipTag;
             panels.Add(new ChipSlot(key, panel, signature));
@@ -397,6 +423,12 @@ public static class ChipView
         if (chip.Kind == ChipKind.Agent)
         {
             return null;
+        }
+        if (chip.Kind == ChipKind.Ask)
+        {
+            // no clock second: an ask's words do not change with time, so its lead (and the badge's pulse) is kept from publish to publish
+            var iconPath = chip.AskItem is { } askItem ? ItemIcon.PathOf(new ItemState(askItem, Array.Empty<Job>()), null) : null;
+            return new AskSignature(chip, tint, L10n.Current, iconPath, lead, trail, side, leadSize);
         }
         return new ChipSignature(chip, tint, L10n.Current, now.ToUnixTimeSeconds(), lead, trail, side, leadSize);
     }

@@ -102,10 +102,23 @@ public partial class ToastView : UserControl
             }
             : new TextBlock { Text = ModuleGlyphs.Get(name).Glyph, FontFamily = ModuleGlyphs.Get(name).Family, Foreground = tint };
 
-    /// The icon a toast draws in its glyph slot for its agent or app (Mac toastIcon): the item's own icon in the tint, so the agent
-    /// shows where a glyph would. Null for a toast with no item, which keeps its glyph.
-    public static FrameworkElement? IconOf(Toast t, Color tint, double size, IProcessReader? processes) =>
-        t.Icon is { } item ? ItemIcon.Element(new ItemState(item, Array.Empty<Job>()), size, tint, processes) : null;
+    /// The icon a toast draws in its glyph slot for its agent or app (Mac toastIcon): the item's own icon at size. Its fallback sparkles
+    /// take the item's own colour, as the Mac's item icon does, not the toast's tint. Null for a toast with no item, which keeps its glyph.
+    public static FrameworkElement? IconOf(Toast t, double size, IProcessReader? processes) =>
+        t.Icon is { } item
+            ? ItemIcon.Element(new ItemState(item, Array.Empty<Job>()), size, ItemTint.Of(item, NoColours, null), processes)
+            : null;
+
+    /// The icon's size in each look (Mac toastIcon: compact 18, island and banner 20, card 26). The island's icon is larger than its glyph
+    /// (14), which is kept as the fallback glyph's size.
+    public static double IconSizeOf(ToastLook look) => look switch
+    {
+        ToastLook.Compact => 18,
+        ToastLook.Card => 26,
+        _ => 20,
+    };
+
+    private static readonly IReadOnlyDictionary<string, string> NoColours = new Dictionary<string, string>();
 
     /// The tint symbol drawn on the right of a toast that has an item (Mac: the symbol beside the icon, which tells the toast's kind).
     /// Null for a toast with no item.
@@ -146,7 +159,7 @@ public partial class ToastView : UserControl
             CompactLeft.Width = new GridLength(side);
             CompactMiddle.Width = new GridLength(IslandNotchWidth);
             CompactRight.Width = new GridLength(side);
-            CompactGlyph.Content = IconOf(t, color, CompactGlyph.FontSize, processes) ?? GlyphOf(t.Glyph, tint, CompactGlyph.FontSize);
+            CompactGlyph.Content = IconOf(t, IconSizeOf(ToastLook.Compact), processes) ?? GlyphOf(t.Glyph, tint, CompactGlyph.FontSize);
             var art = t.Art as ChargeArt;
             var device = t.Art as DeviceArt;
             CompactArt.Content = art is not null ? new ChargeArtView(art, motion)
@@ -163,7 +176,7 @@ public partial class ToastView : UserControl
         TopRow.Visibility = VisibleIf(look is ToastLook.Island or ToastLook.Banner);
         TopGlyph.Content = deviceArt is not null && look is ToastLook.Island or ToastLook.Banner
             ? new DeviceArtView(deviceArt, tint, motion, TopGlyph.FontSize)
-            : IconOf(t, color, TopGlyph.FontSize, processes) ?? GlyphOf(t.Glyph, tint, TopGlyph.FontSize);
+            : IconOf(t, IconSizeOf(look), processes) ?? GlyphOf(t.Glyph, tint, TopGlyph.FontSize);
         var topTrail = TrailOf(t, tint, 14);
         TopTrail.Content = topTrail;
         TopTrail.Visibility = VisibleIf(topTrail is not null);
@@ -172,7 +185,7 @@ public partial class ToastView : UserControl
         CardGlyph.Visibility = VisibleIf(look == ToastLook.Card);
         CardGlyph.Content = deviceArt is not null && look == ToastLook.Card
             ? new DeviceArtView(deviceArt, tint, motion, CardGlyph.FontSize)
-            : IconOf(t, color, CardGlyph.FontSize, processes) ?? GlyphOf(t.Glyph, tint, CardGlyph.FontSize);
+            : IconOf(t, IconSizeOf(look), processes) ?? GlyphOf(t.Glyph, tint, CardGlyph.FontSize);
         var cardTrail = TrailOf(t, tint, 15);
         CardTrail.Content = cardTrail;
         CardTrail.Visibility = VisibleIf(cardTrail is not null && look == ToastLook.Card);

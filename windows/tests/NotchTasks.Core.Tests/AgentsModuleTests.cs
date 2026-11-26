@@ -150,9 +150,10 @@ public class AgentsModuleTests
     [Fact]
     public void DoneNaming_AgentNamesTheItemAndKeepsItsIcon()
     {
-        var (title, icon) = AgentsModule.DoneNaming(Claude, "proj");
+        var (title, subtitle, icon) = AgentsModule.DoneNaming(Claude, "proj", "40 sec");
 
         Assert.Equal("Claude done", title);
+        Assert.Equal("proj · 40 sec", subtitle);
         Assert.Equal(Claude, icon);
     }
 
@@ -162,10 +163,12 @@ public class AgentsModuleTests
         // a dev row's job names its tool ("Gradle done"), and the row's own icon is not drawn
         var build = new WatchItem("build", "Build & CI", WatchKind.Dev);
 
-        var (title, icon) = AgentsModule.DoneNaming(build, "Gradle");
+        var (title, subtitle, icon) = AgentsModule.DoneNaming(build, "Gradle", "2 min");
 
         Assert.Equal("Gradle done", title);
         Assert.Null(icon);
+        // the title already names the job, so the subtitle is the elapsed time only (Mac Model.swift:1121)
+        Assert.Equal("2 min", subtitle);
     }
 
     [Fact]

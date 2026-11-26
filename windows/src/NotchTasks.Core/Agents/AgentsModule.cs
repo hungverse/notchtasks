@@ -284,12 +284,12 @@ public sealed class AgentsModule
             {
                 continue;
             }
-            var (title, icon) = DoneNaming(w.Item, w.Title);
+            var (title, subtitle, icon) = DoneNaming(w.Item, w.Title, Ago.Text(took));
             _announce.Announce(new Toast(
                 Glyph: "check",
                 Tint: DoneTint,
                 Title: title,
-                Subtitle: $"{w.Title} · {Ago.Text(took)}",
+                Subtitle: subtitle,
                 Event: "taskDone",
                 Module: _build ? "ci" : "agents",
                 ToPhone: true,
@@ -297,12 +297,13 @@ public sealed class AgentsModule
         }
     }
 
-    /// The title and icon of a done toast (Mac announceFinished). A dev row names its job ("Gradle done", the tool that ran), since
-    /// the row's own name says nothing about it, and has no icon; any other item is named and drawn by its own icon.
-    public static (string Title, WatchItem? Icon) DoneNaming(WatchItem item, string jobTitle) =>
+    /// The title, subtitle and icon of a done toast (Mac announceFinished, Model.swift:1119-1121). A dev row names its job ("Gradle done",
+    /// the tool that ran), so its subtitle is the elapsed time alone, and it has no icon; any other item is named by its name, with
+    /// the job and the time under it, and is drawn by its own icon.
+    public static (string Title, string Subtitle, WatchItem? Icon) DoneNaming(WatchItem item, string jobTitle, string ago) =>
         item.Kind == WatchKind.Dev
-            ? (L10n.L("{0} done", jobTitle), null)
-            : (L10n.L("{0} done", item.Name), item);
+            ? (L10n.L("{0} done", jobTitle), ago, null)
+            : (L10n.L("{0} done", item.Name), $"{jobTitle} · {ago}", item);
 
     /// A job seen working: when it started, and when it was last seen working (both in ms).
     private sealed record Tracked(WatchItem Item, string Title, long Since, long LastSeen);
