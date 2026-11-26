@@ -86,6 +86,43 @@ public sealed class AppearancePaneTests
         });
     }
 
+    /// The text blocks under a node of the logical tree (a tile's title is its only one).
+    private static IEnumerable<TextBlock> TextBlocksOf(DependencyObject node)
+    {
+        foreach (var child in LogicalTreeHelper.GetChildren(node).OfType<DependencyObject>())
+        {
+            if (child is TextBlock text)
+            {
+                yield return text;
+            }
+            foreach (var inner in TextBlocksOf(child))
+            {
+                yield return inner;
+            }
+        }
+    }
+
+    [Fact]
+    public void ThemeTiles_TitleIsThePrimaryTextBrush()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            var pane = Fixture.Create<AppearancePane>(state.Settings, state);
+            var primary = pane.FindResource("TextFillColorPrimaryBrush");
+
+            // Each tile's title sits on its card, so it is the theme's primary text (13 DIP SemiBold), in every theme's look.
+            foreach (var tile in Tiles(pane))
+            {
+                var title = Assert.Single(TextBlocksOf(tile));
+                Assert.Same(primary, title.Foreground);
+                Assert.Equal(13, title.FontSize);
+                Assert.Equal(FontWeights.SemiBold, title.FontWeight);
+            }
+        });
+    }
+
     [Fact]
     public void ClickingATheme_AppliesItToTheStoreAndSelectsItsTile()
     {

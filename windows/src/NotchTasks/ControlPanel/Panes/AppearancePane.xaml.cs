@@ -303,7 +303,16 @@ public partial class AppearancePane : SettingsPane
             VerticalAlignment = VerticalAlignment.Center,
         };
         check.SetResourceReference(FluentGlyph.ForegroundProperty, "AccentFillColorDefaultBrush");
-        var title = new TextBlock { FontWeight = FontWeights.SemiBold, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis };
+        // The title sits on the card, not on the swatch, so it takes the theme's primary text brush (dark text on the light card and
+        // light text on the dark one); a hard-coded grey was unreadable on the dark card.
+        var title = new TextBlock
+        {
+            FontSize = 13,
+            FontWeight = FontWeights.SemiBold,
+            VerticalAlignment = VerticalAlignment.Center,
+            TextTrimming = TextTrimming.CharacterEllipsis,
+        };
+        title.SetResourceReference(TextBlock.ForegroundProperty, "TextFillColorPrimaryBrush");
         var labelRow = new DockPanel { Margin = new Thickness(2, 8, 2, 0) };
         DockPanel.SetDock(check, Dock.Right);
         labelRow.Children.Add(check);

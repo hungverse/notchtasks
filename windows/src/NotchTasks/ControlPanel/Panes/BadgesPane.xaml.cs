@@ -100,6 +100,16 @@ public partial class BadgesPane : SettingsPane
 
     private Button AddSlot(bool right)
     {
+        // The "+" takes the theme's secondary text brush, so it reads on the light and the dark card alike.
+        var plus = new TextBlock
+        {
+            Text = "+",
+            FontSize = 16,
+            FontWeight = FontWeights.SemiBold,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        plus.SetResourceReference(TextBlock.ForegroundProperty, "TextFillColorSecondaryBrush");
         var face = new Border
         {
             Width = 36,
@@ -107,15 +117,7 @@ public partial class BadgesPane : SettingsPane
             CornerRadius = new CornerRadius(8),
             BorderThickness = new Thickness(1),
             BorderBrush = Solid(Color.FromRgb(0x5A, 0x5A, 0x5C)),
-            Child = new TextBlock
-            {
-                Text = "+",
-                FontSize = 16,
-                FontWeight = FontWeights.SemiBold,
-                Foreground = Solid(Color.FromRgb(0x9A, 0x9A, 0x9A)),
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center,
-            },
+            Child = plus,
         };
         var button = new Button
         {

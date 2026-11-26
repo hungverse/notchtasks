@@ -179,8 +179,9 @@ public partial class TemperaturesPane : UserControl
         else
         {
             HottestValue.Text = "—";
-            HottestValue.Foreground = ToBrush("#808080");
-            HottestGlyph.Foreground = ToBrush("#808080");
+            // No reading: the dash and the glyph take the theme's secondary text brush, not a fixed grey.
+            HottestValue.SetResourceReference(TextBlock.ForegroundProperty, "TextFillColorSecondaryBrush");
+            HottestGlyph.SetResourceReference(FluentGlyph.ForegroundProperty, "TextFillColorSecondaryBrush");
             HottestName.Text = L10n.L("Could not read temperature sensors.");
         }
 
