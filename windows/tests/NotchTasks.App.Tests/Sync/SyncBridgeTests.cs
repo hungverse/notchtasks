@@ -127,6 +127,24 @@ public sealed class SyncBridgeTests
     }
 
     [Fact]
+    public void NotchOf_FreshSettings_SendsEveryModuleTheModulesPaneShowsOn()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            var settings = SettingsStore.Load(AppPaths.SettingsFile);
+
+            // The phone gets the same full list the Mac sends (Settings.swift: saved plus every remaining module), not the short default.
+            var modules = SyncBridge.NotchOf(settings)["modules"]!.AsArray().Select(n => n!.GetValue<string>()).ToList();
+
+            Assert.Contains("devices", modules);
+            Assert.Contains("calls", modules);
+            Assert.Contains("privacy", modules);
+            Assert.Contains("mirror", modules);
+        });
+    }
+
+    [Fact]
     public void ApplyNotch_ClampsAndFilters()
     {
         Sta.Run(() =>

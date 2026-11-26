@@ -363,7 +363,7 @@ public sealed class SyncBridge : IAsyncDisposable
             ["gradientB"] = s.GradientB,
             ["toastStyle"] = s.ToastStyle,
             ["motion"] = s.Motion,
-            ["modules"] = StringArray(s.Modules),
+            ["modules"] = StringArray(ModuleCatalog.Order(s.Modules)),  // the full order the Mac sends, so the phone shows the same rows
             ["disabled"] = StringArray(s.Disabled),
             ["placements"] = placements,
             ["haptics"] = false,

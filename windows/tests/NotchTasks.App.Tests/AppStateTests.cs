@@ -16,7 +16,29 @@ public sealed class AppStateTests
             state.Settings.Set("modules", JsonNode.Parse("[\"calls\",\"agents\",\"timer\",\"network\"]"));
             state.Settings.Set("disabled", JsonNode.Parse("[\"agents\"]"));
 
-            Assert.Equal(new[] { "calls", "timer", "network" }, AppState.ActiveModules(state.Settings).ToArray());
+            var active = AppState.ActiveModules(state.Settings).ToArray();
+            Assert.Equal(new[] { "calls", "timer", "network" }, active.Take(3));
+            Assert.DoesNotContain("agents", active);
+        });
+    }
+
+    [Fact]
+    public void AppState_ActiveModules_FreshSettings_TurnsOnTheModulesTheModulesPaneShowsOn()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+
+            // A fresh install: the Modules pane shows devices, calls, privacy and mirror on, so they must run (Mac: every module
+            // is on except the disabled set).
+            var active = AppState.ActiveModules(state.Settings);
+
+            Assert.Contains("devices", active);
+            Assert.Contains("calls", active);
+            Assert.Contains("privacy", active);
+            Assert.Contains("mirror", active);
+            Assert.DoesNotContain("timer", active);  // the one module off by default (DefaultDisabled)
         });
     }
 

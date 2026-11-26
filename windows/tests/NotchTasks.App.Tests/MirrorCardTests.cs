@@ -81,7 +81,7 @@ public sealed class MirrorCardTests
                 state.Publish();
                 Assert.Equal(Visibility.Visible, mirror.Visibility);
 
-                state.Settings.Set("modules", JsonNode.Parse("[]"));  // the mirror module off: no button
+                state.Settings.Set("disabled", JsonNode.Parse("[\"mirror\"]"));  // the mirror module off (the toggle): no button
                 Fixture.Flush();
                 state.Publish();
                 Assert.Equal(Visibility.Collapsed, mirror.Visibility);
@@ -144,7 +144,7 @@ public sealed class MirrorCardTests
             using var state = NewState(cameras);
             state.OpenMirror();
 
-            state.Settings.Set("modules", JsonNode.Parse("[]"));
+            state.Settings.Set("disabled", JsonNode.Parse("[\"mirror\"]"));
             Fixture.Flush();
 
             Assert.False(state.MirrorOn);

@@ -254,11 +254,12 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    /// The modules that are on: Modules without Disabled, in the user's order.
+    /// The modules that are on, in the user's order. Goes through ModuleCatalog.Order so a fresh install runs the modules the
+    /// Modules pane shows on (devices, calls, privacy, mirror), not only the short saved list.
     public static IReadOnlyList<string> ActiveModules(SettingsStore s)
     {
         var disabled = s.Disabled;
-        return s.Modules.Where(id => !disabled.Contains(id)).ToList();
+        return ModuleCatalog.Order(s.Modules).Where(id => !disabled.Contains(id)).ToList();
     }
 
     /// Plays the toast's sound (its Event) and queues the toast. notify is ignored until system notifications exist.
