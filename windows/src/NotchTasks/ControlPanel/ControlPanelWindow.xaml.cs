@@ -2,6 +2,8 @@ using System.IO;
 using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
+using Microsoft.Win32;
 using NotchTasks.ControlPanel.Panes;
 using NotchTasks.Core;
 using NotchTasks.Pill;
@@ -48,9 +50,32 @@ public partial class ControlPanelWindow : Window
         Closed += (_, _) =>
         {
             LocalizedStrings.Instance.PropertyChanged -= OnLanguageChanged;
+            SystemEvents.UserPreferenceChanged -= OnUserPreferenceChanged;
             _window = null;
         };
         SelectPane(pane);
+    }
+
+    /// Once the handle exists, the window takes its backdrop: Mica on Windows 11, where the background is clear so the
+    /// backdrop shows; otherwise the theme's solid background stays (the XAML's DynamicResource).
+    protected override void OnSourceInitialized(EventArgs e)
+    {
+        base.OnSourceInitialized(e);
+        if (Backdrop.Apply(this))
+        {
+            Background = Brushes.Transparent;
+        }
+        // The title bar's dark mode follows the system theme while the window is open.
+        SystemEvents.UserPreferenceChanged += OnUserPreferenceChanged;
+    }
+
+    /// The system's theme changed (General covers light and dark mode): the title bar's dark mode is applied again.
+    private void OnUserPreferenceChanged(object sender, UserPreferenceChangedEventArgs e)
+    {
+        if (e.Category == UserPreferenceCategory.General)
+        {
+            Backdrop.UpdateDarkMode(this);
+        }
     }
 
     /// The app state the window was opened with.

@@ -25,12 +25,14 @@
     <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
   </Style>
 
-  <!-- A rounded card that holds the rows of a section. The Mac's cards are 12 DIP rounded (SettingsView.swift). -->
+  <!-- A rounded card that holds the rows of a section: 8 DIP rounded, 1 DIP stroke, and 4 DIP below it, as the Windows 11
+       Settings cards (the cards of a pane are separated by that gap, not by a divider). -->
   <Style x:Key="Card" TargetType="Border">
     <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}" />
     <Setter Property="BorderBrush" Value="{DynamicResource CardStrokeColorDefaultBrush}" />
     <Setter Property="BorderThickness" Value="1" />
-    <Setter Property="CornerRadius" Value="12" />
+    <Setter Property="CornerRadius" Value="8" />
+    <Setter Property="Margin" Value="0,0,0,4" />
   </Style>
 
   <!-- A card's title, inside the card (the Mac's "Needed now"): 15 semibold. -->
@@ -49,8 +51,9 @@
     <Setter Property="Margin" Value="0,12,0,6" />
     <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
   </Style>
-  <!-- The Mac's switch: a 40x22 track (off = the Mac's grey, on = the accent) with a white knob that slides 150 ms.
-       As the implicit CheckBox style of the Control Panel (ControlPanelWindow.xaml), the CheckBox keeps its IsChecked
+  <!-- The Windows 11 ToggleSwitch: a 40x20 track (off = a 1 DIP control stroke, on = the accent) with a 12 DIP knob that grows
+       to 14 under the mouse. The knob's margin centres it in the track at both sizes, so it grows in place. The knob slides
+       150 ms. As the implicit CheckBox style of the Control Panel (ControlPanelWindow.xaml), the CheckBox keeps its IsChecked
        and Click behaviour; its Content, when it has one, sits 8 DIP to the right of the track. -->
   <Style x:Key="Switch" TargetType="CheckBox">
     <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
@@ -65,18 +68,16 @@
               <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <!-- The focus ring sits 2 DIP around the track, drawn only for keyboard focus. -->
-            <Grid Width="44" Height="26" VerticalAlignment="Center">
-              <Border x:Name="FocusRing" CornerRadius="13" BorderThickness="0"
+            <Grid Width="44" Height="24" VerticalAlignment="Center">
+              <Border x:Name="FocusRing" CornerRadius="12" BorderThickness="0"
                       BorderBrush="{DynamicResource AccentFillColorDefaultBrush}" />
-              <Border x:Name="Track" Width="40" Height="22" CornerRadius="11" Background="#59787880">
-                <!-- The knob's position is the Margin: the Checked and Unchecked animations (Style.Triggers) slide it
-                     in 150 ms; the template trigger sets the same end position for a state set in code. -->
-                <Ellipse x:Name="Knob" Width="18" Height="18" Margin="2,0,0,0"
-                         HorizontalAlignment="Left" VerticalAlignment="Center" Fill="White">
-                  <Ellipse.Effect>
-                    <DropShadowEffect Opacity="0.25" BlurRadius="3" ShadowDepth="1" Direction="270" />
-                  </Ellipse.Effect>
-                </Ellipse>
+              <Border x:Name="Track" Width="40" Height="20" CornerRadius="10" BorderThickness="1"
+                      Background="Transparent" BorderBrush="{DynamicResource ControlStrongStrokeColorDefaultBrush}">
+                <!-- The knob's position is its Margin, counted from the track's inner edge: 3 DIP off, 23 on (12 DIP knob).
+                     A hovered knob is 14 DIP and sits 2 (off) or 22 (on) in, so it keeps the same centre. -->
+                <Ellipse x:Name="Knob" Width="12" Height="12" Margin="3,0,0,0"
+                         HorizontalAlignment="Left" VerticalAlignment="Center"
+                         Fill="{DynamicResource ControlStrongFillColorDefaultBrush}" />
               </Border>
             </Grid>
             <ContentPresenter x:Name="Label" Grid.Column="1" Margin="8,0,0,0" VerticalAlignment="Center"
@@ -84,15 +85,18 @@
           </Grid>
           <ControlTemplate.Triggers>
             <!-- The knob slides 150 ms when the switch is changed. The animations have no From, so one that runs
-                 while the switch is first built starts at the knob's place and does not slide in. -->
+                 while the switch is first built starts at the knob's place and does not slide in. FillBehavior Stop
+                 releases the animation at its end, so the hover setters below take effect again. -->
             <Trigger Property="IsChecked" Value="True">
               <Setter TargetName="Track" Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}" />
-              <Setter TargetName="Knob" Property="Margin" Value="20,0,0,0" />
+              <Setter TargetName="Track" Property="BorderBrush" Value="Transparent" />
+              <Setter TargetName="Knob" Property="Margin" Value="23,0,0,0" />
+              <Setter TargetName="Knob" Property="Fill" Value="{DynamicResource TextOnAccentFillColorPrimaryBrush}" />
               <Trigger.EnterActions>
                 <BeginStoryboard>
                   <Storyboard>
                     <ThicknessAnimation Storyboard.TargetName="Knob" Storyboard.TargetProperty="Margin"
-                                        To="20,0,0,0" Duration="0:0:0.15" />
+                                        To="23,0,0,0" Duration="0:0:0.15" FillBehavior="Stop" />
                   </Storyboard>
                 </BeginStoryboard>
               </Trigger.EnterActions>
@@ -100,11 +104,29 @@
                 <BeginStoryboard>
                   <Storyboard>
                     <ThicknessAnimation Storyboard.TargetName="Knob" Storyboard.TargetProperty="Margin"
-                                        To="2,0,0,0" Duration="0:0:0.15" />
+                                        To="3,0,0,0" Duration="0:0:0.15" FillBehavior="Stop" />
                   </Storyboard>
                 </BeginStoryboard>
               </Trigger.ExitActions>
             </Trigger>
+            <MultiTrigger>
+              <MultiTrigger.Conditions>
+                <Condition Property="IsMouseOver" Value="True" />
+                <Condition Property="IsChecked" Value="False" />
+              </MultiTrigger.Conditions>
+              <Setter TargetName="Knob" Property="Width" Value="14" />
+              <Setter TargetName="Knob" Property="Height" Value="14" />
+              <Setter TargetName="Knob" Property="Margin" Value="2,0,0,0" />
+            </MultiTrigger>
+            <MultiTrigger>
+              <MultiTrigger.Conditions>
+                <Condition Property="IsMouseOver" Value="True" />
+                <Condition Property="IsChecked" Value="True" />
+              </MultiTrigger.Conditions>
+              <Setter TargetName="Knob" Property="Width" Value="14" />
+              <Setter TargetName="Knob" Property="Height" Value="14" />
+              <Setter TargetName="Knob" Property="Margin" Value="22,0,0,0" />
+            </MultiTrigger>
             <Trigger Property="IsKeyboardFocused" Value="True">
               <Setter TargetName="FocusRing" Property="BorderThickness" Value="2" />
             </Trigger>
@@ -299,14 +321,18 @@
     </Setter>
   </Style>
 
-  <!-- One row of a card: a DockPanel whose control is docked right (Dock="Right") and whose label fills the rest. -->
+  <!-- One row of a card: a DockPanel whose control is docked right (Dock="Right") and whose label fills the rest. The row is
+       68 DIP tall, as a Windows 11 setting card: 18 DIP of margin above and below, and at least 32 DIP for its controls
+       (MinHeight of the panel, so a stretched ComboBox is 32 DIP, not 68). -->
   <Style x:Key="SettingRow" TargetType="DockPanel">
-    <Setter Property="Margin" Value="16,10" />
+    <Setter Property="Margin" Value="16,18" />
+    <Setter Property="MinHeight" Value="32" />
     <Setter Property="LastChildFill" Value="True" />
   </Style>
 
-  <!-- The label at the left of a row. -->
+  <!-- The label at the left of a row: the setting's title, 14 DIP. -->
   <Style x:Key="RowLabel" TargetType="TextBlock">
+    <Setter Property="FontSize" Value="14" />
     <Setter Property="VerticalAlignment" Value="Center" />
     <Setter Property="TextWrapping" Value="Wrap" />
     <Setter Property="Margin" Value="0,0,16,0" />

@@ -275,4 +275,76 @@ public sealed class ControlPanelWindowTests
             }
         });
     }
+
+    [Fact]
+    public void SidebarRows_AreFortyEightDip()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            var window = Fixture.Create<ControlPanelWindow>(state, PaneId.Overview);
+            try
+            {
+                Fixture.ShowOffScreen(window);
+                var sidebar = Fixture.Named<ListBox>(window, "Sidebar");
+                window.UpdateLayout();
+
+                // The Windows 11 Settings sidebar: every row is 48 DIP tall (the margin between rows is not part of it).
+                for (var i = 0; i < sidebar.Items.Count; i++)
+                {
+                    var row = Assert.IsType<ListBoxItem>(sidebar.ItemContainerGenerator.ContainerFromIndex(i));
+                    Assert.Equal(48, row.ActualHeight);
+                }
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Window_RendersInLightAndDarkTheme(bool dark)
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            var previous = Application.Current.ThemeMode;
+            Application.Current.ThemeMode = dark ? ThemeMode.Dark : ThemeMode.Light;
+            var window = Fixture.Create<ControlPanelWindow>(state, PaneId.Appearance);
+            try
+            {
+                Fixture.ShowOffScreen(window);
+
+                // The brushes of the look resolve in this theme: a missing key makes FindResource throw.
+                foreach (var key in new[]
+                {
+                    "ApplicationBackgroundBrush", "TextFillColorPrimaryBrush", "CardBackgroundFillColorDefaultBrush",
+                    "CardStrokeColorDefaultBrush", "SubtleFillColorSecondaryBrush", "SubtleFillColorTertiaryBrush",
+                    "ControlStrongStrokeColorDefaultBrush", "ControlStrongFillColorDefaultBrush", "AccentFillColorDefaultBrush",
+                })
+                {
+                    Assert.NotNull(window.FindResource(key));
+                }
+
+                // The window draws in this theme: a bitmap of it renders without throwing and has its size.
+                window.UpdateLayout();
+                var width = Math.Max(1, (int)window.ActualWidth);
+                var height = Math.Max(1, (int)window.ActualHeight);
+                var bitmap = new System.Windows.Media.Imaging.RenderTargetBitmap(width, height, 96, 96, System.Windows.Media.PixelFormats.Pbgra32);
+                bitmap.Render(window);
+                Assert.Equal(width, bitmap.PixelWidth);
+                Assert.Equal(height, bitmap.PixelHeight);
+            }
+            finally
+            {
+                window.Close();
+                Application.Current.ThemeMode = previous;
+            }
+        });
+    }
 }

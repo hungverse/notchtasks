@@ -14,7 +14,7 @@
       <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="MacAccent.xaml" />
       </ResourceDictionary.MergedDictionaries>
-      <!-- Every CheckBox in the Control Panel is the Mac's switch (Controls.xaml). Other windows keep the Fluent box. -->
+      <!-- Every CheckBox in the Control Panel is a Windows 11 toggle switch (Controls.xaml). Other windows keep the Fluent box. -->
       <Style TargetType="CheckBox" BasedOn="{StaticResource Switch}" />
       <!-- Every Slider in the Control Panel is the Mac's blue slider (Controls.xaml): the Fluent one ignores the accent. -->
       <Style TargetType="Slider" BasedOn="{StaticResource MacSlider}" />
@@ -26,41 +26,47 @@
       <ColumnDefinition Width="*" />
     </Grid.ColumnDefinitions>
 
-    <!-- The sidebar is an inset panel, as the Mac's: a rounded layer with the panes and the app version at its foot.
-         The layer and the text colours are the Windows theme's own brushes, so the window follows light and dark mode. -->
-    <Border Grid.Column="0" Margin="10" CornerRadius="12" Background="{DynamicResource LayerFillColorAltBrush}"
-            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+    <!-- The sidebar sits on the window's backdrop (Mica on Windows 11), with no panel of its own, as Windows 11 Settings
+         has it. Its text colours are the Windows theme's own brushes, so the window follows light and dark mode. -->
+    <Border Grid.Column="0" Margin="10">
       <Grid>
         <Grid.RowDefinitions>
           <RowDefinition Height="*" />
           <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- One row per pane, with its icon and title. The selected row takes the accent. -->
+        <!-- One row per pane, with its icon and title: 48 DIP, as the Settings sidebar. The selected row has a subtle fill
+             and the accent pill at its left edge. -->
         <ListBox x:Name="Sidebar" BorderThickness="0" Background="Transparent"
                  Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-                 Padding="8,12" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                 Padding="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
           <ListBox.ItemContainerStyle>
             <Style TargetType="ListBoxItem">
-              <Setter Property="Padding" Value="12,8" />
-              <Setter Property="Margin" Value="0,2" />
+              <Setter Property="Padding" Value="12,0" />
+              <Setter Property="MinHeight" Value="48" />
+              <Setter Property="Margin" Value="0,0,0,2" />
               <Setter Property="HorizontalContentAlignment" Value="Stretch" />
               <Setter Property="FocusVisualStyle" Value="{x:Null}" />
               <Setter Property="Template">
                 <Setter.Value>
                   <ControlTemplate TargetType="ListBoxItem">
-                    <Border x:Name="Body" CornerRadius="8" Background="{TemplateBinding Background}"
-                            Padding="{TemplateBinding Padding}">
-                      <ContentPresenter VerticalAlignment="Center" />
+                    <!-- The Body is 4 DIP rounded. The padding is on the content, so the accent pill sits at the row's edge. -->
+                    <Border x:Name="Body" CornerRadius="4" Background="{TemplateBinding Background}">
+                      <Grid>
+                        <Border x:Name="Pill" Width="3" Height="16" CornerRadius="1.5" HorizontalAlignment="Left"
+                                VerticalAlignment="Center" Background="{DynamicResource AccentFillColorDefaultBrush}"
+                                Visibility="Collapsed" />
+                        <ContentPresenter Margin="{TemplateBinding Padding}" VerticalAlignment="Center" />
+                      </Grid>
                     </Border>
                     <ControlTemplate.Triggers>
-                      <!-- The hover tint is listed before the selection, so a selected row keeps the accent under the mouse. -->
+                      <!-- The hover tint is listed before the selection, so a selected row keeps its fill under the mouse. -->
                       <Trigger Property="IsMouseOver" Value="True">
-                        <Setter TargetName="Body" Property="Background" Value="#0FFFFFFF" />
+                        <Setter TargetName="Body" Property="Background" Value="{DynamicResource SubtleFillColorTertiaryBrush}" />
                       </Trigger>
                       <Trigger Property="IsSelected" Value="True">
-                        <Setter TargetName="Body" Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}" />
-                        <Setter Property="Foreground" Value="{DynamicResource TextOnAccentFillColorPrimaryBrush}" />
+                        <Setter TargetName="Body" Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+                        <Setter TargetName="Pill" Property="Visibility" Value="Visible" />
                       </Trigger>
                     </ControlTemplate.Triggers>
                   </ControlTemplate>

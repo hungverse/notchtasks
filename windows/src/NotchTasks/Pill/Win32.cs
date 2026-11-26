@@ -106,6 +106,25 @@ internal static partial class Win32
     [LibraryImport("user32.dll", EntryPoint = "SystemParametersInfoW", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static partial bool SystemParametersInfo(uint action, uint param, out NativeRect area, uint winIni);
+
+    /// Sets one DWM window attribute (a DWMWA_ id and a value of `size` bytes). Returns an HRESULT: 0 is success.
+    [LibraryImport("dwmapi.dll")]
+    public static partial int DwmSetWindowAttribute(nint hwnd, int attribute, ref int value, int size);
+
+    /// Extends the window's frame into its client area: with margins of -1 the whole client area is glass, which is where
+    /// Mica is drawn. Returns an HRESULT: 0 is success.
+    [LibraryImport("dwmapi.dll")]
+    public static partial int DwmExtendFrameIntoClientArea(nint hwnd, ref NativeMargins margins);
+}
+
+/// MARGINS: the frame extension of each edge, in device pixels (-1 is the whole window).
+[StructLayout(LayoutKind.Sequential)]
+internal struct NativeMargins
+{
+    public int Left;
+    public int Right;
+    public int Top;
+    public int Bottom;
 }
 
 /// POINT in device pixels.
