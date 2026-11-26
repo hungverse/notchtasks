@@ -61,6 +61,9 @@ public partial class ItemCard : UserControl
     /// Each job row's status-dot ripples (for tests): one for a working dot-led row, else none.
     public IReadOnlyList<int> RowRippleCounts => _rows.Select(r => r.RippleCount).ToList();
 
+    /// The line, lead and ripple of job row `index`, for the layout tests.
+    internal (Grid Line, ContentControl Lead, Grid Ripple) RowParts(int index) => _rows[index].Parts;
+
     /// The limit badges in the header now.
     public int LimitBadgeCount => Badges.Children.OfType<FrameworkElement>().Count(e => e.Tag is string tag && tag == LimitBadge.Tag);
 
@@ -373,7 +376,15 @@ public partial class ItemCard : UserControl
 
         private readonly Action<string> _open;
         private readonly Grid _line;
-        private readonly ContentControl _lead = new() { Width = 20, Height = 20, Focusable = false, VerticalAlignment = VerticalAlignment.Center };
+        // Left-aligned in the 28-wide column, so it sits at the leading edge with the ripple (the Mac's frame(width: 20) at the row's edge).
+        private readonly ContentControl _lead = new()
+        {
+            Width = 20,
+            Height = 20,
+            HorizontalAlignment = HorizontalAlignment.Left,
+            VerticalAlignment = VerticalAlignment.Center,
+            Focusable = false,
+        };
         private readonly TextBlock _title = new()
         {
             FontSize = 12,
@@ -458,6 +469,9 @@ public partial class ItemCard : UserControl
 
         /// The ripples on the row's status dot now: one while a dot-led job works, else none (for tests).
         public int RippleCount => _ripple.Children.Count;
+
+        /// The row's line, its lead and the dot's ripple, for the layout tests (the lead and the ripple share the 20-wide lead column).
+        public (Grid Line, ContentControl Lead, Grid Ripple) Parts => (_line, _lead, _ripple);
 
         /// Shows a job in this row, in the tint while it works and grey when it has stopped. toolIcons gives the badge of the job's
         /// tool, which leads the row when it has one.

@@ -54,6 +54,29 @@ public sealed class ItemCardTests
     private static ItemState DotJob(bool working) =>
         new(new WatchItem("dot", "Dot agent", WatchKind.Process), new List<Job> { new("1001", "Task 1", "3%", working) });
 
+    /// The horizontal centre of an element, in the coordinates of `space`.
+    private static double CentreX(FrameworkElement element, FrameworkElement space) =>
+        element.TransformToAncestor(space).Transform(new Point(element.ActualWidth / 2, 0)).X;
+
+    [Fact]
+    public void ItemCard_JobRowLead_IsAtTheLeadingEdge_AndConcentricWithTheRipple()
+    {
+        Sta.Run(() =>
+        {
+            var card = new ItemCard();
+            card.Update(DotJob(working: true), Array.Empty<LimitWindow>(), Tint, null, Now);
+            card.Measure(new Size(400, 300));
+            card.Arrange(new Rect(0, 0, 400, 300));
+            card.UpdateLayout();
+
+            var (line, lead, ripple) = card.RowParts(0);
+            var leadCentre = CentreX(lead, line);
+            var rippleCentre = CentreX(ripple, line);
+            Assert.Equal(10, leadCentre, 0.5);            // the Mac's frame(width: 20) at the leading edge: centre at 10
+            Assert.Equal(leadCentre, rippleCentre, 0.5);  // the ripple is centred on the dot
+        });
+    }
+
     [Fact]
     public void ItemCard_WorkingDotRow_HasOneRipple()
     {
