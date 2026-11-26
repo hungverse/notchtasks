@@ -169,4 +169,114 @@ public sealed class BadgeEditsTests
         Assert.Equal(BadgeEdits.SymbolCodes.Count, BadgeEdits.SymbolCodes.Distinct().Count());
         Assert.Equal("seg:E734", BadgeEdits.SymbolFor("E734"));
     }
+
+    [Fact]
+    public void ApplyText_SetsTheText_AndClearsThePictureAndAnimation()
+    {
+        var badge = new JsonObject
+        {
+            ["id"] = "a", ["image"] = "C:/x/pic.png", ["sprite"] = "px-spark", ["frames"] = 4, ["fps"] = 8,
+        };
+
+        BadgeEdits.ApplyText(badge, "Hi");
+
+        Assert.Equal("Hi", badge["text"]!.GetValue<string>());
+        Assert.Null(badge["image"]);
+        Assert.Null(badge["sprite"]);
+        Assert.Null(badge["frames"]);
+        Assert.Null(badge["fps"]);
+    }
+
+    [Fact]
+    public void ApplyText_KeepsEightCharacters_AsTheMacDoes()
+    {
+        var badge = new JsonObject { ["id"] = "a" };
+
+        BadgeEdits.ApplyText(badge, "ABCDEFGHIJ");
+
+        Assert.Equal("ABCDEFGH", badge["text"]!.GetValue<string>());
+    }
+
+    [Fact]
+    public void ApplyText_CountsAnEmojiAsOneCharacter()
+    {
+        var badge = new JsonObject { ["id"] = "a" };
+
+        const string thumb = "\U0001F44D";
+        BadgeEdits.ApplyText(badge, string.Concat(Enumerable.Repeat(thumb, 10)));
+
+        Assert.Equal(string.Concat(Enumerable.Repeat(thumb, 8)), badge["text"]!.GetValue<string>());
+    }
+
+    [Fact]
+    public void ApplyText_Empty_RemovesTheText()
+    {
+        var badge = new JsonObject { ["id"] = "a", ["text"] = "Hi" };
+
+        BadgeEdits.ApplyText(badge, "");
+
+        Assert.Null(badge["text"]);
+    }
+
+    [Fact]
+    public void ApplyPicture_SetsTheImage_AndClearsTheTextAndAnimation()
+    {
+        var badge = new JsonObject { ["id"] = "a", ["text"] = "Hi", ["sprite"] = "px-spark", ["fps"] = 8 };
+
+        BadgeEdits.ApplyPicture(badge, "C:/x/pic.jpg");
+
+        Assert.Equal("C:/x/pic.jpg", badge["image"]!.GetValue<string>());
+        Assert.Null(badge["text"]);
+        Assert.Null(badge["sprite"]);
+        Assert.Null(badge["fps"]);
+    }
+
+    [Fact]
+    public void ApplyAnimation_Gif_TurnsTheFillOffWhenNoneWasChosen()
+    {
+        var badge = new JsonObject { ["id"] = "a", ["text"] = "Hi" };
+
+        BadgeEdits.ApplyAnimation(badge, "C:/x/cat.gif");
+
+        Assert.Equal("C:/x/cat.gif", badge["image"]!.GetValue<string>());
+        Assert.True(badge["plain"]!.GetValue<bool>());
+        Assert.Null(badge["text"]);
+        Assert.Null(badge["frames"]);
+        Assert.True(BadgeEdits.IsAnimated(badge));
+    }
+
+    [Fact]
+    public void ApplyAnimation_KeepsAFillTheUserChose()
+    {
+        var badge = new JsonObject { ["id"] = "a", ["plain"] = false };
+
+        BadgeEdits.ApplyAnimation(badge, "C:/x/cat.gif");
+
+        Assert.False(badge["plain"]!.GetValue<bool>());
+    }
+
+    [Fact]
+    public void IsAnimated_ReadsAMacSpritesheetAndAGif()
+    {
+        Assert.True(BadgeEdits.IsAnimated(new JsonObject { ["image"] = "/Users/a/Badges/x.png", ["frames"] = 4 }));
+        Assert.True(BadgeEdits.IsAnimated(new JsonObject { ["image"] = "/Users/a/Badges/x.GIF" }));
+        Assert.True(BadgeEdits.IsAnimated(new JsonObject { ["sprite"] = "px-spark" }));
+        Assert.False(BadgeEdits.IsAnimated(new JsonObject { ["image"] = "/Users/a/Badges/x.png" }));
+    }
+
+    [Fact]
+    public void MacBadge_KeepsItsKeys_WhenWindowsEditsIt()
+    {
+        // a badge the Mac wrote: a spritesheet with its frame count and speed
+        var badges = Parse("""[{"id":"m1","symbol":"star.fill","image":"/Users/a/Badges/s.png","frames":4,"fps":12,"shape":"rounded","right":true,"plain":true}]""");
+
+        var edited = BadgeEdits.Update(badges, "m1", b => b["border"] = true);
+
+        var b = (JsonObject)edited[0]!;
+        Assert.Equal("/Users/a/Badges/s.png", b["image"]!.GetValue<string>());
+        Assert.Equal(4, b["frames"]!.GetValue<int>());
+        Assert.Equal(12, b["fps"]!.GetValue<int>());
+        Assert.Equal("rounded", b["shape"]!.GetValue<string>());
+        Assert.True(b["border"]!.GetValue<bool>());
+    }
 }

@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json.Nodes;
 
 namespace NotchTasks.Core.Settings;
@@ -9,6 +10,9 @@ public static class BadgeEdits
 {
     /// Most icons on one side of the notch (the Mac's Badge.perSide; the Electron build's free limit).
     public const int PerSide = 3;
+
+    /// Most characters a badge's text shows (the Mac's editor and settings check both allow eight).
+    public const int TextMax = 8;
 
     /// The badge symbols offered, as the Segoe code each was stored as, four hex digits (stored as "seg:" + code). They draw as
     /// the Fluent icon ModuleGlyphs.Legacy names for the code, so a badge saved before the Fluent icons keeps its look.
@@ -121,6 +125,56 @@ public static class BadgeEdits
         badge["image"] = null;
         badge["text"] = null;
     }
+
+    /// Makes a badge show letters or an emoji: up to eight characters (the Mac's editor limit, counted as the user sees them), and
+    /// the picture and animation are cleared. Empty text removes it, so the badge shows its symbol again.
+    public static void ApplyText(JsonObject badge, string text)
+    {
+        var info = new StringInfo(text);
+        var clipped = info.LengthInTextElements > TextMax ? info.SubstringByTextElements(0, TextMax) : text;
+        badge["text"] = clipped.Length == 0 ? null : JsonValue.Create(clipped);
+        badge["image"] = null;
+        badge["sprite"] = null;
+        badge["frames"] = null;
+        badge["fps"] = null;
+    }
+
+    /// Makes a badge show a picture (a copy in the Badges folder, from BadgeImages). The text and animation are cleared; the fill
+    /// is kept, as the Mac keeps it.
+    public static void ApplyPicture(JsonObject badge, string path)
+    {
+        badge["image"] = JsonValue.Create(path);
+        badge["text"] = null;
+        badge["sprite"] = null;
+        badge["frames"] = null;
+        badge["fps"] = null;
+    }
+
+    /// Makes a badge show an animated GIF: the picture is set and the text and sprite are cleared. With no fill chosen yet it
+    /// turns the fill off, so the animation stands on the notch, as the Mac does (BadgesPane.useAnimation).
+    public static void ApplyAnimation(JsonObject badge, string path)
+    {
+        if (!IsAnimated(badge) && badge["plain"] is null)
+        {
+            badge["plain"] = JsonValue.Create(true);
+        }
+        badge["sprite"] = null;
+        badge["text"] = null;
+        badge["frames"] = null;
+        badge["fps"] = null;
+        badge["image"] = JsonValue.Create(path);
+    }
+
+    /// Whether a badge animates: a built-in sprite, a spritesheet (it has a frame count), or a GIF picture (the Mac's Badge.animated).
+    public static bool IsAnimated(JsonNode? node) =>
+        node is JsonObject badge
+        && (badge["sprite"] is JsonValue
+            || badge["frames"] is JsonValue
+            || (ImageOf(badge) is { } image && image.EndsWith(".gif", StringComparison.OrdinalIgnoreCase)));
+
+    /// The picture path of a badge, or null when it has none.
+    public static string? ImageOf(JsonObject badge) =>
+        badge["image"] is JsonValue value && value.TryGetValue(out string? image) && image.Length > 0 ? image : null;
 
     private static JsonObject NewBadge(bool right, string? sprite) => new()
     {
