@@ -201,4 +201,114 @@ public sealed class ClaudeLimitsSetupRunnerTests
         host.Exit.TrySetResult(true);
         await Within(first);
     }
+
+    [Fact]
+    public async Task Allow_UnknownReply_OpensNoTerminalAndKeepsTheState()
+    {
+        // no reply at all (it did not answer): unknown, so no sign-in window opens
+        var host = new FakeHost { Cli = Exe, Usage = null };
+        var status = new ClaudeLimitsStatus();
+
+        await Within(Runner(host, status).AllowAsync());
+
+        Assert.Empty(host.SignInCalls);
+        Assert.Empty(host.InstallerCalls);
+        Assert.Null(status.SignedIn);
+        Assert.Equal(1, host.Probes);
+    }
+
+    [Fact]
+    public async Task Allow_EmptyOutput_IsUnknown_NoTerminal()
+    {
+        var host = new FakeHost { Cli = Exe, Usage = "" };
+        var status = new ClaudeLimitsStatus();
+        status.Record(SignedInText, DateTimeOffset.UtcNow);
+
+        await Within(Runner(host, status).AllowAsync());
+
+        Assert.Empty(host.SignInCalls);
+        Assert.True(status.SignedIn);  // the previous state stands
+    }
+
+    [Fact]
+    public async Task SignInButton_UnknownReply_OpensNoTerminal()
+    {
+        var host = new FakeHost { Cli = Exe, Usage = "some other text" };
+
+        await Within(Runner(host).SignInAsync());
+
+        Assert.Empty(host.SignInCalls);
+    }
+
+    [Fact]
+    public async Task Recheck_CliMissing_RecordsNotFound_AndRunsNothing()
+    {
+        var host = new FakeHost { Cli = null, InstallsTo = Exe, Usage = CostOnlyText };
+        var status = new ClaudeLimitsStatus();
+
+        await Within(Runner(host, status).RecheckAsync());
+
+        Assert.False(status.CliFound);
+        Assert.Equal(0, host.Probes);
+        Assert.Empty(host.InstallerCalls);
+        Assert.Empty(host.SignInCalls);
+    }
+
+    [Fact]
+    public async Task Recheck_SignedOut_RecordsItAndOpensNoWindow()
+    {
+        var host = new FakeHost { Cli = Exe, Usage = CostOnlyText };
+        var status = new ClaudeLimitsStatus();
+
+        await Within(Runner(host, status).RecheckAsync());
+
+        Assert.True(status.CliFound);
+        Assert.Equal(1, host.Probes);
+        Assert.False(status.SignedIn);
+        Assert.Empty(host.SignInCalls);
+        Assert.Empty(host.InstallerCalls);
+    }
+
+    [Fact]
+    public async Task Recheck_UnknownReply_KeepsThePreviousState_AndOpensNoWindow()
+    {
+        var host = new FakeHost { Cli = Exe, Usage = null };
+        var status = new ClaudeLimitsStatus();
+        status.Record(CostOnlyText, DateTimeOffset.UtcNow);
+
+        await Within(Runner(host, status).RecheckAsync());
+
+        Assert.Equal(1, host.Probes);
+        Assert.False(status.SignedIn);  // unchanged: signed out before, unknown now
+        Assert.Empty(host.SignInCalls);
+    }
+
+    [Fact]
+    public async Task Recheck_WhenSignedIn_RunsNoProbe()
+    {
+        var host = new FakeHost { Cli = Exe, Usage = CostOnlyText };
+        var status = new ClaudeLimitsStatus();
+        status.Record(SignedInText, DateTimeOffset.UtcNow);
+
+        await Within(Runner(host, status).RecheckAsync());
+
+        Assert.Equal(0, host.Probes);
+        Assert.True(status.CliFound);
+    }
+
+    [Fact]
+    public async Task Recheck_CliFoundLater_IsRecorded_AndSignedInIsRead()
+    {
+        var status = new ClaudeLimitsStatus();
+        var host = new FakeHost { Cli = null, Usage = SignedInText };
+        await Within(Runner(host, status).RecheckAsync());
+        Assert.False(status.CliFound);
+
+        host.Cli = Exe;
+        await Within(Runner(host, status).RecheckAsync());
+
+        Assert.True(status.CliFound);
+        Assert.True(status.SignedIn);
+        Assert.Empty(host.SignInCalls);
+    }
 }

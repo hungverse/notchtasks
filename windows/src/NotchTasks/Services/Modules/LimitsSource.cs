@@ -35,7 +35,9 @@ public sealed class LimitsSource : IModuleSource
     private readonly TimeSpan _cliGiveUp;
     private readonly CodexScanner _codex;
     private readonly AntigravityLimits _antigravity;
-    private readonly ClaudeLimitsStatus? _status;
+    private readonly ClaudeLimitsSetupRunner? _setup;
+    private DateTimeOffset _nextRecheck = DateTimeOffset.MinValue;
+    private bool _rechecking;
     private readonly DispatcherTimer _timer = new() { Interval = TickEvery };
     private bool _started;
     private bool _reading;
@@ -51,7 +53,8 @@ public sealed class LimitsSource : IModuleSource
     private ProviderLimits? _antigravityLimits;
 
     /// agents is the agents source whose Codex scanner this shares. cliGiveUp is how long the CLI may take before the statusline
-    /// stands in (30 s; a test passes less). status receives each CLI reply (sign-in and the last reading), when given.
+    /// stands in (30 s; a test passes less). setup gives the status each CLI reply lands in, and the one-minute re-check while the
+    /// sign-in or the CLI is not known to be good; when null there is neither.
     public LimitsSource(
         LimitsModule module,
         SettingsStore settings,
@@ -59,9 +62,9 @@ public sealed class LimitsSource : IModuleSource
         AgentsSource agents,
         Action publish,
         TimeSpan? cliGiveUp = null,
-        ClaudeLimitsStatus? status = null)
+        ClaudeLimitsSetupRunner? setup = null)
     {
-        _status = status;
+        _setup = setup;
         _module = module;
         _settings = settings;
         _reads = reads;
@@ -80,6 +83,7 @@ public sealed class LimitsSource : IModuleSource
         // the CLI runs once at start, and then again when its 30 min are up
         _nextCli = DateTimeOffset.MinValue;
         _nextAntigravity = DateTimeOffset.MinValue;
+        _nextRecheck = DateTimeOffset.MinValue;
         Sync();
         Tick();
     }
@@ -108,6 +112,7 @@ public sealed class LimitsSource : IModuleSource
         if (_settings.ClaudeLimits)
         {
             _nextCli = DateTimeOffset.MinValue;
+            _nextRecheck = DateTimeOffset.MinValue;
         }
         else
         {
@@ -161,6 +166,10 @@ public sealed class LimitsSource : IModuleSource
             _nextCli = now + CliEvery;
             RunCli(now);
         }
+        if (claudeOn && _settings.ClaudeLimits && _setup is { } setup)
+        {
+            RecheckIfDue(setup, now);
+        }
         if (agyOn && !_antigravityBusy && now >= _nextAntigravity)
         {
             _nextAntigravity = now + AntigravityEvery;
@@ -172,6 +181,39 @@ public sealed class LimitsSource : IModuleSource
             ReadInBackground(claudeOn, ownCodex, now);
         }
         Compose(now);
+    }
+
+    /// The fast re-check (ClaudeLimitsSetup.RecheckEvery): every minute while the sign-in or the CLI is not known to be good, in
+    /// the background, and never a window. It stops once both are known good; the 30 min reading then carries on.
+    private void RecheckIfDue(ClaudeLimitsSetupRunner setup, DateTimeOffset now)
+    {
+        if (_rechecking || now < _nextRecheck)
+        {
+            return;
+        }
+        if (ClaudeLimitsSetup.RecheckEvery(setup.Status.SignedIn, setup.Status.CliFound) is not { } wait)
+        {
+            return;
+        }
+        _nextRecheck = now + wait;
+        RecheckInBackground(setup);
+    }
+
+    private async void RecheckInBackground(ClaudeLimitsSetupRunner setup)
+    {
+        _rechecking = true;
+        try
+        {
+            await setup.RecheckAsync().ConfigureAwait(true);
+        }
+        catch (Exception e)
+        {
+            ErrorLog.Write(e);
+        }
+        finally
+        {
+            _rechecking = false;
+        }
     }
 
     private static bool AgyOn(IReadOnlyList<WatchItem> items) => items.Any(IsAgy);
@@ -226,7 +268,7 @@ public sealed class LimitsSource : IModuleSource
             var text = await call.ConfigureAwait(true);
             if (text is not null && _started && generation == _generation && _settings.ClaudeLimits)
             {
-                _status?.Record(text, DateTimeOffset.UtcNow);
+                _setup?.Status.Record(text, DateTimeOffset.UtcNow);
                 var windows = ClaudeUsage.Parse(text, DateTimeOffset.UtcNow);
                 if (windows.Count > 0)
                 {

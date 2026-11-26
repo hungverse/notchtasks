@@ -11,7 +11,8 @@ public interface IClaudeSetupHost
     /// The CLI that would run now, or null when it is not installed.
     CliCommand? FindCli();
 
-    /// Runs `claude -p /usage` once, in the background, and returns its text (null when it did not answer).
+    /// Runs `claude -p /usage` once, in the background, and returns its text. Null when it did not run to an answer (a timeout, an
+    /// exception, a process that could not start).
     string? ProbeUsage(CliCommand cli);
 
     /// Starts a visible window running the program with these arguments. The task completes when the window closes; null when it
@@ -24,8 +25,9 @@ public interface IClaudeSetupHost
 }
 
 /// The Plan limits setup, in the order the user agreed to: the installer when the CLI is missing, then a terminal to sign in when
-/// `claude -p /usage` shows no limits. Each step runs only when it is needed. While a sign-in terminal lives, the CLI is checked again
-/// every few seconds, and once when it closes. Nothing here reads or writes a credential: the user signs in by themselves.
+/// `claude -p /usage` clearly says signed out. Each step runs only when it is needed. While a sign-in terminal lives, the CLI is
+/// checked every few seconds, and once when it closes. Unknown replies never open a terminal. RecheckAsync is the background check
+/// (no window ever opens from it). Nothing here reads or writes a credential: the user signs in by themselves.
 public sealed class ClaudeLimitsSetupRunner
 {
     private static readonly TimeSpan DefaultRecheck = TimeSpan.FromSeconds(10);
@@ -48,8 +50,8 @@ public sealed class ClaudeLimitsSetupRunner
     /// The CLI that would run now, or null. The Plan limits row reads it.
     public CliCommand? Cli() => _host.FindCli();
 
-    /// Allow: the installer when the CLI is missing; then the sign-in terminal when `claude -p /usage` shows no limits. The task
-    /// completes when the steps are done, including the watch of a sign-in terminal. A second call while one runs does nothing.
+    /// Allow: the installer when the CLI is missing; then the sign-in terminal when `claude -p /usage` clearly says signed out. The
+    /// task completes when the steps are done, including the watch of a sign-in terminal. A second call while one runs does nothing.
     public async Task AllowAsync()
     {
         if (_busy)
@@ -90,7 +92,8 @@ public sealed class ClaudeLimitsSetupRunner
         }
     }
 
-    /// The Sign in button: the terminal for sign-in (and the watch of it), without the installer.
+    /// The Sign in button: the terminal for sign-in (and the watch of it), without the installer, and only when the reply says
+    /// signed out.
     public async Task SignInAsync()
     {
         if (_busy)
@@ -111,6 +114,23 @@ public sealed class ClaudeLimitsSetupRunner
         }
     }
 
+    /// The background check: records whether the CLI is here, and when it is and the sign-in is not known to be good, reads the reply
+    /// and records it. It never opens a window. It does nothing while Allow or a sign-in step runs.
+    public async Task RecheckAsync()
+    {
+        if (_busy)
+        {
+            return;
+        }
+        var cli = _host.FindCli();
+        Status.RecordCli(cli is not null);
+        if (cli is null || Status.SignedIn == true)
+        {
+            return;
+        }
+        await ProbeAsync(cli);
+    }
+
     private async Task<CliCommand?> InstallCoreAsync()
     {
         var window = _host.StartInstaller(ClaudeLimitsSetup.InstallerFile, ClaudeLimitsSetup.InstallerArguments);
@@ -123,8 +143,8 @@ public sealed class ClaudeLimitsSetupRunner
 
     private async Task SignInIfNeededAsync(CliCommand cli)
     {
-        var text = await ProbeAsync(cli);
-        if (ClaudeLimitsSetup.SignedIn(text))
+        // only a clear signed-out reply opens the terminal; unknown and signed-in leave it alone
+        if (await ProbeAsync(cli) != ClaudeReply.SignedOut)
         {
             return;
         }
@@ -146,7 +166,7 @@ public sealed class ClaudeLimitsSetupRunner
             {
                 break;
             }
-            if (ClaudeLimitsSetup.SignedIn(await ProbeAsync(cli)))
+            if (await ProbeAsync(cli) == ClaudeReply.SignedIn)
             {
                 return;
             }
@@ -154,12 +174,12 @@ public sealed class ClaudeLimitsSetupRunner
         await ProbeAsync(cli);
     }
 
-    /// One `claude -p /usage` on a pool thread; its reply goes to the status.
-    private async Task<string?> ProbeAsync(CliCommand cli)
+    /// One `claude -p /usage` on a pool thread; its reply goes to the status and is returned as what it says.
+    private async Task<ClaudeReply> ProbeAsync(CliCommand cli)
     {
         var text = await Task.Run(() => _host.ProbeUsage(cli));
         Status.Record(text, DateTimeOffset.UtcNow);
-        return text;
+        return ClaudeLimitsSetup.Classify(text);
     }
 }
 
@@ -185,7 +205,17 @@ public sealed class ClaudeSetupHost : IClaudeSetupHost
 
     public CliCommand? FindCli() => CliLauncher.Resolve("claude", _home, _path, _appData, _localAppData);
 
-    public string? ProbeUsage(CliCommand cli) => CliLauncher.Run(cli, Args, ProbeLimit, CancellationToken.None);
+    public string? ProbeUsage(CliCommand cli)
+    {
+        try
+        {
+            return CliLauncher.Run(cli, Args, ProbeLimit, CancellationToken.None);
+        }
+        catch (Exception)
+        {
+            return null;  // an exception is no answer
+        }
+    }
 
     public Task? StartInstaller(string file, string arguments) => StartVisible(file, arguments, workingDir: null);
 

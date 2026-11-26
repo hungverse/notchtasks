@@ -82,7 +82,8 @@ public sealed class LimitsSourceTests
         var agents = new AgentsSource(new AgentsModule(new QuietAnnouncer()), settings,
             new AgentReaders(new Fixture.NoProcesses(), new Fixture.NoSqlite(), new Fixture.NoHttp(), _ => null, readers.Home, readers.ClaudeDir),
             () => { }, _ => { });
-        return (new LimitsSource(module, settings, readers, agents, publish, giveUp, status), module);
+        var setup = new ClaudeLimitsSetupRunner(new ClaudeLimitsSetupRunnerTests.FakeHost(), status);
+        return (new LimitsSource(module, settings, readers, agents, publish, giveUp, setup), module);
     }
 
     [Fact]

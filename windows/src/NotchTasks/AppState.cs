@@ -104,7 +104,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         _notifier = o.Notifier ?? new SystemNotifier();
         _agentsSource = new AgentsSource(Agents, settings, agentReaders, Publish, SetCodexAsks);
         ClaudeSetup = new ClaudeLimitsSetupRunner(o.ClaudeHost ?? new ClaudeSetupHost(HomeOf(o)));
-        _limitsSource = new LimitsSource(LimitsModule, settings, limitReaders, _agentsSource, Publish, null, ClaudeSetup.Status);
+        _limitsSource = new LimitsSource(LimitsModule, settings, limitReaders, _agentsSource, Publish, null, ClaudeSetup);
         BuildAgents = new AgentsModule(this, build: true);
         Ci = new CiModule(this, CiState.Get, CiState.Set, settings.AddSeenTools,
             path => RunnerLogs.ReadTail(path, WorkerLogTail));
