@@ -139,6 +139,9 @@ public partial class PillWindow : Window
     {
         _state = state;
         InitializeComponent();
+        // The window's size is the geometry's: the layout with the host margin round it, so a spring overshoot and the glow stay inside.
+        Width = PillGeometry.WindowWidth;
+        Height = PillGeometry.WindowHeight;
         // A section that changed size (its content changed) makes the open height measure again; nothing else does.
         SectionList.SizeChanged += (_, _) => OnBodySizeChanged();
         EmptyNote.SizeChanged += (_, _) => OnBodySizeChanged();

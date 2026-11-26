@@ -11,7 +11,7 @@ public static class PillGeometry
     public const double OpenWidth = 520;
     public const double OpenRadius = 28;
 
-    /// The open pill grows with its ask cards up to this height (the window is 420 high).
+    /// The open pill grows with its ask cards up to this height (the window is this high plus HostMargin).
     public const double MaxOpenHeight = 400;
 
     /// The ask toast width: max(200 + 300, 520).
@@ -54,9 +54,18 @@ public static class PillGeometry
     /// counts for hover: the screen's top edge opens the pill.
     public const double IslandTop = 4;
 
-    /// The window: big enough for the open card and the glow, never resized.
-    public const double WindowWidth = 560;
-    public const double WindowHeight = 420;
+    /// How far the glow reaches outside the ring's geometry: the glow's 8 DIP blur (BlurRadius), which the ring's own stroke half (1.2 DIP)
+    /// is added to.
+    public const double GlowReach = 10;
+
+    /// The room the window keeps round the layout on the sides and at the bottom (not the top, which is the screen's edge). The
+    /// bouncy open overshoots its target by 7.3 % (SpringCurve), up to 36 DIP for a 488 DIP grow; with the glow's reach and the
+    /// ring's half stroke that is 47 DIP, so 48 holds every step of every motion (the test checks it).
+    public const double HostMargin = 48;
+
+    /// The window: the layout with HostMargin round it on both sides, and HostMargin under the open height. It is never resized.
+    public static double WindowWidth => LayoutWidth + 2 * HostMargin;
+    public static double WindowHeight => MaxOpenHeight + HostMargin;
 
     /// Top centre of the work area, in whole device pixels, IslandTop below its top. The size is the window's DIP size times the DPI scale.
     public static (int X, int Y, int W, int H) Place((int X, int Y, int W, int H) workAreaPx, double windowWidthDip, double windowHeightDip, double scale)

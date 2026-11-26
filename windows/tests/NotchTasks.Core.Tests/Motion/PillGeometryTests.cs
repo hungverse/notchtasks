@@ -27,4 +27,27 @@ public sealed class PillGeometryTests
         Assert.Equal(160.0, PillGeometry.WingOffset(200));
         Assert.Equal(0.0, PillGeometry.WingOffset(520));
     }
+
+    [Theory]
+    [InlineData("smooth")]
+    [InlineData("snappy")]
+    [InlineData("bouncy")]
+    public void HostMargin_HoldsTheGlowAndTheSpringOvershootOfEveryOpen(string motion)
+    {
+        // The open overshoots its target by the curve's peak, on the width and the height. The largest grow is from the smallest
+        // closed shape (ClosedHeight) to the layout's width, or to the open height from the same circle.
+        var curve = SpringCurve.For(motion, opening: true, animationsOn: true);
+        var peak = 0.0;
+        for (var t = 0.0; t <= curve.Settle; t += 0.001)
+        {
+            peak = Math.Max(peak, curve.At(t) - 1);
+        }
+        var widthGrow = PillGeometry.LayoutWidth - PillGeometry.ClosedHeight;
+        var heightGrow = PillGeometry.MaxOpenHeight - PillGeometry.ClosedHeight;
+        var needed = peak * Math.Max(widthGrow, heightGrow) + PillGeometry.GlowReach + 1.2;  // the ring's half stroke
+
+        Assert.True(PillGeometry.HostMargin >= needed, $"{motion}: the margin {PillGeometry.HostMargin} is short of {needed:0.0}");
+        Assert.Equal(PillGeometry.LayoutWidth + 2 * PillGeometry.HostMargin, PillGeometry.WindowWidth);
+        Assert.Equal(PillGeometry.MaxOpenHeight + PillGeometry.HostMargin, PillGeometry.WindowHeight);
+    }
 }

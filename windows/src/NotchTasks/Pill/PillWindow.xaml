@@ -4,7 +4,6 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:pill="clr-namespace:NotchTasks.Pill"
         Title="NotchTasks"
-        Width="560" Height="420"
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"

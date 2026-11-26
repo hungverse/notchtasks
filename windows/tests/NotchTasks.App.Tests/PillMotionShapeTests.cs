@@ -141,25 +141,94 @@ public sealed class PillMotionShapeTests
                 // Not shown: the window handle is zero, so screen points are read as client points at scale 1.
                 var shape = Fixture.Field<RectangleGeometry>(pill, "_shape");
 
-                // The closed rectangle: 200 wide, centred in the 560 window, so x in 180..380 and y in 0..32.
+                // The layout sits in the window with the host margin on its left, so a layout x is a window x plus `left`.
+                var left = (PillGeometry.WindowWidth - PillGeometry.LayoutWidth) / 2;
+
+                // The closed rectangle: 200 wide, centred in the layout, so x in 160..360 and y in 0..32 (layout).
                 shape.Rect = new Rect(160, 0, 200, 32);
                 shape.RadiusX = shape.RadiusY = PillGeometry.ClosedRadius;
-                Assert.True(Inside(pill, 280, 16));
-                Assert.False(Inside(pill, 280, 100));
-                Assert.False(Inside(pill, 30, 16));
+                Assert.True(Inside(pill, (int)left + 260, 16));
+                Assert.False(Inside(pill, (int)left + 260, 100));
+                Assert.False(Inside(pill, (int)left + 10, 16));
 
-                // The open rectangle: 520 wide, so x in 20..540 and y in 0..400.
+                // The open rectangle: 520 wide, so x in 0..520 and y in 0..400 (layout).
                 shape.Rect = new Rect(0, 0, 520, 400);
                 shape.RadiusX = shape.RadiusY = PillGeometry.OpenRadius;
-                Assert.True(Inside(pill, 30, 200));
-                Assert.True(Inside(pill, 280, 390));
-                Assert.False(Inside(pill, 280, 410));
+                Assert.True(Inside(pill, (int)left + 10, 200));
+                Assert.True(Inside(pill, (int)left + 260, 390));
+                Assert.False(Inside(pill, (int)left + 260, 410));
             }
             finally
             {
                 pill.Close();
             }
         });
+    }
+
+    [Fact]
+    public void Animate_OpenKeepsTheNeonRingInsideTheWindowAtEveryStep()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            // One badge, so the closed pill shows the glow too; the open flight starts from the closed one.
+            state.Settings.Set("badges", JsonNode.Parse("[{\"symbol\":\"seg:E700\",\"right\":false}]"));
+            // The glow look with the bouncy open: its spring overshoots the open size, which is the case the window must hold.
+            state.Settings.Set("background", JsonValue.Create("glow"));
+            state.Settings.Set("motion", JsonValue.Create("bouncy"));
+            var pill = new PillWindow(state);
+            try
+            {
+                ShowAway(pill);
+                state.Publish();
+                var ring = Fixture.Named<System.Windows.Shapes.Path>(pill, "GlowRing");
+                var content = Assert.IsAssignableFrom<UIElement>(pill.Content);
+                Assert.Equal(Visibility.Visible, ring.Visibility);
+                AssertNoClipAbove(ring);
+
+                OpenHeld(pill);
+                var steps = 0;
+                var end = DateTime.UtcNow.AddSeconds(5);
+                do
+                {
+                    AssertRingFitsWindow(ring, content);
+                    steps++;
+                    PumpFor(TimeSpan.FromMilliseconds(16));
+                }
+                while (Fixture.Field<bool>(pill, "_animating") && DateTime.UtcNow < end);
+
+                Assert.True(steps > 3, $"the open took {steps} steps");
+                AssertRingFitsWindow(ring, content);
+            }
+            finally
+            {
+                pill.Close();
+            }
+        });
+    }
+
+    /// The ring's stroke and its glow, at the ring's place in the window, lie inside the window on the sides and the bottom (the
+    /// top edge sits on the screen edge, so it is exempt). A spring overshoot must not push them past the window's edge.
+    private static void AssertRingFitsWindow(System.Windows.Shapes.Path ring, UIElement content)
+    {
+        var bounds = ring.TransformToAncestor(content).TransformBounds(ring.Data.Bounds);
+        var reach = PillGeometry.GlowReach + ring.StrokeThickness / 2;
+        Assert.True(bounds.Left - reach >= -0.5, $"the ring's left edge and glow start at {bounds.Left - reach}");
+        Assert.True(bounds.Right + reach <= PillGeometry.WindowWidth + 0.5, $"the ring's right glow ends at {bounds.Right + reach}");
+        Assert.True(bounds.Bottom + reach <= PillGeometry.WindowHeight + 0.5, $"the ring's bottom glow ends at {bounds.Bottom + reach}");
+    }
+
+    /// No element above the ring (up to the window's content) clips it: a clip there would cut the stroke or the glow.
+    private static void AssertNoClipAbove(DependencyObject element)
+    {
+        for (var parent = VisualTreeHelper.GetParent(element); parent is not null; parent = VisualTreeHelper.GetParent(parent))
+        {
+            if (parent is UIElement layer)
+            {
+                Assert.Null(layer.Clip);
+            }
+        }
     }
 
     /// IsInsidePill takes the internal NativePoint of the pill's assembly, so the test builds one by reflection.
