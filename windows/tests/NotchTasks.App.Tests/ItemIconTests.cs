@@ -126,8 +126,8 @@ public sealed class ItemIconTests
                 var item = new WatchItem("icon-invalid", "Mine", WatchKind.Process, Icon: text);
                 var element = ItemIcon.Element(new ItemState(item, Array.Empty<Job>()), 18, Colors.Gray, null);
 
-                var glyph = Assert.IsType<TextBlock>(element);
-                Assert.Equal(ModuleGlyphs.Get("sparkles").Glyph, glyph.Text);
+                var glyph = Assert.IsType<FluentGlyph>(element);
+                Assert.Equal(ModuleGlyphs.Get("sparkles").Glyph, glyph.Code);
             }
         });
     }

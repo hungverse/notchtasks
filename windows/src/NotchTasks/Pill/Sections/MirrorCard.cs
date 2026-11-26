@@ -18,13 +18,12 @@ public sealed class MirrorCard : Border
     private const double Radius = 14;
     private const string CloseGlyph = "";  // Fluent cancel: the × of the card (Mac xmark)
     private const string PrivacyUri = "ms-settings:privacy-webcam";
-    private const string DeniedGlyph = "video.slash";  // a drawn camera with a slash (ModuleGlyphs.Vector): the font has none
+    private const string DeniedGlyph = "video.slash";  // the camera with a slash (Fluent video off)
 
     private static readonly Brush CardFill = Frozen(new SolidColorBrush(Color.FromArgb(0x0F, 0xFF, 0xFF, 0xFF)));
     private static readonly Brush CloseFill = Frozen(new SolidColorBrush(Color.FromArgb(0x80, 0x00, 0x00, 0x00)));
     private static readonly Brush FrameFill = Frozen(new SolidColorBrush(Colors.Black));
     private static readonly Brush GreyBrush = Frozen(new SolidColorBrush(Color.FromRgb(0x8E, 0x8E, 0x93)));
-    private static readonly FontFamily GlyphFamily = FluentIcons.Regular;
     private static readonly FontFamily TextFamily = new("Segoe UI Variable Text, Segoe UI");
     private static readonly Lazy<ResourceDictionary> AskStyles = new(() => new ResourceDictionary
     {
@@ -34,7 +33,7 @@ public sealed class MirrorCard : Border
     private readonly Grid _frameHost;
     private readonly Image _image;
     private readonly StackPanel _message;
-    private readonly Path _messageGlyph;
+    private readonly FluentGlyph _messageGlyph;
     private readonly TextBlock _messageText;
     private readonly Button _settings;
     private readonly Button _close;
@@ -62,17 +61,8 @@ public sealed class MirrorCard : Border
             new Rect(0, 0, e.NewSize.Width, e.NewSize.Height), Radius, Radius);
         _frameHost.Children.Add(_image);
 
-        _messageGlyph = new Path
-        {
-            Data = Geometry.Parse(ModuleGlyphs.Vector(DeniedGlyph) ?? string.Empty),
-            Stroke = GreyBrush,
-            StrokeThickness = 1.5,
-            Stretch = Stretch.Uniform,
-            Width = 22,
-            Height = 22,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            Focusable = false,
-        };
+        _messageGlyph = FluentGlyph.Named(DeniedGlyph, 22);
+        _messageGlyph.Foreground = GreyBrush;
         _messageText = new TextBlock
         {
             FontFamily = TextFamily,
@@ -114,11 +104,10 @@ public sealed class MirrorCard : Border
         _close = new Button
         {
             Style = closeStyle,
-            Content = new TextBlock
+            Content = new FluentGlyph
             {
-                Text = CloseGlyph,
-                FontFamily = GlyphFamily,
-                FontSize = 10,
+                Code = CloseGlyph,
+                Size = 10,
                 Foreground = Brushes.White,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,

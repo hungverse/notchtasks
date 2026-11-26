@@ -46,7 +46,7 @@ public partial class PairingPane : UserControl
         _poll = new DispatcherTimer { Interval = PollInterval };
         _poll.Tick += (_, _) => OnPollTick();
 
-        ProblemGlyph.Text = WarningGlyph;
+        ProblemGlyph.Code = WarningGlyph;
         UnpairAllButton.Foreground = Destructive;
         ApplyTexts();
 
@@ -401,11 +401,10 @@ public partial class PairingPane : UserControl
             DockPanel.SetDock(pro, Dock.Right);
             row.Children.Add(pro);
         }
-        row.Children.Add(new TextBlock
+        row.Children.Add(new FluentGlyph
         {
-            Text = PhoneGlyph,
-            FontFamily = FluentIcons.Regular,
-            FontSize = 14,
+            Code = PhoneGlyph,
+            Size = 14,
             Margin = new Thickness(0, 0, 10, 0),
             VerticalAlignment = VerticalAlignment.Center,
         });

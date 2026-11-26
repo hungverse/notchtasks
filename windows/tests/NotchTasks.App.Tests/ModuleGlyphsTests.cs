@@ -129,12 +129,12 @@ public sealed class ModuleGlyphsTests
     }
 
     [Fact]
-    public void Gauge_And_Hourglass_AreFontGlyphs_NotVectors()
+    public void ModuleGlyphs_HasNoVectorTable_AndTheMacSymbolsAreFontGlyphs()
     {
-        Assert.Null(ModuleGlyphs.Vector("gauge"));
-        Assert.Null(ModuleGlyphs.Vector("hourglass"));
-        Assert.Null(ModuleGlyphs.Vector("check"));
-        Assert.NotNull(ModuleGlyphs.Vector("hammer.fill"));
+        Assert.Null(typeof(ModuleGlyphs).GetMethod("Vector"));
+        Assert.Null(typeof(ModuleGlyphs).GetField("Paths", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static));
+        Assert.NotEqual(ModuleGlyphs.Fallback, ModuleGlyphs.Get("hammer.fill").Glyph);
+        Assert.True(ModuleGlyphs.IsFilled("hammer.fill"));
     }
 
     [Fact]

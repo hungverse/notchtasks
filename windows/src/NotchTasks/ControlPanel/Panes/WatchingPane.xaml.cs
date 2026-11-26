@@ -145,7 +145,7 @@ public partial class WatchingPane : SettingsPane
 
         var remove = new Button
         {
-            Content = new TextBlock { Text = DeleteGlyph, FontFamily = FluentIcons.Regular },
+            Content = new FluentGlyph { Code = DeleteGlyph, Size = 14, Foreground = (Brush)FindResource("TextFillColorPrimaryBrush") },
             ToolTip = L10n.L("Remove"),
             Margin = new Thickness(12, 0, 0, 0),
             VerticalAlignment = VerticalAlignment.Center,
@@ -293,17 +293,12 @@ public partial class WatchingPane : SettingsPane
     /// The item's symbol as its glyph when the glyph map has it, else the sparkles an agent without an app icon shows on the pill.
     private static FrameworkElement SymbolGlyph(WatchItem item)
     {
-        var (family, glyph) = ModuleGlyphs.Get(WatchItems.Symbol(item));
-        var sparkles = ModuleGlyphs.Get("sparkles");
-        var unknown = glyph == ModuleGlyphs.Fallback;
+        var symbol = WatchItems.Symbol(item);
+        var unknown = ModuleGlyphs.Get(symbol).Glyph == ModuleGlyphs.Fallback;
         // a 20 DIP glyph in the text colour, centred in its box (FluentGlyph); the row centres the element in its column
-        return new FluentGlyph
-        {
-            Code = unknown ? sparkles.Glyph : glyph,
-            Filled = ReferenceEquals(unknown ? sparkles.Family : family, FluentIcons.Filled),
-            Size = 20,
-            Foreground = (Brush)Application.Current.FindResource("TextFillColorPrimaryBrush"),
-        };
+        var glyph = FluentGlyph.Named(unknown ? "sparkles" : symbol, 20);
+        glyph.Foreground = (Brush)Application.Current.FindResource("TextFillColorPrimaryBrush");
+        return glyph;
     }
 
     /// Opens the icon editor of a watch item (the Mac's BadgeEditor for item.icon). It starts from the item's own badge, else from

@@ -1,6 +1,8 @@
 using System.Collections.Concurrent;
 using System.Globalization;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Media;
 
 namespace NotchTasks;
@@ -31,9 +33,10 @@ public sealed class FluentGlyph : FrameworkElement
         nameof(Filled), typeof(bool), typeof(FluentGlyph), new FrameworkPropertyMetadata(false,
             FrameworkPropertyMetadataOptions.AffectsRender, (d, _) => ((FluentGlyph)d).Rebuild()));
 
-    /// The fill of the glyph. Inherited, so a glyph inside a coloured parent takes that parent's Foreground; white when none is set.
-    public static readonly DependencyProperty ForegroundProperty = DependencyProperty.Register(
-        nameof(Foreground), typeof(Brush), typeof(FluentGlyph), new FrameworkPropertyMetadata(Brushes.White,
+    /// The fill of the glyph: the TextElement foreground, so a glyph inside a Button or a TextBlock takes its colour the way text does
+    /// (a Button's template sets it), and is white when no ancestor sets one.
+    public static readonly DependencyProperty ForegroundProperty = TextElement.ForegroundProperty.AddOwner(
+        typeof(FluentGlyph), new FrameworkPropertyMetadata(Brushes.White,
             FrameworkPropertyMetadataOptions.Inherits | FrameworkPropertyMetadataOptions.AffectsRender));
 
     private static readonly ConcurrentDictionary<(string Code, bool Filled, double Size), Geometry?> Cache = new();
@@ -43,6 +46,8 @@ public sealed class FluentGlyph : FrameworkElement
     public FluentGlyph()
     {
         IsHitTestVisible = false;
+        HorizontalAlignment = HorizontalAlignment.Center;  // an icon is centred in its parent: a stretched element would move its drawing off the centre
+        VerticalAlignment = VerticalAlignment.Center;
         Rebuild();
     }
 
@@ -57,6 +62,15 @@ public sealed class FluentGlyph : FrameworkElement
     /// The outline of the glyph, moved so its bounds are centred in the Size square (null for an empty code). Frozen and cached.
     public Geometry? Outline => _geometry;
 
+    /// The glyph of a ModuleGlyphs name, in its own family (Filled when the name is a filled icon), at `size` DIP. The one way the pill
+    /// and the Control Panel draw a named icon.
+    public static FluentGlyph Named(string name, double size)
+    {
+        var glyph = new FluentGlyph { Size = size };
+        glyph.SetNamed(name);
+        return glyph;
+    }
+
     /// The centred outline of a glyph at `size` DIP, from the font it names. Cached by (code, family, size); null when the code is
     /// empty or the font has no outline for it.
     public static Geometry? CentredOutline(string code, bool filled, double size) =>
@@ -70,6 +84,14 @@ public sealed class FluentGlyph : FrameworkElement
         {
             drawingContext.DrawGeometry(Foreground, null, _geometry);
         }
+    }
+
+    /// Draws the named ModuleGlyphs icon into this glyph (its code and family), as the Control Panel and the pill name their icons.
+    public void SetNamed(string name)
+    {
+        var (family, code) = NotchTasks.Pill.ModuleGlyphs.Get(name);
+        Filled = ReferenceEquals(family, FluentIcons.Filled);
+        Code = code;
     }
 
     private void Rebuild()

@@ -34,7 +34,7 @@ public sealed class NowPlayingCard : Border
 
     private readonly Border _artFrame;
     private readonly Image _artImage;
-    private readonly TextBlock _artGlyph;
+    private readonly FluentGlyph _artGlyph;
     private readonly TextBlock _title;
     private readonly Image _appIcon;
     private readonly TextBlock _caption;
@@ -57,11 +57,11 @@ public sealed class NowPlayingCard : Border
             Clip = new RectangleGeometry(new Rect(0, 0, ArtSize, ArtSize), ArtSize * ArtCorner, ArtSize * ArtCorner),
             Focusable = false,
         };
-        _artGlyph = new TextBlock
+        _artGlyph = new FluentGlyph
         {
-            Text = ModuleGlyphs.Get("media").Glyph,
-            FontFamily = ModuleGlyphs.Get("media").Family,
-            FontSize = 18,
+            Code = ModuleGlyphs.Get("media").Glyph,
+            Filled = ModuleGlyphs.IsFilled("media"),
+            Size = 18,
             Foreground = CaptionBrush,
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
@@ -205,15 +205,12 @@ public sealed class NowPlayingCard : Border
         string.Join(" · ", new[] { shown.Artist, shown.AppName }.Where(s => !string.IsNullOrWhiteSpace(s)));
 
     /// The Mac's filled double triangle for previous and next: 16 by 11 DIP, a pair of triangles pointing one way.
-    private static readonly Geometry NextSkip = Freeze(Geometry.Parse("M0,0 L8,5.5 L0,11 Z M8,0 L16,5.5 L8,11 Z"));
-    private static readonly Geometry PreviousSkip = Freeze(Geometry.Parse("M16,0 L8,5.5 L16,11 Z M8,0 L0,5.5 L8,11 Z"));
 
     /// A control's content: the filled triangles for previous and next (vector, as the Mac's), the Fluent glyph for play and pause.
-    private static object ControlContent(string name) => name switch
+    private static object ControlContent(string name, double size) => name switch
     {
-        "previous" => new System.Windows.Shapes.Path { Data = PreviousSkip, Fill = Brushes.White },
-        "next" => new System.Windows.Shapes.Path { Data = NextSkip, Fill = Brushes.White },
-        _ => ModuleGlyphs.Get(name).Glyph,
+        "previous" or "next" => FluentGlyph.Named(name, size),  // the Fluent skip icons (the Mac's backward and forward fills)
+        _ => FluentGlyph.Named(name, size),
     };
 
     /// The plain template of the control buttons: a transparent border, so the whole square takes the mouse, around the centred
@@ -252,9 +249,7 @@ public sealed class NowPlayingCard : Border
         BorderThickness = new Thickness(0),
         Background = Brushes.Transparent,
         Foreground = Brushes.White,
-        FontFamily = ModuleGlyphs.Get(glyph).Family,
-        FontSize = size,
-        Content = ControlContent(glyph),
+        Content = ControlContent(glyph, size),
         Template = PlainControl,
         Cursor = Cursors.Hand,
         Focusable = false,
@@ -266,7 +261,7 @@ public sealed class NowPlayingCard : Border
     {
         button.IsEnabled = can;
         button.Opacity = can ? 1 : DisabledOpacity;
-        button.Content = ControlContent(glyph);
+        button.Content = ControlContent(glyph, size);
         button.FontSize = size;
     }
 

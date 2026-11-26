@@ -1,6 +1,7 @@
 using System.IO;
 using System.Text.RegularExpressions;
 using NotchTasks.Core.Asks;
+using NotchTasks.Core.Ci;
 using NotchTasks.Core.Permissions;
 using NotchTasks.Core.Settings;
 using NotchTasks.Pill;
@@ -121,6 +122,60 @@ public sealed class IconGlyphSourceTests
         {
             Assert.False(empty.IsMatch(File.ReadAllText(file)), $"{Path.GetFileName(file)} draws a Fluent icon with empty text");
         }
+    }
+
+    [Fact]
+    public void NoPillOrControlPanelIcon_IsDrawnFromAPath()
+    {
+        // Every icon is a Fluent glyph (FluentGlyph). A path parsed from text is an icon drawn by hand, which the brief retired;
+        // progress rings, spinners and charge art build their geometry from figures, not from text, and are not icons.
+        foreach (var root in new[] { "Pill", "ControlPanel" }.Select(r => Path.Combine(IconFonts.SourceRoot, "NotchTasks", r)))
+        {
+            foreach (var file in Directory.EnumerateFiles(root, "*.cs", SearchOption.AllDirectories))
+            {
+                Assert.DoesNotContain("Geometry.Parse(", File.ReadAllText(file));
+            }
+        }
+    }
+
+    [Fact]
+    public void MacSymbolsTheApp_Uses_ResolveToAFluentGlyph()
+    {
+        // every Mac symbol the rows, badges and CI rules name is in the Fluent map (a name the map lacks draws the star or nothing)
+        var names = new[]
+        {
+            "hammer.fill", "shippingbox.fill", "checkmark.diamond.fill", "icloud.and.arrow.up.fill", "server.rack",
+            "arrow.down.circle.fill", "doc.on.doc.fill", "film.stack", "archivebox.fill", "arrow.triangle.branch",
+            "arrow.left.arrow.right", "photo.stack.fill", "waveform", "cube.transparent.fill", "airplane", "xmark", "seal",
+            "octagon", "applewatch", "dot.radiowaves.left.and.right", "cable.connector", "video.slash", "terminal.fill",
+            "star", "star.fill", "sparkles",
+        }.Concat(new[] { "GitLab Runner", "Tải file", "ffmpeg", "Git", "anything else" }.Select(DevRules.DefaultSymbol));
+        foreach (var name in names)
+        {
+            Assert.True(ModuleGlyphs.Has(name), name);
+            Assert.NotEqual(ModuleGlyphs.Fallback, ModuleGlyphs.Get(name).Glyph);
+        }
+    }
+
+    [Fact]
+    public void NoPillOrControlPanelFile_SetsAFluentFont_OutsideTheGlyphHelper()
+    {
+        // Every Fluent icon in the pill and the Control Panel is a FluentGlyph (centred on its outline). A TextBlock, Button or
+        // ContentControl that names a Fluent family draws on the font's baseline, so none may: the Fluent families are named in
+        // the helper (FluentGlyph, FluentIcons) and the Core glyph map (ModuleGlyphs), and nowhere else. No text is allow-listed.
+        var fluentFont = new Regex(
+            @"FluentRegular|FluentFilled|FluentIcons\.(Regular|Filled)|ModuleGlyphs\.Get\([^)]*\)\.Family|GlyphFamily",
+            RegexOptions.None, TimeSpan.FromSeconds(5));
+        var allowed = new HashSet<string>(StringComparer.Ordinal) { "ModuleGlyphs.cs" };
+        var roots = new[] { "Pill", "ControlPanel" }.Select(r => Path.Combine(IconFonts.SourceRoot, "NotchTasks", r));
+        var offenders = roots
+            .SelectMany(root => Directory.EnumerateFiles(root, "*.*", SearchOption.AllDirectories))
+            .Where(f => f.EndsWith(".cs", StringComparison.Ordinal) || f.EndsWith(".xaml", StringComparison.Ordinal))
+            .Where(f => !allowed.Contains(Path.GetFileName(f)))
+            .Where(f => fluentFont.IsMatch(File.ReadAllText(f)))
+            .Select(Path.GetFileName)
+            .ToList();
+        Assert.Empty(offenders);
     }
 
     [Fact]

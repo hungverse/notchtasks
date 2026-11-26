@@ -21,8 +21,8 @@ public sealed class ToastIconTests
             var toast = new Toast("check", "#30D158", "Claude done", Icon: Claude);
 
             // an agent with no program icon draws the sparkles glyph (the item's icon), not the toast's check
-            var icon = Assert.IsType<TextBlock>(ToastView.IconOf(toast, 18, null));
-            Assert.Equal(ModuleGlyphs.Get("sparkles").Glyph, icon.Text);
+            var icon = Assert.IsType<FluentGlyph>(ToastView.IconOf(toast, 18, null));
+            Assert.Equal(ModuleGlyphs.Get("sparkles").Glyph, icon.Code);
         });
     }
 
@@ -34,9 +34,9 @@ public sealed class ToastIconTests
         {
             var toast = new Toast("check", "#30D158", "Claude done", Icon: Claude);
 
-            var icon = Assert.IsType<TextBlock>(ToastView.IconOf(toast, 20, null));
+            var icon = Assert.IsType<FluentGlyph>(ToastView.IconOf(toast, 20, null));
 
-            Assert.Equal(20, icon.Width);
+            Assert.Equal(16, icon.Size);  // the sparkles fallback is 0.8 of the icon size, centred in its box
             var brush = Assert.IsType<SolidColorBrush>(icon.Foreground);
             Assert.Equal(ItemTint.Of(Claude, new Dictionary<string, string>(), null), brush.Color);
         });
@@ -70,8 +70,8 @@ public sealed class ToastIconTests
         {
             var toast = new Toast("check", "#30D158", "Claude done", Icon: Claude);
 
-            var symbol = Assert.IsType<TextBlock>(ToastView.TrailOf(toast, Brushes.White, 14));
-            Assert.Equal(ModuleGlyphs.Get("check").Glyph, symbol.Text);
+            var symbol = Assert.IsType<FluentGlyph>(ToastView.TrailOf(toast, Brushes.White, 14));
+            Assert.Equal(ModuleGlyphs.Get("check").Glyph, symbol.Code);
         });
     }
 

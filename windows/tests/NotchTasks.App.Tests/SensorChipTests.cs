@@ -51,8 +51,8 @@ public sealed class SensorChipTests
                 Call = new CallInfo("zoom.exe", "Zoom", now, false, true),
             };
 
-            var lead = Assert.IsType<TextBlock>(ChipView.Lead(chip, 18, null, NoColours));
-            Assert.Equal(ModuleGlyphs.Get("micoff").Glyph, lead.Text);
+            var lead = Assert.IsType<FluentGlyph>(ChipView.Lead(chip, 18, null, NoColours));
+            Assert.Equal(ModuleGlyphs.Get("micoff").Glyph, lead.Code);
         });
     }
 
@@ -73,8 +73,8 @@ public sealed class SensorChipTests
             var row = Assert.IsType<StackPanel>(ChipView.Lead(both, 18, null, NoColours));
             Assert.Equal(2, row.Children.Count);
             var single = Assert.IsType<StackPanel>(ChipView.Lead(micOnly, 18, null, NoColours));
-            var glyph = Assert.IsType<TextBlock>(Assert.Single(single.Children));
-            Assert.Equal(ModuleGlyphs.Get("mic").Glyph, glyph.Text);
+            var glyph = Assert.IsType<FluentGlyph>(Assert.Single(single.Children));
+            Assert.Equal(ModuleGlyphs.Get("mic").Glyph, glyph.Code);
             Assert.Null(ChipView.Trail(both, 11, null, NoColours, DateTimeOffset.Now));  // a sensor has no trail
         });
     }

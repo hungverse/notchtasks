@@ -17,15 +17,16 @@ public sealed class BadgeGlyphTests
         new() { ["symbol"] = symbol, ["color"] = "#30D158" };
 
     [Fact]
-    public void HammerSymbol_DrawsTheHammerMark_NotTheStar()
+    public void HammerSymbol_DrawsTheWrenchGlyph_NotTheStar()
     {
         Sta.Run(() =>
         {
             var glyph = Assert.IsType<Grid>(BadgeGlyph.Create(Badge("hammer.fill"), 18, Colors.Gray));
 
-            // children: the fill, then the icon
-            var icon = glyph.Children[1];
-            Assert.IsType<Path>(icon);
+            // children: the fill, then the icon: the Fluent wrench (the Mac hammer.fill), not the star
+            var icon = Assert.IsType<FluentGlyph>(glyph.Children[1]);
+            Assert.Equal(ModuleGlyphs.Get("hammer.fill").Glyph, icon.Code);
+            Assert.NotEqual(BadgeGlyph.StarCode, icon.Code);
         });
     }
 
@@ -145,8 +146,8 @@ public sealed class BadgeGlyphTests
             var fill = Assert.IsType<Border>(glyph.Children[0]);
             Assert.Same(Brushes.Transparent, fill.Background);
             Assert.Null(glyph.Clip);
-            var ink = Assert.IsType<Path>(glyph.Children[1]);
-            Assert.Equal(Colors.White, Assert.IsType<SolidColorBrush>(ink.Stroke).Color);
+            var ink = Assert.IsType<FluentGlyph>(glyph.Children[1]);
+            Assert.Equal(Colors.White, Assert.IsType<SolidColorBrush>(ink.Foreground).Color);
         });
     }
 

@@ -394,11 +394,11 @@ public partial class ItemCard : UserControl
             Focusable = false,
         };
         private readonly TextBlock _detail = new() { FontSize = 11, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(8, 0, 0, 0), Focusable = false };
-        private readonly TextBlock _log = new()
+        private readonly FluentGlyph _log = new()
         {
-            Text = ModuleGlyphs.Get("log").Glyph,
-            FontFamily = ModuleGlyphs.Get("log").Family,
-            FontSize = 10,
+            Code = ModuleGlyphs.Get("log").Glyph,
+            Filled = ModuleGlyphs.IsFilled("log"),
+            Size = 10,
             Foreground = GreyBrush,
             Margin = new Thickness(8, 0, 0, 0),
             VerticalAlignment = VerticalAlignment.Center,
@@ -557,7 +557,7 @@ public partial class ItemCard : UserControl
 
         /// The kind of lead a symbol gives: a dot, a font glyph, or a vector.
         private static string LeadKind(string? symbol) => JobLead.MarkOf(symbol) is { } mark
-            ? (ModuleGlyphs.Vector(mark) is not null ? "vector:" : "glyph:") + mark
+            ? "glyph:" + mark
             : "dot";
 
         private static FrameworkElement BuildLead(string? symbol, Brush brush) =>
@@ -579,11 +579,8 @@ public partial class ItemCard : UserControl
                 case Ellipse dot:
                     dot.Fill = brush;
                     break;
-                case TextBlock glyph:
+                case FluentGlyph glyph:
                     glyph.Foreground = brush;
-                    break;
-                case Path vector:
-                    vector.Stroke = brush;
                     break;
             }
         }

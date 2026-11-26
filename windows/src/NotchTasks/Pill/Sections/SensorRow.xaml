@@ -1,16 +1,15 @@
 <UserControl x:Class="NotchTasks.Pill.Sections.SensorRow"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:fi="clr-namespace:NotchTasks"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              FontFamily="Segoe UI Variable Text, Segoe UI" Foreground="White">
   <!-- Mac SensorRow (Views.swift): which apps are listening or filming, outside a call. -->
   <Border CornerRadius="10" Height="30" Padding="10,0" Background="#0FFFFFFF">
     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-      <TextBlock x:Name="MicGlyph" FontFamily="{StaticResource FluentRegular}" FontSize="12"
-                 Foreground="#FF9F0A" VerticalAlignment="Center" />
+      <fi:FluentGlyph x:Name="MicGlyph" Size="12" Foreground="#FF9F0A" VerticalAlignment="Center" />
       <TextBlock x:Name="MicText" Margin="8,0,0,0" FontSize="11" FontWeight="Medium" VerticalAlignment="Center"
                  TextTrimming="CharacterEllipsis" MaxWidth="260" />
-      <TextBlock x:Name="CameraGlyph" Margin="14,0,0,0" FontFamily="{StaticResource FluentRegular}" FontSize="12"
-                 Foreground="#30D158" VerticalAlignment="Center" />
+      <fi:FluentGlyph x:Name="CameraGlyph" Margin="14,0,0,0" Size="12" Foreground="#30D158" VerticalAlignment="Center" />
       <TextBlock x:Name="CameraText" Margin="8,0,0,0" FontSize="11" FontWeight="Medium" VerticalAlignment="Center" />
     </StackPanel>
   </Border>

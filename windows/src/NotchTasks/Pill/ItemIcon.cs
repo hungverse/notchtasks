@@ -99,16 +99,12 @@ public static class ItemIcon
                 Focusable = false,
             };
         }
-        return new TextBlock
+        return new FluentGlyph
         {
-            Text = ModuleGlyphs.Get("sparkles").Glyph,
-            FontFamily = ModuleGlyphs.Get("sparkles").Family,
-            FontSize = size * 0.8,
+            Code = ModuleGlyphs.Get("sparkles").Glyph,
+            Filled = ModuleGlyphs.IsFilled("sparkles"),
+            Size = size * 0.8,
             Foreground = TintBrushes.Of(tint),
-            Width = size,
-            Height = size,
-            TextAlignment = TextAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center,
             Focusable = false,
         };
     }

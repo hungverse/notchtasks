@@ -1,5 +1,6 @@
 <UserControl x:Class="NotchTasks.Pill.ToastView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:fi="clr-namespace:NotchTasks"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              HorizontalAlignment="Center" VerticalAlignment="Top"
              FontFamily="Segoe UI Variable Text, Segoe UI" Foreground="White">
@@ -26,7 +27,7 @@
       <!-- The glyph holder: a font glyph (its TextBlock inherits the font) or a drawn path for a glyph the font lacks. -->
       <ContentControl x:Name="CompactGlyph" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center"
                       HorizontalContentAlignment="Left" VerticalContentAlignment="Center" Focusable="False"
-                      FontFamily="{StaticResource FluentRegular}" FontSize="18" />
+                      FontSize="18" />
       <!-- A battery toast's art (ChargeArt) takes the glyph's place in the left column. -->
       <ContentControl x:Name="CompactArt" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center"
                       Visibility="Collapsed" />
@@ -38,7 +39,7 @@
       <Grid x:Name="TopRow" Height="32">
         <ContentControl x:Name="TopGlyph" Margin="12,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center"
                         HorizontalContentAlignment="Left" VerticalContentAlignment="Center" Focusable="False"
-                        FontFamily="{StaticResource FluentRegular}" FontSize="14" />
+                        FontSize="14" />
         <!-- The tint symbol at the right of the notch row, for a toast about an agent or app (Mac: the symbol beside the icon). -->
         <ContentControl x:Name="TopTrail" Margin="0,0,12,0" HorizontalAlignment="Right" VerticalAlignment="Center"
                         HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Focusable="False"
@@ -57,7 +58,7 @@
         <!-- The card's glyph, at the left of its text. -->
         <ContentControl x:Name="CardGlyph" Grid.Column="1" Margin="0,0,12,0" VerticalAlignment="Center" Visibility="Collapsed"
                         HorizontalContentAlignment="Left" VerticalContentAlignment="Center" Focusable="False"
-                        FontFamily="{StaticResource FluentRegular}" FontSize="26" />
+                        FontSize="26" />
         <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="0,0,8,0">
           <TextBlock x:Name="TitleText" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
           <TextBlock x:Name="SubtitleText" Foreground="#99FFFFFF" TextTrimming="CharacterEllipsis" />
@@ -73,8 +74,7 @@
           </StackPanel>
           <Button Focusable="False" x:Name="ActionButton" Style="{StaticResource PrimaryChoice}" Height="24" Padding="11,0" Visibility="Collapsed" />
           <Button Focusable="False" x:Name="HideButton" Style="{StaticResource CloseButton}" Margin="6,0,0,0">
-            <TextBlock Text="&#xF369;" FontFamily="{StaticResource FluentRegular}" FontSize="9"
-                       Foreground="#B3FFFFFF" />
+            <fi:FluentGlyph Code="&#xF369;" Size="9" Foreground="#B3FFFFFF" />
           </Button>
         </StackPanel>
       </Grid>

@@ -28,9 +28,7 @@ public partial class LevelView : UserControl
     /// Shows a bar: the level's symbol, the fill and the figure.
     public void Show(LevelHud hud)
     {
-        var (family, glyph) = ModuleGlyphs.Get(LevelsModule.SymbolName(hud));
-        IconText.FontFamily = family;
-        IconText.Text = glyph;
+        IconText.SetNamed(LevelsModule.SymbolName(hud));
 
         var value = Math.Clamp(hud.Value, 0, 1);
         var shown = hud.Muted ? 0 : value;

@@ -66,22 +66,18 @@ public sealed class ToastGlyphTests
     [Theory]
     [InlineData("seal")]    // CI passed (Mac checkmark.seal.fill)
     [InlineData("octagon")] // CI failed (Mac xmark.octagon.fill)
-    public void CiGlyphs_ResolveToVectors(string name)
+    public void CiGlyphs_ResolveToFluentGlyphs(string name)
     {
-        var data = ModuleGlyphs.Vector(name);
-        Assert.NotNull(data);
-        Assert.StartsWith("M", data);
-        Assert.Equal(ModuleGlyphs.Fallback, ModuleGlyphs.Get(name).Glyph);
+        Assert.True(ModuleGlyphs.Has(name));
+        Assert.NotEqual(ModuleGlyphs.Fallback, ModuleGlyphs.Get(name).Glyph);
     }
 
     [Fact]
-    public void EveryCoreToastGlyph_ResolvesToAFontGlyphOrAVector_NeverTheFallback()
+    public void EveryCoreToastGlyph_ResolvesToAFluentGlyph_NeverTheFallback()
     {
         foreach (var name in CoreToastGlyphs.Value)
         {
-            var isVector = ModuleGlyphs.Vector(name) is not null;
-            var isFont = ModuleGlyphs.Get(name).Glyph != ModuleGlyphs.Fallback;
-            Assert.True(isVector || isFont, name);
+            Assert.NotEqual(ModuleGlyphs.Fallback, ModuleGlyphs.Get(name).Glyph);
         }
     }
 
@@ -92,8 +88,8 @@ public sealed class ToastGlyphTests
         {
             var view = new ToastView();
             view.Show(new Toast("gauge", "#FF9F0A", "Claude 95%"), "compact", null, "bouncy");
-            var glyph = Assert.IsType<TextBlock>(Fixture.Named<ContentControl>(view, "CompactGlyph").Content);
-            Assert.Equal(ModuleGlyphs.Get("gauge").Glyph, glyph.Text);
+            var glyph = Assert.IsType<FluentGlyph>(Fixture.Named<ContentControl>(view, "CompactGlyph").Content);
+            Assert.Equal(ModuleGlyphs.Get("gauge").Glyph, glyph.Code);
         });
     }
 
@@ -104,8 +100,8 @@ public sealed class ToastGlyphTests
         {
             var view = new ToastView();
             view.Show(new Toast("check", "#30D158", "Done"), "island", null, "bouncy");
-            var glyph = Assert.IsType<TextBlock>(Fixture.Named<ContentControl>(view, "TopGlyph").Content);
-            Assert.Equal(ModuleGlyphs.Get("check").Glyph, glyph.Text);
+            var glyph = Assert.IsType<FluentGlyph>(Fixture.Named<ContentControl>(view, "TopGlyph").Content);
+            Assert.Equal(ModuleGlyphs.Get("check").Glyph, glyph.Code);
         });
     }
 }

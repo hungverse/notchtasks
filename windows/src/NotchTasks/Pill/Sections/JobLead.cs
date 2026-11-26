@@ -19,7 +19,8 @@ public static class JobLead
         {
             return null;
         }
-        if (ModuleGlyphs.Vector(symbol) is not null)
+        // a Mac symbol with a dot is a mark the Fluent font draws under its own name (hammer.fill, cable.connector, ...)
+        if (symbol.Contains('.') && ModuleGlyphs.Has(symbol))
         {
             return symbol;
         }
@@ -46,26 +47,11 @@ public static class JobLead
         {
             return null;
         }
-        if (ModuleGlyphs.Vector(mark) is { } path)
+        return new FluentGlyph
         {
-            return new Path
-            {
-                Data = Geometry.Parse(path),
-                Stroke = brush,
-                StrokeThickness = 1.4,
-                Stretch = Stretch.Uniform,
-                Width = size,
-                Height = size,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center,
-                Focusable = false,
-            };
-        }
-        return new TextBlock
-        {
-            Text = ModuleGlyphs.Get(mark).Glyph,
-            FontFamily = ModuleGlyphs.Get(mark).Family,
-            FontSize = size,
+            Code = ModuleGlyphs.Get(mark).Glyph,
+            Filled = ModuleGlyphs.IsFilled(mark),
+            Size = size,
             Foreground = brush,
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,

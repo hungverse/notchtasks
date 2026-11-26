@@ -49,10 +49,10 @@ public sealed class NowPlayingCardTests
             using var root = new TempRoot();
             var (state, card) = CardFor(Session(status: MediaStatus.Playing));
 
-            // Playing shows the filled pause; previous and next are the filled double triangles, drawn as paths.
-            Assert.Equal("", Assert.IsType<string>(card.PlayPauseButton.Content));
-            Assert.IsType<System.Windows.Shapes.Path>(card.PreviousButton.Content);
-            Assert.IsType<System.Windows.Shapes.Path>(card.NextButton.Content);
+            // Playing shows the filled pause; previous and next are the Fluent skip glyphs.
+            Assert.IsType<FluentGlyph>(card.PlayPauseButton.Content);
+            Assert.IsType<FluentGlyph>(card.PreviousButton.Content);
+            Assert.IsType<FluentGlyph>(card.NextButton.Content);
             Assert.Equal(30, card.PlayPauseButton.Width);
             state.Dispose();
         });
@@ -165,8 +165,8 @@ public sealed class NowPlayingCardTests
             ImageSource? none(string _) => null;
 
             // no artwork and no app icon yet: the music-note glyph
-            var glyph = Assert.IsType<TextBlock>(ChipView.Lead(chip, 18, null, colors, art: none));
-            Assert.Equal(ModuleGlyphs.Get("media").Glyph, glyph.Text);
+            var glyph = Assert.IsType<FluentGlyph>(ChipView.Lead(chip, 18, null, colors, art: none));
+            Assert.Equal(ModuleGlyphs.Get("media").Glyph, glyph.Code);
 
             // the app's icon, once it is known, stands in for the artwork
             var icon = BitmapSource.Create(1, 1, 96, 96, PixelFormats.Bgra32, null, new byte[4], 4);

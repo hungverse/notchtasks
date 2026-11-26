@@ -26,8 +26,8 @@ public sealed class AskChipLeadTests
             // the icon, then the badge over its corner
             Assert.Equal(2, lead.Children.Count);
             var badge = Assert.IsType<Border>(lead.Children[1]);
-            var hand = Assert.IsType<TextBlock>(badge.Child);
-            Assert.Equal(ModuleGlyphs.Get("hand").Glyph, hand.Text);
+            var hand = Assert.IsType<FluentGlyph>(badge.Child);
+            Assert.Equal(ModuleGlyphs.Get("hand").Glyph, hand.Code);
         });
     }
 
@@ -132,9 +132,9 @@ public sealed class AskChipLeadTests
         {
             var chip = new Chip(ChipKind.Ask, "agents", "ask") { AskCount = 2 };
 
-            var lead = Assert.IsType<TextBlock>(ChipView.Lead(chip, 18, null, NoColours));
+            var lead = Assert.IsType<FluentGlyph>(ChipView.Lead(chip, 18, null, NoColours));
 
-            Assert.Equal(ModuleGlyphs.Get("hand").Glyph, lead.Text);
+            Assert.Equal(ModuleGlyphs.Get("hand").Glyph, lead.Code);
         });
     }
 }

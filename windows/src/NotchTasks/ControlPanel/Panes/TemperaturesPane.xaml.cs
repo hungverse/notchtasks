@@ -35,7 +35,7 @@ public partial class TemperaturesPane : UserControl
         _poll = new DispatcherTimer { Interval = PollInterval };
         _poll.Tick += (_, _) => _ = ReadAsync();
 
-        HottestGlyph.Text = ModuleGlyphs.Get("thermometer").Glyph;  // the toast's glyph, in the Fluent regular font
+        HottestGlyph.SetNamed("thermometer");  // the toast's glyph, in its family
         TurnOnButton.Click += (_, _) => TurnOnFromClick(SignInCheck.IsChecked == true);
         ApplyTexts();
 

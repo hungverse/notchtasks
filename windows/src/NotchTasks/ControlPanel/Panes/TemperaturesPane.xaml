@@ -1,5 +1,6 @@
 <UserControl x:Class="NotchTasks.ControlPanel.Panes.TemperaturesPane"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:fi="clr-namespace:NotchTasks"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
   <StackPanel>
     <!-- The helper is not On: why, and the one button that turns it on (the Permissions pane's opt-in). Nothing is read until then. -->
@@ -21,8 +22,7 @@
           <ColumnDefinition Width="Auto" />
           <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
-        <TextBlock x:Name="HottestGlyph" FontFamily="{StaticResource FluentRegular}" FontSize="22"
-                   VerticalAlignment="Center" Margin="0,0,14,0" />
+        <fi:FluentGlyph x:Name="HottestGlyph" Size="22" VerticalAlignment="Center" Margin="0,0,14,0" />
         <StackPanel Grid.Column="1" VerticalAlignment="Center">
           <TextBlock x:Name="HottestValue" FontSize="26" FontWeight="SemiBold" />
           <TextBlock x:Name="HottestName" Style="{StaticResource CardNote}" TextWrapping="Wrap" />

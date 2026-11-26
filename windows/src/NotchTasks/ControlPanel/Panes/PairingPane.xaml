@@ -1,5 +1,6 @@
 <UserControl x:Class="NotchTasks.ControlPanel.Panes.PairingPane"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:fi="clr-namespace:NotchTasks"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:l="clr-namespace:NotchTasks.ControlPanel"
              xmlns:local="clr-namespace:NotchTasks.ControlPanel">
@@ -45,8 +46,7 @@
                   Visibility="Collapsed" />
 
           <StackPanel x:Name="ProblemRow" Orientation="Horizontal" Margin="0,12,0,0" Visibility="Collapsed">
-            <TextBlock x:Name="ProblemGlyph" FontFamily="{StaticResource FluentRegular}" FontSize="14"
-                       Foreground="#FF9F0A" Margin="0,0,8,0" VerticalAlignment="Center" />
+            <fi:FluentGlyph x:Name="ProblemGlyph" Size="14" Foreground="#FF9F0A" Margin="0,0,8,0" VerticalAlignment="Center" />
             <TextBlock x:Name="ProblemText" Foreground="#FF9F0A" TextWrapping="Wrap" VerticalAlignment="Center" />
           </StackPanel>
 

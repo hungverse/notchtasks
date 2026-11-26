@@ -179,7 +179,7 @@ public sealed class CiCardsTests
 
             card.Update(Build("b1", tool: "Gradle"), Array.Empty<LimitWindow>(), Tint, null, Now, NoBadges);
 
-            Assert.IsType<Path>(card.RowLeads[0]);  // the hammer vector
+            Assert.IsType<FluentGlyph>(card.RowLeads[0]);  // the hammer: the Fluent wrench
         });
     }
 
@@ -218,16 +218,16 @@ public sealed class CiCardsTests
         {
             var chip = new Chip(ChipKind.Alerts, "ci", "alerts") { AlertCount = 1 };
 
-            var lead = Assert.IsType<TextBlock>(ChipView.Lead(chip, 18, null, NoColours));
+            var lead = Assert.IsType<FluentGlyph>(ChipView.Lead(chip, 18, null, NoColours));
 
-            Assert.Equal(ModuleGlyphs.Get("warning").Glyph, lead.Text);
+            Assert.Equal(ModuleGlyphs.Get("warning").Glyph, lead.Code);
         });
     }
 
     [Fact]
-    public void CiSymbols_EachDrawsAPath()
+    public void CiSymbols_EachResolvesToAFluentGlyph()
     {
-        // every job symbol the CI rules and the rows use has a drawn path that parses
+        // every job symbol the CI rules and the rows use is a glyph of the Fluent font (no drawn paths)
         foreach (var symbol in new[]
                  {
                      "hammer.fill", "shippingbox.fill", "checkmark.diamond.fill", "icloud.and.arrow.up.fill", "server.rack",
@@ -235,9 +235,8 @@ public sealed class CiCardsTests
                      "arrow.left.arrow.right", "photo.stack.fill", "waveform", "cube.transparent.fill", "airplane", "xmark",
                  })
         {
-            var data = ModuleGlyphs.Vector(symbol);
-            Assert.False(string.IsNullOrEmpty(data), symbol);
-            Assert.NotNull(Geometry.Parse(data!));
+            Assert.True(ModuleGlyphs.Has(symbol), symbol);
+            Assert.NotEqual(ModuleGlyphs.Fallback, ModuleGlyphs.Get(symbol).Glyph);
         }
     }
 
@@ -308,8 +307,8 @@ public sealed class CiCardsTests
             var card = Assert.Single(panel.Children.OfType<ItemCard>());
 
             var backdrop = Assert.IsType<Border>(card.IconContent);
-            var hammer = Assert.IsType<Path>(backdrop.Child);
-            Assert.Equal(Geometry.Parse(ModuleGlyphs.Vector("hammer.fill")!).ToString(), hammer.Data.ToString());
+            var hammer = Assert.IsType<FluentGlyph>(backdrop.Child);
+            Assert.Equal(ModuleGlyphs.Get("hammer.fill").Glyph, hammer.Code);
         });
     }
 
@@ -340,11 +339,11 @@ public sealed class CiCardsTests
 
             // no badge for its tool: its symbol
             var withSymbol = new Chip(ChipKind.Agent, "ci", "ci-b2") { Agent = Build("b2", tool: "Unknown") };
-            Assert.IsType<Path>(ChipView.Lead(withSymbol, 18, null, NoColours, null, badges));
+            Assert.IsType<FluentGlyph>(ChipView.Lead(withSymbol, 18, null, NoColours, null, badges));
 
             // no symbol either: the item's icon (the sparkles glyph here)
             var bare = new ItemState(new WatchItem("b3", "Bare", WatchKind.Dev), new[] { new Job("b3-1", "x", "y", true, null, null, null, null) });
-            Assert.IsType<TextBlock>(ChipView.Lead(new Chip(ChipKind.Agent, "ci", "ci-b3") { Agent = bare }, 18, null, NoColours, null, badges));
+            Assert.IsType<FluentGlyph>(ChipView.Lead(new Chip(ChipKind.Agent, "ci", "ci-b3") { Agent = bare }, 18, null, NoColours, null, badges));
         });
     }
 

@@ -20,7 +20,7 @@ public sealed class LevelViewTests
             view.Show(new LevelHud(LevelKind.Volume, 0.42, false));
 
             Assert.Equal("42", Fixture.Named<TextBlock>(view, "PercentText").Text);
-            Assert.Equal(ModuleGlyphs.Get("volume.mid").Glyph, Fixture.Named<TextBlock>(view, "IconText").Text);
+            Assert.Equal(ModuleGlyphs.Get("volume.mid").Glyph, Fixture.Named<FluentGlyph>(view, "IconText").Code);
             Assert.Equal(0.42, Fixture.Field<ColumnDefinition>(view, "FillColumn").Width.Value, 6);
         });
     }
@@ -35,7 +35,7 @@ public sealed class LevelViewTests
             view.Show(new LevelHud(LevelKind.Volume, 0.8, true));
 
             Assert.Equal("Off", Fixture.Named<TextBlock>(view, "PercentText").Text);
-            Assert.Equal(ModuleGlyphs.Get("volume.off").Glyph, Fixture.Named<TextBlock>(view, "IconText").Text);
+            Assert.Equal(ModuleGlyphs.Get("volume.off").Glyph, Fixture.Named<FluentGlyph>(view, "IconText").Code);
             Assert.Equal(0, Fixture.Field<ColumnDefinition>(view, "FillColumn").Width.Value, 6);
         });
     }
@@ -50,7 +50,7 @@ public sealed class LevelViewTests
             view.Show(new LevelHud(LevelKind.Brightness, 0.2));
 
             Assert.Equal("20", Fixture.Named<TextBlock>(view, "PercentText").Text);
-            Assert.Equal(ModuleGlyphs.Get("brightness.low").Glyph, Fixture.Named<TextBlock>(view, "IconText").Text);
+            Assert.Equal(ModuleGlyphs.Get("brightness.low").Glyph, Fixture.Named<FluentGlyph>(view, "IconText").Code);
         });
     }
 }

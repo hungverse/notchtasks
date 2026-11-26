@@ -140,11 +140,10 @@ public partial class OverviewPane : SettingsPane
         RunningPart.Children.Clear();
         if (running > 0)
         {
-            var sparkle = new TextBlock
+            var sparkle = new FluentGlyph
             {
-                Text = "",
-                FontFamily = FluentIcons.Regular,
-                FontSize = 10,
+                Code = "",
+                Size = 10,
                 Foreground = tint,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,
@@ -175,11 +174,10 @@ public partial class OverviewPane : SettingsPane
         AlertPart.Children.Clear();
         if (alerts > 0)
         {
-            AlertPart.Children.Add(new TextBlock
+            AlertPart.Children.Add(new FluentGlyph
             {
-                Text = "",
-                FontFamily = FluentIcons.Regular,
-                FontSize = 12,
+                Code = "",
+                Size = 12,
                 Foreground = tint,
                 VerticalAlignment = VerticalAlignment.Center,
             });
@@ -218,11 +216,10 @@ public partial class OverviewPane : SettingsPane
     /// One stat: its glyph in its colour (the accent when color is null), its value over its label, in a card.
     private Border StatCard(string glyph, Color? color, string label, out TextBlock value)
     {
-        var icon = new TextBlock
+        var icon = new FluentGlyph
         {
-            Text = glyph,
-            FontFamily = FluentIcons.Regular,
-            FontSize = 16,
+            Code = glyph,
+            Size = 16,
         };
         if (color is { } tint)
         {
@@ -326,11 +323,10 @@ public partial class OverviewPane : SettingsPane
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
-        var icon = new TextBlock
+        var icon = new FluentGlyph
         {
-            Text = glyph,
-            FontFamily = FluentIcons.Regular,
-            FontSize = 14,
+            Code = glyph,
+            Size = 14,
             Margin = new Thickness(0, 0, 12, 0),
             VerticalAlignment = VerticalAlignment.Center,
         };

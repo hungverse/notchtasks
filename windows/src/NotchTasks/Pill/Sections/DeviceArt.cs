@@ -129,25 +129,12 @@ public sealed class DeviceArtView : Grid
 
     /// A device's symbol in a brush at a size: the drawn path for a name the font lacks, else the Fluent glyph.
     public static FrameworkElement Glyph(string symbol, Brush brush, double size) =>
-        ModuleGlyphs.Vector(symbol) is { } data
-            ? new Path
+        new FluentGlyph
             {
-                Data = Geometry.Parse(data),
-                Stroke = brush,
-                StrokeThickness = 1.6,
-                Stretch = Stretch.Uniform,
-                Width = size,
-                Height = size,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center,
-                Focusable = false,
-            }
-            : new TextBlock
-            {
-                Text = ModuleGlyphs.Get(symbol).Glyph,
+                Code = ModuleGlyphs.Get(symbol).Glyph,
+                Filled = ModuleGlyphs.IsFilled(symbol),
                 Foreground = brush,
-                FontFamily = ModuleGlyphs.Get(symbol).Family,
-                FontSize = size,
+                Size = size,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,
                 Focusable = false,

@@ -41,7 +41,6 @@ public sealed class ShelfCard : Border
     private static readonly Brush TargetedBrush = Frozen(new SolidColorBrush(TargetedFill));
     private static readonly Brush MenuBackground = Frozen(new SolidColorBrush(Color.FromRgb(0x1C, 0x1C, 0x1E)));
     private static readonly Brush MenuBorder = Frozen(new SolidColorBrush(Color.FromArgb(0x33, 0xFF, 0xFF, 0xFF)));
-    private static readonly FontFamily GlyphFamily = FluentIcons.Regular;
     private static readonly FontFamily TextFamily = new("Segoe UI Variable Text, Segoe UI");
     private static readonly Lazy<ResourceDictionary> PillStyles = new(() => new ResourceDictionary
     {
@@ -56,7 +55,7 @@ public sealed class ShelfCard : Border
     private readonly HashSet<string> _selected = new(StringComparer.OrdinalIgnoreCase);
     // Whether each shelf path exists, as the last background check found it. A path not checked yet shows as present.
     private readonly Dictionary<string, bool> _present = new(StringComparer.OrdinalIgnoreCase);
-    private readonly TextBlock _titleGlyph;
+    private readonly FluentGlyph _titleGlyph;
     private readonly TextBlock _title;
     private readonly TextBlock _count;
     private readonly Button _selectAll;
@@ -90,8 +89,7 @@ public sealed class ShelfCard : Border
         CornerRadius = new CornerRadius(14);
         Padding = new Thickness(10);
 
-        _titleGlyph = Text(TrayGlyph, 12, GlyphFamily, Brushes.White);
-        _titleGlyph.Margin = new Thickness(0, 0, 6, 0);
+        _titleGlyph = new FluentGlyph { Code = TrayGlyph, Size = 12, Foreground = Brushes.White, Margin = new Thickness(0, 0, 6, 0) };
         _title = Text(string.Empty, 12, TextFamily, Brushes.White, FontWeights.SemiBold);
         _count = Text(string.Empty, 11, TextFamily, Brushes.Gray);
         _count.Margin = new Thickness(6, 0, 0, 0);
@@ -562,11 +560,10 @@ public sealed class ShelfCard : Border
 
     private static Style ChoiceStyle() => (Style)AskStyles.Value["ChoiceButton"];
 
-    private static TextBlock Glyph(string glyph) => new()
+    private static FluentGlyph Glyph(string glyph) => new()
     {
-        Text = glyph,
-        FontFamily = GlyphFamily,
-        FontSize = 12,
+        Code = glyph,
+        Size = 12,
         Foreground = Brushes.White,
         VerticalAlignment = VerticalAlignment.Center,
         HorizontalAlignment = HorizontalAlignment.Center,
@@ -600,7 +597,7 @@ public sealed class ShelfTile : Border
     private static readonly Brush PlainFill = Frozen(new SolidColorBrush(Color.FromArgb(0x0A, 0xFF, 0xFF, 0xFF)));
 
     private readonly TextBlock _name;
-    private readonly TextBlock _check;
+    private readonly FluentGlyph _check;
     private (bool Exists, bool Selected, Color Accent)? _shown;  // what the tile shows now: Show changes nothing when it is the same
 
     public ShelfTile(string filePath)
@@ -640,11 +637,10 @@ public sealed class ShelfTile : Border
         content.Children.Add(Thumb);
         content.Children.Add(_name);
 
-        _check = new TextBlock
+        _check = new FluentGlyph
         {
-            Text = CheckGlyph,
-            FontFamily = FluentIcons.Regular,
-            FontSize = 13,
+            Code = CheckGlyph,
+            Size = 13,
             HorizontalAlignment = HorizontalAlignment.Right,
             VerticalAlignment = VerticalAlignment.Top,
             Margin = new Thickness(0, -6, -6, 0),

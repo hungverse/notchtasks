@@ -34,9 +34,9 @@ public partial class CallCard : UserControl
             return false;
         }
         _state = state;
-        (CallGlyph.FontFamily, CallGlyph.Text) = ModuleGlyphs.Get(call.Video ? "video" : "phone");
+        CallGlyph.SetNamed(call.Video ? "video" : "phone");
         TitleText.Text = call.Video ? L10n.L("Video call · {0}", call.Name) : L10n.L("On a call · {0}", call.Name);
-        (MuteGlyph.FontFamily, MuteGlyph.Text) = ModuleGlyphs.Get(call.Muted ? "micoff" : "mic");
+        MuteGlyph.SetNamed(call.Muted ? "micoff" : "mic");
         MuteCaption.Text = call.Muted ? L10n.L("Unmute") : L10n.L("Mute");
         MuteCircle.Background = new SolidColorBrush(call.Muted ? Red : Color.FromArgb(0x2E, 0xFF, 0xFF, 0xFF));
         RefreshTime();

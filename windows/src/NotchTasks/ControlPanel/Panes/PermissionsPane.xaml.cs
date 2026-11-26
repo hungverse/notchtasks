@@ -237,11 +237,12 @@ public partial class PermissionsPane : SettingsPane
             Background = new SolidColorBrush(StateColor(item.State)),
             Margin = new Thickness(0, 0, 12, 0),
             VerticalAlignment = VerticalAlignment.Center,
-            Child = new TextBlock
+            Child = new FluentGlyph
             {
-                Text = item.Glyph,
-                FontFamily = item.Filled ? FluentIcons.Filled : FluentIcons.Regular,
-                Style = (Style)FindResource("IconGlyphLarge"),
+                Code = item.Glyph,
+                Filled = item.Filled,
+                Size = 16,
+                Foreground = (Brush)FindResource("TextOnAccentFillColorPrimaryBrush"),
             },
         };
 

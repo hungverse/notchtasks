@@ -173,15 +173,8 @@ public static class ChipView
             return Glyph("hand", size * 0.72, HexColor.Brush(ToHex(AskOrange)));
         }
         var badge = size * 0.3;
-        var hand = new TextBlock
-        {
-            Text = ModuleGlyphs.Get("hand").Glyph,
-            FontFamily = ModuleGlyphs.Get("hand").Family,
-            FontSize = badge,
-            Foreground = Brushes.White,
-            TextAlignment = TextAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center,
-        };
+        var hand = FluentGlyph.Named("hand", badge);
+        hand.Foreground = Brushes.White;
         var disc = new Border
         {
             Width = badge + 5,
@@ -244,14 +237,12 @@ public static class ChipView
     }
 
     /// A glyph in a brush, from the Fluent System Icons font.
-    private static TextBlock Glyph(string name, double size, Brush brush) => new()
+    private static FluentGlyph Glyph(string name, double size, Brush brush)
     {
-        Text = ModuleGlyphs.Get(name).Glyph,
-        FontFamily = ModuleGlyphs.Get(name).Family,
-        FontSize = size,
-        Foreground = brush,
-        VerticalAlignment = VerticalAlignment.Center,
-    };
+        var glyph = FluentGlyph.Named(name, size);
+        glyph.Foreground = brush;
+        return glyph;
+    }
 
     /// A limit's colour: red from 95 % used, else orange (the Mac's `w.used >= 95 ? .red : .orange`).
     public static Color LimitColor(double used) => used >= 95 ? CallRed : AskOrange;

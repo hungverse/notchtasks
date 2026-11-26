@@ -37,11 +37,11 @@ public partial class QuickBar : UserControl
     public void Update(AppState state)
     {
         _state = state;
-        (TimerGlyph.FontFamily, TimerGlyph.Text) = ModuleGlyphs.Get("timer");
+        TimerGlyph.SetNamed("timer");
         var show = state.Snapshot.ActiveModules.Contains("timer") && state.Timer.State is null;
         TimerBar.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
         // The Mirror pill: while the mirror module is on and the mirror is closed. It follows the timer's pills, with a gap when they show.
-        (MirrorGlyph.FontFamily, MirrorGlyph.Text) = ModuleGlyphs.Get("camera");
+        MirrorGlyph.SetNamed("camera");
         MirrorLabel.Text = L10n.L("Mirror");
         MirrorButton.ToolTip = L10n.L("Quick camera check");
         MirrorButton.Margin = new Thickness(show ? 8 : 0, 0, 0, 0);
@@ -50,7 +50,7 @@ public partial class QuickBar : UserControl
             : Visibility.Collapsed;
         // The shelf's link: while the shelf is on, empty and no file is dragged over the pill (the card shows then).
         var shelfLink = state.Snapshot.ActiveModules.Contains("shelf") && state.Shelf.Items.Count == 0 && !state.ShelfTargeted;
-        ShelfGlyph.Text = ShelfGlyphText;
+        ShelfGlyph.Code = ShelfGlyphText;
         ShelfLabel.Text = L10n.L("Drag and drop or choose files");
         ShelfLink.ToolTip = L10n.L("Drag files onto the notch, or click to choose files for the shelf");
         ShelfLink.Visibility = shelfLink ? Visibility.Visible : Visibility.Collapsed;

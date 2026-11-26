@@ -640,7 +640,7 @@ public partial class PillWindow : Window
         }
         var brush = (Brush)new BrushConverter().ConvertFromString(Thermals.Tint(reading.Celsius))!;
         brush.Freeze();
-        (TempGlyph.FontFamily, TempGlyph.Text) = ModuleGlyphs.Get("thermometer");
+        TempGlyph.SetNamed("thermometer");
         TempGlyph.Foreground = brush;
         TempText.Text = Math.Round(reading.Celsius, MidpointRounding.AwayFromZero).ToString("0", CultureInfo.InvariantCulture) + "°";
         TempText.Foreground = brush;

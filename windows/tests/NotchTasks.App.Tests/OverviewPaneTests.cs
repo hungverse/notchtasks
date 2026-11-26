@@ -148,7 +148,7 @@ public sealed class OverviewPaneTests
             Assert.Empty(left.Children);
             // The wrench and the 60% progress ring.
             Assert.Equal(2, right.Children.Count);
-            Assert.Equal("", Assert.IsType<TextBlock>(right.Children[0]).Text);
+            Assert.Equal("", Assert.IsType<FluentGlyph>(right.Children[0]).Code);
         });
     }
 }

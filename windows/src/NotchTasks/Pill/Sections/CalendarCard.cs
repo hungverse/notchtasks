@@ -343,18 +343,11 @@ public sealed class CalendarCard : Border
     };
 
     /// A glyph from the Fluent font in a brush, `box` DIPs square with the glyph centred (the Mac's symbol sizes).
-    private static TextBlock Glyph(string name, double size, Brush brush, double box)
+    private static Grid Glyph(string name, double size, Brush brush, double box)
     {
-        var (family, glyph) = ModuleGlyphs.Get(name);
-        return new TextBlock
-        {
-            Text = glyph,
-            FontFamily = family,
-            FontSize = size,
-            Foreground = brush,
-            Width = box,
-            TextAlignment = TextAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center,
-        };
+        // the glyph is centred in a box x box grid (FluentGlyph centres its outline in its own square)
+        var glyph = FluentGlyph.Named(name, size);
+        glyph.Foreground = brush;
+        return new Grid { Width = box, Height = box, Children = { glyph } };
     }
 }

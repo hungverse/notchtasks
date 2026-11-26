@@ -69,6 +69,32 @@ public static class ModuleGlyphs
         ["brightness.low"] = new("", true),  // brightness_low filled (Mac sun.min.fill): below half
         ["brightness.high"] = new("", true), // brightness_high filled (Mac sun.max.fill): half and up
         ["sun"] = new("", true),                   // weather_sunny filled (Mac sun.max.fill): an all-day event
+        // The Mac symbols the Build and CI, device, toast and camera rows draw: the Fluent glyph each one is (Mac name, closest icon)
+        ["seal"] = new(""),                                // badge (Mac checkmark.seal)
+        ["octagon"] = new(""),                             // stop (Mac octagon)
+        ["xmark"] = new(""),                               // dismiss (Mac xmark)
+        ["hammer.fill"] = new("", true),                   // wrench filled (Mac hammer.fill): the Build and CI tool
+        ["shippingbox.fill"] = new("", true),              // box multiple filled (Mac shippingbox.fill)
+        ["checkmark.diamond.fill"] = new("", true),        // shield checkmark filled (Mac checkmark.diamond.fill)
+        ["icloud.and.arrow.up.fill"] = new("", true),      // cloud arrow up filled (Mac icloud.and.arrow.up.fill)
+        ["server.rack"] = new(""),                         // server (Mac server.rack)
+        ["arrow.down.circle.fill"] = new("", true),        // arrow circle down filled (Mac arrow.down.circle.fill)
+        ["doc.on.doc.fill"] = new("", true),               // copy filled (Mac doc.on.doc.fill)
+        ["film.stack"] = new(""),                          // video clip multiple (Mac film.stack)
+        ["archivebox.fill"] = new("", true),               // archive filled (Mac archivebox.fill)
+        ["arrow.triangle.branch"] = new(""),               // branch (Mac arrow.triangle.branch)
+        ["arrow.left.arrow.right"] = new(""),              // arrow swap (Mac arrow.left.arrow.right)
+        ["photo.stack.fill"] = new("", true),              // image multiple filled (Mac photo.stack.fill)
+        ["waveform"] = new(""),                            // data bar vertical (Mac waveform)
+        ["cube.transparent.fill"] = new("", true),         // cube filled (Mac cube.transparent.fill)
+        ["airplane"] = new(""),                            // airplane (Mac airplane)
+        ["applewatch"] = new(""),                          // smartwatch (Mac applewatch)
+        ["dot.radiowaves.left.and.right"] = new(""),       // radio button (Mac dot.radiowaves.left.and.right)
+        ["cable.connector"] = new(""),                     // plug connected (Mac cable.connector)
+        ["video.slash"] = new(""),                         // video off (Mac video.slash): the camera mirror's no-picture mark
+        ["terminal.fill"] = new(""),                       // code (Mac terminal.fill): a watched process with no icon of its own
+        ["star"] = new(""),                                // star (Mac star): the badge symbol a new badge starts with
+        ["star.fill"] = new("", true),                     // star filled (Mac star.fill): the sync default of a badge
     };
 
     /// The codes the badge symbols were stored as before the Fluent icons (a "seg:" + Segoe code in settings). They still
@@ -96,40 +122,6 @@ public static class ModuleGlyphs
         ["E895"] = "",  // emoji
     };
 
-    /// Vector stand-ins for the Mac symbols the font does not draw here: stroked paths in a 16 by 16 box, in the toast's tint.
-    /// Null for every other name.
-    private static readonly IReadOnlyDictionary<string, string> Paths = new Dictionary<string, string>(StringComparer.Ordinal)
-    {
-        // a scalloped seal: eight outward arcs around a circle, with a check mark inside
-        ["seal"] = "M13.40,8.00 A2.4,2.4 0 0 1 11.82,11.82 A2.4,2.4 0 0 1 8.00,13.40 A2.4,2.4 0 0 1 4.18,11.82 A2.4,2.4 0 0 1 2.60,8.00 A2.4,2.4 0 0 1 4.18,4.18 A2.4,2.4 0 0 1 8.00,2.60 A2.4,2.4 0 0 1 11.82,4.18 A2.4,2.4 0 0 1 13.40,8.00 Z M5.2,8.2 L7.1,10.1 L10.9,6.3",
-        // a stop-sign octagon with an x inside
-        ["octagon"] = "M13.73,10.37 L10.37,13.73 L5.63,13.73 L2.27,10.37 L2.27,5.63 L5.63,2.27 L10.37,2.27 L13.73,5.63 Z M5.8,5.8 L10.2,10.2 M10.2,5.8 L5.8,10.2",
-        // the close mark of an alert card (Mac xmark)
-        ["xmark"] = "M3.5,3.5 L12.5,12.5 M12.5,3.5 L3.5,12.5",
-        // the Build & CI job symbols (Mac SF Symbol names, the key is the name itself): drawn outlines in the same 16 by 16 box
-        ["hammer.fill"] = "M2.5,3 H10 V6 H2.5 Z M6.2,6 V14.5",
-        ["shippingbox.fill"] = "M2,5 L8,2 L14,5 V11 L8,14 L2,11 Z M2,5 L8,8 L14,5 M8,8 V14",
-        ["checkmark.diamond.fill"] = "M8,1.5 L14.5,8 L8,14.5 L1.5,8 Z M5,8 L7.2,10.2 L11,6.2",
-        ["icloud.and.arrow.up.fill"] = "M4,12.5 A3,3 0 0 1 4.3,6.6 A4.2,4.2 0 0 1 12,6.8 A2.7,2.7 0 0 1 12,12.5 Z M8,14.5 V8 M5.8,10.2 L8,8 L10.2,10.2",
-        ["server.rack"] = "M2,2.5 H14 V6.5 H2 Z M2,9.5 H14 V13.5 H2 Z M4,4.5 H5.5 M4,11.5 H5.5 M9,4.5 H12 M9,11.5 H12",
-        ["arrow.down.circle.fill"] = "M8,1.5 A6.5,6.5 0 1 0 8,14.5 A6.5,6.5 0 1 0 8,1.5 Z M8,4.5 V10.5 M5.5,8 L8,10.5 L10.5,8",
-        ["doc.on.doc.fill"] = "M5.5,1.5 H12.5 V11.5 H5.5 Z M3.5,4.5 V14.5 H10.5",
-        ["film.stack"] = "M2.5,5.5 H13.5 V14 H2.5 Z M4.5,3 H11.5 M6.5,8 L10,10.25 L6.5,12.5 Z",
-        ["archivebox.fill"] = "M1.5,2.5 H14.5 V5.5 H1.5 Z M2.5,5.5 V14 H13.5 V5.5 M6,8.5 H10",
-        ["arrow.triangle.branch"] = "M4,1.5 V14.5 M12,3.5 V6 C12,9 4,7.5 4,10.5",
-        ["arrow.left.arrow.right"] = "M1.5,8 H14.5 M4.5,5 L1.5,8 L4.5,11 M11.5,5 L14.5,8 L11.5,11",
-        ["photo.stack.fill"] = "M4.5,2.5 H13.5 V11.5 H4.5 Z M2.5,4.5 V13.5 H11.5 M7,9.5 L9.5,6.5 L13.5,11",
-        ["waveform"] = "M2,7.5 V8.5 M4,6 V10 M6,3.5 V12.5 M8,6.5 V9.5 M10,2.5 V13.5 M12,5 V11 M14,7 V9",
-        ["cube.transparent.fill"] = "M8,1.5 L14,4.5 V11.5 L8,14.5 L2,11.5 V4.5 Z M2,4.5 L8,7.5 L14,4.5 M8,7.5 V14.5",
-        ["airplane"] = "M8,1.5 L9.2,6 L14.5,9 V10.5 L9.2,9.3 L9,12.5 L10.5,13.8 V14.8 L8,14.1 L5.5,14.8 V13.8 L7,12.5 L6.8,9.3 L1.5,10.5 V9 L6.8,6 Z",
-        // the Devices module's symbols the font lacks: a watch (Mac applewatch), a radio dot with its waves, and a USB plug (Mac cable.connector)
-        ["applewatch"] = "M5,4.5 H11 V11.5 H5 Z M6.5,4.5 L7,2 H9 L9.5,4.5 M6.5,11.5 L7,14 H9 L9.5,11.5",
-        ["dot.radiowaves.left.and.right"] = "M6.9,8 A1.1,1.1 0 1 0 9.1,8 A1.1,1.1 0 1 0 6.9,8 Z M4.2,5.2 A4,4 0 0 0 4.2,10.8 M11.8,5.2 A4,4 0 0 1 11.8,10.8 M2.2,2.8 A7,7 0 0 0 2.2,13.2 M13.8,2.8 A7,7 0 0 1 13.8,13.2",
-        ["cable.connector"] = "M6,1.5 V5 M10,1.5 V5 M4.5,5 H11.5 V8 A3.5,3.5 0 0 1 4.5,8 Z M8,11.5 V14.5",
-        // the camera mirror's "no picture" mark (Mac video.slash.fill): a camera body with its lens, crossed by a slash
-        ["video.slash"] = "M1.8,4 H9.8 V12 H1.8 Z M9.8,7 L14.2,4.5 V11.5 L9.8,9 M1.5,1.5 L14.5,14.5",
-    };
-
     /// The glyph of a name and the family it is drawn in (Filled for a Mac symbol that is filled), or the fallback in Regular
     /// when the name is not in the map.
     public static (FontFamily Family, string Glyph) Get(string name) =>
@@ -139,10 +131,10 @@ public static class ModuleGlyphs
 
     /// The Fluent glyph of a badge symbol stored as a Segoe code (the "seg:" symbols), or null when the code is not one the
     /// badge list offers.
-    public static string? Legacy(string segoeCode) => LegacyBadgeSymbols.TryGetValue(segoeCode, out var code) ? code : null;
+    /// Whether a name is in the glyph map (a Fluent glyph of its own).
+    public static bool Has(string name) => Map.ContainsKey(name);
 
-    /// The path data of a name the font does not draw (the Mac symbols above), or null.
-    public static string? Vector(string name) => Paths.TryGetValue(name, out var data) ? data : null;
+    public static string? Legacy(string segoeCode) => LegacyBadgeSymbols.TryGetValue(segoeCode, out var code) ? code : null;
 
     /// Every glyph name the map knows, for the tests.
     public static IEnumerable<string> Names => Map.Keys;

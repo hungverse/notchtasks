@@ -299,11 +299,10 @@ public partial class ModulesPane : SettingsPane
         {
             Style = (Style)FindResource("MoveArrow"),
             ToolTip = tip,
-            Content = new TextBlock
+            Content = new FluentGlyph
             {
-                Text = glyph,
-                FontFamily = FluentIcons.Regular,
-                FontSize = 10,
+                Code = glyph,
+                Size = 10,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,
             },

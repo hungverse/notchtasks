@@ -30,8 +30,8 @@ public sealed class AppXamlResourcesTests
         Sta.Run(() =>
         {
             var card = Fixture.Create<TimerCard>();
-            var glyph = Fixture.Named<TextBlock>(card, "Glyph");
-            Assert.Same(FluentIcons.Regular, glyph.FontFamily);
+            var glyph = Fixture.Named<FluentGlyph>(card, "Glyph");
+            Assert.False(glyph.Filled);  // the timer glyph is the Regular font
         });
     }
 

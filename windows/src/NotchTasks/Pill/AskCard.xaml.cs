@@ -25,13 +25,13 @@ public partial class AskCard : UserControl
     private readonly List<List<Option>> _options = [];
 
     /// An answer option: its button, and for multi-select the box and tick drawn inside it.
-    private sealed record Option(string Label, Button Button, Border? Box, TextBlock? Mark);
+    private sealed record Option(string Label, Button Button, Border? Box, FluentGlyph? Mark);
 
     public AskCard(AgentAsk ask)
     {
         InitializeComponent();
         Ask = ask;
-        Glyph.Text = GlyphFor(ask);
+        Glyph.Code = GlyphFor(ask);
         TitleText.Text = AskPresentation.Title(ask);
         SessionText.Text = AskPresentation.Display(ask.Session);
 
@@ -178,14 +178,12 @@ public partial class AskCard : UserControl
         row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
 
         Border? box = null;
-        TextBlock? mark = null;
+        FluentGlyph? mark = null;
         if (multiSelect)
         {
-            mark = new TextBlock
+            mark = new FluentGlyph
             {
-                Text = string.Empty,
-                FontFamily = FluentIcons.Regular,
-                FontSize = 9,
+                Size = 9,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,
                 Foreground = Brushes.Black,
@@ -251,7 +249,7 @@ public partial class AskCard : UserControl
         if (option.Box is not null && option.Mark is not null)
         {
             option.Box.BorderBrush = selected ? Brushes.Black : Dim;
-            option.Mark.Text = selected ? CheckGlyph : string.Empty;
+            option.Mark.Code = selected ? CheckGlyph : string.Empty;
         }
     }
 

@@ -148,7 +148,7 @@ public sealed class CalendarCardTests
             var glyph = ChipView.Lead(new Chip(ChipKind.Calendar, "calendar", "calendar") { Event = upcoming }, 18, null, colors);
             var ring = ChipView.Lead(new Chip(ChipKind.Calendar, "calendar", "calendar") { Event = running }, 18, null, colors);
 
-            Assert.IsType<TextBlock>(glyph);
+            Assert.IsType<FluentGlyph>(glyph);
             Assert.IsType<Grid>(ring);
         });
     }

@@ -86,21 +86,16 @@ public partial class ToastView : UserControl
         _ => ask is null ? IslandWidth : PillGeometry.OpenWidth,
     };
 
-    /// A toast's glyph in its tint and size: the drawn path for a Mac symbol the font does not have (the CI seal and octagon, the build marks), else the font glyph.
+    /// A toast's glyph in its tint and size: the Fluent glyph of its name, centred.
     public static FrameworkElement GlyphOf(string name, Brush tint, double size) =>
-        ModuleGlyphs.Vector(name) is { } data
-            ? new System.Windows.Shapes.Path
-            {
-                Data = Geometry.Parse(data),
-                Stroke = tint,
-                StrokeThickness = 1.6,
-                Stretch = Stretch.Uniform,
-                Width = size,
-                Height = size,
-                HorizontalAlignment = HorizontalAlignment.Left,
-                VerticalAlignment = VerticalAlignment.Center,
-            }
-            : new TextBlock { Text = ModuleGlyphs.Get(name).Glyph, FontFamily = ModuleGlyphs.Get(name).Family, Foreground = tint };
+        Tinted(FluentGlyph.Named(name, size), tint);
+
+    /// The same glyph in a tint (the toast's own colour).
+    private static FluentGlyph Tinted(FluentGlyph glyph, Brush tint)
+    {
+        glyph.Foreground = tint;
+        return glyph;
+    }
 
     /// The icon a toast draws in its glyph slot for its agent or app (Mac toastIcon): the item's own icon at size. Its fallback sparkles
     /// take the item's own colour, as the Mac's item icon does, not the toast's tint. Null for a toast with no item, which keeps its glyph.

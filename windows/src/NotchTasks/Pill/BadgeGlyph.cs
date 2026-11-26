@@ -276,29 +276,13 @@ public static class BadgeGlyph
     /// The icon inside the fill: a glyph, or a drawn mark. On a fill it sits a little smaller, as the Mac draws it.
     private static UIElement Content(JsonObject badge, double size, bool plain, Color ink)
     {
-        // A Mac symbol name that has a drawn mark (the Build & CI tools' defaults: hammer.fill, server.rack, ...) draws that mark,
-        // as the Build & CI rows draw it, rather than the star.
         var symbol = ReadString(badge, "symbol");
-        if (symbol is not null && !symbol.StartsWith("seg:", StringComparison.Ordinal) && ModuleGlyphs.Vector(symbol) is { } data)
-        {
-            var box = size * (plain ? 0.75 : 0.55);
-            return new System.Windows.Shapes.Path
-            {
-                Data = Geometry.Parse(data),
-                Stroke = Frozen(new SolidColorBrush(ink)),
-                StrokeThickness = 1.4,
-                Stretch = Stretch.Uniform,
-                Width = box,
-                Height = box,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center,
-            };
-        }
 
         // the glyph is centred in its box by FluentGlyph (a TextBlock would sit it on the baseline)
         return new FluentGlyph
         {
             Code = GlyphText(symbol),
+            Filled = symbol is not null && !symbol.StartsWith("seg:", StringComparison.Ordinal) && ModuleGlyphs.IsFilled(symbol),
             Size = size * (plain ? 0.75 : 0.55),
             Foreground = Frozen(new SolidColorBrush(ink)),
             HorizontalAlignment = HorizontalAlignment.Center,
@@ -314,6 +298,10 @@ public static class BadgeGlyph
             && ModuleGlyphs.Legacy(symbol[4..]) is { } glyph)
         {
             return glyph;
+        }
+        if (symbol is not null && !symbol.StartsWith("seg:", StringComparison.Ordinal) && ModuleGlyphs.Has(symbol))
+        {
+            return ModuleGlyphs.Get(symbol).Glyph;  // a Mac symbol the Fluent map names (hammer.fill, server.rack, ...)
         }
         return new Rune(Convert.ToInt32(StarCode, 16)).ToString();
     }
