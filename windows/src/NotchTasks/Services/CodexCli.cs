@@ -18,8 +18,6 @@ public interface ICodexCli
 public sealed partial class CodexCli : ICodexCli
 {
     private static readonly TimeSpan QueueLimit = TimeSpan.FromSeconds(60);
-    private static readonly string[] ProcessNames = { "codex" };
-
     private readonly string _home;
 
     /// home is the user's profile folder, searched for the codex CLI.
@@ -47,14 +45,15 @@ public sealed partial class CodexCli : ICodexCli
 
     public bool BringToFront()
     {
-        foreach (var name in ProcessNames)
+        var processes = Process.GetProcessesByName("codex").Concat(Process.GetProcessesByName("ChatGPT")).ToList();
+        try
         {
-            foreach (var process in Process.GetProcessesByName(name))
+            foreach (var process in processes)
             {
                 try
                 {
                     var window = process.MainWindowHandle;
-                    if (window == 0)
+                    if (window == 0 || !IsCodexWindow(process))
                     {
                         continue;
                     }
@@ -68,13 +67,38 @@ public sealed partial class CodexCli : ICodexCli
                 {
                     // the process has gone
                 }
-                finally
-                {
-                    process.Dispose();
-                }
+            }
+            return false;
+        }
+        finally
+        {
+            foreach (var process in processes)
+            {
+                process.Dispose();
             }
         }
-        return false;
+    }
+
+    /// True for a file in the Codex desktop app's package (...\WindowsApps\OpenAI.Codex_<version>_<arch>__<publisher>\...). The
+    /// plain ChatGPT desktop app is another package, so it is not Codex. Compared without regard to case or separator style.
+    public static bool IsCodexDesktopPath(string path) =>
+        path.Replace('/', '\\').Contains(@"\WindowsApps\OpenAI.Codex_", StringComparison.OrdinalIgnoreCase);
+
+    /// The codex CLI's window, or the Codex desktop app's (its main process is ChatGPT.exe in the Codex package).
+    private static bool IsCodexWindow(Process process) =>
+        process.ProcessName.Equals("codex", StringComparison.OrdinalIgnoreCase) || IsCodexDesktopPath(ImagePath(process));
+
+    /// The process's executable path, or empty when it cannot be read (another user's process, or it has gone).
+    private static string ImagePath(Process process)
+    {
+        try
+        {
+            return process.MainModule?.FileName ?? string.Empty;
+        }
+        catch (Exception)
+        {
+            return string.Empty;
+        }
     }
 
     private const int SwRestore = 9;

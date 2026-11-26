@@ -12,10 +12,36 @@ public static class AgentSetup
 
     private static readonly string[] Extensions = [".exe", ".cmd", ".bat", ".ps1"];
 
-    /// True when the agent's CLI is on one of the usual paths. Claude is always present: the desktop app reads ~/.claude too.
-    /// `path` is the PATH to search; null means this process's PATH.
-    public static bool Present(AgentKind kind, string home, string? path = null) =>
-        kind == AgentKind.Claude || FindCli(AgentKinds.Spec(kind).Cli, home, path) is not null;
+    /// True when the agent's CLI is on one of the usual paths, or for Codex the desktop app is installed. Claude is always present:
+    /// the desktop app reads ~/.claude too. `path` is the PATH to search; null means this process's PATH. `appData` and
+    /// `localAppData` are the folders searched for the npm CLI and the desktop app; null means the real ones.
+    public static bool Present(AgentKind kind, string home, string? path = null, string? appData = null, string? localAppData = null) =>
+        kind == AgentKind.Claude
+        || FindCli(AgentKinds.Spec(kind).Cli, home, path, appData) is not null
+        || (kind == AgentKind.Codex && CodexDesktopInstalled(home, localAppData));
+
+    /// True when the Codex desktop app is installed: it writes ~/.codex/.desktop-created, and its package's execution alias folder
+    /// is in %LOCALAPPDATA%\Microsoft\WindowsApps as OpenAI.Codex_*. `localAppData` null means this user's own folder.
+    public static bool CodexDesktopInstalled(string home, string? localAppData = null)
+    {
+        if (File.Exists(Path.Combine(home, ".codex", ".desktop-created")))
+        {
+            return true;
+        }
+        localAppData ??= Environment.GetEnvironmentVariable("LOCALAPPDATA");
+        if (string.IsNullOrEmpty(localAppData))
+        {
+            return false;
+        }
+        try
+        {
+            return Directory.EnumerateDirectories(Path.Combine(localAppData, "Microsoft", "WindowsApps"), "OpenAI.Codex_*").Any();
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            return false;
+        }
+    }
 
     /// The full path of a CLI found on PATH or in one of the usual folders, or null. The folders are the npm global ones and
     /// ~/.local/bin, ~/.npm-global/bin and ~/.opencode/bin. `appData` is the %APPDATA% folder to search (null: the real one);

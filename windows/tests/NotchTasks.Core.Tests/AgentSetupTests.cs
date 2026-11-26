@@ -71,6 +71,29 @@ public sealed class AgentSetupTests : IDisposable
     }
 
     [Fact]
+    public void Present_CodexDesktopApp_NoCliNeeded_OnItsMarker()
+    {
+        var local = Path.Combine(_home, "LocalAppData");
+        Directory.CreateDirectory(local);
+        Assert.False(AgentSetup.Present(AgentKind.Codex, _home, path: "", appData: local, localAppData: local));
+
+        Write(".codex/.desktop-created", "");
+
+        Assert.True(AgentSetup.Present(AgentKind.Codex, _home, path: "", appData: local, localAppData: local));
+    }
+
+    [Fact]
+    public void Present_CodexDesktopApp_NoCliNeeded_OnItsPackageAliasFolder()
+    {
+        var local = Path.Combine(_home, "LocalAppData");
+        Directory.CreateDirectory(Path.Combine(local, "Microsoft", "WindowsApps", "OpenAI.Codex_26.1101.1234.0_x64__2p2nqsd0c76g0"));
+
+        Assert.True(AgentSetup.Present(AgentKind.Codex, _home, path: "", appData: local, localAppData: local));
+        // the desktop app is Codex's signal only: it does not make Gemini present
+        Assert.False(AgentSetup.Present(AgentKind.Gemini, _home, path: "", appData: local, localAppData: local));
+    }
+
+    [Fact]
     public void SetupStep_CodexNeedsTrustOnceTheHookIsOn()
     {
         Assert.Null(AgentSetup.SetupStep(AgentKind.Codex, _home, geminiKeySet: false, path: ""));
