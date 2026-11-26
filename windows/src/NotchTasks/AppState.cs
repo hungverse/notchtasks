@@ -560,6 +560,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         Health.Load)
         {
             Running = modules.Contains("agents") ? Agents.Running : Array.Empty<ItemState>(),
+            JobCount = modules.Contains("agents") ? Agents.States.Sum(item => item.Jobs.Count) : 0,
             BuildRunning = modules.Contains("ci") ? BuildRunningRows() : Array.Empty<ItemState>(),
             Alerts = modules.Contains("ci") ? Ci.Alerts : Array.Empty<JobAlert>(),
             Limits = modules.Contains("limits") ? LimitsModule.Limits : Array.Empty<ProviderLimits>(),

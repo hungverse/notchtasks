@@ -349,7 +349,7 @@ public sealed class PillWindowTests
     private static bool IsChip(UIElement element) => element is FrameworkElement { Tag: "chip" };
 
     [Fact]
-    public void Pill_WaitingAsk_ShowsInSummary()
+    public void Pill_PendingAsk_IsNotCountedInTheSummary_ToldApartFromIdleJobs()
     {
         Sta.Run(() =>
         {
@@ -358,9 +358,10 @@ public sealed class PillWindowTests
             var pill = new PillWindow(state);
             try
             {
+                // Mac's header counts jobs (working or idle), never pending asks: an ask alone reads "Nothing running".
                 state.Asks.Add(new AgentAsk("s1", 1, "work", "Bash", "ls", Array.Empty<AskQuestion>(), DateTimeOffset.Now, "claude"));
                 state.Publish();
-                Assert.Equal("1 waiting", Fixture.Named<TextBlock>(pill, "HeaderSummary").Text);
+                Assert.Equal("Nothing running", Fixture.Named<TextBlock>(pill, "HeaderSummary").Text);
             }
             finally
             {

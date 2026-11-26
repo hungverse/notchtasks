@@ -20,6 +20,9 @@ public sealed record NotchSnapshot(
     /// The agents that are working now, in the watch list's order (none unless the agents module is on).
     public IReadOnlyList<ItemState> Running { get; init; } = Array.Empty<ItemState>();
 
+    /// Every agent job, working or idle (zero unless the agents module is on). The header's "waiting" is this minus the working ones.
+    public int JobCount { get; init; }
+
     /// The Build & CI rows that are working now: the build row first, then the build watch items (none unless ci is on).
     public IReadOnlyList<ItemState> BuildRunning { get; init; } = Array.Empty<ItemState>();
 
