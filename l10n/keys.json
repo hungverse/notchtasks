@@ -1124,5 +1124,6 @@
 "{0} done",
 "Couldn't use this sound",
 "Audio files",
-"NotchTasks sounds"
+"NotchTasks sounds",
+"Reports go through sync, which is off. Turn sync on in Pairing to send one."
 ]

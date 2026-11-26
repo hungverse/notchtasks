@@ -54,5 +54,9 @@
 
     <Button x:Name="GuideButton" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Left" Margin="0,20,0,0"
             Content="{l:L See the guide}" />
+
+    <!-- Always there, as the Mac's overview: a report can be sent even with sync off (the dialog says why it cannot send). -->
+    <Button x:Name="ReportButton" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Left" Margin="0,8,0,0"
+            Content="{l:L Report a problem}" />
   </StackPanel>
 </local:SettingsPane>

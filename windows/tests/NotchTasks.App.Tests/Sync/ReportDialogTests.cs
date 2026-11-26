@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using NotchTasks.ControlPanel;
+using NotchTasks.Core;
 using NotchTasks.Core.Sync;
 using NotchTasks.Services.Sync;
 using Xunit;
@@ -33,7 +34,8 @@ public sealed class ReportDialogTests
             try
             {
                 var topics = Fixture.Named<ComboBox>(dialog, "TopicPicker");
-                Assert.Equal(new object[] { "Pairing", "Permissions", "Fans & temperature", "Update", "Other" }, topics.Items.Cast<object>().ToArray());
+                // No "Fans & temperature": Windows has no fans pane to report on (Task 11 adds a Temperatures pane later).
+                Assert.Equal(new object[] { "Pairing", "Permissions", "Update", "Other" }, topics.Items.Cast<object>().ToArray());
                 Assert.Equal("Other", topics.SelectedItem);
 
                 var send = Fixture.Named<Button>(dialog, "SendButton");
@@ -53,6 +55,33 @@ public sealed class ReportDialogTests
             {
                 dialog.Close();
                 PairingVisuals.Stop(hub);
+            }
+        });
+    }
+
+    [Fact]
+    public void Report_WithSyncOff_OpensAndSaysWhySendIsOff()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            PairingVisuals.InitEnglish();
+            // Reports go through the sync hub, so with no bridge the dialog still opens, explains why it cannot send, and
+            // keeps Send off: never a silent no-op.
+            var dialog = new ReportDialog(null);
+            Fixture.ShowOffScreen(dialog);
+            try
+            {
+                Fixture.Named<TextBox>(dialog, "WhatBox").Text = "The phone does not pair";
+
+                Assert.False(Fixture.Named<Button>(dialog, "SendButton").IsEnabled);
+                var problem = Fixture.Named<TextBlock>(dialog, "ProblemText");
+                Assert.Equal(Visibility.Visible, problem.Visibility);
+                Assert.Equal(L10n.L("Reports go through sync, which is off. Turn sync on in Pairing to send one."), problem.Text);
+            }
+            finally
+            {
+                dialog.Close();
             }
         });
     }

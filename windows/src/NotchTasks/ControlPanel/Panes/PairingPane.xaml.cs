@@ -307,12 +307,9 @@ public partial class PairingPane : UserControl
         Render();
     }
 
+    /// Opens Report a problem; with sync off the dialog opens too and says it cannot send (no silent no-op).
     private void ShowReport()
     {
-        if (_bridge is null)
-        {
-            return;
-        }
         var dialog = new ReportDialog(_bridge) { Owner = Window.GetWindow(this) };
         dialog.ShowDialog();
     }

@@ -62,6 +62,7 @@ public partial class OverviewPane : SettingsPane
         Stats.Children.Add(StatCard("", ControlPanelLook.Red, L10n.L("CI errors"), out _alertsValue));
         Stats.Children.Add(StatCard("", ControlPanelLook.Green, L10n.L("Permissions"), out _permissionsValue));
         GuideButton.Click += (_, _) => OnboardingWindow.Show(_state);
+        ReportButton.Click += (_, _) => ShowReport();
 
         // The running and error counts follow the notch while the pane is shown; the handler is removed when it is hidden.
         Loaded += (_, _) => _state.NotchChanged += OnNotchChanged;
@@ -295,6 +296,13 @@ public partial class OverviewPane : SettingsPane
             ControlPanelWindow.Show(_state, PaneId.Watching);
         }
         ApplyStored();
+    }
+
+    /// Opens Report a problem. It opens with or without sync: with no bridge the dialog explains it cannot send.
+    private void ShowReport()
+    {
+        var dialog = new ReportDialog(_state.Bridge) { Owner = Window.GetWindow(this) };
+        dialog.ShowDialog();
     }
 
     private void OpenPermission(PermItem item)

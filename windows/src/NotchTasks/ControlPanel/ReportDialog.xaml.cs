@@ -10,17 +10,18 @@ namespace NotchTasks.ControlPanel;
 
 /// Report a problem (Mac MacReportSheet). The user says what happened and how to reach them; Send writes the report through the sync
 /// hub (under the group, or under a fresh account when unpaired). Once sent, the window shows the report code (its last six characters)
-/// and a Copy button; a failure says to try again when online. The window is modal, owned by the Control Panel.
+/// and a Copy button; a failure says to try again when online. With sync off (no bridge, so no hub) the window still opens, says why
+/// it cannot send, and keeps Send off. The window is modal, owned by the Control Panel.
 public partial class ReportDialog : Window
 {
-    /// The issue types, in the Mac's order. The last one is the default.
-    private static readonly string[] TopicKeys = ["Pairing", "Permissions", "Fans & temperature", "Update", "Other"];
+    /// The issue types, in the Mac's order. The last one is the default. No "Fans & temperature": Windows has no fans pane to report on.
+    private static readonly string[] TopicKeys = ["Pairing", "Permissions", "Update", "Other"];
 
-    private readonly SyncBridge _bridge;
+    private readonly SyncBridge? _bridge;
     private string? _code;
     private bool _busy;
 
-    public ReportDialog(SyncBridge bridge)
+    public ReportDialog(SyncBridge? bridge)
     {
         _bridge = bridge;
         InitializeComponent();
@@ -41,13 +42,19 @@ public partial class ReportDialog : Window
         SendButton.Click += (_, _) => _ = SendAsync();
         CloseButton.Click += (_, _) => Close();
         CopyButton.Click += (_, _) => CopyCode();
+        if (_bridge is null)
+        {
+            ProblemText.Text = L10n.L("Reports go through sync, which is off. Turn sync on in Pairing to send one.");
+            ProblemText.Visibility = Visibility.Visible;
+        }
         Render();
     }
 
-    /// Sends the report. Nothing is sent without text, and not twice. A failure is shown; the user may try again.
+    /// Sends the report. Nothing is sent without text, without sync, and not twice. A failure is shown; the user may try again.
     private async Task SendAsync()
     {
-        if (_busy || _code is not null || WhatBox.Text.Length == 0)
+        var bridge = _bridge;
+        if (bridge is null || _busy || _code is not null || WhatBox.Text.Length == 0)
         {
             return;
         }
@@ -57,7 +64,7 @@ public partial class ReportDialog : Window
         try
         {
             var topic = TopicKeys[Math.Max(0, TopicPicker.SelectedIndex)];
-            _code = await _bridge.Hub.SendReportAsync(L10n.L(topic), WhatBox.Text, ContactBox.Text, ReportInfoOf());
+            _code = await bridge.Hub.SendReportAsync(L10n.L(topic), WhatBox.Text, ContactBox.Text, ReportInfoOf());
         }
         catch (Exception e)
         {
@@ -91,10 +98,10 @@ public partial class ReportDialog : Window
         }
     }
 
-    /// Send is enabled while there is text and nothing is sent; the result row shows once the report is sent.
+    /// Send is enabled while there is text, sync is on and nothing is sent; the result row shows once the report is sent.
     private void Render()
     {
-        SendButton.IsEnabled = !_busy && _code is null && WhatBox.Text.Length > 0;
+        SendButton.IsEnabled = _bridge is not null && !_busy && _code is null && WhatBox.Text.Length > 0;
         ResultRow.Visibility = _code is null ? Visibility.Collapsed : Visibility.Visible;
         if (_code is not null)
         {

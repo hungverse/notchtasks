@@ -52,6 +52,25 @@ public sealed class OverviewPaneTests
     }
 
     [Fact]
+    public void ReportButton_IsAtTheBottom_AfterTheGuide_WithSyncOff()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();  // no sync: the report still opens from here (Mac Preferences.swift:166)
+            var pane = Fixture.Create<OverviewPane>(state.Settings, state);
+            Fixture.Call(pane, "Apply");
+
+            var report = Fixture.Named<Button>(pane, "ReportButton");
+            var guide = Fixture.Named<Button>(pane, "GuideButton");
+            Assert.Equal(L10n.L("Report a problem"), report.Content);
+            Assert.Same(guide.Parent, report.Parent);
+            var parent = (StackPanel)report.Parent;
+            Assert.True(parent.Children.IndexOf(report) > parent.Children.IndexOf(guide));
+        });
+    }
+
+    [Fact]
     public void ModuleSwitch_WritesTheModuleOffAndOn()
     {
         Sta.Run(() =>
