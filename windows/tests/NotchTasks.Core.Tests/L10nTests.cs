@@ -255,6 +255,41 @@ public sealed class L10nTests
         "Join", "Calendar can't be opened. Check Settings > Privacy & security > Calendar.",
     ];
 
+    // The Windows-only texts of the profile and badge dialogs, the picture and GIF file filters, and the Overview's report note. They
+    // have no Mac text, so each one needs its text in electron/l10n/windows.json, in every language.
+    private static readonly string[] FinalReviewKeys =
+    [
+        "Couldn't export the profile", "Couldn't import the profile", "This file isn't a NotchTasks profile.",
+        "Choose a GIF.", "That picture is over 8 MB.", "That file is not a picture.", "That file can't be read.",
+        "Picture files", "GIF files", "Reports go through sync, which is off. Turn sync on in Pairing to send one.",
+    ];
+
+    [Fact]
+    public void FinalReviewKeys_ExistInEveryLanguage()
+    {
+        var overlayFile = Path.Combine(RepoRoot(), "electron", "l10n", "windows.json");
+        var missing = new List<string>();
+        var placeholders = new List<string>();
+        foreach (var (code, _) in L10n.Languages.Where(language => language.Code != "en"))
+        {
+            var mac = ReadStrings(Path.Combine(MacSources(), $"l10n-{code}.json"));
+            var windows = ReadOverlay(overlayFile, code);
+            foreach (var key in FinalReviewKeys)
+            {
+                if (!mac.ContainsKey(key) && !windows.ContainsKey(key))
+                {
+                    missing.Add($"{code}: {key}");
+                }
+                if (windows.TryGetValue(key, out var text) && Placeholders(key).Any(p => !text.Contains(p, StringComparison.Ordinal)))
+                {
+                    placeholders.Add($"{code}: {key}");
+                }
+            }
+        }
+        Assert.Empty(missing);
+        Assert.Empty(placeholders);
+    }
+
     [Fact]
     public void Phase9Keys_ExistInEveryLanguage()
     {
