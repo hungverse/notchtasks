@@ -116,8 +116,9 @@ public partial class AppearancePane : SettingsPane
             File.WriteAllText(path, text, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
             return null;
         }
-        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        catch (Exception e) when (e is not OutOfMemoryException)
         {
+            // any failure but a fatal one is shown: a bad path is an ArgumentException, not an IOException
             return e.Message;
         }
     }
@@ -140,7 +141,7 @@ public partial class AppearancePane : SettingsPane
     }
 
     /// Reads and checks a profile file. Runs on a pool thread: it does not touch the store or the controls. A file too large to be
-    /// a profile is refused; a disk or IO error is shown with the exception's message.
+    /// a profile is refused; any failure to read it (a disk or IO error, a bad path) is shown with the exception's message.
     internal static ProfileRead ReadProfile(string path)
     {
         try
@@ -151,22 +152,38 @@ public partial class AppearancePane : SettingsPane
             }
             return SettingsProfile.Read(File.ReadAllText(path));
         }
-        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        catch (Exception e) when (e is not OutOfMemoryException)
         {
             return new ProfileRead(new Dictionary<string, JsonNode?>(StringComparer.Ordinal), e.Message);
         }
     }
 
     /// Applies a read profile on the UI thread: its values are saved in one write, so every open pane and the pill take them. A
-    /// profile that could not be read is shown in a message box and changes nothing.
+    /// profile that could not be read, or whose values could not be saved (a locked settings file), is shown in a message box;
+    /// nothing is changed then.
     internal void ApplyProfile(ProfileRead read)
     {
-        if (read.Error is not null)
+        var problem = read.Error ?? SaveProfile(read.Values);
+        if (problem is not null)
         {
-            Message(L10n.L("Couldn't import the profile"), read.Error);
-            return;
+            Message(L10n.L("Couldn't import the profile"), problem);
         }
-        WriteMany(read.Values);
+    }
+
+    /// The problem saving a profile's values, or null when they are saved. A failed save is logged and the stored values are
+    /// given back to the controls (WriteMany does both); any other failure is handled the same way.
+    private string? SaveProfile(IReadOnlyDictionary<string, JsonNode?> values)
+    {
+        try
+        {
+            return WriteMany(values);
+        }
+        catch (Exception e) when (e is not OutOfMemoryException)
+        {
+            ErrorLog.Write(e);
+            ApplyStored();
+            return e.Message;
+        }
     }
 
     /// Shows a message box owned by the Control Panel window.
@@ -214,7 +231,7 @@ public partial class AppearancePane : SettingsPane
     internal void ShowStoredValues() => ApplyStored();
 
     /// A theme's one click: its values are saved in one write, so every open pane and the pill take the look at once.
-    private void ApplyTheme(Theme theme) => WriteMany(theme.Values);
+    private void ApplyTheme(Theme theme) => _ = WriteMany(theme.Values);
 
     /// One theme tile: a preview of the theme (its background, the closed pill with an accent dot and bar, the Mac's ThemeTile),
     /// its title and the check of the selected theme.

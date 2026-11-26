@@ -284,6 +284,82 @@ public sealed class AppearancePaneTests
     }
 
     [Fact]
+    public void ImportProfile_ALockedSettingsFile_ShowsTheProblemAndChangesNothing()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            var pane = Fixture.Create<AppearancePane>(state.Settings, state);
+            string? shown = null;
+            pane.Message = (caption, text) => shown = caption + "|" + text;
+            var path = Path.Combine(root.Folder, "mac.json");
+            File.WriteAllText(path, MacProfile);
+            state.Settings.Set("background", JsonValue.Create("solid"));
+            var before = state.Settings.Background;
+
+            // another program holds the settings file: the save cannot write it
+            using (new FileStream(AppPaths.SettingsFile, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+            {
+                pane.ApplyProfile(AppearancePane.ReadProfile(path));
+            }
+
+            Assert.StartsWith("Couldn't import the profile|", shown);
+            Assert.Equal(before, state.Settings.Background);
+        });
+    }
+
+    [Fact]
+    public void ImportProfile_AnUnexpectedFailure_ShowsTheImportProblem_NotASilentFailure()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            var pane = Fixture.Create<AppearancePane>(state.Settings, state);
+            string? shown = null;
+            pane.Message = (caption, text) => shown = caption + "|" + text;
+
+            // a NUL in a path is an ArgumentException, not an IOException: the import still says what failed
+            var task = pane.ImportProfileFrom(Path.Combine(root.Folder, "bad\0.json"));
+            Fixture.PumpUntil(() => task.IsCompleted);
+
+            Assert.True(task.IsCompletedSuccessfully);
+            Assert.StartsWith("Couldn't import the profile|", shown);
+        });
+    }
+
+    [Fact]
+    public void ExportProfile_AnUnexpectedFailure_ShowsTheExportProblem_NotASilentFailure()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            var pane = Fixture.Create<AppearancePane>(state.Settings, state);
+            string? shown = null;
+            pane.Message = (caption, text) => shown = caption + "|" + text;
+
+            var task = pane.ExportProfileTo(Path.Combine(root.Folder, "bad\0.json"));
+            Fixture.PumpUntil(() => task.IsCompleted);
+
+            Assert.True(task.IsCompletedSuccessfully);
+            Assert.StartsWith("Couldn't export the profile|", shown);
+        });
+    }
+
+    [Fact]
+    public void ProfileFileProblems_AreReportedAsTextNotThrown()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            Assert.NotNull(AppearancePane.WriteProfile("{}", Path.Combine(root.Folder, "bad\0.json")));
+            Assert.NotNull(AppearancePane.ReadProfile(Path.Combine(root.Folder, "bad\0.json")).Error);
+        });
+    }
+
+    [Fact]
     public void SelectedThemeBorder_FollowsALiveThemeChange()
     {
         // The selected tile's border is the accent of the current theme: a change of the accent brush reaches it at once, without a
