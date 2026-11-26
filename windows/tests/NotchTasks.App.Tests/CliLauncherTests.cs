@@ -185,34 +185,6 @@ public sealed class CliLauncherTests
     }
 
     [Fact]
-    public void ResolveDirect_SqliteCmdEarlierOnPath_ExeLaterOnPathWins()
-    {
-        using var root = new TempRoot();
-        var cmdDir = Folder(root, "cmd");
-        var exeDir = Folder(root, "exe");
-        Write(cmdDir, "sqlite3.cmd", "@echo off\r\n");
-        var exe = Write(exeDir, "sqlite3.exe");
-
-        var command = CliLauncher.ResolveDirect("sqlite3", Home(root), cmdDir + Path.PathSeparator + exeDir, AppData(root));
-
-        Assert.NotNull(command);
-        Assert.Equal(CliKind.Direct, command!.Kind);
-        Assert.Equal(exe, command.FileName);
-        Assert.Empty(command.Prefix);
-    }
-
-    [Fact]
-    public void ResolveDirect_OnlyASqliteCmd_IsRefused()
-    {
-        using var root = new TempRoot();
-        var dir = Folder(root, "bin");
-        Write(dir, "sqlite3.cmd", "@echo off\r\n");
-        Write(dir, "sqlite3.bat", "@echo off\r\n");
-
-        Assert.Null(CliLauncher.ResolveDirect("sqlite3", Home(root), dir, AppData(root)));
-    }
-
-    [Fact]
     public void Resolve_ARelativeExe_IsNotAWinner_AndAFullyQualifiedShimIsUsed()
     {
         using var root = new TempRoot();

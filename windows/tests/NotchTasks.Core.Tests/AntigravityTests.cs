@@ -8,7 +8,7 @@ namespace NotchTasks.Core.Tests;
 
 // Ported from electron/test/providers.test.js: the Antigravity quota tests, fetchAntigravityLimits, the mid-turn and project
 // tests, AntigravityScanner, and readAntigravityConversation. Mac reference: mac/Sources/AntigravityScanner.swift and
-// Providers.swift. Every folder is a temp folder; the language server, the process list and sqlite3 are fakes.
+// Providers.swift. Every folder is a temp folder; the language server, the process list and the database reader are fakes.
 [Collection("L10n")]
 public sealed class AntigravityTests : IDisposable
 {
@@ -67,7 +67,7 @@ public sealed class AntigravityTests : IDisposable
         }
     }
 
-    /// sqlite3 stand-in: answers the two queries a conversation needs. Null means the query failed.
+    /// SQLite stand-in: answers the two queries a conversation needs. Null means the query failed.
     private sealed class FakeSqlite : ISqliteReader
     {
         public int Type { get; set; } = 15;

@@ -9,7 +9,7 @@ using NotchTasks.Core.Settings;
 
 namespace NotchTasks.Services.Modules;
 
-/// The OS readers the agents and limits sources run on (AppStateOptions): the process table, sqlite3, a loopback GET (Ollama),
+/// The OS readers the agents and limits sources run on (AppStateOptions): the process table, the Antigravity database reader, a loopback GET (Ollama),
 /// the LM Studio runner, the user's profile folder (Home) and the Claude config folder (ClaudeDir).
 public sealed record AgentReaders(
     IProcessReader Processes,

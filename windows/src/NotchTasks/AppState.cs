@@ -581,7 +581,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         Module: "agents",
         Icon: AgentItems.ItemOf(ask, items));
 
-    /// The agents and limits readers: the options' fakes, else this PC's (the process table, sqlite3, the loopback HTTP, the
+    /// The agents and limits readers: the options' fakes, else this PC's (the process table, the Antigravity databases, the loopback HTTP, the
     /// LM Studio runner and the claude CLI). The agent folders are under Home; the Claude folder is CLAUDE_CONFIG_DIR when it is
     /// set (production only; a test's Home is used as it is).
     private static string HomeOf(AppStateOptions o) => o.Home ?? Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
@@ -591,7 +591,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         var home = HomeOf(o);
         var claudeDir = ClaudeSessions.Dir(home, o.Home is null ? Environment.GetEnvironmentVariable("CLAUDE_CONFIG_DIR") : null);
         IProcessReader processes = o.Processes ?? new ProcessReader();
-        ISqliteReader sqlite = o.Sqlite ?? new SqliteCli(home);
+        ISqliteReader sqlite = o.Sqlite ?? new SqliteReader();
         IHttpPost http = o.Http ?? HttpLoopback.Shared;
         IHttpGet httpGet = o.HttpGet ?? HttpLoopback.Shared;
         IClaudeCli cli = o.ClaudeCli ?? new ClaudeCli(home);

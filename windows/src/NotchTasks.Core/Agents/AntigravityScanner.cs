@@ -3,12 +3,12 @@ using System.Text.Json;
 
 namespace NotchTasks.Core.Agents;
 
-/// Reads one Antigravity conversation through sqlite3. The app runs the query (sqlite3 -readonly -json, 2 s, found through
-/// AgentSetup.FindCli); with no sqlite3 there are no Antigravity jobs (ruling P3b-R4).
+/// Reads one Antigravity conversation's database. The app runs the query in-process, read-only (Microsoft.Data.Sqlite, see
+/// SqliteReader in the app), so no external tool is needed on the PC.
 public interface ISqliteReader
 {
-    /// The rows of a read-only query on dbFile, as sqlite3 -json prints them ("" when there are none). Null when the query
-    /// failed, timed out, or there is no sqlite3.
+    /// The rows of a read-only query on dbFile, as a JSON array of objects ("" when there are none). Null when the query
+    /// failed, the file is missing, locked or corrupt.
     string? Query(string dbFile, string sql);
 }
 
