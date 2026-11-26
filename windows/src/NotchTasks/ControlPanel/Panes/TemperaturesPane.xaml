@@ -8,17 +8,15 @@
     <TextBlock Style="{StaticResource SectionHeader}" Margin="0,0,0,8" Text="{l:L Temperatures}" />
     <!-- The helper is not On: why, and the one button that turns it on (the Permissions pane's opt-in). Nothing is read until then. -->
     <Border x:Name="HelperCard" Style="{StaticResource Card}" Padding="16">
-      <!-- A settings row: the note at the left, the sign-in check and Turn on at the right, centred on the note. -->
-      <DockPanel LastChildFill="True">
-        <StackPanel x:Name="HelperActions" Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="16,0,0,0">
-          <CheckBox x:Name="SignInCheck" VerticalAlignment="Center" Margin="0,0,12,0" />
-          <Button x:Name="TurnOnButton" Style="{StaticResource PrimaryButton}" VerticalAlignment="Center" />
-        </StackPanel>
-        <StackPanel VerticalAlignment="Center">
-          <TextBlock x:Name="HelperTitle" FontSize="14" FontWeight="SemiBold" TextWrapping="Wrap" />
-          <TextBlock x:Name="HelperNote" Style="{StaticResource CardNote}" Margin="0,6,0,0" TextWrapping="Wrap" />
-        </StackPanel>
-      </DockPanel>
+      <!-- The note runs the full width of the card; below it, a row: the sign-in toggle and its label at the left, Turn on at the right. -->
+      <StackPanel>
+        <TextBlock x:Name="HelperTitle" FontSize="14" FontWeight="SemiBold" TextWrapping="Wrap" />
+        <TextBlock x:Name="HelperNote" Style="{StaticResource CardNote}" Margin="0,6,0,0" TextWrapping="Wrap" />
+        <DockPanel x:Name="HelperActions" Margin="0,12,0,0" LastChildFill="True">
+          <Button x:Name="TurnOnButton" DockPanel.Dock="Right" Style="{StaticResource PrimaryButton}" VerticalAlignment="Center" />
+          <CheckBox x:Name="SignInCheck" VerticalAlignment="Center" />
+        </DockPanel>
+      </StackPanel>
     </Border>
 
     <!-- The hottest reading, in its tint: the header's number, with its zone's name. -->
