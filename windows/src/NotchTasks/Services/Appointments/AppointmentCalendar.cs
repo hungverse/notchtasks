@@ -15,6 +15,39 @@ public sealed class AppointmentCalendarOpener : ICalendarOpener
     }
 }
 
+/// The find options of the calendar read. The default fetch set leaves out the body and the online meeting link, where a Teams or
+/// Zoom invitation keeps its join link, so they are named here. Hidden appointments are not read, and the count is capped.
+internal static class AppointmentQuery
+{
+    /// The most appointments one read asks the store for.
+    public const uint MaxCount = 50;
+
+    public static FindAppointmentsOptions Create()
+    {
+        var options = new FindAppointmentsOptions
+        {
+            MaxCount = MaxCount,
+            IncludeHidden = false,
+        };
+        foreach (var property in new[]
+                 {
+                     AppointmentProperties.Subject,
+                     AppointmentProperties.StartTime,
+                     AppointmentProperties.Duration,
+                     AppointmentProperties.AllDay,
+                     AppointmentProperties.Location,
+                     AppointmentProperties.Details,
+                     AppointmentProperties.Uri,
+                     AppointmentProperties.OnlineMeetingLink,
+                 })
+        {
+            options.FetchProperties.Add(property);
+        }
+
+        return options;
+    }
+}
+
 /// The appointment store as the calendar module reads it: its appointments in a window, each with its calendar's name and colour,
 /// and its change event. A calendar with no colour of its own reads as the Mac's default blue.
 internal sealed class AppointmentCalendarStore : ICalendarStore
@@ -39,7 +72,7 @@ internal sealed class AppointmentCalendarStore : ICalendarStore
             calendars[calendar.LocalId] = (calendar.DisplayName ?? string.Empty, color is { } c ? $"#{c.R:X2}{c.G:X2}{c.B:X2}" : DefaultColor);
         }
 
-        var appointments = await _store.FindAppointmentsAsync(from, length);
+        var appointments = await _store.FindAppointmentsAsync(from, length, AppointmentQuery.Create());
         return appointments.Select(a =>
         {
             var (name, color) = calendars.TryGetValue(a.CalendarId, out var found) ? found : (string.Empty, DefaultColor);
@@ -53,7 +86,8 @@ internal sealed class AppointmentCalendarStore : ICalendarStore
                 color,
                 a.Location,
                 a.Details,
-                a.Uri?.AbsoluteUri);
+                a.Uri?.AbsoluteUri,
+                a.OnlineMeetingLink);
         }).ToList();
     }
 

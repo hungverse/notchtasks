@@ -125,7 +125,7 @@ public sealed class CalendarEventsTests
     [InlineData("http://zoom.us/j/1", false)]
     public void MeetingLink_MatchesTheMeetingServices(string link, bool expected)
     {
-        var found = CalendarEvents.MeetingLink(link, null, null);
+        var found = CalendarEvents.MeetingLink(null, null, null, link);
 
         Assert.Equal(expected ? link : null, found);
     }
@@ -133,8 +133,30 @@ public sealed class CalendarEventsTests
     [Fact]
     public void MeetingLink_IsNullWithNoText()
     {
-        Assert.Null(CalendarEvents.MeetingLink(null, null, null));
-        Assert.Null(CalendarEvents.MeetingLink(string.Empty, "Room 4", string.Empty));
+        Assert.Null(CalendarEvents.MeetingLink(null, null, null, null));
+        Assert.Null(CalendarEvents.MeetingLink(string.Empty, "Room 4", string.Empty, string.Empty));
+    }
+
+    [Fact]
+    public void MeetingLink_ConsidersTheOnlineMeetingLinkFirstThenLocationDetailsAndUri()
+    {
+        const string online = "https://meet.google.com/online-link";
+        const string location = "https://zoom.us/j/location";
+        const string details = "https://teams.microsoft.com/l/details";
+        const string uri = "https://webex.com/meet/uri";
+
+        Assert.Equal(online, CalendarEvents.MeetingLink(online, location, details, uri));
+        Assert.Equal(location, CalendarEvents.MeetingLink(null, location, details, uri));
+        Assert.Equal(details, CalendarEvents.MeetingLink(null, "Room 4", details, uri));
+        Assert.Equal(uri, CalendarEvents.MeetingLink(string.Empty, null, "Notes only", uri));
+    }
+
+    [Fact]
+    public void MeetingLink_SkipsAFieldWithNoLinkAndTakesTheNextOne()
+    {
+        var found = CalendarEvents.MeetingLink("https://example.com/no", "Room 4", "https://meet.google.com/abc", null);
+
+        Assert.Equal("https://meet.google.com/abc", found);
     }
 
     [Fact]

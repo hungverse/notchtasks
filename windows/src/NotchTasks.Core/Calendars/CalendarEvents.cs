@@ -40,16 +40,29 @@ public static class CalendarEvents
                 r.Color,
                 r.AllDay,
                 r.Calendar,
-                MeetingLink(r.Uri, r.Location, r.Details),
+                MeetingLink(r.OnlineMeetingLink, r.Location, r.Details, r.Uri),
                 r.Id))
             .ToList();
     }
 
-    /// The video-call link in the event's url, location or notes: the first Meet, Zoom, Teams or Webex link, else null.
-    public static string? MeetingLink(string? uri, string? location, string? details)
+    /// The video-call link of the event: the first Meet, Zoom, Teams or Webex link in the online meeting link, then the location,
+    /// then the notes, then the url; else null. Each field is searched on its own, in that order.
+    public static string? MeetingLink(string? onlineMeetingLink, string? location, string? details, string? uri)
     {
-        var text = string.Join(" ", new[] { uri, location, details }.Where(s => !string.IsNullOrEmpty(s)));
-        var match = MeetingPattern.Match(text);
-        return match.Success ? match.Value : null;
+        foreach (var field in new[] { onlineMeetingLink, location, details, uri })
+        {
+            if (string.IsNullOrEmpty(field))
+            {
+                continue;
+            }
+
+            var match = MeetingPattern.Match(field);
+            if (match.Success)
+            {
+                return match.Value;
+            }
+        }
+
+        return null;
     }
 }
