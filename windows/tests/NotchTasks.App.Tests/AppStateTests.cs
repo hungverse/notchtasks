@@ -1,4 +1,5 @@
 using System.Text.Json.Nodes;
+using NotchTasks.Core;
 using NotchTasks.Core.Asks;
 using Xunit;
 
@@ -83,6 +84,45 @@ public sealed class AppStateTests
 
             Assert.Null(state.Toasts.Current);
             Assert.Equal(0, state.Snapshot.AskCount);
+        });
+    }
+
+    [Fact]
+    public void AppState_AgentsOff_PassesEveryPendingAsk_AndTheListClears()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            var ask = new AgentAsk("ask6", 1, "work", "Bash", "ls", Array.Empty<AskQuestion>(), DateTimeOffset.Now, "claude");
+
+            // The ask is pending while agents are on.
+            Fixture.Call(state, "SyncAsks", new List<AgentAsk> { ask });
+            Assert.Single(state.Asks);
+
+            // Turning agents off passes the ask back, so the agent is not left waiting (Mac Model.swift refreshAsks).
+            state.Settings.Set("disabled", JsonNode.Parse("[\"agents\"]"));
+            Fixture.Flush();
+
+            Assert.Empty(state.Asks);
+            Assert.Equal(ReplyKinds.Pass, new AskStore(AppPaths.AsksDir).ReadReply("ask6")!.Kind);
+        });
+    }
+
+    [Fact]
+    public void AppState_AgentsOff_NewAsk_IsPassedBack_AtOnce()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            state.Settings.Set("disabled", JsonNode.Parse("[\"agents\"]"));
+            var ask = new AgentAsk("ask7", 1, "work", "Bash", "ls", Array.Empty<AskQuestion>(), DateTimeOffset.Now, "claude");
+
+            Fixture.Call(state, "SyncAsks", new List<AgentAsk> { ask });
+
+            Assert.Empty(state.Asks);
+            Assert.Equal(ReplyKinds.Pass, new AskStore(AppPaths.AsksDir).ReadReply("ask7")!.Kind);
         });
     }
 

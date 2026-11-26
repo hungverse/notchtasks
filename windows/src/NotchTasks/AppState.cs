@@ -431,6 +431,11 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         _watched = list;
         var visible = _tracker.Filter(list.Concat(_codexAsks.Where(a => !_answeredCodex.Contains(a.Id))).OrderBy(a => a.At).ToList());
         var agentsOn = ActiveModules(Settings).Contains("agents");
+        if (!agentsOn)
+        {
+            PassAsks(visible);
+            return;
+        }
         var wanted = new HashSet<string>(visible.Select(a => a.Id), StringComparer.Ordinal);
         var left = new HashSet<string>(StringComparer.Ordinal);
         for (var i = Asks.Count - 1; i >= 0; i--)
@@ -453,11 +458,37 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
                 continue;
             }
             Asks.Insert(Math.Min(i, Asks.Count), visible[i]);
-            // An ask belongs to the agents module: with it off, the ask is kept but makes no toast and no sound.
-            if (agentsOn)
+            Announce(AskToast(visible[i]));
+        }
+        Publish();
+    }
+
+    /// With agents off, every pending ask is passed back and leaves the pill: the agent asks as usual instead of blocking on an
+    /// answer nobody will give (Mac Model.swift refreshAsks). Codex questions have no reply file, so they are only dropped here.
+    private void PassAsks(IReadOnlyList<AgentAsk> pending)
+    {
+        foreach (var ask in pending)
+        {
+            if (IsCodexAsk(ask.Id))
             {
-                Announce(AskToast(visible[i]));
+                _answeredCodex.Add(ask.Id);
+                continue;
             }
+            try
+            {
+                _store.Reply(ask.Id, new AskReply(ReplyKinds.Pass, null));
+            }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+            {
+                ErrorLog.Write(new IOException($"NotchTasks: could not write the pass for ask {ask.Id}", e));
+                continue;
+            }
+            _tracker.MarkAnswered(ask.Id);
+        }
+        Asks.Clear();
+        if (pending.Count > 0)
+        {
+            Toasts.DropAsks(pending.Select(a => a.Id).ToHashSet(StringComparer.Ordinal), DateTimeOffset.Now);
         }
         Publish();
     }
@@ -774,7 +805,12 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         {
             return;
         }
-        _host.Apply(ActiveModules(Settings));
+        var active = ActiveModules(Settings);
+        _host.Apply(active);
+        if (!active.Contains("agents"))
+        {
+            SyncAsks(_watched);  // agents off: the asks already pending are passed back now, not at the next file change
+        }
         Publish();
     }
 
