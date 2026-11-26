@@ -128,13 +128,43 @@ public class ClaudeUsageTests : IDisposable
         var status = new ProviderLimits("claude", "Claude", null, new[] { new LimitWindow("5h", 1, at.AddHours(1)) }, at);
 
         // 10 min old: the window that reset 5 min after the reading counts as unused
-        var fresh = ClaudeUsage.Now(live, at, status, at.AddMinutes(10));
+        var fresh = ClaudeUsage.Now(null, live, at, status, at.AddMinutes(10));
         Assert.NotNull(fresh);
         Assert.Equal(at, fresh!.Updated);
         Assert.Equal(new[] { 90.0, 0.0 }, fresh.Windows.Select(w => w.Used));
 
         // 16 min old: the statusline answers instead
-        Assert.Same(status, ClaudeUsage.Now(live, at, status, at.AddMinutes(16)));
-        Assert.Same(status, ClaudeUsage.Now(null, null, status, at));
+        Assert.Same(status, ClaudeUsage.Now(null, live, at, status, at.AddMinutes(16)));
+        Assert.Same(status, ClaudeUsage.Now(null, null, null, status, at));
+    }
+
+    [Fact]
+    public void Now_AccountBeatsCliBeatsStatusline_StaleAccountFallsThrough()
+    {
+        var at = new DateTimeOffset(2026, 11, 27, 10, 0, 0, TimeSpan.Zero);
+        var cliAt = at.AddMinutes(5);
+        var live = new[] { new LimitWindow("5h", 60, at.AddHours(2)) };
+        var status = new ProviderLimits("claude", "Claude", null, new[] { new LimitWindow("5h", 1, at.AddHours(1)) }, at);
+        var account = new ProviderLimits("claude", "Claude", null, new[] { new LimitWindow("5h", 33, at.AddHours(3)) }, at);
+
+        // a fresh account reading (14 min old) wins over a fresh CLI reading (9 min old)
+        var won = ClaudeUsage.Now(account, live, cliAt, status, at.AddMinutes(14));
+        Assert.NotNull(won);
+        Assert.Equal(new[] { 33.0 }, won!.Windows.Select(w => w.Used));
+        Assert.Equal(at, won.Updated);
+
+        // a stale account (16 min old) gives way to the CLI reading (11 min old)
+        var cli = ClaudeUsage.Now(account, live, cliAt, status, at.AddMinutes(16));
+        Assert.NotNull(cli);
+        Assert.Equal(new[] { 60.0 }, cli!.Windows.Select(w => w.Used));
+
+        // a stale account and a stale CLI reading (31 min old): the statusline answers
+        Assert.Same(status, ClaudeUsage.Now(account, live, cliAt, status, at.AddMinutes(36)));
+        // no account, no CLI: the statusline answers
+        Assert.Same(status, ClaudeUsage.Now(null, null, null, status, at.AddMinutes(1)));
+
+        // an account window that reset before now counts as unused
+        var past = new ProviderLimits("claude", "Claude", null, new[] { new LimitWindow("5h", 80, at.AddMinutes(-1)) }, at);
+        Assert.Equal(new[] { 0.0 }, ClaudeUsage.Now(past, null, null, status, at.AddMinutes(1))!.Windows.Select(w => w.Used));
     }
 }

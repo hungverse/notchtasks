@@ -9,7 +9,8 @@ namespace NotchTasks.Core.Limits;
 /// (Mac: claudeLimits/claudeNow; electron/src/core/providers.js claudeLimits, parseClaudeUsage, parseResetWhen).
 public static partial class ClaudeUsage
 {
-    private const string BundleId = "com.anthropic.claudefordesktop";
+    /// The Claude desktop app's bundle id: the provider limits of Claude carry it (the Mac uses it for the app icon).
+    public const string BundleId = "com.anthropic.claudefordesktop";
     /// The statusline snapshot's file name in the Claude config folder (written by ClaudeStatusline.Save).
     public const string StatusFile = "notchtasks-status.json";
     private static readonly string[] Months = { "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC" };
@@ -79,10 +80,16 @@ public static partial class ClaudeUsage
         }
     }
 
-    /// The limits the Mac shows for Claude (Model.claudeNow): the live CLI reading when it is younger than 15 min
-    /// (windows past their reset count as unused), else the statusline snapshot.
-    public static ProviderLimits? Now(IReadOnlyList<LimitWindow>? live, DateTimeOffset? liveAt, ProviderLimits? statusline, DateTimeOffset now)
+    /// The limits the app shows for Claude: the signed-in account's reading (ClaudeAccountUsage) when it is younger than 15 min,
+    /// else the live CLI reading when it is younger than 15 min, else the statusline snapshot. Windows past their reset count as
+    /// unused in the account and CLI readings.
+    public static ProviderLimits? Now(ProviderLimits? account, IReadOnlyList<LimitWindow>? live, DateTimeOffset? liveAt, ProviderLimits? statusline, DateTimeOffset now)
     {
+        if (account is not null && now - account.Updated < TimeSpan.FromMinutes(15))
+        {
+            var accountWindows = account.Windows.Select(w => w.Resets > now ? w : w with { Used = 0 }).ToList();
+            return account with { Windows = accountWindows };
+        }
         if (live is null || liveAt is not { } at || now - at >= TimeSpan.FromMinutes(15))
         {
             return statusline;

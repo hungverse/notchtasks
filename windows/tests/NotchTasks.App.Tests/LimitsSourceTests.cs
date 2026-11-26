@@ -1,4 +1,5 @@
 using System.IO;
+using System.Net.Http;
 using System.Windows.Threading;
 using NotchTasks.Core;
 using NotchTasks.Core.Agents;
@@ -38,8 +39,9 @@ public sealed class LimitsSourceTests
 
     private static readonly WatchItem ClaudeItem = new("claude", "Claude", WatchKind.Claude);
 
-    /// A temp home whose statusline says the 5 h window is 42 % used, and the readers that use it.
-    private static LimitReaders Readers(TempRoot root, IClaudeCli cli)
+    /// A temp home whose statusline says the 5 h window is 42 % used, and the readers that use it. The account handler answers
+    /// the usage endpoint (NoAccount when none is given); a credentials file is written only when one is given.
+    private static LimitReaders Readers(TempRoot root, IClaudeCli cli, HttpMessageHandler? account = null)
     {
         var home = Path.Combine(root.Folder, "home");
         var claudeDir = Path.Combine(home, ".claude");
@@ -47,14 +49,30 @@ public sealed class LimitsSourceTests
         var resets = DateTimeOffset.UtcNow.ToUnixTimeSeconds() + 3600;
         File.WriteAllText(Path.Combine(claudeDir, "notchtasks-status.json"),
             $"{{\"rate_limits\":{{\"five_hour\":{{\"used_percentage\":42,\"resets_at\":{resets}}}}}}}");
-        return new LimitReaders(new Fixture.NoHttp(), cli, home, claudeDir);
+        if (account is not null)
+        {
+            var expires = DateTimeOffset.UtcNow.AddHours(1).ToUnixTimeMilliseconds();
+            File.WriteAllText(Path.Combine(claudeDir, ".credentials.json"),
+                $"{{\"claudeAiOauth\":{{\"accessToken\":\"tok\",\"expiresAt\":{expires}}}}}");
+        }
+        return new LimitReaders(new Fixture.NoHttp(), cli, home, claudeDir, account ?? new Fixture.NoAccount());
+    }
+
+    /// The account's usage endpoint: 33 % used in the 5 h window.
+    private sealed class UsageHandler : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) =>
+            Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+            {
+                Content = new StringContent("{\"five_hour\":{\"utilization\":33,\"resets_at\":null}}"),
+            });
     }
 
     private static (LimitsSource Source, LimitsModule Module) Source(TempRoot root, SettingsStore settings, IClaudeCli cli,
-        Action publish, TimeSpan giveUp)
+        Action publish, TimeSpan giveUp, HttpMessageHandler? account = null)
     {
         var module = new LimitsModule(new QuietAnnouncer());
-        var readers = Readers(root, cli);
+        var readers = Readers(root, cli, account);
         var agents = new AgentsSource(new AgentsModule(new QuietAnnouncer()), settings,
             new AgentReaders(new Fixture.NoProcesses(), new Fixture.NoSqlite(), new Fixture.NoHttp(), _ => null, readers.Home, readers.ClaudeDir),
             () => { }, _ => { });
@@ -96,6 +114,25 @@ public sealed class LimitsSourceTests
             var claude = Assert.Single(module.Limits);
             Assert.Equal("claude", claude.Kind);
             Assert.Equal(42, claude.Windows.Single(w => w.Label == "5h").Used);
+            source.Stop();
+        });
+    }
+
+    [Fact]
+    public void LimitsSource_AccountReading_ShowsInPlaceOfTheStatusline()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            var settings = SettingsStore.Load(AppPaths.SettingsFile);
+            settings.SetItems(new[] { ClaudeItem });
+            var (source, module) = Source(root, settings, new HangingCli(), () => { }, TimeSpan.FromMilliseconds(50), new UsageHandler());
+
+            source.Start();
+            Fixture.PumpUntil(() => module.Limits.Any(l => l.Windows.Any(w => w.Used == 33)));
+
+            var claude = Assert.Single(module.Limits);
+            Assert.Equal(33, claude.Windows.Single(w => w.Label == "5h").Used);
             source.Stop();
         });
     }

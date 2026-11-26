@@ -183,6 +183,7 @@ internal static class Fixture
         Sqlite: new NoSqlite(),
         Http: new NoHttp(),
         HttpGet: new NoHttp(),
+        ClaudeAccount: new NoAccount(),
         ClaudeCli: new NoClaudeCli(),
         Home: Path.Combine(AppPaths.Root, "Home"),
         LmsPsJson: _ => null,
@@ -434,6 +435,13 @@ internal static class Fixture
             Task.FromResult<string?>(null);
 
         public Task<string?> GetAsync(string url, TimeSpan timeout) => Task.FromResult<string?>(null);
+    }
+
+    /// The Claude account's usage endpoint, as a test sees it: every request is answered 503, so no reading is made.
+    public sealed class NoAccount : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) =>
+            Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.ServiceUnavailable));
     }
 
     /// A Claude CLI that is not there: no usage is read.
