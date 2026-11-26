@@ -9,14 +9,6 @@
         WindowStartupLocation="CenterOwner"
         Background="{DynamicResource ApplicationBackgroundBrush}"
         Foreground="{DynamicResource TextFillColorPrimaryBrush}">
-  <Window.Resources>
-    <ResourceDictionary>
-      <!-- The accent-filled controls take the Mac's blue, as in the Control Panel (MacAccent.xaml). -->
-      <ResourceDictionary.MergedDictionaries>
-        <ResourceDictionary Source="MacAccent.xaml" />
-      </ResourceDictionary.MergedDictionaries>
-    </ResourceDictionary>
-  </Window.Resources>
   <!-- The Mac's report sheet (MacReportSheet): the issue type, what happened, a contact, what is sent, the report code once it is
        sent, and the problem when it is not. The labels and texts are set by the window. -->
   <StackPanel Margin="20">

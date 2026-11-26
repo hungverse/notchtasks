@@ -6,14 +6,6 @@
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
         Background="{DynamicResource ApplicationBackgroundBrush}"
         Foreground="{DynamicResource TextFillColorPrimaryBrush}">
-  <!-- The Mac's blue accent for the switches and buttons of this dialog (MacAccent.xaml). -->
-  <Window.Resources>
-    <ResourceDictionary>
-      <ResourceDictionary.MergedDictionaries>
-        <ResourceDictionary Source="MacAccent.xaml" />
-      </ResourceDictionary.MergedDictionaries>
-    </ResourceDictionary>
-  </Window.Resources>
   <!-- The icon editor of one detected build tool (the Mac's BadgeEditor opened from BuildToolsBox): a live preview and the
        subtitle, the shared editor body, and Reset (back to the tool's default) and Done. -->
   <StackPanel Margin="20">
