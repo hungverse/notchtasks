@@ -7,45 +7,63 @@
   <StackPanel>
     <TextBlock Style="{StaticResource PaneTitle}" Text="{l:L Appearance}" />
 
-    <!-- The live preview: the closed pill (200 x 32) with the current background and accent glow, and a toast sample under
-         it. It keeps the pill's dark look in both Windows themes. -->
-    <Border Style="{StaticResource Card}" Padding="0,20">
-      <Grid Height="150">
-        <!-- The screen's top edge: the island floats below it, 4 px down, as on the Mac. -->
-        <Border Height="1" VerticalAlignment="Top" Background="{DynamicResource DividerStrokeColorDefaultBrush}" />
-        <Border x:Name="PreviewGlow" Width="200" Height="32" VerticalAlignment="Top" Margin="0,4,0,0" CornerRadius="16"
-                BorderThickness="1.5" Visibility="Collapsed" />
-        <Border x:Name="PreviewPill" Width="200" Height="32" VerticalAlignment="Top" Margin="0,4,0,0" CornerRadius="16"
-                Background="Black">
-          <Border.Effect>
-            <DropShadowEffect Color="Black" Opacity="0.3" BlurRadius="6" ShadowDepth="2" Direction="270" />
-          </Border.Effect>
-        </Border>
-        <Border x:Name="PreviewToast" Width="260" VerticalAlignment="Top" Margin="0,44,0,0" Padding="14,10"
-                CornerRadius="18" Background="Black">
-          <Grid>
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="Auto" />
-              <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-            <!-- the done toast's glyph: a 16 DIP glyph, centred (FluentGlyph); its colour is set by the pane -->
-            <fi:FluentGlyph x:Name="PreviewGlyph" Code="&#xF294;" Size="16" VerticalAlignment="Center" Margin="0,0,10,0" />
-            <StackPanel Grid.Column="1" VerticalAlignment="Center">
-              <TextBlock x:Name="PreviewTitle" Text="{l:L Task finished}" Foreground="White" FontSize="13"
-                         FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-              <TextBlock Text="{l:L Test alert}" Foreground="#99FFFFFF" FontSize="11" />
-            </StackPanel>
-          </Grid>
-        </Border>
-      </Grid>
-    </Border>
+    <!-- The top row, as the Mac's: the live preview (300 wide) on the left and the "Test alert" button at the pane's right edge. -->
+    <Grid UseLayoutRounding="True">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="300" />
+        <ColumnDefinition Width="*" />
+      </Grid.ColumnDefinitions>
 
-    <!-- The Mac's "Test alert": a task-finished toast in the current style, with the sound and no system notification. -->
-    <!-- Its right edge is the preview card's right edge: the card and the button are both the pane's full width. -->
-    <Button x:Name="TestAlertButton" HorizontalAlignment="Right" Margin="0,8,0,0" Padding="12,4" Style="{StaticResource PrimaryButton}" />
+      <!-- The live preview: the closed pill (200 x 32) with the current background and accent glow, and a toast sample under
+           it. The glow is a blurred layer behind the pill, and the crisp ring is on top of the pill, with no effect. -->
+      <Border Style="{StaticResource Card}" Padding="0" VerticalAlignment="Top">
+        <Grid Margin="0,0,0,12">
+          <!-- The screen's top edge: a 1 DIP rule flush with the card's top, across its full width. -->
+          <Border Height="1" VerticalAlignment="Top" Background="{DynamicResource DividerStrokeColorDefaultBrush}" />
+          <!-- The island floats 4 DIP below the edge, as on the Mac. -->
+          <Border x:Name="PreviewGlow" Width="200" Height="32" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,4,0,0"
+                  CornerRadius="16" BorderThickness="1.5" Visibility="Collapsed" />
+          <Border x:Name="PreviewPill" Width="200" Height="32" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,4,0,0"
+                  CornerRadius="16" Background="Black">
+            <Border.Effect>
+              <DropShadowEffect Color="Black" Opacity="0.3" BlurRadius="6" ShadowDepth="2" Direction="270" />
+            </Border.Effect>
+          </Border>
+          <Border x:Name="PreviewRing" Width="200" Height="32" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,4,0,0"
+                  CornerRadius="16" BorderThickness="1.5" Visibility="Collapsed" SnapsToDevicePixels="True" />
+          <Border x:Name="PreviewToast" Width="260" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,44,0,0" Padding="14,10"
+                  CornerRadius="18" Background="Black">
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+              <!-- the done toast's glyph: a 16 DIP glyph, centred (FluentGlyph); its colour is set by the pane -->
+              <fi:FluentGlyph x:Name="PreviewGlyph" Code="&#xF294;" Size="16" VerticalAlignment="Center" Margin="0,0,10,0" />
+              <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                <TextBlock x:Name="PreviewTitle" Text="{l:L Task finished}" Foreground="White" FontSize="13"
+                           FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                <TextBlock Text="{l:L Test alert}" Foreground="#99FFFFFF" FontSize="11" />
+              </StackPanel>
+            </Grid>
+          </Border>
+        </Grid>
+      </Border>
 
-    <!-- The one-click themes (the Mac's Theme.all): a tile per theme, built in code, three across as the Mac's grid. -->
-    <UniformGrid x:Name="ThemeGrid" Columns="3" Margin="0,8,0,0" />
+      <!-- The Mac's "Test alert": a task-finished toast in the current style, with the sound and no system notification. -->
+      <Button x:Name="TestAlertButton" Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center" Padding="12,4"
+              Style="{StaticResource PrimaryButton}">
+        <StackPanel Orientation="Horizontal">
+          <!-- the bell, white, centred (FluentGlyph) -->
+          <fi:FluentGlyph Code="&#xF0F4;" Size="16" Foreground="White" Margin="0,0,8,0" />
+          <TextBlock x:Name="TestAlertLabel" VerticalAlignment="Center" />
+        </StackPanel>
+      </Button>
+    </Grid>
+
+    <!-- The one-click themes (the Mac's Theme.all): a tile per theme, built in code, three across with 12 DIP gaps. Each tile has
+         6 DIP around it, and the grid reaches 6 DIP past the pane's edges, so the outer tiles sit flush with the pane. -->
+    <UniformGrid x:Name="ThemeGrid" Columns="3" Margin="-6,12,-6,0" />
 
     <TextBlock Style="{StaticResource SectionHeader}" Text="{l:L Notch}" />
     <Border Style="{StaticResource Card}">

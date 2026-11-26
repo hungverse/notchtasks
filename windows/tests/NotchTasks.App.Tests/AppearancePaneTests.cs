@@ -2,7 +2,9 @@ using System.IO;
 using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using NotchTasks.ControlPanel.Panes;
+using NotchTasks.Pill;
 using NotchTasks.Core;
 using NotchTasks.Core.Asks;
 using NotchTasks.Core.Notch;
@@ -274,6 +276,131 @@ public sealed class AppearancePaneTests
             {
                 window.Close();
             }
+        });
+    }
+
+    /// A crisp ring: no effect, the accent at full alpha, and drawn above the fill (later in the same parent).
+    private static void AssertCrispRing(Border ring, Border fill, Color accent)
+    {
+        Assert.Null(ring.Effect);
+        var brush = Assert.IsType<SolidColorBrush>(ring.BorderBrush);
+        Assert.Equal(255, brush.Color.A);
+        Assert.Equal(accent, brush.Color);
+        var siblings = ((Panel)ring.Parent).Children.Cast<UIElement>().ToList();
+        Assert.True(siblings.IndexOf(ring) > siblings.IndexOf(fill));
+    }
+
+    [Fact]
+    public void PreviewRing_IsAboveThePill_WithNoEffect_AndFullAccent_ForTheGlowBackground()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            state.Settings.Set("background", JsonValue.Create("glow"));
+            state.Settings.Set("accent", JsonValue.Create("orange"));
+            var pane = Fixture.Create<AppearancePane>(state.Settings, state);
+            pane.ShowStoredValues();
+
+            var ring = Fixture.Named<Border>(pane, "PreviewRing");
+            Assert.Equal(Visibility.Visible, ring.Visibility);
+            AssertCrispRing(ring, Fixture.Named<Border>(pane, "PreviewPill"), Color.FromRgb(0xFF, 0x9F, 0x0A));
+        });
+    }
+
+    [Fact]
+    public void ThemeTileRing_IsAboveThePillWithNoEffect_ForTheGlowTheme()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            var pane = Fixture.Create<AppearancePane>(state.Settings, state);
+
+            var glow = Themes.All.First(t => t.Background == "glow");
+            var ring = pane.RingOf(glow.Id);
+
+            Assert.NotNull(ring);
+            Assert.Null(ring!.Effect);
+            var brush = Assert.IsType<SolidColorBrush>(ring.BorderBrush);
+            Assert.Equal(255, brush.Color.A);
+            var siblings = ((Panel)ring.Parent).Children.Cast<UIElement>().ToList();
+            var fill = siblings.OfType<Border>().First(b => b.Width == 90 && b.Background is not null);
+            Assert.True(siblings.IndexOf(ring) > siblings.IndexOf(fill));
+            Assert.Null(pane.RingOf(Themes.All.First(t => t.Background != "glow").Id));
+        });
+    }
+
+    [Fact]
+    public void PillGlowRing_IsCrisp_AboveTheFill_AndOutsideTheClip()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            state.Settings.Set("background", JsonValue.Create("glow"));
+            var pill = new PillWindow(state);
+            try
+            {
+                Fixture.Call(pill, "ApplyAppearance");
+                // The ring shows only while the pill is open or has a collapsed item; this checks what it is when shown.
+                var ring = Fixture.Named<System.Windows.Shapes.Path>(pill, "GlowRing");
+                Assert.Null(ring.Effect);
+                Assert.True(ring.SnapsToDevicePixels);
+                Assert.True(ring.StrokeThickness >= 1.5);
+                var brush = Assert.IsType<SolidColorBrush>(ring.Stroke);
+                Assert.Equal(255, brush.Color.A);
+
+                var siblings = ((Panel)ring.Parent).Children.Cast<UIElement>().ToList();
+                var content = Fixture.Named<Grid>(pill, "PillContent");
+                Assert.True(siblings.IndexOf(ring) > siblings.IndexOf(content));
+                Assert.NotSame(content, ring.Parent);  // not inside PillContent's clip, so its whole stroke shows
+            }
+            finally
+            {
+                pill.Close();
+            }
+        });
+    }
+
+    [Fact]
+    public void TestAlertButton_HasTheWhiteBellGlyph_AndItsLabel()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            var pane = Fixture.Create<AppearancePane>(state.Settings, state);
+            pane.ShowStoredValues();
+
+            var button = Fixture.Named<Button>(pane, "TestAlertButton");
+            var glyph = ((StackPanel)button.Content).Children.OfType<FluentGlyph>().Single();
+            Assert.Equal("", glyph.Code);
+            Assert.Equal(Colors.White, ((SolidColorBrush)glyph.Foreground).Color);
+            Assert.Equal("Test alert", Fixture.Named<TextBlock>(pane, "TestAlertLabel").Text);
+        });
+    }
+
+    [Fact]
+    public void ThemeTiles_HaveTwelveDipBetweenThemAndAHairlineUnlessSelected()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            var pane = Fixture.Create<AppearancePane>(state.Settings, state);
+
+            // Each tile has 6 DIP on each side, so two neighbours have 12 DIP between them.
+            Assert.All(Tiles(pane), b => Assert.Equal(12, b.Margin.Left + b.Margin.Right));
+
+            state.Settings.SetMany(Themes.All.First(t => t.Id == "ocean").Values);
+            pane.ShowStoredValues();
+
+            var ocean = (Border)Tiles(pane).First(b => (string)b.Tag == "ocean").Content;
+            var sunset = (Border)Tiles(pane).First(b => (string)b.Tag == "sunset").Content;
+            Assert.Equal(2, ocean.BorderThickness.Left);
+            Assert.Equal(1, sunset.BorderThickness.Left);
+            Assert.Equal(12, ocean.Padding.Left);
         });
     }
 }

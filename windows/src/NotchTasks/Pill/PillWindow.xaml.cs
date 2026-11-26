@@ -1359,7 +1359,7 @@ public partial class PillWindow : Window
         }
         if (_glow is null || _glow.Color != _accent)
         {
-            _glow = new DropShadowEffect { Color = _accent, BlurRadius = 6, ShadowDepth = 0, Opacity = 1 };
+            _glow = new DropShadowEffect { Color = _accent, BlurRadius = 8, ShadowDepth = 0, Opacity = 0.9 };
         }
         GlowBacking.Effect = _glow;
         GlowRing.Visibility = glow ? Visibility.Visible : Visibility.Collapsed;

@@ -73,7 +73,7 @@ public partial class AppearancePane : SettingsPane
         CustomAccentRow.Visibility = Store.Accent == "custom" ? Visibility.Visible : Visibility.Collapsed;
 
         NotchNote.Text = L10n.L("This screen has no notch: shown as a floating Dynamic Island.");
-        TestAlertButton.Content = L10n.L("Test alert");
+        TestAlertLabel.Text = L10n.L("Test alert");
         BackupHeader.Text = L10n.L("Back up settings");
         BackupLabel.Text = L10n.L("Back up, share");
         ExportButton.Content = L10n.L("Export…");
@@ -195,14 +195,9 @@ public partial class AppearancePane : SettingsPane
             var selected = Themes.IsSelected(tile.Theme, Store);
             tile.Check.Visibility = selected ? Visibility.Visible : Visibility.Collapsed;
             // A dynamic reference, so a live light/dark or accent change reaches the border (a FindResource would keep the old brush).
-            if (selected)
-            {
-                tile.Frame.SetResourceReference(Border.BorderBrushProperty, "AccentFillColorDefaultBrush");
-            }
-            else
-            {
-                tile.Frame.BorderBrush = Brushes.Transparent;
-            }
+            // The selected tile has a 2 DIP accent border; the others a 1 DIP hairline.
+            tile.Frame.BorderThickness = new Thickness(selected ? 2 : 1);
+            tile.Frame.SetResourceReference(Border.BorderBrushProperty, selected ? "AccentFillColorDefaultBrush" : "CardStrokeColorDefaultBrush");
             tile.Title.Text = L10n.L(tile.Theme.TitleKey);
             AutomationProperties.SetName(tile.Button, tile.Title.Text);
         }
@@ -211,6 +206,9 @@ public partial class AppearancePane : SettingsPane
     /// Whether the tile of a theme shows its check (the theme is the one the store has). For the tests.
     internal bool ShowsSelected(string themeId) =>
         _tiles.First(tile => tile.Theme.Id == themeId).Check.Visibility == Visibility.Visible;
+
+    /// The crisp ring over the pill of a theme tile (null when the theme has no glow). For the tests.
+    internal Border? RingOf(string themeId) => _tiles.First(tile => tile.Theme.Id == themeId).Ring;
 
     /// Gives the controls the stored values now (the tests check the theme tiles after a change made outside the pane).
     internal void ShowStoredValues() => ApplyStored();
@@ -242,12 +240,6 @@ public partial class AppearancePane : SettingsPane
             Margin = new Thickness(0, 6, 0, 0),
             Padding = new Thickness(8, 0, 8, 0),
         };
-        if (theme.Background == "glow")
-        {
-            pill.BorderThickness = new Thickness(1);
-            pill.BorderBrush = accentBrush;
-            pill.Effect = new DropShadowEffect { Color = accent, BlurRadius = 4, ShadowDepth = 0, Opacity = 1 };
-        }
         var pillRow = new DockPanel();
         pillRow.Children.Add(new Border
         {
@@ -262,9 +254,43 @@ public partial class AppearancePane : SettingsPane
         pillRow.Children.Insert(0, bar);
         pill.Child = pillRow;
 
+        // The glow theme splits the pill as the Control Panel's preview does: a blurred glow layer behind it, the pill, and a crisp
+        // full-opacity ring on top with no effect (the ring is kept for the tests).
         var preview = new Grid { Height = 62 };
         preview.Children.Add(new Border { CornerRadius = new CornerRadius(10), Background = previewBackground });
+        Border? ring = null;
+        if (theme.Background == "glow")
+        {
+            preview.Children.Add(new Border
+            {
+                Width = 90,
+                Height = 18,
+                CornerRadius = new CornerRadius(9),
+                BorderThickness = new Thickness(1.5),
+                BorderBrush = accentBrush,
+                VerticalAlignment = VerticalAlignment.Top,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(0, 6, 0, 0),
+                Effect = new DropShadowEffect { Color = accent, BlurRadius = 8, ShadowDepth = 0, Opacity = 0.9 },
+            });
+        }
         preview.Children.Add(pill);
+        if (theme.Background == "glow")
+        {
+            ring = new Border
+            {
+                Width = 90,
+                Height = 18,
+                CornerRadius = new CornerRadius(9),
+                BorderThickness = new Thickness(1.5),
+                BorderBrush = accentBrush,
+                VerticalAlignment = VerticalAlignment.Top,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(0, 6, 0, 0),
+                SnapsToDevicePixels = true,
+            };
+            preview.Children.Add(ring);
+        }
 
         // the selected theme's check: a 16 DIP glyph in the accent, centred on the title's line (FluentGlyph centres it)
         var glyph = ModuleGlyphs.Get("check");
@@ -288,7 +314,7 @@ public partial class AppearancePane : SettingsPane
             CornerRadius = new CornerRadius(14),
             BorderThickness = new Thickness(2),
             BorderBrush = Brushes.Transparent,
-            Padding = new Thickness(10),
+            Padding = new Thickness(12),
             Child = new StackPanel { Children = { preview, labelRow } },
         };
         frame.SetResourceReference(Border.BackgroundProperty, "CardBackgroundFillColorDefaultBrush");
@@ -298,11 +324,11 @@ public partial class AppearancePane : SettingsPane
             Style = (Style)FindResource("TileButton"),
             Content = frame,
             Tag = theme.Id,
-            Margin = new Thickness(4),
+            Margin = new Thickness(6),  // 6 DIP each side: 12 DIP between tiles
         };
         AutomationProperties.SetName(button, L10n.L(theme.TitleKey));
         button.Click += (_, _) => ApplyTheme(theme);
-        return new ThemeTileView(theme, button, frame, check, title);
+        return new ThemeTileView(theme, button, frame, check, title, ring);
     }
 
     /// The accent a theme's preview shows: its own colour when it has one, the Mac's orange for "auto" (the Mac's ThemeTile).
@@ -310,7 +336,7 @@ public partial class AppearancePane : SettingsPane
         theme.Accent == "auto" ? "#FF9F0A" : Appearance.ResolveAccent(theme.Accent, theme.CustomAccent, null) ?? "#FF9F0A";
 
     /// The controls of one theme tile, kept to show its selection and title.
-    private sealed record ThemeTileView(Theme Theme, Button Button, Border Frame, FluentGlyph Check, TextBlock Title);
+    private sealed record ThemeTileView(Theme Theme, Button Button, Border Frame, FluentGlyph Check, TextBlock Title, Border? Ring);
 
     /// Draws the closed pill and the toast sample with the stored look (background, gradient, accent glow, toast style).
     private void UpdatePreview()
@@ -329,10 +355,14 @@ public partial class AppearancePane : SettingsPane
         PreviewPill.Background = background;
         PreviewToast.Background = background;
 
+        // The glow is a blurred layer behind the pill; the crisp ring sits on top of the pill, with no effect.
         var glow = Store.Background == "glow";
         PreviewGlow.Visibility = glow ? Visibility.Visible : Visibility.Collapsed;
         PreviewGlow.BorderBrush = accentBrush;
-        PreviewGlow.Effect = glow ? new DropShadowEffect { Color = accent, BlurRadius = 6, ShadowDepth = 0, Opacity = 1 } : null;
+        PreviewGlow.Effect = glow ? new DropShadowEffect { Color = accent, BlurRadius = 8, ShadowDepth = 0, Opacity = 0.9 } : null;
+        PreviewRing.Visibility = glow ? Visibility.Visible : Visibility.Collapsed;
+        PreviewRing.BorderBrush = accentBrush;
+        PreviewRing.Effect = null;
         PreviewGlyph.Foreground = HexColor.Brush(GreenTint);  // the done toast is green, as the Mac's; an accent check can vanish on a dark pill
 
         // The toast sample takes the toast style's shape: island and banner hang from the pill, the compact one sits inside
