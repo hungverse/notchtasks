@@ -1,16 +1,24 @@
 using System.IO;
+using System.Net;
+using System.Net.Http;
+using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
+using NotchTasks.AppTests.Updates;
 using NotchTasks.Core;
 using NotchTasks.Core.Asks;
 using NotchTasks.Core.Modules;
 using NotchTasks.Core.Motion;
 using NotchTasks.Core.Notch;
+using NotchTasks.Core.Updates;
 using NotchTasks.Pill;
 using NotchTasks.Pill.Sections;
+using NotchTasks.Services.Updates;
 using Xunit;
 
 namespace NotchTasks.AppTests;
@@ -489,6 +497,113 @@ public sealed class PillWindowTests
             found.AddRange(ClocksUnder(VisualTreeHelper.GetChild(node, i)));
         }
         return found;
+    }
+
+    /// A feed manifest that offers `build`: the feed's shape, with the fake installer's real checksum.
+    private static string FeedManifest(int build) => JsonSerializer.Serialize(new
+    {
+        version = "3.0.1",
+        build,
+        url = FakeUpdateServer.InstallerUrl,
+        sha256 = FakeUpdateServer.Sha256Of(FakeUpdateServer.Installer),
+        minOS = "10.0.0",
+        notes = new Dictionary<string, string> { ["en"] = "Faster sync" },
+    });
+
+    [Fact]
+    public void OpenAndClose_PlayTheOpenAndCloseSound_OncePerRealChange()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            var pill = new PillWindow(state);
+            var plays = new List<string>();
+            pill.PlayEvent = plays.Add;
+            try
+            {
+                Fixture.Call(pill, "ClosePill");  // already closed: nothing changes, so nothing plays
+                Assert.Empty(plays);
+
+                Fixture.Call(pill, "OpenPill");
+                Fixture.Call(pill, "OpenPill");  // already open: no second open sound
+                Assert.Equal(new[] { "open" }, plays);
+
+                Fixture.Call(pill, "ClosePill");
+                Fixture.Call(pill, "ClosePill");  // already closed again: no second close sound
+                Assert.Equal(new[] { "open", "close" }, plays);
+            }
+            finally
+            {
+                pill.Close();
+            }
+        });
+    }
+
+    [Fact]
+    public void AToast_DoesNotPlayTheOpenOrCloseSound()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            var pill = new PillWindow(state);
+            var plays = new List<string>();
+            pill.PlayEvent = plays.Add;
+            try
+            {
+                // A toast shows over the closed pill: the pill does not change between open and closed, so no open or close sound.
+                state.Announce(new Toast("check", "#30D158", "Task done"));
+                Assert.NotNull(Fixture.Field<Toast?>(pill, "_shownToast"));
+                Assert.False(Fixture.Field<bool>(pill, "_open"));
+                Assert.Empty(plays);
+            }
+            finally
+            {
+                pill.Close();
+            }
+        });
+    }
+
+    [Fact]
+    public void UpdateDot_ShowsOnTheControlPanelButton_WhileAnUpdateIsOffered()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            var build = UpdateService.CurrentBuild + 1;
+            using var state = Fixture.NewState(new UpdateClient(new FakeUpdateServer(_ => Task.FromResult(
+                new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(FeedManifest(build), Encoding.UTF8, "application/json"),
+                }))));
+            var pill = new PillWindow(state);
+            try
+            {
+                var bar = Fixture.Named<QuickBar>(pill, "Bar");
+                var dot = Fixture.Named<System.Windows.Shapes.Ellipse>(bar, "UpdateDot");
+                Assert.Equal(Visibility.Collapsed, dot.Visibility);  // nothing offered yet
+
+                state.Updates.Check(manual: false);
+                Fixture.PumpUntil(() => !state.Updates.Checking);
+                Assert.NotNull(state.Updates.Offered);
+                Assert.Equal(Visibility.Visible, dot.Visibility);
+                // The Mac's 5 pt blue dot (the update notice's tint).
+                Assert.Equal(5, dot.Width);
+                Assert.Equal(5, dot.Height);
+                Assert.Equal(Color.FromRgb(0x0A, 0x84, 0xFF), ((SolidColorBrush)dot.Fill).Color);
+
+                build = UpdateService.CurrentBuild;  // the feed now offers nothing newer
+                state.Updates.Check(manual: false);
+                Fixture.PumpUntil(() => !state.Updates.Checking);
+                Assert.Null(state.Updates.Offered);
+                Assert.Equal(Visibility.Collapsed, dot.Visibility);
+            }
+            finally
+            {
+                pill.Close();
+            }
+        });
     }
 
     /// True when a text block under `node` shows `text`.

@@ -54,8 +54,13 @@
           <TextBlock x:Name="ShelfLabel" VerticalAlignment="Center" />
         </StackPanel>
       </Button>
-      <Button Focusable="False" x:Name="ControlPanelButton" Style="{StaticResource FooterButton}" Margin="0,0,6,0"
-              Content="&#xF6A9;" ToolTip="{l:L Control Panel}" />
+      <!-- The gear with the update dot: a 5 DIP blue dot at its top-right corner, overhanging it by 2 DIP as the Mac's offset(x: 2, y: -2). -->
+      <Grid Margin="0,0,6,0">
+        <Button Focusable="False" x:Name="ControlPanelButton" Style="{StaticResource FooterButton}"
+                Content="&#xF6A9;" ToolTip="{l:L Control Panel}" />
+        <Ellipse x:Name="UpdateDot" Width="5" Height="5" Fill="#0A84FF" HorizontalAlignment="Right" VerticalAlignment="Top"
+                 Margin="0,-2,-2,0" IsHitTestVisible="False" Visibility="Collapsed" />
+      </Grid>
       <Button Focusable="False" x:Name="QuitButton" Style="{StaticResource FooterButton}"
               Content="&#xF60E;" ToolTip="{l:L Quit}" />
     </StackPanel>

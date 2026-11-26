@@ -140,6 +140,13 @@ internal static class Fixture
         return new AppState(settings, new AskStore(AppPaths.AsksDir), Inert(settings));
     }
 
+    /// The app state as NewState, with `update` as its update feed (a fake feed, so a check can offer a build).
+    public static AppState NewState(UpdateClient update)
+    {
+        var settings = SettingsStore.Load(AppPaths.SettingsFile);
+        return new AppState(settings, new AskStore(AppPaths.AsksDir), Inert(settings) with { Update = update });
+    }
+
     /// The OS readers every App test runs on. Nothing here touches the real system: the Downloads folder is a folder that does
     /// not exist under the temp root (so nothing is watched), the network reads no adapter and subscribes to nothing, the power is
     /// a PC with no battery, the disk has 100 GB free, the sensors read quiet and watch nothing, the mic is not muted, and the

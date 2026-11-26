@@ -120,6 +120,9 @@ public partial class PillWindow : Window
 
     /// Whether the last shape animation used the grow curve (the shape opened or grew) rather than the settle curve. A test reads it.
     internal bool LastCurveOpening { get; private set; }
+
+    /// Plays a sound event ("open" or "close") when the pill really opens or closes. Sounds.Play in the app; a test records the plays.
+    internal Action<string> PlayEvent { get; set; } = Sounds.Play;
     private bool _warm;  // the card layer is laid out at zero opacity while the pointer is near (WarmCard)
     private bool _openRefreshPending;  // a publish came during an open: it is applied once when the open finishes
     private double _openHeight;  // the open pill's height, as last measured
@@ -169,6 +172,7 @@ public partial class PillWindow : Window
             ControlPanelWindow.Show(_state);
         };
         Bar.QuitRequested += () => App.Quit();
+        Bar.SetUpdatePending(_state.Updates.Offered is not null);  // a build offered before the pill was made shows its dot at once
         L10n.Changed += OnLanguageChanged;
 
         _pollTimer.Tick += OnPoll;
@@ -237,6 +241,7 @@ public partial class PillWindow : Window
         _state.LoadChanged += SyncHeader;  // a load tick moves the meters only
         _state.ThermalChanged += SyncHeader;  // a temperature reading moves the header's temperature only
         _state.Toasts.Changed += OnToastsChanged;
+        _state.Updates.Changed += OnUpdatesChanged;
         SystemEvents.DisplaySettingsChanged += OnDisplaySettingsChanged;
         SpriteClock.WatchSystem();
 
@@ -532,6 +537,8 @@ public partial class PillWindow : Window
         Animate(Mode.Open);
         ApplyAppearance();
         _closeTimer.Start();
+        // Only a real open plays: a toast or an open already under way does not reach here (the guard above). The Mac plays it on expanded.
+        PlayEvent("open");
         // The work that is not drawn (the shelf's files, the wait ticks, the sensors and the load) comes after the open's first frame.
         var token = ++_openToken;
         Dispatcher.BeginInvoke(new Action(() => FinishOpen(token)), DispatcherPriority.ContextIdle);
@@ -579,6 +586,7 @@ public partial class PillWindow : Window
         _outsideSince = null;
         _closeTimer.Stop();
         _waitTimer.Stop();
+        PlayEvent("close");  // a real close only: an already closed pill returned at the guard above
         Animate(Mode.Closed);  // the pill fades out while its shape settles to the closed width (SetShapeShown)
         ApplyAppearance();
         SyncToast();  // a toast that came in while the pill was open shows now
@@ -1158,6 +1166,9 @@ public partial class PillWindow : Window
     /// The queue changed: the toast shown follows it.
     private void OnToastsChanged() => SyncToast();
 
+    /// The update feed changed: the Control Panel button's dot shows while a build is offered (the Mac's pendingChanged).
+    private void OnUpdatesChanged() => Bar.SetUpdatePending(_state.Updates.Offered is not null);
+
     /// The app state's snapshot was rebuilt: the chips and the sections follow it.
     private void OnNotchChanged()
     {
@@ -1354,6 +1365,7 @@ public partial class PillWindow : Window
         _state.LoadChanged -= SyncHeader;
         _state.ThermalChanged -= SyncHeader;
         _state.Toasts.Changed -= OnToastsChanged;
+        _state.Updates.Changed -= OnUpdatesChanged;
         L10n.Changed -= OnLanguageChanged;
         // Only this pill's own builder: a newer pill may have registered its own since.
         SectionRegistry.Unregister("agents", _agentsSection);

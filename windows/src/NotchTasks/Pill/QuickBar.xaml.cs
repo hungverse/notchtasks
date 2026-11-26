@@ -56,6 +56,10 @@ public partial class QuickBar : UserControl
         ShelfLink.Visibility = shelfLink ? Visibility.Visible : Visibility.Collapsed;
     }
 
+    /// Shows or hides the Control Panel button's blue update dot, so an offered build is seen from the pill (the Mac's dot).
+    public void SetUpdatePending(bool pending) =>
+        UpdateDot.Visibility = pending ? Visibility.Visible : Visibility.Collapsed;
+
     /// A quick-start pill: starts a timer of its minutes (the pill's Tag), then publishes the change.
     private void OnTimerPill(object sender, RoutedEventArgs e)
     {
