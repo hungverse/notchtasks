@@ -22,7 +22,7 @@ public sealed class SqliteReaderTests : IDisposable
     private string MakeConversation(int stepType, int status, string project = "NotchTasks")
     {
         var path = Path.Combine(_root.Folder, Guid.NewGuid().ToString("N") + ".db");
-        using var connection = new SqliteConnection("Data Source=" + path);
+        using var connection = new SqliteConnection(Connect(path));
         connection.Open();
         Exec(connection, "create table steps (idx integer primary key, step_type integer, status integer)");
         Exec(connection, "create table trajectory_metadata_blob (data blob)");
@@ -42,6 +42,9 @@ public sealed class SqliteReaderTests : IDisposable
         var uri = Encoding.UTF8.GetBytes("file:///Users/x/" + project);
         return new byte[] { 0x0a, (byte)uri.Length }.Concat(uri).ToArray();
     }
+
+    /// A connection string for the fixture writers: no pooling, so the file handle closes when the writer is disposed.
+    private static string Connect(string path) => "Data Source=" + path + ";Pooling=False";
 
     private static void Exec(SqliteConnection connection, string sql)
     {
@@ -89,7 +92,7 @@ public sealed class SqliteReaderTests : IDisposable
     public void LockedFile_ReturnsNullQuickly_AndTheWriterIsUnharmed()
     {
         var db = MakeConversation(stepType: 15, status: 8);
-        using var writer = new SqliteConnection("Data Source=" + db);
+        using var writer = new SqliteConnection(Connect(db));
         writer.Open();
         Exec(writer, "begin exclusive");
         var reader = new SqliteReader();
@@ -97,8 +100,9 @@ public sealed class SqliteReaderTests : IDisposable
 
         var rows = reader.Query(db, LastStep);
 
+        // The busy timeout is 100 ms: the read must give up well inside the 600 ms bound, not wait for the whole-second default.
         Assert.Null(rows);
-        Assert.True(clock.Elapsed < TimeSpan.FromSeconds(5), $"the read waited {clock.Elapsed}");
+        Assert.True(clock.Elapsed < TimeSpan.FromMilliseconds(600), $"the read waited {clock.Elapsed}");
         Exec(writer, "rollback");
         Assert.Equal("[{\"step_type\":15,\"status\":8}]", reader.Query(db, LastStep));
     }
@@ -108,9 +112,27 @@ public sealed class SqliteReaderTests : IDisposable
     {
         // A writer holding only a reserved lock does not block readers in the default rollback-journal mode.
         var db = MakeConversation(stepType: 15, status: 8);
-        using var writer = new SqliteConnection("Data Source=" + db);
+        using var writer = new SqliteConnection(Connect(db));
         writer.Open();
         Exec(writer, "begin immediate");
+
+        var rows = new SqliteReader().Query(db, LastStep);
+
+        Assert.Equal("[{\"step_type\":15,\"status\":8}]", rows);
+        Exec(writer, "rollback");
+    }
+
+    [Fact]
+    public void WalFile_WithALiveWriter_ReadsTheCommittedStepOnly()
+    {
+        // Antigravity conversations are WAL databases written while the app runs. A reader sees the last committed step, and an
+        // uncommitted write by the live writer does not change it. The writer stays open, so the -wal and -shm files exist.
+        var db = MakeConversation(stepType: 15, status: 8);
+        using var writer = new SqliteConnection(Connect(db));
+        writer.Open();
+        Exec(writer, "pragma journal_mode = wal");
+        Exec(writer, "begin immediate");
+        Exec(writer, "insert into steps values (3, 15, 3)");
 
         var rows = new SqliteReader().Query(db, LastStep);
 
