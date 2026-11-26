@@ -21,6 +21,7 @@ public sealed class LevelsSource : IModuleSource
     private Action<double>? _panelHandler;
     private Bound? _bound;  // the endpoint bound now, with the handler it was given
     private bool _started;
+    private int _generation;  // bumps on each Start and Stop: a panel that opens after its start was stopped is given back
 
     /// The source of `module`, binding through `outputs` and `brightness` (made at Start). It is made on the UI thread.
     public LevelsSource(LevelsModule module, Func<IOutputDevices> outputs, Func<IBrightness> brightness)
@@ -33,10 +34,13 @@ public sealed class LevelsSource : IModuleSource
         _module.Changed += OnModuleChanged;
     }
 
-    /// Binds the default output and the panel, and takes their readings as the baselines: nothing shows at start.
+    /// Binds the default output (Core Audio, on this thread) and starts the panel's open on a worker, then returns: the panel's first WMI
+    /// read and its watch can take a while to connect, so Start never waits on them. The output's volume is the baseline now, and the
+    /// panel's brightness is the baseline when it lands. Nothing shows at start.
     public void Start()
     {
         _started = true;
+        var generation = ++_generation;
         try
         {
             _devices = _outputs();
@@ -48,29 +52,15 @@ public sealed class LevelsSource : IModuleSource
             ErrorLog.Write(e);
             _module.SetVolumeBaseline(null);
         }
-
-        try
-        {
-            _panel = _brightness();
-            var level = _panel.Read();
-            _module.SetBrightnessBaseline(level);
-            if (level is not null)
-            {
-                _panelHandler = value => _dispatcher.BeginInvoke(new Action(() => OnBrightness(value)));
-                _panel.Changed += _panelHandler;
-                _panel.Watch(true);
-            }
-        }
-        catch (Exception e)
-        {
-            ErrorLog.Write(e);
-        }
+        _ = Task.Run(() => OpenPanel(generation));
     }
 
-    /// Stops the feeds and releases the COM objects and the panel's watch. The bar is cleared, and no timer runs.
+    /// Stops the feeds and releases the COM objects and the panel's watch. The bar is cleared, and no timer runs. A panel still opening
+    /// is given back when it lands: its generation is past.
     public void Stop()
     {
         _started = false;
+        _generation++;
         _hide.Stop();
         Unbind();
         if (_devices is { } devices)
@@ -92,6 +82,57 @@ public sealed class LevelsSource : IModuleSource
         }
         _module.Clear();
     }
+
+    /// On a worker: opens the panel, reads its brightness, and starts its change feed. The result goes back to the UI thread, which adopts it
+    /// only when this open is still the current one.
+    private void OpenPanel(int generation)
+    {
+        PanelOpening? opened = null;
+        try
+        {
+            var panel = _brightness();
+            var level = panel.Read();
+            Action<double>? handler = null;
+            if (level is not null)
+            {
+                handler = value => _dispatcher.BeginInvoke(new Action(() => OnBrightness(value)));
+                panel.Changed += handler;
+                panel.Watch(true);
+            }
+            opened = new PanelOpening(panel, level, handler);
+        }
+        catch (Exception e)
+        {
+            ErrorLog.Write(e);
+        }
+        _dispatcher.BeginInvoke(new Action(() => AdoptPanel(generation, opened)));
+    }
+
+    /// On the UI thread: the opened panel becomes the source's, and its brightness the baseline. A panel from a start that was stopped (or
+    /// restarted) since is given back at once.
+    private void AdoptPanel(int generation, PanelOpening? opened)
+    {
+        if (opened is null)
+        {
+            return;
+        }
+        if (!_started || generation != _generation)
+        {
+            if (opened.Handler is { } stale)
+            {
+                opened.Panel.Changed -= stale;
+            }
+            opened.Panel.Watch(false);
+            opened.Panel.Dispose();
+            return;
+        }
+        _panel = opened.Panel;
+        _panelHandler = opened.Handler;
+        _module.SetBrightnessBaseline(opened.Level);
+    }
+
+    /// A panel that was opened on the worker, with its first reading and the handler its change feed raises through.
+    private sealed record PanelOpening(IBrightness Panel, double? Level, Action<double>? Handler);
 
     /// Called on a COM thread when the default device changes: the rebind runs on the UI thread.
     private void OnDefaultChanged() => _dispatcher.BeginInvoke(new Action(Rebind));

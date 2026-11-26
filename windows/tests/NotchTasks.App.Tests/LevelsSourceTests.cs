@@ -59,9 +59,16 @@ public sealed class LevelsSourceTests
         public bool Watching { get; private set; }
         public int WatchCalls { get; private set; }
         public bool Disposed { get; private set; }
+
+        /// When set, the first read waits for it: a test holds the panel's open on its worker thread to stop the source before it lands.
+        public ManualResetEventSlim? Gate { get; set; }
         public event Action<double>? Changed;
 
-        public double? Read() => Level;
+        public double? Read()
+        {
+            Gate?.Wait();
+            return Level;
+        }
 
         public void Watch(bool on)
         {
@@ -83,6 +90,9 @@ public sealed class LevelsSourceTests
     private static LevelsSource Source(LevelsModule module, FakeOutputs outputs, FakePanel panel) =>
         new(module, () => outputs, () => panel);
 
+    /// Whether the panel the worker opened has come back to the source (it is adopted on the UI thread, after Start returns).
+    private static bool Adopted(LevelsSource source) => Fixture.Field<IBrightness?>(source, "_panel") is not null;
+
     [Fact]
     public void Start_ReadsTheBaselines_AndShowsNothing_AndWatchesThePanel()
     {
@@ -96,6 +106,7 @@ public sealed class LevelsSourceTests
             try
             {
                 source.Start();
+                Fixture.PumpUntil(() => Adopted(source));
 
                 Assert.Null(module.Hud);
                 Assert.Equal(1, outputs.Opens);
@@ -151,6 +162,7 @@ public sealed class LevelsSourceTests
             try
             {
                 source.Start();
+                Fixture.PumpUntil(() => Adopted(source));
 
                 panel.RaiseChanged(0.9);
                 Fixture.PumpUntil(() => module.Hud is not null);
@@ -175,12 +187,57 @@ public sealed class LevelsSourceTests
             try
             {
                 source.Start();
+                Fixture.PumpUntil(() => Adopted(source));
 
                 Assert.False(panel.Watching);
                 Assert.Equal(0, panel.WatchCalls);
             }
             finally
             {
+                source.Stop();
+            }
+        });
+    }
+
+    [Fact]
+    public void StopBeforeThePanelOpens_DiscardsIt_AndNeverWatches()
+    {
+        // The panel's first read runs on a worker; a Stop before it lands must give the panel back, not adopt it.
+        Sta.Run(() =>
+        {
+            var module = new LevelsModule();
+            var panel = new FakePanel(0.4) { Gate = new ManualResetEventSlim(false) };
+            var source = Source(module, new FakeOutputs(), panel);
+
+            source.Start();
+            source.Stop();
+            panel.Gate.Set();
+
+            Fixture.PumpUntil(() => panel.Disposed);
+            Assert.False(panel.Watching);
+            Assert.False(Adopted(source));
+            Assert.Null(module.Hud);
+        });
+    }
+
+    [Fact]
+    public void Start_ReturnsBeforeThePanelOpens()
+    {
+        // Start must not wait on WMI: with the panel's read held, Start still returns, and nothing is adopted yet.
+        Sta.Run(() =>
+        {
+            var panel = new FakePanel(0.4) { Gate = new ManualResetEventSlim(false) };
+            var source = Source(new LevelsModule(), new FakeOutputs(), panel);
+            try
+            {
+                source.Start();
+
+                Assert.False(Adopted(source));
+                Assert.False(panel.Watching);
+            }
+            finally
+            {
+                panel.Gate.Set();
                 source.Stop();
             }
         });
@@ -275,6 +332,7 @@ public sealed class LevelsSourceTests
             speakers.Volume = new VolumeReading(0.7, false);
             speakers.RaiseChanged();
             Fixture.PumpUntil(() => module.Hud is not null);
+            Fixture.PumpUntil(() => Adopted(source) && panel.Watching);
 
             source.Stop();
 

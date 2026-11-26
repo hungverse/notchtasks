@@ -32,6 +32,7 @@ public sealed class CoreAudioOutputs : IOutputDevices
         var hr = _enumerator.RegisterEndpointNotificationCallback(_client);
         if (hr != 0)
         {
+            Marshal.ReleaseComObject(_enumerator);  // the object is not kept: give it back before the failure reaches the source
             Marshal.ThrowExceptionForHR(hr);
         }
     }
@@ -229,7 +230,7 @@ internal interface IMMNotificationClient
 }
 
 /// IAudioEndpointVolume: the master volume and the mute, and the change callback. Slots the source never calls are kept by name, in the
-/// header's order (endpointvolume.h): the volume's 15 methods before GetMute, with GetMute at slot 15.
+/// header's order (endpointvolume.h). GetMute is at vtable index 15: IUnknown's three slots, then the twelve methods before it.
 [ComImport]
 [Guid("5CDF2C82-841E-4546-9722-0CF74078229A")]
 [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
@@ -268,7 +269,7 @@ internal interface IAudioEndpointVolume
 
 /// IAudioEndpointVolumeCallback: Core Audio calls OnNotify when the endpoint's volume or mute changes.
 [ComImport]
-[Guid("657804FA-5D96-4CE9-B9C0-0A4B4B6EC1FB")]
+[Guid("657804FA-D6AD-4496-8A60-352752AF4F89")]
 [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
 internal interface IAudioEndpointVolumeCallback
 {

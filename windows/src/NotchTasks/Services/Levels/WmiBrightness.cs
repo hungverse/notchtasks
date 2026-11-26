@@ -11,7 +11,7 @@ public sealed class WmiBrightness : IBrightness
 {
     private const string Scope = @"root\WMI";
     private ManagementEventWatcher? _watcher;
-    private bool _logged;
+    private static int _logged;  // 1 once an absence was logged: shared by every instance, so one line per app run
 
     /// Raised on the WMI thread with each new brightness (0 to 1) while the watch is on.
     public event Action<double>? Changed;
@@ -101,23 +101,23 @@ public sealed class WmiBrightness : IBrightness
         watcher.Dispose();
     }
 
-    private void LogOnce(string reason)
+    /// Logs the reason once for the whole app run: a desktop has no panel, so every start would otherwise log it again.
+    private static void LogOnce(string reason)
     {
-        if (_logged)
+        if (Interlocked.Exchange(ref _logged, 1) != 0)
         {
             return;
         }
-        _logged = true;
         ErrorLog.Write(new InvalidOperationException("NotchTasks: brightness is not shown: " + reason));
     }
 
-    private void LogOnce(Exception e)
+    /// The exception form of LogOnce, for a WMI call that threw.
+    private static void LogOnce(Exception e)
     {
-        if (_logged)
+        if (Interlocked.Exchange(ref _logged, 1) != 0)
         {
             return;
         }
-        _logged = true;
         ErrorLog.Write(new InvalidOperationException("NotchTasks: brightness is not shown", e));
     }
 }
