@@ -22,7 +22,8 @@ public enum PermGroup
 }
 
 /// One row of the Permissions pane. Modules are the modules that need it (none when no module does). Applies is false for a
-/// row that does not apply on this computer (an agent that is not installed here): the pane hides it.
+/// row that does not apply on this computer (an agent that is not installed here): the pane hides it. Glyph is a Fluent System
+/// Icons codepoint, in the Filled font when Filled is set (the Mac draws that row's symbol filled).
 public sealed record PermItem(
     string Id,
     string Title,
@@ -30,7 +31,8 @@ public sealed record PermItem(
     string Glyph,
     IReadOnlyList<string> Modules,
     PermState State,
-    bool Applies = true);
+    bool Applies = true,
+    bool Filled = false);
 
 /// What the probe found. A null value is unknown: the row shows Checking. Present says which agents are installed here.
 public sealed record PermissionFacts(
@@ -55,6 +57,16 @@ public static class PermissionItems
     private static readonly IReadOnlyList<string> CameraModules = ["mirror"];
     private static readonly IReadOnlyList<string> AgentModules = ["agents"];
 
+    /// The glyphs of the rows: the Mac's symbols as Fluent icons (notification bell, power, microphone and camera filled as the
+    /// Mac draws them, thermometer, shield, and the sparkle the agents use).
+    private const string BellIcon = "";        // alert
+    private const string PowerIcon = "";       // power
+    private const string MicIcon = "";         // mic, filled
+    private const string CameraIcon = "";      // camera, filled
+    private const string TemperatureIcon = ""; // temperature
+    private const string ShieldIcon = "";      // shield
+    private const string SparkleIcon = "";     // sparkle: the agents
+
     /// Whether the firewall row is shown. The rule lets the phone reach the notch, so the row comes with pairing (Phase 4).
     /// Until then the row is not built and the rule is not probed; the code for it stays in place.
     public static readonly bool FirewallRowShown = false;
@@ -65,21 +77,21 @@ public static class PermissionItems
     {
         var items = new List<PermItem>
         {
-            new("notifications", L("Notifications"), L("Alerts when a task finishes or fails."), "", NoModules,
+            new("notifications", L("Notifications"), L("Alerts when a task finishes or fails."), BellIcon, NoModules,
                 facts.ToastsOn switch { true => PermState.Granted, false => PermState.Denied, null => PermState.Checking }),
-            new(LoginId, L("Open at login"), L("Starts when you log in."), "", NoModules,
+            new(LoginId, L("Open at login"), L("Starts when you log in."), PowerIcon, NoModules,
                 facts.LoginOn ? PermState.Granted : PermState.NotAsked),
-            new("mic", L("Microphone"), L("Lets the notch show when an app uses the mic, and calls."), "", NoModules,
-                Consent(facts.MicAllowed)),
-            new("camera", L("Camera mirror"), L("Check the camera before joining a meeting"), "", CameraModules,
-                Consent(facts.CameraAllowed)),
+            new("mic", L("Microphone"), L("Lets the notch show when an app uses the mic, and calls."), MicIcon, NoModules,
+                Consent(facts.MicAllowed), Filled: true),
+            new("camera", L("Camera mirror"), L("Check the camera before joining a meeting"), CameraIcon, CameraModules,
+                Consent(facts.CameraAllowed), Filled: true),
         };
         items.Add(new PermItem(TemperaturesId, L("Temperatures"),
             L("Optional. Reading temperatures on Windows needs administrator, so a small helper runs with administrator rights only if you turn this on."),
-            "\uF78F", NoModules, facts.Temperatures));
+            TemperatureIcon, NoModules, facts.Temperatures));
         if (FirewallRowShown)
         {
-            items.Add(new PermItem("firewall", L("Firewall rule"), L("Lets your phone reach the notch on this network."), "", NoModules,
+            items.Add(new PermItem("firewall", L("Firewall rule"), L("Lets your phone reach the notch on this network."), ShieldIcon, NoModules,
                 facts.FirewallRule switch { true => PermState.Granted, false => PermState.NotAsked, null => PermState.Checking }));
         }
 
@@ -92,7 +104,7 @@ public static class PermissionItems
                 "hook." + kind.Id(),
                 L("{0} permission prompts", name),
                 L("Answers {0}'s permission prompts from the notch.", name),
-                "",
+                SparkleIcon,
                 AgentModules,
                 hook switch { true => PermState.Granted, false => PermState.NotAsked, null => PermState.Checking },
                 Applies: here));

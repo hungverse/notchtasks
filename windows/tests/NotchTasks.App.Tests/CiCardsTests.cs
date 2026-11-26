@@ -220,7 +220,7 @@ public sealed class CiCardsTests
 
             var lead = Assert.IsType<TextBlock>(ChipView.Lead(chip, 18, null, NoColours));
 
-            Assert.Equal(ModuleGlyphs.Get("warning"), lead.Text);
+            Assert.Equal(ModuleGlyphs.Get("warning").Glyph, lead.Text);
         });
     }
 

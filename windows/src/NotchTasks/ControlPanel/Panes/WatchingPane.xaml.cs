@@ -293,11 +293,13 @@ public partial class WatchingPane : SettingsPane
     /// The item's symbol as its glyph when the glyph map has it, else the sparkles an agent without an app icon shows on the pill.
     private static TextBlock SymbolGlyph(WatchItem item)
     {
-        var glyph = ModuleGlyphs.Get(WatchItems.Symbol(item));
+        var (family, glyph) = ModuleGlyphs.Get(WatchItems.Symbol(item));
+        var sparkles = ModuleGlyphs.Get("sparkles");
+        var unknown = glyph == ModuleGlyphs.Fallback;
         return new TextBlock
         {
-            Text = glyph == ModuleGlyphs.Fallback ? ModuleGlyphs.Get("sparkles") : glyph,
-            FontFamily = FluentIcons.Regular,
+            Text = unknown ? sparkles.Glyph : glyph,
+            FontFamily = unknown ? sparkles.Family : family,
             FontSize = 18,
             Width = 26,
             Height = 26,

@@ -99,7 +99,7 @@ public partial class ToastView : UserControl
                 HorizontalAlignment = HorizontalAlignment.Left,
                 VerticalAlignment = VerticalAlignment.Center,
             }
-            : new TextBlock { Text = ModuleGlyphs.Get(name), Foreground = tint };
+            : new TextBlock { Text = ModuleGlyphs.Get(name).Glyph, FontFamily = ModuleGlyphs.Get(name).Family, Foreground = tint };
 
     /// Shows the toast in a style: its glyph, title, subtitle and the buttons it needs. `ask` is the agent's ask the toast
     /// stands for, or null. `motion` is the Motion setting, which a battery toast's art springs by.

@@ -21,7 +21,6 @@ public sealed class DeviceArtView : Grid
 
     private static readonly Color GreyColor = Color.FromRgb(0x8E, 0x8E, 0x93);
     private static readonly SolidColorBrush GreyBrush = Frozen(new SolidColorBrush(GreyColor));
-    private static readonly FontFamily GlyphFamily = FluentIcons.Regular;
 
     /// The spring's position, 0 (the start) to 1 (the settled look).
     public static readonly DependencyProperty ProgressProperty = DependencyProperty.Register(
@@ -145,9 +144,9 @@ public sealed class DeviceArtView : Grid
             }
             : new TextBlock
             {
-                Text = ModuleGlyphs.Get(symbol),
+                Text = ModuleGlyphs.Get(symbol).Glyph,
                 Foreground = brush,
-                FontFamily = GlyphFamily,
+                FontFamily = ModuleGlyphs.Get(symbol).Family,
                 FontSize = size,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,

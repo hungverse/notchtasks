@@ -6,10 +6,10 @@ namespace NotchTasks;
 /// from the Segoe fonts of Windows, so an icon looks the same on every Windows build and the Mac's symbol has one Windows match.
 public static class FluentIcons
 {
-    /// The outline icons: the font for every glyph unless it is named in ModuleGlyphs.FamilyOf as filled.
+    /// The outline icons: the font for every glyph that the Mac draws as an outline.
     public static readonly FontFamily Regular = new(FontsFolder(), "./#FluentSystemIcons-Regular");
 
-    /// The filled icons: play and pause, which the Mac draws filled (ModuleGlyphs.FamilyOf picks this font for them).
+    /// The filled icons: the glyphs the Mac draws filled (ModuleGlyphs.Get names the family of each).
     public static readonly FontFamily Filled = new(FontsFolder(), "./#FluentSystemIcons-Filled");
 
     /// The Resources/Fonts folder inside the app's own pack. Reading PackUriHelper first registers the pack:// scheme, so the

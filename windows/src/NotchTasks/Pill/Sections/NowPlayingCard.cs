@@ -30,7 +30,6 @@ public sealed class NowPlayingCard : Border
     private static readonly Brush CardFill = Freeze(new SolidColorBrush(Color.FromArgb(0x0F, 0xFF, 0xFF, 0xFF)));
     private static readonly Brush ArtFill = Freeze(new SolidColorBrush(Color.FromArgb(0x1F, 0xFF, 0xFF, 0xFF)));
     private static readonly Brush CaptionBrush = Freeze(new SolidColorBrush(Color.FromRgb(0x8E, 0x8E, 0x93)));
-    private static readonly FontFamily GlyphFamily = FluentIcons.Regular;
     private static readonly FontFamily TextFamily = new("Segoe UI Variable Text, Segoe UI");
 
     private readonly Border _artFrame;
@@ -60,8 +59,8 @@ public sealed class NowPlayingCard : Border
         };
         _artGlyph = new TextBlock
         {
-            Text = ModuleGlyphs.Get("media"),
-            FontFamily = GlyphFamily,
+            Text = ModuleGlyphs.Get("media").Glyph,
+            FontFamily = ModuleGlyphs.Get("media").Family,
             FontSize = 18,
             Foreground = CaptionBrush,
             HorizontalAlignment = HorizontalAlignment.Center,
@@ -214,7 +213,7 @@ public sealed class NowPlayingCard : Border
     {
         "previous" => new System.Windows.Shapes.Path { Data = PreviousSkip, Fill = Brushes.White },
         "next" => new System.Windows.Shapes.Path { Data = NextSkip, Fill = Brushes.White },
-        _ => ModuleGlyphs.Get(name),
+        _ => ModuleGlyphs.Get(name).Glyph,
     };
 
     /// The plain template of the control buttons: a transparent border, so the whole square takes the mouse, around the centred
@@ -253,9 +252,8 @@ public sealed class NowPlayingCard : Border
         BorderThickness = new Thickness(0),
         Background = Brushes.Transparent,
         Foreground = Brushes.White,
-        FontFamily = ModuleGlyphs.FamilyOf(glyph),
+        FontFamily = ModuleGlyphs.Get(glyph).Family,
         FontSize = size,
-        FontWeight = FontWeights.Bold,
         Content = ControlContent(glyph),
         Template = PlainControl,
         Cursor = Cursors.Hand,

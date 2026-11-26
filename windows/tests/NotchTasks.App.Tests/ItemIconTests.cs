@@ -127,7 +127,7 @@ public sealed class ItemIconTests
                 var element = ItemIcon.Element(new ItemState(item, Array.Empty<Job>()), 18, Colors.Gray, null);
 
                 var glyph = Assert.IsType<TextBlock>(element);
-                Assert.Equal(ModuleGlyphs.Get("sparkles"), glyph.Text);
+                Assert.Equal(ModuleGlyphs.Get("sparkles").Glyph, glyph.Text);
             }
         });
     }

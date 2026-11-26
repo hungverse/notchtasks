@@ -52,7 +52,7 @@ public sealed class SensorChipTests
             };
 
             var lead = Assert.IsType<TextBlock>(ChipView.Lead(chip, 18, null, NoColours));
-            Assert.Equal(ModuleGlyphs.Get("micoff"), lead.Text);
+            Assert.Equal(ModuleGlyphs.Get("micoff").Glyph, lead.Text);
         });
     }
 
@@ -74,7 +74,7 @@ public sealed class SensorChipTests
             Assert.Equal(2, row.Children.Count);
             var single = Assert.IsType<StackPanel>(ChipView.Lead(micOnly, 18, null, NoColours));
             var glyph = Assert.IsType<TextBlock>(Assert.Single(single.Children));
-            Assert.Equal(ModuleGlyphs.Get("mic"), glyph.Text);
+            Assert.Equal(ModuleGlyphs.Get("mic").Glyph, glyph.Text);
             Assert.Null(ChipView.Trail(both, 11, null, NoColours, DateTimeOffset.Now));  // a sensor has no trail
         });
     }
@@ -82,8 +82,8 @@ public sealed class SensorChipTests
     [Fact]
     public void Glyphs_ForTheCallEnd_AndTheMute_AreNotTheFallback()
     {
-        Assert.NotEqual(ModuleGlyphs.Fallback, ModuleGlyphs.Get("phonedown"));
-        Assert.Equal("", ModuleGlyphs.Get("phonedown"));
-        Assert.Equal("", ModuleGlyphs.Get("micoff"));
+        Assert.NotEqual(ModuleGlyphs.Fallback, ModuleGlyphs.Get("phonedown").Glyph);
+        Assert.Equal(IconFonts.GlyphOf(IconFonts.Filled["ic_fluent_call_end_20_filled"]), ModuleGlyphs.Get("phonedown").Glyph);
+        Assert.Equal(IconFonts.GlyphOf(IconFonts.Filled["ic_fluent_mic_off_20_filled"]), ModuleGlyphs.Get("micoff").Glyph);
     }
 }

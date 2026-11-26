@@ -73,27 +73,31 @@ public static class ModuleCatalog
         _ => string.Empty,
     };
 
-    /// The Fluent System Icons glyph of a module (the Mac's SF Symbol, mapped to the closest Fluent icon).
+    /// The Fluent System Icons glyph of a module: the Mac's SF Symbol, as the closest Fluent icon. The codepoint is in the
+    /// Filled font when GlyphFilled says so (the Mac draws that symbol filled), else in the Regular font.
     public static string Glyph(string id) => id switch
     {
-        "agents" => "\uE1B8",   // sparkle-like: AI agent
-        "ci" => "\uEE86",       // wrench: build and CI
-        "media" => "\uE854",    // music note
-        "calendar" => "\uE24E", // calendar
-        "timer" => "\uED88",    // timer
-        "shelf" => "\uF418",    // folder: file shelf
-        "limits" => "\uF4C7",   // gauge: AI limits
-        "battery" => "\uF1C5",  // battery
-        "devices" => "\uE6EE",  // headphones
-        "calls" => "\uF5E0",    // phone
-        "privacy" => "\uE7F9",  // microphone
-        "levels" => "\uEB42",   // volume
-        "network" => "\uF8B2",  // wifi
-        "downloads" => "\uF150", // download
-        "health" => "\uF78F",   // health / thermometer-like
-        "mirror" => "\uF254",   // camera
-        _ => "\uE824",          // more
+        "agents" => "\uEB33",   // sparkle (Mac sparkles): AI agent
+        "ci" => "\uEE86",       // wrench, filled (Mac wrench.and.screwdriver.fill): build and CI
+        "media" => "\uE854",    // music_note_2 (Mac music.note)
+        "calendar" => "\uE24E", // calendar_ltr (Mac calendar)
+        "timer" => "\uED88",    // timer (Mac timer)
+        "shelf" => "\uF41C",    // folder, filled (Mac tray.full.fill): file shelf
+        "limits" => "\uF4C7",   // gauge (Mac gauge.with.dots.needle.67percent): AI limits
+        "battery" => "\uF1C5",  // battery_5 (Mac battery.100percent)
+        "devices" => "\uE6EE",  // headphones (Mac headphones)
+        "calls" => "\uF5EA",    // phone, filled (Mac phone.fill)
+        "privacy" => "\uE807",  // mic, filled (Mac mic.fill): microphone
+        "levels" => "\uEB4B",   // speaker_2, filled (Mac speaker.wave.2.fill): volume
+        "network" => "\uF8B2",  // wifi_4 (Mac wifi)
+        "downloads" => "\uF12C", // arrow_circle_down, filled (Mac arrow.down.circle.fill)
+        "health" => "\uF78F",   // temperature (Mac thermometer.medium): the computer's heat
+        "mirror" => "\uF254",   // camera, filled (Mac video.fill): the camera mirror
+        _ => "\uE824",          // more_horizontal
     };
+
+    /// Whether a module's Glyph is in the Filled font: the Mac draws that module's symbol filled.
+    public static bool GlyphFilled(string id) => id is "ci" or "shelf" or "calls" or "privacy" or "levels" or "downloads" or "mirror";
 
     /// The stored list with `id` swapped with the previous (delta -1) or next (delta 1) visible Windows module. Only the
     /// visible modules move among themselves: every other stored id (hidden on Windows, unknown) keeps its position. A

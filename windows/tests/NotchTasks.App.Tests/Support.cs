@@ -78,7 +78,8 @@ internal static class Sta
 
 /// The application the real App.xaml makes, without the App class. App.xaml is an Application definition: loading it
 /// would create NotchTasks.App, which these tests never do. So the resources it merges are loaded by pack URI instead:
-/// ThemeMode System, and ControlPanel/Controls.xaml (the shared styles every window and pane uses).
+/// ThemeMode System, the Fluent families (App.xaml's FluentRegular and FluentFilled), and ControlPanel/Controls.xaml (the shared
+/// styles every window and pane uses).
 internal static class WpfHost
 {
     private static readonly object Gate = new();
@@ -97,6 +98,9 @@ internal static class WpfHost
             {
                 Source = new Uri("pack://application:,,,/NotchTasks;component/ControlPanel/Controls.xaml", UriKind.Absolute),
             });
+            // The two Fluent families App.xaml defines (x:Static to FluentIcons): the same objects under the same keys.
+            app.Resources["FluentRegular"] = NotchTasks.FluentIcons.Regular;
+            app.Resources["FluentFilled"] = NotchTasks.FluentIcons.Filled;
         }
     }
 }

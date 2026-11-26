@@ -71,7 +71,7 @@ public sealed class ToastGlyphTests
         var data = ModuleGlyphs.Vector(name);
         Assert.NotNull(data);
         Assert.StartsWith("M", data);
-        Assert.Equal(ModuleGlyphs.Fallback, ModuleGlyphs.Get(name));
+        Assert.Equal(ModuleGlyphs.Fallback, ModuleGlyphs.Get(name).Glyph);
     }
 
     [Fact]
@@ -80,7 +80,7 @@ public sealed class ToastGlyphTests
         foreach (var name in CoreToastGlyphs.Value)
         {
             var isVector = ModuleGlyphs.Vector(name) is not null;
-            var isFont = ModuleGlyphs.Get(name) != ModuleGlyphs.Fallback;
+            var isFont = ModuleGlyphs.Get(name).Glyph != ModuleGlyphs.Fallback;
             Assert.True(isVector || isFont, name);
         }
     }
@@ -93,7 +93,7 @@ public sealed class ToastGlyphTests
             var view = new ToastView();
             view.Show(new Toast("gauge", "#FF9F0A", "Claude 95%"), "compact", null, "bouncy");
             var glyph = Assert.IsType<TextBlock>(Fixture.Named<ContentControl>(view, "CompactGlyph").Content);
-            Assert.Equal(ModuleGlyphs.Get("gauge"), glyph.Text);
+            Assert.Equal(ModuleGlyphs.Get("gauge").Glyph, glyph.Text);
         });
     }
 
@@ -105,7 +105,7 @@ public sealed class ToastGlyphTests
             var view = new ToastView();
             view.Show(new Toast("check", "#30D158", "Done"), "island", null, "bouncy");
             var glyph = Assert.IsType<TextBlock>(Fixture.Named<ContentControl>(view, "TopGlyph").Content);
-            Assert.Equal(ModuleGlyphs.Get("check"), glyph.Text);
+            Assert.Equal(ModuleGlyphs.Get("check").Glyph, glyph.Text);
         });
     }
 }

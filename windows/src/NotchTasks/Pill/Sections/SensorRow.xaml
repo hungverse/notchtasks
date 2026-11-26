@@ -5,11 +5,11 @@
   <!-- Mac SensorRow (Views.swift): which apps are listening or filming, outside a call. -->
   <Border CornerRadius="10" Height="30" Padding="10,0" Background="#0FFFFFFF">
     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-      <TextBlock x:Name="MicGlyph" FontFamily="/NotchTasks;component/Resources/Fonts/#FluentSystemIcons-Regular" FontSize="12"
+      <TextBlock x:Name="MicGlyph" FontFamily="{StaticResource FluentRegular}" FontSize="12"
                  Foreground="#FF9F0A" VerticalAlignment="Center" />
       <TextBlock x:Name="MicText" Margin="8,0,0,0" FontSize="11" FontWeight="Medium" VerticalAlignment="Center"
                  TextTrimming="CharacterEllipsis" MaxWidth="260" />
-      <TextBlock x:Name="CameraGlyph" Margin="14,0,0,0" FontFamily="/NotchTasks;component/Resources/Fonts/#FluentSystemIcons-Regular" FontSize="12"
+      <TextBlock x:Name="CameraGlyph" Margin="14,0,0,0" FontFamily="{StaticResource FluentRegular}" FontSize="12"
                  Foreground="#30D158" VerticalAlignment="Center" />
       <TextBlock x:Name="CameraText" Margin="8,0,0,0" FontSize="11" FontWeight="Medium" VerticalAlignment="Center" />
     </StackPanel>

@@ -22,11 +22,11 @@ public partial class SensorRow : UserControl
         {
             return false;
         }
-        MicGlyph.Text = ModuleGlyphs.Get("mic");
+        (MicGlyph.FontFamily, MicGlyph.Text) = ModuleGlyphs.Get("mic");
         MicGlyph.Visibility = sensors.Mic ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
         MicText.Text = sensors.Mic ? L10n.L("Micro: ") + string.Join(", ", sensors.MicApps.Select(CallApps.Name)) : string.Empty;
         MicText.Visibility = MicGlyph.Visibility;
-        CameraGlyph.Text = ModuleGlyphs.Get("camera");
+        (CameraGlyph.FontFamily, CameraGlyph.Text) = ModuleGlyphs.Get("camera");
         CameraGlyph.Visibility = sensors.Camera ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
         CameraText.Text = sensors.Camera ? L10n.L("Camera on") : string.Empty;
         CameraText.Visibility = CameraGlyph.Visibility;

@@ -7,7 +7,7 @@
     <Setter Property="Padding" Value="0" />
     <Setter Property="Foreground" Value="White" />
     <Setter Property="Background" Value="#33FFFFFF" />
-    <Setter Property="FontFamily" Value="/NotchTasks;component/Resources/Fonts/#FluentSystemIcons-Regular" />
+    <Setter Property="FontFamily" Value="{StaticResource FluentRegular}" />
     <Setter Property="FontSize" Value="12" />
     <Setter Property="Cursor" Value="Hand" />
     <Setter Property="FocusVisualStyle" Value="{x:Null}" />

@@ -25,7 +25,6 @@ public static class ItemIcon
     private static readonly TimeSpan NoPathAgain = TimeSpan.FromSeconds(30);
     /// How long a found path is kept before its pid is looked up again: a pid is reused once its program has exited.
     private static readonly TimeSpan FoundPathAgain = TimeSpan.FromMinutes(10);
-    private static readonly FontFamily GlyphFamily = FluentIcons.Regular;
     private static readonly object Gate = new();
     private static readonly Dictionary<string, ImageSource?> IconsByPath = new(StringComparer.OrdinalIgnoreCase);
     /// The path a pid's program had, keyed by the pid and the program's start time (ProcInfo.StartTicks), so a reused pid never
@@ -102,8 +101,8 @@ public static class ItemIcon
         }
         return new TextBlock
         {
-            Text = ModuleGlyphs.Get("sparkles"),
-            FontFamily = GlyphFamily,
+            Text = ModuleGlyphs.Get("sparkles").Glyph,
+            FontFamily = ModuleGlyphs.Get("sparkles").Family,
             FontSize = size * 0.8,
             Foreground = TintBrushes.Of(tint),
             Width = size,

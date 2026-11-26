@@ -166,7 +166,7 @@ public sealed class NowPlayingCardTests
 
             // no artwork and no app icon yet: the music-note glyph
             var glyph = Assert.IsType<TextBlock>(ChipView.Lead(chip, 18, null, colors, art: none));
-            Assert.Equal(ModuleGlyphs.Get("media"), glyph.Text);
+            Assert.Equal(ModuleGlyphs.Get("media").Glyph, glyph.Text);
 
             // the app's icon, once it is known, stands in for the artwork
             var icon = BitmapSource.Create(1, 1, 96, 96, PixelFormats.Bgra32, null, new byte[4], 4);

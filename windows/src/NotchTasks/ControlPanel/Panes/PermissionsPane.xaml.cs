@@ -240,6 +240,7 @@ public partial class PermissionsPane : SettingsPane
             Child = new TextBlock
             {
                 Text = item.Glyph,
+                FontFamily = item.Filled ? FluentIcons.Filled : FluentIcons.Regular,
                 Style = (Style)FindResource("IconGlyphLarge"),
             },
         };

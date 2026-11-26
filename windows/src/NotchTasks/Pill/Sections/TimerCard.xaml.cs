@@ -46,7 +46,7 @@ public partial class TimerCard : UserControl
         var fraction = timer.Total.TotalSeconds > 0 ? Math.Clamp(left.TotalSeconds / timer.Total.TotalSeconds, 0, 1) : 0;
         TimeText.Text = TimerState.Mmss(left);
         CaptionText.Text = L10n.L("{0}-minute timer", (int)timer.Total.TotalMinutes);
-        Glyph.Text = ModuleGlyphs.Get("timer");
+        (Glyph.FontFamily, Glyph.Text) = ModuleGlyphs.Get("timer");
         Glyph.Foreground = tint;
         Ring.Stroke = tint;
         Ring.Data = RingGeometry(fraction);

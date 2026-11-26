@@ -9,7 +9,6 @@ namespace NotchTasks.Pill.Sections;
 /// row in the agent and Build & CI cards and by a build chip, so both draw a symbol the same way.
 public static class JobLead
 {
-    private static readonly FontFamily GlyphFamily = FluentIcons.Regular;
 
     /// The glyph or vector name of a job's symbol, or null for none (a plain status dot). A symbol that has its own drawn path is
     /// named by itself (hammer.fill, checkmark.diamond.fill, server.rack, ...); else the keyword rules: a checkmark, sparkles, a
@@ -64,8 +63,8 @@ public static class JobLead
         }
         return new TextBlock
         {
-            Text = ModuleGlyphs.Get(mark),
-            FontFamily = GlyphFamily,
+            Text = ModuleGlyphs.Get(mark).Glyph,
+            FontFamily = ModuleGlyphs.Get(mark).Family,
             FontSize = size,
             Foreground = brush,
             HorizontalAlignment = HorizontalAlignment.Center,

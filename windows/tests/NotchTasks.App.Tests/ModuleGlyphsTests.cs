@@ -1,4 +1,4 @@
-using System.Text.Json;
+using System.IO;
 using System.Windows.Media;
 using NotchTasks.Core.Settings;
 using NotchTasks.Pill;
@@ -16,32 +16,33 @@ public sealed class ModuleGlyphsTests
         "check", "sparkles", "log", "media", "previous", "next", "play", "pause", "gauge", "hourglass",
     };
 
-    /// The icon each name draws: the Fluent System Icons key whose codepoint the glyph is (20 px, Regular unless Filled is named).
+    /// The icon each name draws: the key of the bundled font it is (ic_fluent_<name>_20_regular, or _filled where the Mac draws
+    /// the symbol filled).
     private static readonly IReadOnlyDictionary<string, string> KeyOf = new Dictionary<string, string>
     {
-        ["hand"] = "ic_fluent_hand_right_20_regular",
-        ["question"] = "ic_fluent_chat_help_20_regular",
+        ["hand"] = "ic_fluent_hand_right_20_filled",
+        ["question"] = "ic_fluent_chat_help_20_filled",
         ["timer"] = "ic_fluent_timer_20_regular",
-        ["download"] = "ic_fluent_arrow_download_20_regular",
+        ["download"] = "ic_fluent_arrow_circle_down_20_filled",
         ["drive"] = "ic_fluent_storage_20_regular",
-        ["phone"] = "ic_fluent_phone_20_regular",
-        ["video"] = "ic_fluent_video_20_regular",
-        ["mic"] = "ic_fluent_mic_20_regular",
-        ["micoff"] = "ic_fluent_mic_off_20_regular",
-        ["phonedown"] = "ic_fluent_call_end_20_regular",
-        ["camera"] = "ic_fluent_camera_20_regular",
+        ["phone"] = "ic_fluent_phone_20_filled",
+        ["video"] = "ic_fluent_video_20_filled",
+        ["mic"] = "ic_fluent_mic_20_filled",
+        ["micoff"] = "ic_fluent_mic_off_20_filled",
+        ["phonedown"] = "ic_fluent_call_end_20_filled",
+        ["camera"] = "ic_fluent_camera_20_filled",
         ["wifi"] = "ic_fluent_wifi_4_20_regular",
         ["wifioff"] = "ic_fluent_wifi_off_20_regular",
         ["network"] = "ic_fluent_globe_20_regular",
-        ["vpn"] = "ic_fluent_shield_lock_20_regular",
-        ["vpnoff"] = "ic_fluent_lock_open_20_regular",
+        ["vpn"] = "ic_fluent_shield_lock_20_filled",
+        ["vpnoff"] = "ic_fluent_lock_open_20_filled",
         ["battery"] = "ic_fluent_battery_5_20_regular",
         ["batterylow"] = "ic_fluent_battery_1_20_regular",
-        ["bolt"] = "ic_fluent_flash_20_regular",
-        ["plug"] = "ic_fluent_power_20_regular",
-        ["warning"] = "ic_fluent_warning_20_regular",
+        ["bolt"] = "ic_fluent_flash_20_filled",
+        ["plug"] = "ic_fluent_plug_connected_20_regular",
+        ["warning"] = "ic_fluent_warning_20_filled",
         ["thermometer"] = "ic_fluent_temperature_20_regular",
-        ["check"] = "ic_fluent_checkmark_20_regular",
+        ["check"] = "ic_fluent_checkmark_circle_20_filled",
         ["sparkles"] = "ic_fluent_sparkle_20_regular",
         ["log"] = "ic_fluent_text_bullet_list_ltr_20_regular",
         ["media"] = "ic_fluent_music_note_2_20_regular",
@@ -61,36 +62,93 @@ public sealed class ModuleGlyphsTests
     {
         foreach (var name in Names)
         {
-            var glyph = ModuleGlyphs.Get(name);
+            var glyph = ModuleGlyphs.Get(name).Glyph;
             Assert.False(string.IsNullOrEmpty(glyph), name);
             Assert.NotEqual(ModuleGlyphs.Fallback, glyph);
         }
     }
 
     [Fact]
-    public void EveryGlyphName_ResolvesToItsKeysCodepointInTheBundledJson()
+    public void EveryGlyphName_ResolvesToItsKeysCodepointInItsFamily()
     {
-        var regular = BundledJson("FluentSystemIcons-Regular.json");
-        var filled = BundledJson("FluentSystemIcons-Filled.json");
         foreach (var name in Names)
         {
             var key = KeyOf[name];
-            var table = key.EndsWith("_filled", StringComparison.Ordinal) ? filled : regular;
-            Assert.True(table.TryGetValue(key, out var codepoint), $"{name}: {key} is not in the bundled json");
-            Assert.Equal(char.ConvertFromUtf32(codepoint), ModuleGlyphs.Get(name));
+            var filled = key.EndsWith("_filled", StringComparison.Ordinal);
+            var (family, glyph) = ModuleGlyphs.Get(name);
+            Assert.Same(filled ? FluentIcons.Filled : FluentIcons.Regular, family);
+            var table = filled ? IconFonts.Filled : IconFonts.Regular;
+            Assert.True(table.TryGetValue(key, out var codepoint), $"{name}: {key} is not in its font");
+            Assert.Equal(IconFonts.GlyphOf(codepoint), glyph);
         }
     }
 
     [Fact]
-    public void EveryMappedName_IsInTheBundledJson()
+    public void EveryMappedName_IsInTheFontItsFilledFlagNames()
     {
-        var regular = BundledJson("FluentSystemIcons-Regular.json");
-        var filled = BundledJson("FluentSystemIcons-Filled.json");
-        var values = regular.Values.Concat(filled.Values).ToHashSet();
         foreach (var name in ModuleGlyphs.Names)
         {
-            var glyph = ModuleGlyphs.Get(name);
-            Assert.True(values.Contains(char.ConvertToUtf32(glyph, 0)), $"{name} draws a code the fonts do not have");
+            var (family, glyph) = ModuleGlyphs.Get(name);
+            var codepoint = char.ConvertToUtf32(glyph, 0);
+            var table = Equals(family, FluentIcons.Filled) ? IconFonts.Filled : IconFonts.Regular;
+            Assert.Contains(codepoint, table.Values);
+        }
+    }
+
+    [Fact]
+    public void UnknownName_DrawsTheFallbackInRegular()
+    {
+        var (family, glyph) = ModuleGlyphs.Get("no-such-glyph");
+        Assert.Equal(ModuleGlyphs.Fallback, glyph);
+        Assert.Same(FluentIcons.Regular, family);
+        Assert.Equal(ModuleGlyphs.Fallback, IconFonts.GlyphOf(IconFonts.Regular["ic_fluent_more_horizontal_20_regular"]));
+    }
+
+    [Fact]
+    public void NoTwoNamesShareACodePoint_UnlessIntended()
+    {
+        foreach (var (a, b) in Names.SelectMany((a, i) => Names.Skip(i + 1).Select(b => (a, b))))
+        {
+            var shared = ModuleGlyphs.Get(a).Glyph == ModuleGlyphs.Get(b).Glyph;
+            var intended = IntendedSharedGlyphs.Any(p => (p.A == a && p.B == b) || (p.A == b && p.B == a));
+            Assert.False(shared && !intended, $"{a} and {b} share a glyph");
+        }
+    }
+
+    [Fact]
+    public void FilledFlag_FollowsTheMacsFilledSymbols()
+    {
+        // The Mac's .fill symbols are filled; the outline ones are not.
+        Assert.Same(FluentIcons.Filled, ModuleGlyphs.Get("play").Family);
+        Assert.Same(FluentIcons.Filled, ModuleGlyphs.Get("phone").Family);
+        Assert.Same(FluentIcons.Filled, ModuleGlyphs.Get("check").Family);
+        Assert.Same(FluentIcons.Regular, ModuleGlyphs.Get("wifi").Family);
+        Assert.Same(FluentIcons.Regular, ModuleGlyphs.Get("iphone").Family);
+    }
+
+    [Fact]
+    public void Gauge_And_Hourglass_AreFontGlyphs_NotVectors()
+    {
+        Assert.Null(ModuleGlyphs.Vector("gauge"));
+        Assert.Null(ModuleGlyphs.Vector("hourglass"));
+        Assert.Null(ModuleGlyphs.Vector("check"));
+        Assert.NotNull(ModuleGlyphs.Vector("hammer.fill"));
+    }
+
+    [Fact]
+    public void BadgeSymbolsStoredAsSegoeCodes_DrawTheirFluentIcon()
+    {
+        Assert.Equal(IconFonts.GlyphOf(IconFonts.Regular["ic_fluent_star_20_regular"]), ModuleGlyphs.Legacy("E734"));
+        Assert.Equal(IconFonts.GlyphOf(IconFonts.Regular["ic_fluent_heart_20_regular"]), ModuleGlyphs.Legacy("E735"));
+        Assert.Null(ModuleGlyphs.Legacy("E6BA"));
+    }
+
+    [Fact]
+    public void EveryBadgeSymbolTheListOffers_HasAFluentGlyph()
+    {
+        foreach (var code in BadgeEdits.SymbolCodes)
+        {
+            Assert.NotNull(ModuleGlyphs.Legacy(code));
         }
     }
 
@@ -106,66 +164,5 @@ public sealed class ModuleGlyphsTests
         var table = System.Text.Encoding.ASCII.GetString(buffer.ToArray());
         Assert.Contains("resources/fonts/fluentsystemicons-regular.ttf", table);
         Assert.Contains("resources/fonts/fluentsystemicons-filled.ttf", table);
-    }
-
-    [Fact]
-    public void UnknownName_DrawsTheFallback()
-    {
-        Assert.Equal(ModuleGlyphs.Fallback, ModuleGlyphs.Get("no-such-glyph"));
-        Assert.Equal(ModuleGlyphs.Fallback, char.ConvertFromUtf32(BundledJson("FluentSystemIcons-Regular.json")["ic_fluent_more_horizontal_20_regular"]));
-    }
-
-    [Fact]
-    public void NoTwoNamesShareACodePoint_UnlessIntended()
-    {
-        foreach (var (a, b) in Names.SelectMany((a, i) => Names.Skip(i + 1).Select(b => (a, b))))
-        {
-            var shared = ModuleGlyphs.Get(a) == ModuleGlyphs.Get(b);
-            var intended = IntendedSharedGlyphs.Any(p => (p.A == a && p.B == b) || (p.A == b && p.B == a));
-            Assert.False(shared && !intended, $"{a} and {b} share a glyph");
-        }
-    }
-
-    [Fact]
-    public void PlayAndPause_AreTheFilledFont_EveryOtherGlyphIsRegular()
-    {
-        Assert.Same(FluentIcons.Filled, ModuleGlyphs.FamilyOf("play"));
-        Assert.Same(FluentIcons.Filled, ModuleGlyphs.FamilyOf("pause"));
-        Assert.Same(FluentIcons.Regular, ModuleGlyphs.FamilyOf("vpn"));
-    }
-
-    [Fact]
-    public void Gauge_And_Hourglass_AreFontGlyphs_NotVectors()
-    {
-        Assert.Null(ModuleGlyphs.Vector("gauge"));
-        Assert.Null(ModuleGlyphs.Vector("hourglass"));
-        Assert.Null(ModuleGlyphs.Vector("check"));
-        Assert.NotNull(ModuleGlyphs.Vector("hammer.fill"));
-    }
-
-    [Fact]
-    public void BadgeSymbolsStoredAsSegoeCodes_DrawTheirFluentIcon()
-    {
-        var regular = BundledJson("FluentSystemIcons-Regular.json");
-        Assert.Equal(char.ConvertFromUtf32(regular["ic_fluent_star_20_regular"]), ModuleGlyphs.Legacy("E734"));
-        Assert.Equal(char.ConvertFromUtf32(regular["ic_fluent_heart_20_regular"]), ModuleGlyphs.Legacy("E735"));
-        Assert.Null(ModuleGlyphs.Legacy("E6BA"));
-    }
-
-    [Fact]
-    public void EveryBadgeSymbolTheListOffers_HasAFluentGlyph()
-    {
-        foreach (var code in BadgeEdits.SymbolCodes)
-        {
-            Assert.NotNull(ModuleGlyphs.Legacy(code));
-        }
-    }
-
-    private static Dictionary<string, int> BundledJson(string file)
-    {
-        using var stream = typeof(ModuleGlyphs).Assembly.GetManifestResourceStream(file)
-            ?? throw new InvalidOperationException($"{file} is not embedded in the app");
-        using var document = JsonDocument.Parse(stream);
-        return document.RootElement.EnumerateObject().ToDictionary(p => p.Name, p => p.Value.GetInt32());
     }
 }

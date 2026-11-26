@@ -137,6 +137,7 @@ public partial class ModulesPane : SettingsPane
         var glyph = new TextBlock
         {
             Text = ModuleCatalog.Glyph(id),
+            FontFamily = ModuleCatalog.GlyphFilled(id) ? FluentIcons.Filled : FluentIcons.Regular,
             Style = (Style)FindResource("IconGlyph"),
         };
         var tile = new Border

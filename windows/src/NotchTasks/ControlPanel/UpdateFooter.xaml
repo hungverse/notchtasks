@@ -37,7 +37,7 @@
       <Button x:Name="InstallButton" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Margin="0,2,0,0"
               Click="OnInstallClick">
         <StackPanel Orientation="Horizontal">
-          <TextBlock Text="&#xF150;" FontFamily="/NotchTasks;component/Resources/Fonts/#FluentSystemIcons-Regular" Margin="0,0,6,0" VerticalAlignment="Center" />
+          <TextBlock Text="&#xF150;" FontFamily="{StaticResource FluentRegular}" Margin="0,0,6,0" VerticalAlignment="Center" />
           <TextBlock x:Name="InstallLabel" VerticalAlignment="Center" />
         </StackPanel>
       </Button>

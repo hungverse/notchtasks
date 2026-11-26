@@ -25,7 +25,6 @@ public partial class ItemCard : UserControl
     private const double IconSize = 20;
     private static readonly Brush GreyBrush = Frozen(new SolidColorBrush(Color.FromRgb(0x8E, 0x8E, 0x93)));  // the Mac's .gray
     private static readonly Brush TitleBrush = Frozen(new SolidColorBrush(Color.FromArgb(0xE6, 0xFF, 0xFF, 0xFF)));  // white at 90 %
-    private static readonly FontFamily GlyphFamily = FluentIcons.Regular;
 
     private readonly JobRow[] _rows = new JobRow[MaxRows];
     private ItemState? _state;
@@ -397,8 +396,8 @@ public partial class ItemCard : UserControl
         private readonly TextBlock _detail = new() { FontSize = 11, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(8, 0, 0, 0), Focusable = false };
         private readonly TextBlock _log = new()
         {
-            Text = ModuleGlyphs.Get("log"),
-            FontFamily = GlyphFamily,
+            Text = ModuleGlyphs.Get("log").Glyph,
+            FontFamily = ModuleGlyphs.Get("log").Family,
             FontSize = 10,
             Foreground = GreyBrush,
             Margin = new Thickness(8, 0, 0, 0),

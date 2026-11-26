@@ -216,7 +216,7 @@
 
   <!-- The white glyph of an IconTile. -->
   <Style x:Key="IconGlyph" TargetType="TextBlock">
-    <Setter Property="FontFamily" Value="/NotchTasks;component/Resources/Fonts/#FluentSystemIcons-Regular" />
+    <Setter Property="FontFamily" Value="{StaticResource FluentRegular}" />
     <Setter Property="FontSize" Value="14" />
     <Setter Property="Foreground" Value="White" />
     <Setter Property="HorizontalAlignment" Value="Center" />

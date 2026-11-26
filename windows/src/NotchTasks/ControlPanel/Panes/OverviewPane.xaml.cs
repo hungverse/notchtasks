@@ -25,10 +25,10 @@ namespace NotchTasks.ControlPanel.Panes;
 public partial class OverviewPane : SettingsPane
 {
     /// The glyph of a permission row. The permission rows carry no glyph of their own, so the lock stands for all of them.
-    private const string PermissionGlyph = "";
+    private const string PermissionGlyph = "";  // lock_closed: the permission rows (Mac lock.fill)
 
     /// The glyph of an agent row (the sparkle the Mac uses for agents; the same as the agent module).
-    private const string AgentGlyph = "";
+    private const string AgentGlyph = "";  // sparkle: the agent rows (Mac sparkles)
 
     /// The glyph of the phone step (the iPhone the Mac shows).
     private const string PhoneGlyph = "";
@@ -141,7 +141,7 @@ public partial class OverviewPane : SettingsPane
         {
             var sparkle = new TextBlock
             {
-                Text = "",
+                Text = "",
                 FontFamily = FluentIcons.Regular,
                 FontSize = 10,
                 Foreground = tint,
@@ -408,6 +408,7 @@ public partial class OverviewPane : SettingsPane
             Child = new TextBlock
             {
                 Text = ModuleCatalog.Glyph(id),
+                FontFamily = ModuleCatalog.GlyphFilled(id) ? FluentIcons.Filled : FluentIcons.Regular,
                 Style = (Style)FindResource("IconGlyph"),
                 FontSize = 12,
             },

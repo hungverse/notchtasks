@@ -5,6 +5,9 @@
              ThemeMode="System">
   <Application.Resources>
     <ResourceDictionary>
+      <!-- The Fluent System Icons families. FluentIcons.cs holds the one pack URI of each; XAML and C# use the same objects. -->
+      <x:Static x:Key="FluentRegular" Member="NotchTasks.FluentIcons.Regular" />
+      <x:Static x:Key="FluentFilled" Member="NotchTasks.FluentIcons.Filled" />
       <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="ControlPanel/Controls.xaml" />
       </ResourceDictionary.MergedDictionaries>

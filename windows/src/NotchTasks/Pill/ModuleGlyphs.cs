@@ -1,60 +1,65 @@
+using System.Windows.Media;
+
 namespace NotchTasks.Pill;
 
 /// The Fluent System Icons glyph of each glyph name a toast or a chip carries (Toast.Glyph, the chip's lead). A name the map
-/// does not know draws the fallback, never nothing. Each code is the one the bundled JSON names for the icon in its comment;
-/// the tests check every code against that JSON.
+/// does not know draws the fallback, never nothing. Each entry names its icon in a comment and says whether it is the Filled
+/// twin (the Mac draws that symbol filled); the tests check every code against the bundled JSON of its family.
 public static class ModuleGlyphs
 {
+    /// One map entry: the codepoint, and whether it is in the Filled font (true) or the Regular font (false).
+    private readonly record struct Icon(string Code, bool Filled = false);
+
     /// What an unknown name draws (the Control Panel's "more" glyph, more_horizontal).
     public const string Fallback = "";
 
-    private static readonly IReadOnlyDictionary<string, string> Map = new Dictionary<string, string>(StringComparer.Ordinal)
+    private static readonly IReadOnlyDictionary<string, Icon> Map = new Dictionary<string, Icon>(StringComparer.Ordinal)
     {
-        ["hand"] = "",                 // hand_right: an agent's approval (AskCard)
-        ["question"] = "",             // chat_help: an agent's question (AskCard)
-        ["timer"] = "",                // timer
-        ["download"] = "",             // arrow_download
-        ["drive"] = "",                // storage
-        ["phone"] = "",                // phone
-        ["video"] = "",                // video
-        ["mic"] = "",                  // mic
-        ["micoff"] = "",               // mic_off: the mic is muted
-        ["phonedown"] = "",            // call_end: the call ended
-        ["camera"] = "",               // camera
-        ["wifi"] = "",                 // wifi_4
-        ["network"] = "",              // globe
-        ["vpn"] = "",                  // shield_lock
-        ["wifioff"] = "",              // wifi_off: network disconnected
-        ["vpnoff"] = "",               // lock_open: VPN off
-        ["battery"] = "",              // battery_5
-        ["bolt"] = "",                 // flash: charging
-        ["plug"] = "",                 // power: unplugged
-        ["batterylow"] = "",           // battery_1: low battery
-        ["battery.25percent"] = "",    // battery_1: a device's low battery (Devices module)
-        ["warning"] = "",              // warning
-        ["thermometer"] = "",          // temperature: the header temperature
-        ["check"] = "",                // checkmark: a finished job's status
-        ["sparkles"] = "",             // sparkle: an agent's icon when it has no app icon
-        ["log"] = "",                  // text_bullet_list_ltr: a job's log, opened on click
-        ["media"] = "",                // music_note_2: Now Playing's chip and art when there is no app icon
-        ["previous"] = "",             // previous
-        ["next"] = "",                 // next
-        ["play"] = "",                 // play_20_filled (the Filled font): the Mac's play.fill
-        ["pause"] = "",                // pause_20_filled (the Filled font): the Mac's pause.fill
+        ["hand"] = new("", true),                        // hand_right filled: an agent's approval (Mac hand.raised.fill)
+        ["question"] = new("", true),                    // chat_help filled: an agent's question (Mac questionmark.bubble.fill)
+        ["timer"] = new(""),                             // timer
+        ["download"] = new("", true),                    // arrow_circle_down filled (Mac arrow.down.circle.fill)
+        ["drive"] = new(""),                             // storage (no Mac symbol)
+        ["phone"] = new("", true),                       // phone filled (Mac phone.fill)
+        ["video"] = new("", true),                       // video filled (Mac video.fill)
+        ["mic"] = new("", true),                         // mic filled (Mac mic.fill)
+        ["micoff"] = new("", true),                      // mic_off filled: the mic is muted (Mac mic.slash.fill)
+        ["phonedown"] = new("", true),                   // call_end filled: the call ended (Mac phone.down.fill)
+        ["camera"] = new("", true),                      // camera filled: the camera mirror (Mac video.fill)
+        ["wifi"] = new(""),                              // wifi_4 (Mac wifi)
+        ["network"] = new(""),                           // globe (Mac network)
+        ["vpn"] = new("", true),                         // shield_lock filled (Mac lock.shield.fill)
+        ["wifioff"] = new(""),                           // wifi_off: network disconnected (Mac wifi.slash)
+        ["vpnoff"] = new("", true),                      // lock_open filled: VPN off (Mac lock.open.fill)
+        ["battery"] = new(""),                           // battery_5 (Mac battery.100percent)
+        ["bolt"] = new("", true),                        // flash filled: charging (Mac bolt.fill)
+        ["plug"] = new(""),                              // plug_connected: unplugged (Mac powerplug.portrait)
+        ["batterylow"] = new(""),                        // battery_1: low battery
+        ["battery.25percent"] = new(""),                 // battery_1: a device's low battery (Mac battery.25percent)
+        ["warning"] = new("", true),                     // warning filled (Mac exclamationmark.triangle.fill)
+        ["thermometer"] = new(""),                       // temperature (Mac thermometer.medium)
+        ["check"] = new("", true),                       // checkmark_circle filled: a finished job (Mac checkmark.circle.fill)
+        ["sparkles"] = new(""),                          // sparkle (Mac sparkles): an agent's icon
+        ["log"] = new(""),                               // text_bullet_list_ltr: a job's log (Mac text.alignleft)
+        ["media"] = new(""),                             // music_note_2 (Mac music.note)
+        ["previous"] = new(""),                          // previous
+        ["next"] = new(""),                              // next
+        ["play"] = new("", true),                        // play filled (Mac play.fill)
+        ["pause"] = new("", true),                       // pause filled (Mac pause.fill)
         // Devices (the Mac's device symbols). The AirPods use the headphones glyph, as the font has no AirPods.
-        ["headphones"] = "",           // headphones
-        ["airpods"] = "",
-        ["airpodspro"] = "",
-        ["airpodsmax"] = "",
-        ["keyboard"] = "",             // keyboard
-        ["computermouse"] = "",        // cursor: the mouse
-        ["rectangle.and.hand.point.up.left"] = "",  // hand_left: touch pointer
-        ["hifispeaker"] = "",          // speaker_2
-        ["gamecontroller"] = "",       // games
-        ["iphone"] = "",               // phone: the same glyph as "phone"
-        ["externaldrive"] = "",        // hard_drive
-        ["gauge"] = "",                // gauge: a limit's chip below 100 % used (Mac gauge)
-        ["hourglass"] = "",            // hourglass: a limit's chip at 100 % used (Mac hourglass)
+        ["headphones"] = new(""),                        // headphones
+        ["airpods"] = new(""),
+        ["airpodspro"] = new(""),
+        ["airpodsmax"] = new(""),
+        ["keyboard"] = new(""),                          // keyboard
+        ["computermouse"] = new(""),                     // cursor: the mouse (Fluent has no mouse)
+        ["rectangle.and.hand.point.up.left"] = new(""),  // hand_left: touch pointer
+        ["hifispeaker"] = new(""),                       // speaker_2
+        ["gamecontroller"] = new(""),                    // games
+        ["iphone"] = new(""),                            // phone (Mac iphone)
+        ["externaldrive"] = new(""),                     // hard_drive (Mac externaldrive)
+        ["gauge"] = new(""),                             // gauge (Mac gauge.with.dots.needle.67percent): a limit below 100 %
+        ["hourglass"] = new(""),                         // hourglass (Mac hourglass): a limit at 100 %
     };
 
     /// The codes the badge symbols were stored as before the Fluent icons (a "seg:" + Segoe code in settings). They still
@@ -82,8 +87,8 @@ public static class ModuleGlyphs
         ["E895"] = "",  // emoji
     };
 
-    /// Vector stand-ins for the names the font does not draw here: the Mac's SF Symbols that have no Fluent icon, drawn as stroked
-    /// paths in a 16 by 16 box, in the toast's tint. Null for every other name.
+    /// Vector stand-ins for the Mac symbols the font does not draw here: stroked paths in a 16 by 16 box, in the toast's tint.
+    /// Null for every other name.
     private static readonly IReadOnlyDictionary<string, string> Paths = new Dictionary<string, string>(StringComparer.Ordinal)
     {
         // a scalloped seal: eight outward arcs around a circle, with a check mark inside
@@ -116,12 +121,12 @@ public static class ModuleGlyphs
         ["video.slash"] = "M1.8,4 H9.8 V12 H1.8 Z M9.8,7 L14.2,4.5 V11.5 L9.8,9 M1.5,1.5 L14.5,14.5",
     };
 
-    /// The glyph for a name, or the fallback when the name is not in the map.
-    public static string Get(string name) => Map.TryGetValue(name, out var code) ? code : Fallback;
-
-    /// The font a name's glyph is drawn in: Filled for play and pause, Regular for every other glyph.
-    public static System.Windows.Media.FontFamily FamilyOf(string name) =>
-        name is "play" or "pause" ? FluentIcons.Filled : FluentIcons.Regular;
+    /// The glyph of a name and the family it is drawn in (Filled for a Mac symbol that is filled), or the fallback in Regular
+    /// when the name is not in the map.
+    public static (FontFamily Family, string Glyph) Get(string name) =>
+        Map.TryGetValue(name, out var icon)
+            ? (icon.Filled ? FluentIcons.Filled : FluentIcons.Regular, icon.Code)
+            : (FluentIcons.Regular, Fallback);
 
     /// The Fluent glyph of a badge symbol stored as a Segoe code (the "seg:" symbols), or null when the code is not one the
     /// badge list offers.
@@ -130,6 +135,9 @@ public static class ModuleGlyphs
     /// The path data of a name the font does not draw (the Mac symbols above), or null.
     public static string? Vector(string name) => Paths.TryGetValue(name, out var data) ? data : null;
 
-    /// Every glyph name the map knows, for the tests that check each code against the bundled JSON.
+    /// Every glyph name the map knows, for the tests.
     public static IEnumerable<string> Names => Map.Keys;
+
+    /// Whether a name's glyph is in the Filled font, for the tests that check each code against its family.
+    public static bool IsFilled(string name) => Map.TryGetValue(name, out var icon) && icon.Filled;
 }

@@ -119,7 +119,6 @@ public sealed class MirrorCard : Border
                 Text = CloseGlyph,
                 FontFamily = GlyphFamily,
                 FontSize = 10,
-                FontWeight = FontWeights.Bold,
                 Foreground = Brushes.White,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,

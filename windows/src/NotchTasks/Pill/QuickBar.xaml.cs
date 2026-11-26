@@ -37,11 +37,11 @@ public partial class QuickBar : UserControl
     public void Update(AppState state)
     {
         _state = state;
-        TimerGlyph.Text = ModuleGlyphs.Get("timer");
+        (TimerGlyph.FontFamily, TimerGlyph.Text) = ModuleGlyphs.Get("timer");
         var show = state.Snapshot.ActiveModules.Contains("timer") && state.Timer.State is null;
         TimerBar.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
         // The Mirror pill: while the mirror module is on and the mirror is closed. It follows the timer's pills, with a gap when they show.
-        MirrorGlyph.Text = ModuleGlyphs.Get("camera");
+        (MirrorGlyph.FontFamily, MirrorGlyph.Text) = ModuleGlyphs.Get("camera");
         MirrorLabel.Text = L10n.L("Mirror");
         MirrorButton.ToolTip = L10n.L("Quick camera check");
         MirrorButton.Margin = new Thickness(show ? 8 : 0, 0, 0, 0);

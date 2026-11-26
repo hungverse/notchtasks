@@ -21,7 +21,6 @@ namespace NotchTasks.Pill;
 /// percentage (or its wait). A sensor chip has its glyphs only.
 public static class ChipView
 {
-    private static readonly FontFamily GlyphFamily = FluentIcons.Regular;  // made once: a FontFamily per glyph was a cost each rebuild
     private const string ChipTag = "chip";  // the Tag of a chip's panel in a wing: what a rebuild removes
     /// The chip and side a panel was made for (its key): a fill replaces a panel of the same key in place, with no motion.
     private static readonly DependencyProperty KeyProperty = DependencyProperty.RegisterAttached(
@@ -178,8 +177,8 @@ public static class ChipView
     /// A glyph in a brush, from the Fluent System Icons font.
     private static TextBlock Glyph(string name, double size, Brush brush) => new()
     {
-        Text = ModuleGlyphs.Get(name),
-        FontFamily = GlyphFamily,
+        Text = ModuleGlyphs.Get(name).Glyph,
+        FontFamily = ModuleGlyphs.Get(name).Family,
         FontSize = size,
         Foreground = brush,
         VerticalAlignment = VerticalAlignment.Center,
