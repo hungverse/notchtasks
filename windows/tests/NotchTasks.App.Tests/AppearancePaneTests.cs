@@ -123,4 +123,124 @@ public sealed class AppearancePaneTests
             Assert.False(pane.ShowsSelected("sunset"));
         });
     }
+
+    /// A profile as the Mac writes it, with a key Windows lacks (haptics) and a Mac module (calendar).
+    private const string MacProfile = """
+    {
+      "accent" : "custom",
+      "background" : "glass",
+      "customAccent" : "#00F5D4",
+      "disabled" : [ "timer", "calendar" ],
+      "doneAfter" : 45,
+      "expandMode" : "hover",
+      "gradientA" : "#1E1B4B",
+      "gradientB" : "#000000",
+      "haptics" : false,
+      "hoverDelay" : 0.15,
+      "limitWarn" : 80,
+      "menuBarIcon" : true,
+      "moduleColors" : {},
+      "modules" : [ "agents", "calendar", "timer" ],
+      "motion" : "snappy",
+      "placements" : {},
+      "size" : "compact",
+      "soundMap" : {},
+      "sounds" : true,
+      "systemNotifications" : true,
+      "toastStyle" : "card",
+      "volume" : 0.5
+    }
+    """;
+
+    [Fact]
+    public void ExportProfile_WritesTheMacsProfileFile()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            var path = Path.Combine(root.Folder, "NotchTasks.json");
+
+            Assert.Null(AppearancePane.WriteProfile(SettingsProfile.Export(state.Settings), path));
+
+            var json = JsonNode.Parse(File.ReadAllText(path))!.AsObject();
+            Assert.Equal(22, json.Count);
+            Assert.True((bool?)json["haptics"]);
+        });
+    }
+
+    [Fact]
+    public void ExportProfile_AFailedWriteReportsIt()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            var bad = Path.Combine(root.Folder, "no-such-folder", "NotchTasks.json");
+
+            Assert.NotNull(AppearancePane.WriteProfile("{}", bad));
+        });
+    }
+
+    [Fact]
+    public void ImportProfile_AppliesTheMacProfile_ToTheStore()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            var pane = Fixture.Create<AppearancePane>(state.Settings, state);
+            var path = Path.Combine(root.Folder, "mac.json");
+            File.WriteAllText(path, MacProfile);
+
+            pane.ApplyProfile(AppearancePane.ReadProfile(path));
+
+            Assert.Equal("glass", state.Settings.Background);
+            Assert.Equal("#00F5D4", state.Settings.CustomAccent);
+            Assert.Equal("snappy", state.Settings.Motion);
+            Assert.Equal("card", state.Settings.ToastStyle);
+            Assert.Equal(45, state.Settings.DoneAfter, 1);
+            Assert.Equal(0.5, state.Settings.Volume, 2);
+            Assert.Equal(new[] { "timer" }, state.Settings.Disabled);
+        });
+    }
+
+    [Fact]
+    public void ImportProfile_ANonProfile_ShowsTheMessageAndChangesNothing()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            var pane = Fixture.Create<AppearancePane>(state.Settings, state);
+            string? shown = null;
+            pane.Message = (caption, text) => shown = caption + "|" + text;
+            var path = Path.Combine(root.Folder, "notes.json");
+            File.WriteAllText(path, "{\"hello\":1}");
+            var before = state.Settings.Background;
+
+            pane.ApplyProfile(AppearancePane.ReadProfile(path));
+
+            Assert.Equal("Couldn't import the profile|This file isn't a NotchTasks profile.", shown);
+            Assert.Equal(before, state.Settings.Background);
+        });
+    }
+
+    [Fact]
+    public void ImportProfile_AMissingFile_ShowsTheProblem()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            using var state = Fixture.NewState();
+            var pane = Fixture.Create<AppearancePane>(state.Settings, state);
+            string? shown = null;
+            pane.Message = (caption, text) => shown = caption + "|" + text;
+
+            var read = AppearancePane.ReadProfile(Path.Combine(root.Folder, "gone.json"));
+            pane.ApplyProfile(read);
+
+            Assert.NotNull(read.Error);
+            Assert.Equal("Couldn't import the profile|" + read.Error, shown);
+        });
+    }
 }

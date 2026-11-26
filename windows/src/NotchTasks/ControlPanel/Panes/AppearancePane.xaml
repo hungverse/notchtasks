@@ -96,5 +96,18 @@
         </DockPanel>
       </StackPanel>
     </Border>
+
+    <!-- The profile file (the Mac's "Back up settings"): the customization in one .json file, the same format on both. -->
+    <TextBlock x:Name="BackupHeader" Style="{StaticResource SectionHeader}" />
+    <Border Style="{StaticResource Card}">
+      <DockPanel Style="{StaticResource SettingRow}">
+        <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+          <Button x:Name="ExportButton" Margin="0,0,8,0" Padding="10,4" />
+          <Button x:Name="ImportButton" Padding="10,4" />
+        </StackPanel>
+        <TextBlock x:Name="BackupLabel" Style="{StaticResource RowLabel}" />
+      </DockPanel>
+    </Border>
+    <TextBlock x:Name="BackupFooter" Style="{StaticResource CardNote}" Margin="4,8,0,0" TextWrapping="Wrap" />
   </StackPanel>
 </local:SettingsPane>

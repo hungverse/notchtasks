@@ -1,9 +1,12 @@
+using System.IO;
+using System.Text;
+using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Effects;
-using System.Text.Json.Nodes;
+using Microsoft.Win32;
 using NotchTasks.Core;
 using NotchTasks.Core.Notch;
 using NotchTasks.Core.Settings;
@@ -33,6 +36,9 @@ public partial class AppearancePane : SettingsPane
             ThemeGrid.Children.Add(tile.Button);
         }
         TestAlertButton.Click += (_, _) => TestAlert();
+        ExportButton.Click += async (_, _) => await ExportProfile();
+        ImportButton.Click += async (_, _) => await ImportProfile();
+        Message = ShowDialogMessage;
 
         BackgroundBox.ItemsSource = ChoiceItems.Backgrounds;
         SizeBox.ItemsSource = ChoiceItems.Sizes;
@@ -68,9 +74,104 @@ public partial class AppearancePane : SettingsPane
 
         NotchNote.Text = L10n.L("This screen has no notch: shown as a floating Dynamic Island.");
         TestAlertButton.Content = L10n.L("Test alert");
+        BackupHeader.Text = L10n.L("Back up settings");
+        BackupLabel.Text = L10n.L("Back up, share");
+        ExportButton.Content = L10n.L("Export…");
+        ImportButton.Content = L10n.L("Import…");
+        BackupFooter.Text = L10n.L("All your customization in one .json file.");
         UpdatePreview();
         RefreshThemes();
     }
+
+    /// Where a message box shows its text. Tests replace it, so no dialog opens.
+    internal Action<string, string> Message { get; set; } = (_, _) => { };
+
+    /// Asks for a file to write the profile to and writes it (the Mac's exportProfile, NotchTasks.json by default).
+    private async Task ExportProfile()
+    {
+        var dialog = new SaveFileDialog { FileName = "NotchTasks.json", Filter = "JSON|*.json" };
+        if (dialog.ShowDialog(Window.GetWindow(this)) == true)
+        {
+            await ExportProfileTo(dialog.FileName);
+        }
+    }
+
+    /// Writes the profile of the stored customization to `path`. The text is made here, on the UI thread, and the file is written
+    /// off it; a failed write is shown in a message box with the exception's message.
+    internal async Task ExportProfileTo(string path)
+    {
+        var text = SettingsProfile.Export(Store);
+        var problem = await Task.Run(() => WriteProfile(text, path));
+        if (problem is not null)
+        {
+            Message(L10n.L("Couldn't export the profile"), problem);
+        }
+    }
+
+    /// Writes the profile text to `path`; returns the problem (the exception's message) when the write fails, else null.
+    internal static string? WriteProfile(string text, string path)
+    {
+        try
+        {
+            File.WriteAllText(path, text, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+            return null;
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            return e.Message;
+        }
+    }
+
+    /// Asks for a profile file and applies it (the Mac's importProfile).
+    private async Task ImportProfile()
+    {
+        var dialog = new OpenFileDialog { Filter = "JSON|*.json" };
+        if (dialog.ShowDialog(Window.GetWindow(this)) == true)
+        {
+            await ImportProfileFrom(dialog.FileName);
+        }
+    }
+
+    /// Reads a profile file off the UI thread, then applies it on the UI thread.
+    internal async Task ImportProfileFrom(string path)
+    {
+        var read = await Task.Run(() => ReadProfile(path));
+        ApplyProfile(read);
+    }
+
+    /// Reads and checks a profile file. Runs on a pool thread: it does not touch the store or the controls. A file too large to be
+    /// a profile is refused; a disk or IO error is shown with the exception's message.
+    internal static ProfileRead ReadProfile(string path)
+    {
+        try
+        {
+            if (new FileInfo(path).Length > SettingsProfile.MaxFileBytes)
+            {
+                return SettingsProfile.NotAProfile();
+            }
+            return SettingsProfile.Read(File.ReadAllText(path));
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            return new ProfileRead(new Dictionary<string, JsonNode?>(StringComparer.Ordinal), e.Message);
+        }
+    }
+
+    /// Applies a read profile on the UI thread: its values are saved in one write, so every open pane and the pill take them. A
+    /// profile that could not be read is shown in a message box and changes nothing.
+    internal void ApplyProfile(ProfileRead read)
+    {
+        if (read.Error is not null)
+        {
+            Message(L10n.L("Couldn't import the profile"), read.Error);
+            return;
+        }
+        WriteMany(read.Values);
+    }
+
+    /// Shows a message box owned by the Control Panel window.
+    private void ShowDialogMessage(string caption, string text) =>
+        MessageBox.Show(Window.GetWindow(this), text, caption, MessageBoxButton.OK, MessageBoxImage.Warning);
 
     /// Shows a task-finished toast in the current style, as the Mac's testToast: it plays the task's sound and queues the
     /// toast on the pill, and posts no system notification (the user is already looking at the pane).

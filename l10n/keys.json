@@ -1136,5 +1136,8 @@
 "That file is not a picture.",
 "That file can't be read.",
 "Picture files",
-"GIF files"
+"GIF files",
+"Couldn't export the profile",
+"Couldn't import the profile",
+"This file isn't a NotchTasks profile."
 ]
