@@ -19,6 +19,9 @@ public sealed record Chip(ChipKind Kind, string Module, string Id)
     public CallInfo? Call { get; init; }
     public SensorState? Sensors { get; init; }
     public int AskCount { get; init; }
+
+    /// The item of the agent asking first: its icon leads the ask chip (Mac's ask chip shows the asking agent's icon).
+    public WatchItem? AskItem { get; init; }
     public int AlertCount { get; init; }
     public LimitChip? Limit { get; init; }
     public ItemState? Agent { get; init; }

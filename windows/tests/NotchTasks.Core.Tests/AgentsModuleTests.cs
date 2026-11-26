@@ -132,6 +132,43 @@ public class AgentsModuleTests
     }
 
     [Fact]
+    public void Done_CarriesTheAgentItemAsItsIcon()
+    {
+        var announcer = new RecordingAnnouncer();
+        var module = new AgentsModule(announcer);
+        var cpu = new CpuMeter();
+        var busy = new[] { new Job("s1", "proj", "Working · 1 sec", true) };
+
+        module.Update(Inputs(new[] { Claude }, Snap(), cpu, claude: busy, doneAfter: 30), 0);
+        module.Update(Inputs(new[] { Claude }, Snap(), cpu, claude: busy, doneAfter: 30), 40_000);
+        module.Update(Inputs(new[] { Claude }, Snap(), cpu, doneAfter: 30), 60_000);
+
+        var toast = Assert.Single(announcer.Toasts);
+        Assert.Equal(Claude, toast.Icon);
+    }
+
+    [Fact]
+    public void DoneNaming_AgentNamesTheItemAndKeepsItsIcon()
+    {
+        var (title, icon) = AgentsModule.DoneNaming(Claude, "proj");
+
+        Assert.Equal("Claude done", title);
+        Assert.Equal(Claude, icon);
+    }
+
+    [Fact]
+    public void DoneNaming_DevRowNamesTheJobAndHasNoIcon()
+    {
+        // a dev row's job names its tool ("Gradle done"), and the row's own icon is not drawn
+        var build = new WatchItem("build", "Build & CI", WatchKind.Dev);
+
+        var (title, icon) = AgentsModule.DoneNaming(build, "Gradle");
+
+        Assert.Equal("Gradle done", title);
+        Assert.Null(icon);
+    }
+
+    [Fact]
     public void Done_AfterGone20s_IfRanLongEnough()
     {
         var announcer = new RecordingAnnouncer();

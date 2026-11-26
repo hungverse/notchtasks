@@ -35,4 +35,7 @@ public sealed record NotchSnapshot(
 
     /// The session the Now Playing card shows (none unless the media module is on and a session is listed). Its chip shows only while it plays.
     public NowPlaying? Media { get; init; }
+
+    /// The item of the first ask waiting, whose icon the ask chip shows (null when no ask waits or the agents module is off).
+    public WatchItem? AskItem { get; init; }
 }

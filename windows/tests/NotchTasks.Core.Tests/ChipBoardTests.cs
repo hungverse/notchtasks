@@ -41,6 +41,17 @@ public class ChipBoardTests
     }
 
     [Fact]
+    public void Ask_CarriesTheAskingAgentsItem_ForItsIcon()
+    {
+        var claude = new WatchItem("claude-1", "Claude", WatchKind.Claude);
+        var snap = Snap(new[] { "agents" }, asks: 1) with { AskItem = claude };
+
+        var ask = Assert.Single(ChipBoard.Chips(snap), c => c.Kind == ChipKind.Ask);
+
+        Assert.Same(claude, ask.AskItem);
+    }
+
+    [Fact]
     public void Ask_NotShown_WhenAgentsOff()
     {
         var chips = ChipBoard.Chips(Snap(new[] { "timer" }, asks: 2, timer: Timer));

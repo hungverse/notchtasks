@@ -63,7 +63,7 @@ public static class ChipBoard
         {
             var calls = 0;
             while (calls < list.Count && list[calls].Kind == ChipKind.Call) calls++;
-            list.Insert(calls, new Chip(ChipKind.Ask, "agents", "ask") { AskCount = s.AskCount });
+            list.Insert(calls, new Chip(ChipKind.Ask, "agents", "ask") { AskCount = s.AskCount, AskItem = s.AskItem });
         }
         return list;
     }

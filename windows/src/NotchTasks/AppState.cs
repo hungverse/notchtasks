@@ -466,7 +466,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
                 continue;
             }
             Asks.Insert(Math.Min(i, Asks.Count), visible[i]);
-            Announce(AskToast(visible[i]));
+            Announce(AskToast(visible[i], Settings.Items));
         }
         Publish();
     }
@@ -503,7 +503,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
 
     /// The toast a new ask shows: a hand for an approval, a question mark for questions. Its texts come from
     /// AskPresentation, the same as the card's.
-    private static Toast AskToast(AgentAsk ask) => new(
+    private static Toast AskToast(AgentAsk ask, IReadOnlyList<WatchItem> items) => new(
         ask.IsQuestion ? "question" : "hand",
         AskTint,
         AskPresentation.Title(ask),
@@ -511,7 +511,8 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         Event: "agentAsk",
         Sticky: true,
         AskId: ask.Id,
-        Module: "agents");
+        Module: "agents",
+        Icon: AgentItems.ItemOf(ask, items));
 
     /// The agents and limits readers: the options' fakes, else this PC's (the process table, sqlite3, the loopback HTTP, the
     /// LM Studio runner and the claude CLI). The agent folders are under Home; the Claude folder is CLAUDE_CONFIG_DIR when it is
@@ -574,6 +575,8 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
             Limits = modules.Contains("limits") ? LimitsModule.Limits : Array.Empty<ProviderLimits>(),
             LimitWarn = Settings.LimitWarn,
             Media = modules.Contains("media") ? this.Media.Current : null,
+            // the first ask's agent, whose icon leads the ask chip (Mac: asks.first)
+            AskItem = modules.Contains("agents") && Asks.Count > 0 ? AgentItems.ItemOf(Asks[0], Settings.Items) : null,
         };
     }
 

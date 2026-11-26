@@ -85,6 +85,10 @@ public static class ChipView
         {
             return ItemIcon.Element(agent, size, TintOf(chip, accent, moduleColors), processes);
         }
+        if (chip.Kind == ChipKind.Ask)
+        {
+            return AskLead(chip.AskItem, size, processes);
+        }
         if (chip.Kind == ChipKind.Limit && chip.Limit is { } limit)
         {
             return Glyph(limit.W.Used >= 100 ? "hourglass" : "gauge", size, new SolidColorBrush(LimitColor(limit.W.Used)));
@@ -144,6 +148,42 @@ public static class ChipView
             };
         }
         return Glyph("media", size, HexColor.Brush(ToHex(tint)));
+    }
+
+    /// The ask chip's lead (Mac ask chip): the asking agent's icon with an orange hand badge at its corner, so the chip says who waits.
+    /// With no item for the agent, the orange hand alone. The badge is what tells the user it is an ask, not a running agent.
+    private static FrameworkElement AskLead(WatchItem? item, double size, IProcessReader? processes)
+    {
+        if (item is null)
+        {
+            return Glyph("hand", size * 0.72, HexColor.Brush(ToHex(AskOrange)));
+        }
+        var badge = size * 0.3;
+        var hand = new TextBlock
+        {
+            Text = ModuleGlyphs.Get("hand").Glyph,
+            FontFamily = ModuleGlyphs.Get("hand").Family,
+            FontSize = badge,
+            Foreground = Brushes.White,
+            TextAlignment = TextAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        var disc = new Border
+        {
+            Width = badge + 5,
+            Height = badge + 5,
+            CornerRadius = new CornerRadius((badge + 5) / 2),
+            Background = HexColor.Brush(ToHex(AskOrange)),
+            BorderBrush = Brushes.Black,
+            BorderThickness = new Thickness(1.5),
+            HorizontalAlignment = HorizontalAlignment.Right,
+            VerticalAlignment = VerticalAlignment.Bottom,
+            Child = hand,
+        };
+        var lead = new Grid { Width = size, Height = size, VerticalAlignment = VerticalAlignment.Center };
+        lead.Children.Add(ItemIcon.Element(new ItemState(item, Array.Empty<Job>()), size, AskOrange, processes));
+        lead.Children.Add(disc);
+        return lead;
     }
 
     /// The Now Playing chip's trail: the three working bars in the tint (Mac: the chip's bars while a session plays).

@@ -39,6 +39,10 @@
         <ContentControl x:Name="TopGlyph" Margin="12,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center"
                         HorizontalContentAlignment="Left" VerticalContentAlignment="Center" Focusable="False"
                         FontFamily="{StaticResource FluentRegular}" FontSize="14" />
+        <!-- The tint symbol at the right of the notch row, for a toast about an agent or app (Mac: the symbol beside the icon). -->
+        <ContentControl x:Name="TopTrail" Margin="0,0,12,0" HorizontalAlignment="Right" VerticalAlignment="Center"
+                        HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Focusable="False"
+                        Visibility="Collapsed" />
       </Grid>
       <Grid x:Name="TextRow" Margin="18,2,18,10">
         <Grid.ColumnDefinitions>
@@ -59,6 +63,9 @@
           <TextBlock x:Name="SubtitleText" Foreground="#99FFFFFF" TextTrimming="CharacterEllipsis" />
         </StackPanel>
         <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
+          <!-- The card's tint symbol, before its buttons (Mac cardToast). -->
+          <ContentControl x:Name="CardTrail" Margin="0,0,10,0" VerticalAlignment="Center" Visibility="Collapsed"
+                          HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Focusable="False" />
           <Button Focusable="False" x:Name="ReplyButton" Style="{StaticResource PrimaryChoice}" Height="24" Padding="11,0" Visibility="Collapsed" />
           <StackPanel x:Name="ApprovalButtons" Orientation="Horizontal">
             <Button Focusable="False" x:Name="DenyButton" Style="{StaticResource ChoiceButton}" Height="24" Padding="11,0" Margin="0,0,6,0" />

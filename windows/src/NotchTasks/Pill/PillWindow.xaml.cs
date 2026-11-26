@@ -654,7 +654,7 @@ public partial class PillWindow : Window
         if (target is not null)
         {
             var ask = target.AskId is { } askId ? _state.Asks.FirstOrDefault(a => a.Id == askId) : null;
-            ToastBox.Show(target, _state.Settings.ToastStyle, ask, _state.Settings.Motion);
+            ToastBox.Show(target, _state.Settings.ToastStyle, ask, _state.Settings.Motion, _state.Processes);
             // Topmost is asserted again when a toast shows, as OpenPill does; the window itself never activates.
             Win32.SetWindowPos(_hwnd, Win32.HwndTopmost, 0, 0, 0, 0, Win32.SWP_NOMOVE | Win32.SWP_NOSIZE | Win32.SWP_NOACTIVATE);
             Animate(Mode.Toast);

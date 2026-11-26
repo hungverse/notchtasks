@@ -284,16 +284,25 @@ public sealed class AgentsModule
             {
                 continue;
             }
+            var (title, icon) = DoneNaming(w.Item, w.Title);
             _announce.Announce(new Toast(
                 Glyph: "check",
                 Tint: DoneTint,
-                Title: L10n.L("{0} done", w.Item.Name),
+                Title: title,
                 Subtitle: $"{w.Title} · {Ago.Text(took)}",
                 Event: "taskDone",
                 Module: _build ? "ci" : "agents",
-                ToPhone: true));
+                ToPhone: true,
+                Icon: icon));
         }
     }
+
+    /// The title and icon of a done toast (Mac announceFinished). A dev row names its job ("Gradle done", the tool that ran), since
+    /// the row's own name says nothing about it, and has no icon; any other item is named and drawn by its own icon.
+    public static (string Title, WatchItem? Icon) DoneNaming(WatchItem item, string jobTitle) =>
+        item.Kind == WatchKind.Dev
+            ? (L10n.L("{0} done", jobTitle), null)
+            : (L10n.L("{0} done", item.Name), item);
 
     /// A job seen working: when it started, and when it was last seen working (both in ms).
     private sealed record Tracked(WatchItem Item, string Title, long Since, long LastSeen);

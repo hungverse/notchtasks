@@ -1,7 +1,11 @@
+using NotchTasks.Core.Agents;
+
 namespace NotchTasks.Core.Notch;
 
 /// A toast the pill shows: the Mac's Toast (Model.swift). Tint is a #RRGGBB hex. Module is the owning module id,
-/// used to drop its toasts. AskId ties a toast to an agent ask, so it goes when that ask is answered.
+/// used to drop its toasts. AskId ties a toast to an agent ask, so it goes when that ask is answered. Icon is the agent or app
+/// the toast is about: its icon is drawn in place of the glyph, and the glyph moves to the right. It is the WatchItem itself,
+/// not a WPF image, so Core stays free of WPF.
 public sealed record Toast(
     string Glyph,
     string Tint,
@@ -16,7 +20,8 @@ public sealed record Toast(
     string? Pane = null,
     string? AskId = null,
     string? Module = null,
-    bool ToPhone = false)
+    bool ToPhone = false,
+    WatchItem? Icon = null)
 {
     /// Set at construction, so each toast is distinct even when its texts are equal.
     public Guid Id { get; } = Guid.NewGuid();

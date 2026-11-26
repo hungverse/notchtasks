@@ -7,6 +7,7 @@ using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using NotchTasks.ControlPanel;
 using NotchTasks.Core;
+using NotchTasks.Core.Agents;
 using NotchTasks.Core.Asks;
 using NotchTasks.Core.Motion;
 using NotchTasks.Core.Notch;
@@ -101,9 +102,20 @@ public partial class ToastView : UserControl
             }
             : new TextBlock { Text = ModuleGlyphs.Get(name).Glyph, FontFamily = ModuleGlyphs.Get(name).Family, Foreground = tint };
 
+    /// The icon a toast draws in its glyph slot for its agent or app (Mac toastIcon): the item's own icon in the tint, so the agent
+    /// shows where a glyph would. Null for a toast with no item, which keeps its glyph.
+    public static FrameworkElement? IconOf(Toast t, Color tint, double size, IProcessReader? processes) =>
+        t.Icon is { } item ? ItemIcon.Element(new ItemState(item, Array.Empty<Job>()), size, tint, processes) : null;
+
+    /// The tint symbol drawn on the right of a toast that has an item (Mac: the symbol beside the icon, which tells the toast's kind).
+    /// Null for a toast with no item.
+    public static FrameworkElement? TrailOf(Toast t, Brush tint, double size) =>
+        t.Icon is null ? null : GlyphOf(t.Glyph, tint, size);
+
     /// Shows the toast in a style: its glyph, title, subtitle and the buttons it needs. `ask` is the agent's ask the toast
-    /// stands for, or null. `motion` is the Motion setting, which a battery toast's art springs by.
-    public void Show(Toast t, string style, AgentAsk? ask, string motion)
+    /// stands for, or null. `motion` is the Motion setting, which a battery toast's art springs by. `processes` reads the program
+    /// icon of the toast's item (an app's icon, or the agent's process); null reads none.
+    public void Show(Toast t, string style, AgentAsk? ask, string motion, IProcessReader? processes = null)
     {
         // A toast that replaces one on screen cross-fades: the old content is kept as a picture, over the new, and fades out.
         var previous = _toast is null ? null : Snapshot();
@@ -134,7 +146,7 @@ public partial class ToastView : UserControl
             CompactLeft.Width = new GridLength(side);
             CompactMiddle.Width = new GridLength(IslandNotchWidth);
             CompactRight.Width = new GridLength(side);
-            CompactGlyph.Content = GlyphOf(t.Glyph, tint, CompactGlyph.FontSize);
+            CompactGlyph.Content = IconOf(t, color, CompactGlyph.FontSize, processes) ?? GlyphOf(t.Glyph, tint, CompactGlyph.FontSize);
             var art = t.Art as ChargeArt;
             var device = t.Art as DeviceArt;
             CompactArt.Content = art is not null ? new ChargeArtView(art, motion)
@@ -151,13 +163,19 @@ public partial class ToastView : UserControl
         TopRow.Visibility = VisibleIf(look is ToastLook.Island or ToastLook.Banner);
         TopGlyph.Content = deviceArt is not null && look is ToastLook.Island or ToastLook.Banner
             ? new DeviceArtView(deviceArt, tint, motion, TopGlyph.FontSize)
-            : GlyphOf(t.Glyph, tint, TopGlyph.FontSize);
+            : IconOf(t, color, TopGlyph.FontSize, processes) ?? GlyphOf(t.Glyph, tint, TopGlyph.FontSize);
+        var topTrail = TrailOf(t, tint, 14);
+        TopTrail.Content = topTrail;
+        TopTrail.Visibility = VisibleIf(topTrail is not null);
         BannerBar.Visibility = VisibleIf(banner);
         BannerBar.Background = tint;
         CardGlyph.Visibility = VisibleIf(look == ToastLook.Card);
         CardGlyph.Content = deviceArt is not null && look == ToastLook.Card
             ? new DeviceArtView(deviceArt, tint, motion, CardGlyph.FontSize)
-            : GlyphOf(t.Glyph, tint, CardGlyph.FontSize);
+            : IconOf(t, color, CardGlyph.FontSize, processes) ?? GlyphOf(t.Glyph, tint, CardGlyph.FontSize);
+        var cardTrail = TrailOf(t, tint, 15);
+        CardTrail.Content = cardTrail;
+        CardTrail.Visibility = VisibleIf(cardTrail is not null && look == ToastLook.Card);
         TextRow.Margin = look == ToastLook.Card ? new Thickness(12) : new Thickness(18, 2, 18, banner ? 12 : 10);
         TitleText.Text = t.Title;
         TitleText.FontSize = banner ? 15 : 13;
