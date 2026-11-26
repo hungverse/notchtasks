@@ -102,8 +102,10 @@
     <ItemGroup>
       <ResolvedFileToPublish Include="@(HookFiles)" Condition="'%(Extension)' == '.dll'" RelativePath="%(Filename)%(Extension)" CopyToPublishDirectory="PreserveNewest" />
       <!-- A self-contained publish already has System.CodeDom.dll (a Windows Desktop runtime assembly); adding it again is NETSDK1152.
-           A framework-dependent publish has no runtime pack, so it still ships the sensors' copy. -->
-      <ResolvedFileToPublish Include="@(SensorsFiles)" Condition="'%(Extension)' == '.dll' And ('$(SelfContained)' != 'true' Or '%(Filename)' != 'System.CodeDom')" RelativePath="%(Filename)%(Extension)" CopyToPublishDirectory="PreserveNewest" />
+           A framework-dependent publish has no runtime pack, so it still ships the sensors' copy. System.Management is the app's own
+           package reference (the brightness feed), so the app publishes it; the helper runs from the same folder and shares that copy
+           (both pin System.Management 10.0.0). Adding the sensors' copy as well is the same NETSDK1152 collision. -->
+      <ResolvedFileToPublish Include="@(SensorsFiles)" Condition="'%(Extension)' == '.dll' And ('$(SelfContained)' != 'true' Or '%(Filename)' != 'System.CodeDom') And '%(Filename)' != 'System.Management'" RelativePath="%(Filename)%(Extension)" CopyToPublishDirectory="PreserveNewest" />
       <ResolvedFileToPublish Include="@(SensorsRuntimeFiles)" RelativePath="runtimes\%(RecursiveDir)%(Filename)%(Extension)" CopyToPublishDirectory="PreserveNewest" />
     </ItemGroup>
   </Target>
