@@ -104,7 +104,7 @@ public sealed class DevicesModule(IAnnouncer announce, Func<string?> tint)
                     L10n.L("{0} battery low", d.Name),
                     $"{low}%",
                     Event: "lowBattery",
-                    Module: "devices"), notify: false);
+                    Module: "devices"), notify: true);  // the Mac's battery-low toast notifies (Model.swift devicesFound)
             }
         }
 

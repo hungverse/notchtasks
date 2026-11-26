@@ -125,7 +125,7 @@ public class DevicesModuleTests
         Assert.Single(low);
 
         var (t, notify) = low[0];
-        Assert.False(notify);
+        Assert.True(notify);  // the Mac's battery-low toast notifies (Model.swift devicesFound), so it reaches Windows too
         Assert.Equal("battery.25percent", t.Glyph);
         Assert.Equal("#FF453A", t.Tint);
         Assert.Equal("AirPods battery low", t.Title);

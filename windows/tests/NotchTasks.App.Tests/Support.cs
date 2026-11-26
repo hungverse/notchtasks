@@ -20,6 +20,7 @@ using NotchTasks.Services;
 using NotchTasks.Services.Devices;
 using NotchTasks.Services.Media;
 using NotchTasks.Services.Modules;
+using NotchTasks.Services.Notifications;
 
 namespace NotchTasks.AppTests;
 
@@ -170,7 +171,8 @@ internal static class Fixture
         Media: new NoMedia(),
         Devices: new NoDevices(),
         Camera: () => new NoCamera(),
-        Update: new UpdateClient(new NoFeed()));
+        Update: new UpdateClient(new NoFeed()),
+        Notifier: new NoNotifier());
 
     /// The update feed with no network: every request answers 404, so a check finds no update.
     public sealed class NoFeed : HttpMessageHandler
@@ -180,6 +182,14 @@ internal static class Fixture
     }
 
     /// The camera seam with no camera: a start finds none, and nothing is captured.
+    /// The OS notifier of every App test that is not about toasts: it posts nothing, so no test shows a real Windows toast.
+    public sealed class NoNotifier : INotifier
+    {
+        public void Post(Toast t)
+        {
+        }
+    }
+
     public sealed class NoCamera : ICameraSession
     {
         public Task<CameraStart> Start(Action<int, int, byte[]> frame) => Task.FromResult(CameraStart.NoCamera);

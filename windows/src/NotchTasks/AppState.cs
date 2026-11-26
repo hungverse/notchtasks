@@ -19,6 +19,7 @@ using NotchTasks.Services;
 using NotchTasks.Services.Devices;
 using NotchTasks.Services.Media;
 using NotchTasks.Services.Modules;
+using NotchTasks.Services.Notifications;
 using NotchTasks.Services.Sync;
 using NotchTasks.Services.Updates;
 
@@ -55,6 +56,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
     /// The Codex questions answered in this session (the Mac's answeredCodex): they stay gone while the agents module cycles.
     private readonly HashSet<string> _answeredCodex = new(StringComparer.Ordinal);
     private readonly ICodexCli _codex;
+    private readonly INotifier _notifier;  // posts the Windows toasts: a toast that notifies goes here when the setting is on
     private readonly Func<ICameraSession> _cameraFactory;  // the mirror's camera (AppStateOptions.Camera; this PC's camera by default)
     private readonly MirrorFrames _mirrorFrames = new();
     private ICameraSession? _camera;  // the running mirror's camera: null while the mirror is closed (written with Volatile.Write)
@@ -87,6 +89,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         Processes = agentReaders.Processes;
         _codex = o.Codex ?? new CodexCli(HomeOf(o));
         _cameraFactory = o.Camera ?? (() => new CameraSession());
+        _notifier = o.Notifier ?? new SystemNotifier();
         _agentsSource = new AgentsSource(Agents, settings, agentReaders, Publish, SetCodexAsks);
         _limitsSource = new LimitsSource(LimitsModule, settings, limitReaders, _agentsSource, Publish);
         BuildAgents = new AgentsModule(this, build: true);
@@ -262,13 +265,18 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         return ModuleCatalog.Order(s.Modules).Where(id => !disabled.Contains(id)).ToList();
     }
 
-    /// Plays the toast's sound (its Event) and queues the toast. notify is ignored until system notifications exist.
+    /// Plays the toast's sound (its Event), posts it as a Windows notification when notify is set and the systemNotifications setting
+    /// is on (the Mac's announce: the notification is what reaches the user while the notch is collapsed), and queues it on the pill.
     public void Announce(Toast t, bool notify = true)
     {
         Bridge?.Record(t);
         if (t.Event is { } sound)
         {
             Sounds.Play(sound);
+        }
+        if (notify && Settings.SystemNotifications)
+        {
+            _notifier.Post(t);
         }
         Toasts.Enqueue(t, DateTimeOffset.Now);
     }

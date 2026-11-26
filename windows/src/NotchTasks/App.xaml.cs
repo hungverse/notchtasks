@@ -12,6 +12,7 @@ using NotchTasks.Core.Updates;
 using NotchTasks.Onboarding;
 using NotchTasks.Pill;
 using NotchTasks.Services;
+using NotchTasks.Services.Notifications;
 
 namespace NotchTasks;
 
@@ -64,6 +65,9 @@ public partial class App : System.Windows.Application
             Shutdown(0);
             return;
         }
+        // The app's identity before any window or toast: Windows reads the AUMID from the process, so the toasts and the taskbar button
+        // belong to the installed app (the installer's shortcut carries the same id).
+        AppIdentity.Apply();
         // Before anything else: a second launch exits at once and creates nothing. First it asks the first instance to show
         // its window (the guide, or the Control Panel).
         try
