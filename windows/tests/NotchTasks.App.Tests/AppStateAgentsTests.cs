@@ -9,8 +9,8 @@ using Xunit;
 
 namespace NotchTasks.AppTests;
 
-/// The agents through the app state: a Codex question is answered from the pill, it stays answered across an agents off and on,
-/// and turning agents off drops its chips and toasts.
+/// The agents through the app state: a Codex question is answered from the pill, it comes back open after agents or Codex
+/// watching is turned off and on (the Mac forgets its answers then), and turning agents off drops its chips and toasts.
 public sealed class AppStateAgentsTests
 {
     private static AgentAsk CodexQuestion(string id) => new(
@@ -79,7 +79,7 @@ public sealed class AppStateAgentsTests
     }
 
     [Fact]
-    public void AnsweredCodexQuestion_StaysGone_AcrossAnAgentsOffAndOn()
+    public void AnsweredCodexQuestion_ComesBackOpen_AfterAnAgentsOffAndOn()
     {
         Sta.Run(() =>
         {
@@ -99,10 +99,43 @@ public sealed class AppStateAgentsTests
                 Fixture.Flush();
                 settings.Set("disabled", JsonNode.Parse("[]"));
                 Fixture.Flush();
-                // the scanner still lists the question: it must not come back
+                // the question is still open in Codex: the scanner lists it again, and it is back on the pill
                 Fixture.Call(state, "SetCodexAsks", question);
 
+                Assert.Single(state.Asks);
+            }
+            finally
+            {
+                state.Dispose();
+            }
+        });
+    }
+
+    [Fact]
+    public void AnsweredCodexQuestion_ComesBackOpen_AfterCodexWatchingIsTurnedOff()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            var settings = SettingsStore.Load(AppPaths.SettingsFile);
+            var codexItem = new WatchItem("codex", "Codex", WatchKind.Codex);
+            settings.SetItems(new[] { codexItem });
+            var codex = new Fixture.RecordingCodex();
+            var state = new AppState(settings, new AskStore(AppPaths.AsksDir), Fixture.Inert(settings) with { Codex = codex });
+            try
+            {
+                var question = new List<AgentAsk> { CodexQuestion("codex|t1|c4") };
+                Fixture.Call(state, "SetCodexAsks", question);
+                state.Answer("codex|t1|c4", new AskReply(ReplyKinds.Pass, null));
                 Assert.Empty(state.Asks);
+
+                settings.SetItems(Array.Empty<WatchItem>());
+                Fixture.Flush();
+                settings.SetItems(new[] { codexItem });
+                Fixture.Flush();
+                Fixture.Call(state, "SetCodexAsks", question);
+
+                Assert.Single(state.Asks);
             }
             finally
             {

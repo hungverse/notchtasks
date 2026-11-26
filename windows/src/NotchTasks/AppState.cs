@@ -881,6 +881,10 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
             {
                 _agentsSource.ItemsChanged();
                 _limitsSource.ItemsChanged();
+                if (!Settings.Items.Any(i => i.Enabled && i.Kind == WatchKind.Codex))
+                {
+                    _answeredCodex.Clear();  // Codex watching is off: its answers are forgotten, so a question still open comes back
+                }
             }
             if (!_disposed && keys.Any(k => k is "systemLoad" or "sensorHelper" or "sensorHelperAtSignIn"))
             {
@@ -908,6 +912,10 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
     private void OnTurnedOff(string id)
     {
         Toasts.DropModule(id, DateTimeOffset.Now);
+        if (id == "agents")
+        {
+            _answeredCodex.Clear();  // as the Mac: a question still open in Codex comes back when agents is on again
+        }
         if (id == "calls")
         {
             _sensorsSource.ForgetCall();
