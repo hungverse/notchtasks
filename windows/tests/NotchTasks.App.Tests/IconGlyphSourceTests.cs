@@ -225,6 +225,27 @@ public sealed class IconGlyphSourceTests
     }
 
     [Fact]
+    public void ProblemText_InPairingAndReport_UsesTheThemesCautionBrush_NotAFixedOrange()
+    {
+        // #FF9F0A is about 2:1 on a light card. The Windows caution brush follows the theme: the same amber in dark mode, a dark
+        // amber in light mode. The Pro label on a phone row is the same brush, set through the theme (SetResourceReference).
+        var panes = Path.Combine(IconFonts.SourceRoot, "NotchTasks", "ControlPanel", "Panes");
+        var pairingXaml = File.ReadAllText(Path.Combine(panes, "PairingPane.xaml"));
+        var pairingCode = File.ReadAllText(Path.Combine(panes, "PairingPane.xaml.cs"));
+        var report = File.ReadAllText(Path.Combine(IconFonts.SourceRoot, "NotchTasks", "ControlPanel", "ReportDialog.xaml"));
+
+        foreach (var text in new[] { pairingXaml, pairingCode, report })
+        {
+            Assert.DoesNotContain("#FF9F0A", text);
+            Assert.DoesNotContain("0xFF, 0x9F, 0x0A", text);
+        }
+        Assert.Contains("x:Name=\"ProblemGlyph\" Size=\"14\" Foreground=\"{DynamicResource SystemFillColorCautionBrush}\"", pairingXaml);
+        Assert.Contains("x:Name=\"ProblemText\" Foreground=\"{DynamicResource SystemFillColorCautionBrush}\"", pairingXaml);
+        Assert.Contains("x:Name=\"ProblemText\" Foreground=\"{DynamicResource SystemFillColorCautionBrush}\"", report);
+        Assert.Contains("SetResourceReference(TextBlock.ForegroundProperty, \"SystemFillColorCautionBrush\")", pairingCode);
+    }
+
+    [Fact]
     public void NavigationRows_AreThe36DipNavigationViewSize_WithA16DipGlyph()
     {
         var window = File.ReadAllText(Path.Combine(IconFonts.SourceRoot, "NotchTasks", "ControlPanel", "ControlPanelWindow.xaml"));

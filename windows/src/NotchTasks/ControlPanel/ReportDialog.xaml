@@ -31,7 +31,7 @@
       <Button x:Name="CopyButton" Style="{StaticResource SecondaryButton}" Margin="12,0,0,0" />
     </StackPanel>
 
-    <TextBlock x:Name="ProblemText" Foreground="#FF9F0A" TextWrapping="Wrap" Margin="0,12,0,0" Visibility="Collapsed" />
+    <TextBlock x:Name="ProblemText" Foreground="{DynamicResource SystemFillColorCautionBrush}" TextWrapping="Wrap" Margin="0,12,0,0" Visibility="Collapsed" />
 
     <Grid Margin="0,16,0,0">
       <Button x:Name="CloseButton" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Left" />

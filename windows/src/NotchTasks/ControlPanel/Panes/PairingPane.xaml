@@ -46,8 +46,8 @@
                   Visibility="Collapsed" />
 
           <StackPanel x:Name="ProblemRow" Orientation="Horizontal" Margin="0,12,0,0" Visibility="Collapsed">
-            <fi:FluentGlyph x:Name="ProblemGlyph" Size="14" Foreground="#FF9F0A" Margin="0,0,8,0" VerticalAlignment="Center" />
-            <TextBlock x:Name="ProblemText" Foreground="#FF9F0A" TextWrapping="Wrap" VerticalAlignment="Center" />
+            <fi:FluentGlyph x:Name="ProblemGlyph" Size="14" Foreground="{DynamicResource SystemFillColorCautionBrush}" Margin="0,0,8,0" VerticalAlignment="Center" />
+            <TextBlock x:Name="ProblemText" Foreground="{DynamicResource SystemFillColorCautionBrush}" TextWrapping="Wrap" VerticalAlignment="Center" />
           </StackPanel>
 
           <Button x:Name="ReportButton" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Left" Margin="0,12,0,0" />

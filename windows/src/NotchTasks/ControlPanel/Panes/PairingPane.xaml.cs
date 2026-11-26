@@ -24,7 +24,6 @@ public partial class PairingPane : UserControl
     private const double LifetimeMs = 30_000_000_000_000;
 
     private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(4);
-    private static readonly Brush Orange = Frozen(new SolidColorBrush(Color.FromRgb(0xFF, 0x9F, 0x0A)));
     private static readonly Brush Destructive = Frozen(new SolidColorBrush(Color.FromRgb(0xFF, 0x45, 0x3A)));
 
     private readonly SyncBridge? _bridge;
@@ -394,10 +393,11 @@ public partial class PairingPane : UserControl
                 Text = L10n.L("Pro"),
                 FontSize = 12,
                 FontWeight = FontWeights.SemiBold,
-                Foreground = Orange,
                 VerticalAlignment = VerticalAlignment.Center,
                 Margin = new Thickness(12, 0, 0, 0),
             };
+            // the theme's caution brush, followed live (a light and dark switch reaches it)
+            pro.SetResourceReference(TextBlock.ForegroundProperty, "SystemFillColorCautionBrush");
             DockPanel.SetDock(pro, Dock.Right);
             row.Children.Add(pro);
         }
