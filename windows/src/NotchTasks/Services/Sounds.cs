@@ -1,4 +1,5 @@
 using System.IO;
+using System.Windows.Media;
 using NotchTasks.Core;
 using NotchTasks.Core.Settings;
 using NotchTasks.Core.Sounds;
@@ -22,6 +23,7 @@ public static class Sounds
     private static readonly Dictionary<string, byte[]> FileBytes = new(StringComparer.OrdinalIgnoreCase);
     private static readonly Dictionary<(string File, int Step), byte[]> Scaled = [];
     private static byte[]? _playing;
+    private static MediaPlayer? _media;
     private static readonly HashSet<string> _unreadable = new(StringComparer.OrdinalIgnoreCase);
     private static SettingsStore? _settings;
 
@@ -57,6 +59,11 @@ public static class Sounds
         {
             return;
         }
+        if (!string.Equals(Path.GetExtension(file), ".wav", StringComparison.OrdinalIgnoreCase))
+        {
+            PlayMedia(file, settings.Volume);
+            return;
+        }
 
         // PlaySound with SND_ASYNC keeps reading the buffer after the call, so every buffer is a pinned array: the GC cannot move it.
         var step = (int)Math.Round(Math.Clamp(settings.Volume, 0, 1) / VolumeStep);
@@ -69,6 +76,28 @@ public static class Sounds
 
         _playing = data;
         Win32.PlaySound(data, nint.Zero, SndMemory | SndAsync | SndNoDefault);
+    }
+
+    /// Plays a file that PlaySound cannot (mp3, m4a, aac, wma) through MediaPlayer, at the volume. One player is kept in a
+    /// field so the GC does not collect it mid-play; it is closed when it ends or fails, and a new sound replaces it.
+    private static void PlayMedia(string file, double volume)
+    {
+        _media?.Close();
+        var player = new MediaPlayer { Volume = Math.Clamp(volume, 0, 1) };
+        player.MediaEnded += (_, _) => Release(player);
+        player.MediaFailed += (_, _) => Release(player);
+        player.Open(new Uri(file, UriKind.Absolute));
+        player.Play();
+        _media = player;
+    }
+
+    private static void Release(MediaPlayer player)
+    {
+        player.Close();
+        if (ReferenceEquals(_media, player))
+        {
+            _media = null;
+        }
     }
 
     /// The file's bytes in a pinned array, read once per file.
