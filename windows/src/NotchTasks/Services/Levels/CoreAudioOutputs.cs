@@ -18,6 +18,9 @@ public sealed class CoreAudioOutputs : IOutputDevices
     /// CLSCTX_ALL, for Activate.
     private const int ClsctxAll = 0x17;
 
+    /// The MMDevice enumerator's class (the Windows CLSID, mmdeviceapi.h).
+    internal static readonly Guid MMDeviceEnumeratorClsid = new("BCDE0395-E52F-467C-8E3D-C4579291692E");
+
     private static readonly Guid EndpointVolumeIid = new("5CDF2C82-841E-4546-9722-0CF74078229A");
 
     private readonly IMMDeviceEnumerator _enumerator;
@@ -27,7 +30,7 @@ public sealed class CoreAudioOutputs : IOutputDevices
     /// without the volume).
     public CoreAudioOutputs()
     {
-        _enumerator = (IMMDeviceEnumerator)new MMDeviceEnumeratorComObject();
+        _enumerator = CreateEnumerator();
         _client = new DefaultDeviceClient(() => DefaultChanged?.Invoke());
         var hr = _enumerator.RegisterEndpointNotificationCallback(_client);
         if (hr != 0)
@@ -36,6 +39,10 @@ public sealed class CoreAudioOutputs : IOutputDevices
             Marshal.ThrowExceptionForHR(hr);
         }
     }
+
+    /// The MMDevice enumerator, activated from its CLSID. Throws when Core Audio is not there.
+    internal static IMMDeviceEnumerator CreateEnumerator() =>
+        (IMMDeviceEnumerator)Activator.CreateInstance(Type.GetTypeFromCLSID(MMDeviceEnumeratorClsid, throwOnError: true)!)!;
 
     /// Raised on a COM thread when the default render device for the multimedia role changes.
     public event Action? DefaultChanged;
@@ -161,13 +168,6 @@ public sealed class CoreAudioOutputs : IOutputDevices
 
         public int OnPropertyValueChanged(string deviceId, PropertyKey key) => 0;
     }
-}
-
-/// The MMDevice enumerator's class (its CLSID is the Windows one).
-[ComImport]
-[Guid("BCDE0395-E52F-467C-8E3D-C4579291692E")]
-internal class MMDeviceEnumeratorComObject
-{
 }
 
 /// IMMDeviceEnumerator, with only the methods used given names; the others keep their slots (the vtable order of mmdeviceapi.h).

@@ -23,11 +23,57 @@ public sealed class CoreAudioInteropTests
     [InlineData(typeof(IMMNotificationClient))]
     [InlineData(typeof(IAudioEndpointVolume))]
     [InlineData(typeof(IAudioEndpointVolumeCallback))]
-    [InlineData(typeof(MMDeviceEnumeratorComObject))]
     public void ComType_IsMarkedComImport(Type type) =>
         Assert.NotNull(type.GetCustomAttributes(typeof(ComImportAttribute), inherit: false).FirstOrDefault());
 
     [Fact]
     public void MMDeviceEnumerator_HasTheSdkClsid() =>
-        Assert.Equal(new Guid("BCDE0395-E52F-467C-8E3D-C4579291692E"), typeof(MMDeviceEnumeratorComObject).GUID);
+        Assert.Equal(new Guid("BCDE0395-E52F-467C-8E3D-C4579291692E"), CoreAudioOutputs.MMDeviceEnumeratorClsid);
+
+    /// The production factory (CoreAudioOutputs.CreateEnumerator) gives the enumerator, which reads the default render endpoint for the
+    /// multimedia role and activates its IAudioEndpointVolume. Only GetMasterVolumeLevelScalar and GetMute are called: nothing sets the
+    /// volume or the mute. A machine with no audio device has no default endpoint, and the test returns early there.
+    [Fact]
+    public void DefaultRenderEndpoint_ReadsTheVolumeThroughTheProductionFactory()
+    {
+        const int render = 0;       // EDataFlow.eRender
+        const int multimedia = 1;   // ERole.eMultimedia
+        const int clsctxAll = 0x17; // CLSCTX_ALL
+
+        var enumerator = CoreAudioOutputs.CreateEnumerator();
+        try
+        {
+            if (enumerator.GetDefaultAudioEndpoint(render, multimedia, out var device) != 0 || device is null)
+            {
+                return;  // no audio device
+            }
+            try
+            {
+                var iid = typeof(IAudioEndpointVolume).GUID;
+                if (device.Activate(ref iid, clsctxAll, IntPtr.Zero, out var volumeObject) != 0
+                    || volumeObject is not IAudioEndpointVolume volume)
+                {
+                    return;  // the endpoint has no volume interface
+                }
+                try
+                {
+                    Assert.Equal(0, volume.GetMasterVolumeLevelScalar(out var level));
+                    Assert.InRange(level, 0f, 1f);
+                    Assert.Equal(0, volume.GetMute(out _));
+                }
+                finally
+                {
+                    Marshal.ReleaseComObject(volume);
+                }
+            }
+            finally
+            {
+                Marshal.ReleaseComObject(device);
+            }
+        }
+        finally
+        {
+            Marshal.ReleaseComObject(enumerator);
+        }
+    }
 }
