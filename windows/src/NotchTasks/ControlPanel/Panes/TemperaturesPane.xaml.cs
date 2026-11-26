@@ -47,7 +47,6 @@ public partial class TemperaturesPane : UserControl
     private void ApplyTexts()
     {
         SignInCheck.Content = L10n.L("Start with Windows without asking again");
-        SensorsCaps.Text = L10n.L("Sensors").ToUpper(CultureInfo.CurrentUICulture);
     }
 
     private void OnLoaded(object sender, RoutedEventArgs e)
@@ -155,7 +154,9 @@ public partial class TemperaturesPane : UserControl
         };
         HelperTitle.Text = title ?? string.Empty;
         HelperTitle.Visibility = VisibleIf(title is not null);
+        // The opt-in note explains the choice the Off state offers; the other titles say their own thing.
         HelperNote.Text = L10n.L("Optional. Reading temperatures on Windows needs administrator, so a small helper runs with administrator rights only if you turn this on.");
+        HelperNote.Visibility = VisibleIf(_helper.State == HelperState.Off);
         TurnOnButton.Content = button ?? string.Empty;
         TurnOnButton.Visibility = VisibleIf(button is not null);
         SignInCheck.Visibility = VisibleIf(signIn);
@@ -183,7 +184,7 @@ public partial class TemperaturesPane : UserControl
             HottestName.Text = L10n.L("Could not read temperature sensors.");
         }
 
-        SensorsCaps.Text = $"{L10n.L("Sensors").ToUpper(CultureInfo.CurrentUICulture)} ({zones.Count})";
+        SensorsCaps.Text = $"{L10n.L("Sensors")} ({zones.Count})";
         SensorRows.Children.Clear();
         for (var i = 0; i < zones.Count; i++)
         {

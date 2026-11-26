@@ -217,6 +217,54 @@ public sealed class TemperaturesPaneTests
         });
     }
 
+    [Theory]
+    [InlineData(HelperState.Off, Visibility.Visible)]
+    [InlineData(HelperState.Unavailable, Visibility.Collapsed)]
+    [InlineData(HelperState.Starting, Visibility.Collapsed)]
+    [InlineData(HelperState.Declined, Visibility.Collapsed)]
+    [InlineData(HelperState.Paused, Visibility.Collapsed)]
+    public void OptInNote_ShowsOnlyWhenTheHelperIsOff(HelperState state, Visibility expected)
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            var (_, pane) = NewPane(state, null);
+            var window = Show(pane);
+            try
+            {
+                Assert.Equal(expected, Fixture.Named<TextBlock>(pane, "HelperNote").Visibility);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    [Fact]
+    public void SensorsCaption_ReadsSensorsWithTheCountInTheMacsCasing()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            var (_, pane) = NewPane(HelperState.On, new[]
+            {
+                new ThermalReading("TZ00", 55),
+                new ThermalReading("CPU Package", 71.5),
+                new ThermalReading("Bogus", 130),
+            });
+            var window = Show(pane);
+            try
+            {
+                Assert.Equal("Sensors (2)", Fixture.Named<TextBlock>(pane, "SensorsCaps").Text);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
     [Fact]
     public void Off_ReadsNothing_AndRunsNoTimer()
     {
