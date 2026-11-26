@@ -197,8 +197,9 @@ public static class BadgeGlyph
         if (pending.Count > 0)
         {
             // draw the badge again once what it waits for has been decoded (on the UI thread, into this same grid)
+            // Fill reads a task's result only when it completed successfully, so a faulted or cancelled decode draws the fallback
             _ = Task.WhenAll(pending).ContinueWith(
-                _ => grid.Dispatcher.BeginInvoke(new Action(() => Fill(grid, badge, size, accent))),
+                done => grid.Dispatcher.BeginInvoke(new Action(() => Fill(grid, badge, size, accent))),
                 TaskScheduler.Default);
         }
     }
@@ -226,7 +227,7 @@ public static class BadgeGlyph
                 pending.Add(animation);
                 return (null, null);
             }
-            return (animation.Result, null);
+            return (animation.IsCompletedSuccessfully ? animation.Result : null, null);  // a faulted task shows nothing, never throws
         }
         var still = BadgeMedia.StillAsync(image, size);
         if (!still.IsCompleted)
@@ -234,7 +235,7 @@ public static class BadgeGlyph
             pending.Add(still);
             return (null, null);
         }
-        return (null, still.Result);
+        return (null, still.IsCompletedSuccessfully ? still.Result : null);
     }
 
     /// Letters in the badge's ink. One or two letters sit centred; more get side room, so the badge widens into a pill.

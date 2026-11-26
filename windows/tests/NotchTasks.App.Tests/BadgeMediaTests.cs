@@ -224,6 +224,44 @@ public sealed class BadgeMediaTests
     }
 
     [Fact]
+    public async Task Gif_HeaderClaiming4000Squared_IsRefusedFromItsBytes_WithoutDecoding()
+    {
+        using var root = new TempRoot();
+        var gif = WriteGifFrames(root.Folder, "claims.gif", 4000, 4000, new GifFrame(0, 0, 1, 1, Solid(1, 0)));
+        // corrupt the frame's LZW data (the bytes after the sub-block size at offset 38), so a decode of it cannot succeed
+        var bytes = File.ReadAllBytes(gif);
+        bytes[39] = 0xFF;
+        bytes[40] = 0xFF;
+        File.WriteAllBytes(gif, bytes);
+
+        var shape = BadgeMedia.ReadGifShape(bytes);
+
+        Assert.True(shape.HasValue);
+        Assert.Equal(4000, shape.Value.Width);
+        Assert.Equal(4000, shape.Value.Height);
+        Assert.Equal(1, shape.Value.Frames);
+        Assert.Null(await BadgeMedia.AnimationAsync(gif, null, null, size: 18));
+    }
+
+    [Fact]
+    public async Task Still_AFailureIsNotCached_AndAReplacedFileDecodesAgain()
+    {
+        using var root = new TempRoot();
+        Directory.CreateDirectory(root.Folder);
+        var path = Path.Combine(root.Folder, "badge.png");
+        File.WriteAllText(path, "not a picture at all");
+
+        var first = BadgeMedia.StillAsync(path, 18);
+        Assert.Null(await first);
+
+        WritePng(root.Folder, "badge.png", 16, 16);  // the same name, now a real picture
+        var second = BadgeMedia.StillAsync(path, 18);
+
+        Assert.NotSame(first, second);  // the failure was not kept
+        Assert.NotNull(await second);
+    }
+
+    [Fact]
     public async Task Gif_OverTheFrameLimit_IsRefused_ButTheLimitItselfIsKept()
     {
         using var root = new TempRoot();
