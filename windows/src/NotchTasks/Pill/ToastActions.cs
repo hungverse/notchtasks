@@ -26,7 +26,11 @@ public static class ToastActions
         }
         try
         {
-            if (IsFile(url, out var path))
+            if (url == ToastLinks.TaskManager)
+            {
+                SystemActions.OpenTaskManager();
+            }
+            else if (IsFile(url, out var path))
             {
                 Launch(new ProcessStartInfo("explorer.exe", $"/select,\"{path}\"") { UseShellExecute = true });
             }
@@ -41,9 +45,9 @@ public static class ToastActions
         }
     }
 
-    /// True when a toast's link may be opened: a file on this PC (shown in its folder) or an http(s) link. Anything else, such as
-    /// a program or another scheme, is not opened from a toast (P3c M7).
-    public static bool IsOpenable(string url) => IsFile(url, out _) || ItemCard.IsWebLink(url);
+    /// True when a toast's link may be opened: a file on this PC (shown in its folder), an http(s) link, or Task Manager (the heat
+    /// toast's "See apps"). Anything else, such as a program or another scheme, is not opened from a toast (P3c M7).
+    public static bool IsOpenable(string url) => url == ToastLinks.TaskManager || IsFile(url, out _) || ItemCard.IsWebLink(url);
 
     /// True when the url is a file on this PC; path is its local path. A full local path (C:\..., or a UNC path) is a file, as
     /// the downloads toast's url is; a file:// URI is one too. Anything else is a link.

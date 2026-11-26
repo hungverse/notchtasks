@@ -17,7 +17,7 @@ public static class Thermals
         ThermalReading? hottest = null;
         foreach (var reading in readings)
         {
-            if (double.IsNaN(reading.Celsius) || reading.Celsius < MinCelsius || reading.Celsius > MaxCelsius)
+            if (!IsPlausible(reading))
             {
                 continue;
             }
@@ -28,6 +28,16 @@ public static class Thermals
         }
         return hottest;
     }
+
+    /// The plausible readings (see Hottest), the hottest first, ties by name. The Temperatures pane lists them.
+    public static IReadOnlyList<ThermalReading> Plausible(IEnumerable<ThermalReading> readings) =>
+        readings.Where(IsPlausible)
+            .OrderByDescending(reading => reading.Celsius)
+            .ThenBy(reading => reading.Name, StringComparer.Ordinal)
+            .ToList();
+
+    private static bool IsPlausible(ThermalReading reading) =>
+        !double.IsNaN(reading.Celsius) && reading.Celsius >= MinCelsius && reading.Celsius <= MaxCelsius;
 
     /// The header's tint for a temperature: green below 60 C, orange below 85 C, red from 85 C.
     public static string Tint(double celsius) =>

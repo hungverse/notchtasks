@@ -38,3 +38,10 @@ public sealed record ChargeArt(int Percent, bool Plugged) : ToastArt;
 
 /// The device toast art: the accessory's symbol and whether it connected (false: it went away).
 public sealed record DeviceArt(string Symbol, bool Connected) : ToastArt;
+
+/// The links a toast may carry that are not files or web pages: the names the app opens itself (the heat toast's "See apps").
+public static class ToastLinks
+{
+    /// Opens Task Manager (the Mac's Activity Monitor link).
+    public const string TaskManager = "taskmgr";
+}

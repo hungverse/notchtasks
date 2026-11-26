@@ -1,0 +1,39 @@
+<UserControl x:Class="NotchTasks.ControlPanel.Panes.TemperaturesPane"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <StackPanel>
+    <!-- The helper is not On: why, and the one button that turns it on (the Permissions pane's opt-in). Nothing is read until then. -->
+    <Border x:Name="HelperCard" Style="{StaticResource Card}" Padding="16">
+      <StackPanel>
+        <TextBlock x:Name="HelperTitle" FontSize="14" FontWeight="SemiBold" TextWrapping="Wrap" />
+        <TextBlock x:Name="HelperNote" Style="{StaticResource CardNote}" Margin="0,6,0,0" TextWrapping="Wrap" />
+        <StackPanel x:Name="HelperActions" Orientation="Horizontal" Margin="0,12,0,0" HorizontalAlignment="Left">
+          <CheckBox x:Name="SignInCheck" VerticalAlignment="Center" Margin="0,0,12,0" />
+          <Button x:Name="TurnOnButton" Style="{StaticResource PrimaryButton}" />
+        </StackPanel>
+      </StackPanel>
+    </Border>
+
+    <!-- The hottest reading, in its tint: the header's number, with its zone's name. -->
+    <Border x:Name="HottestCard" Style="{StaticResource Card}" Padding="16" Margin="0,12,0,0" Visibility="Collapsed">
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <TextBlock x:Name="HottestGlyph" FontFamily="{StaticResource FluentRegular}" FontSize="22"
+                   VerticalAlignment="Center" Margin="0,0,14,0" />
+        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+          <TextBlock x:Name="HottestValue" FontSize="26" FontWeight="SemiBold" />
+          <TextBlock x:Name="HottestName" Style="{StaticResource CardNote}" TextWrapping="Wrap" />
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <!-- Every plausible zone, hottest first: one 48 DIP row each (the SettingRow style). Read-only: nothing here changes a setting. -->
+    <TextBlock x:Name="SensorsCaps" Style="{StaticResource GroupCaps}" Visibility="Collapsed" />
+    <Border x:Name="SensorsCard" Style="{StaticResource Card}" Padding="0,4" Visibility="Collapsed">
+      <StackPanel x:Name="SensorRows" />
+    </Border>
+  </StackPanel>
+</UserControl>

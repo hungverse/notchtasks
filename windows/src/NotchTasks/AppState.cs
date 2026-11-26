@@ -46,6 +46,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
     private readonly HealthSource _healthSource;
     private readonly SensorsSource _sensorsSource;
     private readonly ThermalSource _thermalSource;
+    private readonly HeatSource _heatSource;
     private readonly AgentsSource _agentsSource;
     private readonly LimitsSource _limitsSource;
     private readonly CiSource _ciSource;
@@ -91,6 +92,8 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         _healthSource = new HealthSource(Health, PublishLoad, settings, o.Health);
         Helper = o.Helper ?? SensorHelper.Create(settings);
         _thermalSource = new ThermalSource(settings, Helper, PublishThermal);
+        Heat = new HeatModule(this);
+        _heatSource = new HeatSource(Heat, Helper, TopWorkingTool);
         Agents = new AgentsModule(this);
         Media = new MediaModule();
         LimitsModule = new LimitsModule(this);
@@ -290,6 +293,15 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
 
     /// The temperature helper (Windows only, off by default). Its state drives the Permissions row and the header's reading.
     public SensorHelper Helper { get; }
+
+    /// The heat toast's levels (the Mac's thermalChanged). Its source (HeatSource) runs with the health module while the helper is On.
+    public HeatModule Heat { get; }
+
+    /// The tool of the first working job on the pill, as the heat toast names it: the title's part before " · ". Null when none works.
+    private string? TopWorkingTool() =>
+        Snapshot.Running.Concat(Snapshot.BuildRunning)
+            .SelectMany(item => item.Jobs)
+            .FirstOrDefault(job => job.Working)?.Title.Split(" · ")[0];
 
     /// The hottest temperature the header shows, or null when none is shown (the helper is off, the pill closed, or no reading).
     public ThermalReading? Thermal { get; private set; }
@@ -607,7 +619,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
             ["levels"] = new LevelsSource(Levels, outputs, brightness),
             ["downloads"] = new DownloadsSource(Downloads),
             // one source for both: the temperature feed runs only while the health module runs and the pill is open
-            ["health"] = new CompositeSource(_healthSource, _thermalSource),
+            ["health"] = new CompositeSource(_healthSource, _thermalSource, _heatSource),
             // one source for both: it counts its starts, so it runs while either module is on
             ["privacy"] = _sensorsSource,
             ["calls"] = _sensorsSource,
@@ -924,5 +936,6 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         StopMirror();  // the camera is released, and no frame is delivered after this
         _host.StopAll();
         _thermalSource.Dispose();  // unsubscribes from the helper's StateChanged
+        _heatSource.Dispose();
     }
 }

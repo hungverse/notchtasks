@@ -1,3 +1,4 @@
+using NotchTasks.Core.Notch;
 using NotchTasks.Pill;
 using Xunit;
 
@@ -13,6 +14,15 @@ public sealed class ToastActionsTests
     [InlineData(@"C:\Users\hung\Downloads\setup.exe")]
     [InlineData("file:///C:/temp/x.txt")]
     public void WebLinksAndFiles_Open(string url) => Assert.True(ToastActions.IsOpenable(url));
+
+    [Fact]
+    public void TaskManager_Opens_OnlyTheTaskManagerLink()
+    {
+        // The heat toast's "See apps" opens Task Manager; no other program name opens from a toast.
+        Assert.True(ToastActions.IsOpenable(ToastLinks.TaskManager));
+        Assert.Equal("taskmgr", ToastLinks.TaskManager);
+        Assert.False(ToastActions.IsOpenable("taskmgr.exe"));
+    }
 
     [Theory]
     [InlineData("calc.exe")]

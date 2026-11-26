@@ -384,6 +384,37 @@ public sealed class L10nTests
             : new Dictionary<string, string>();
     }
 
+    // Task 11's heat toast and Temperatures pane: the Mac's texts, and the Windows texts of the helper's rows and the pane.
+    // Each one needs a text in every language, in the Mac table or in electron/l10n/windows.json.
+    private static readonly string[] Phase11Keys =
+    [
+        "Computer is warm", "Computer is very hot", "{0} is working hard", "Consider closing heavy apps", "See apps",
+        "Temperatures", "Sensors", "Could not read temperature sensors.", "Checking…", "Turn on", "Try again",
+        "Start with Windows without asking again", "Not turned on: administrator was not allowed",
+        "Turn on again to read temperatures this session", "This PC does not report temperatures",
+        "Optional. Reading temperatures on Windows needs administrator, so a small helper runs with administrator rights only if you turn this on.",
+    ];
+
+    [Fact]
+    public void Phase11Keys_ExistInEveryLanguage()
+    {
+        var overlayFile = Path.Combine(RepoRoot(), "electron", "l10n", "windows.json");
+        var missing = new List<string>();
+        foreach (var (code, _) in L10n.Languages.Where(language => language.Code != "en"))
+        {
+            var mac = ReadStrings(Path.Combine(MacSources(), $"l10n-{code}.json"));
+            var windows = ReadOverlay(overlayFile, code);
+            foreach (var key in Phase11Keys)
+            {
+                if (!mac.ContainsKey(key) && !windows.ContainsKey(key))
+                {
+                    missing.Add($"{code}: {key}");
+                }
+            }
+        }
+        Assert.Empty(missing);
+    }
+
     [Fact]
     public void WindowsOverlay_TranslatesTheBuildToolMessages_InEveryLanguage()
     {

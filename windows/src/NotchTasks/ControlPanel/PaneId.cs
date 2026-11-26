@@ -3,7 +3,8 @@ using NotchTasks.Core;
 
 namespace NotchTasks.ControlPanel;
 
-/// The panes of the Control Panel, in the Mac's order (Preferences.swift). Fans & temperature is not shown here.
+/// The panes of the Control Panel, in the Mac's order (Preferences.swift). Temperatures is the Mac's Fans & temperature without the
+/// fans: the readings of the optional helper, read only.
 public enum PaneId
 {
     Overview,
@@ -11,6 +12,7 @@ public enum PaneId
     Permissions,
     Watching,
     Pairing,
+    Temperatures,
     Appearance,
     Badges,
     Store,
@@ -28,6 +30,7 @@ public static class PaneIds
         PaneId.Permissions => "Permissions",
         PaneId.Watching => "Watching",
         PaneId.Pairing => "Pairing",
+        PaneId.Temperatures => "Temperatures",
         PaneId.Appearance => "Appearance",
         PaneId.Badges => "Icons & lock",
         PaneId.Store => "Icon Library",
@@ -44,6 +47,7 @@ public static class PaneIds
         PaneId.Permissions => "",
         PaneId.Watching => "",
         PaneId.Pairing => "",
+        PaneId.Temperatures => "\uF78F",  // thermometer, Fluent (the toast's glyph)
         PaneId.Appearance => "",
         PaneId.Badges => "",
         PaneId.Store => "",

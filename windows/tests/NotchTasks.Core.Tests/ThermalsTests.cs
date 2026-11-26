@@ -30,6 +30,21 @@ public sealed class ThermalsTests
     }
 
     [Fact]
+    public void Plausible_DropsImplausible_AndListsTheHottestFirst()
+    {
+        var sorted = Thermals.Plausible(new[]
+        {
+            new ThermalReading("hot", 130),
+            new ThermalReading("low", 48),
+            new ThermalReading("cpu", 61.5),
+            new ThermalReading("cold", 4.9),
+            new ThermalReading("edge", 120),
+        });
+
+        Assert.Equal(new[] { "edge", "cpu", "low" }, sorted.Select(reading => reading.Name));
+    }
+
+    [Fact]
     public void Tint_Thresholds()
     {
         // Green below 60, orange below 85, red from 85 (NotchView.swift).
