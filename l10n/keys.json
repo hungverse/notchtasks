@@ -1141,5 +1141,12 @@
 "Couldn't import the profile",
 "This file isn't a NotchTasks profile.",
 "Join",
-"Calendar can't be opened. Check Settings > Privacy & security > Calendar."
+"Calendar can't be opened. Check Settings > Privacy & security > Calendar.",
+"Track Claude's plan limits?",
+"NotchTasks will run Claude Code in the background every few minutes to read /usage. If Claude Code isn't installed, it installs it with Anthropic's installer. If you're not signed in, it opens Claude Code in a terminal so you can sign in once.",
+"Show Claude's 5h and 7d limits on the notch and the phone",
+"On · updated {0}",
+"Claude Code isn't installed",
+"Install",
+"Sign in to Claude Code once"
 ]

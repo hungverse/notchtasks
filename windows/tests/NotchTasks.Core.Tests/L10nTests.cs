@@ -425,16 +425,19 @@ public sealed class L10nTests
         Assert.Empty(placeholders);
     }
 
-    // The Watching pane's "Plan limits" row under Claude (the opt-in statusline). "On", "Turn on", "Turn off" and "Couldn't edit
-    // {0}'s settings: {1}" come from the Mac table or the earlier batches. Each one needs a text in every language.
-    private static readonly string[] StatuslineKeys =
+    // The Watching pane's "Plan limits" row under Claude, and its confirmation (the CLI setup). "On", "Turn on", "Turn off", "Allow",
+    // "Cancel" and "Sign in" come from the Mac table or the earlier batches. Each one needs a text in every language.
+    private static readonly string[] PlanLimitsKeys =
     [
-        "Plan limits", "Show Claude's 5h and 7d limits from Claude Code's status line",
-        "Your own status line is set. NotchTasks won't replace it.", "On", "Turn on", "Turn off",
+        "Plan limits", "Show Claude's 5h and 7d limits on the notch and the phone", "On · updated {0}", "On", "Turn on", "Turn off",
+        "Claude Code isn't installed", "Install", "Sign in to Claude Code once", "Sign in",
+        "Track Claude's plan limits?",
+        "NotchTasks will run Claude Code in the background every few minutes to read /usage. If Claude Code isn't installed, it installs it with Anthropic's installer. If you're not signed in, it opens Claude Code in a terminal so you can sign in once.",
+        "Allow", "Cancel",
     ];
 
     [Fact]
-    public void StatuslineKeys_ExistInEveryLanguage()
+    public void PlanLimitsKeys_ExistInEveryLanguage()
     {
         var overlayFile = Path.Combine(RepoRoot(), "electron", "l10n", "windows.json");
         var missing = new List<string>();
@@ -442,7 +445,7 @@ public sealed class L10nTests
         {
             var mac = ReadStrings(Path.Combine(MacSources(), $"l10n-{code}.json"));
             var windows = ReadOverlay(overlayFile, code);
-            foreach (var key in StatuslineKeys)
+            foreach (var key in PlanLimitsKeys)
             {
                 if (!mac.ContainsKey(key) && !windows.ContainsKey(key))
                 {
