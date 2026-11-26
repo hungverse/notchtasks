@@ -55,7 +55,7 @@
     </Grid>
 
     <!-- All the rows are one card; a hairline divides them. -->
-    <Border Style="{StaticResource Card}" Padding="0,6">
+    <Border Style="{StaticResource Card}" Padding="0">
       <StackPanel x:Name="Rows" />
     </Border>
   </StackPanel>

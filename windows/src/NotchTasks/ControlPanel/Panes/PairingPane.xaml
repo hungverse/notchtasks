@@ -71,7 +71,7 @@
 
       <!-- The paired phones, sorted by name, and Unpair all (Mac's third section). -->
       <TextBlock x:Name="PairedCaps" Style="{StaticResource GroupCaps}" Visibility="Collapsed" />
-      <Border x:Name="PairedCard" Style="{StaticResource Card}" Padding="16,8" Visibility="Collapsed">
+      <Border x:Name="PairedCard" Style="{StaticResource Card}" Padding="16" Visibility="Collapsed">
         <StackPanel>
           <StackPanel x:Name="PhoneRows" />
           <Button x:Name="UnpairAllButton" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Left"

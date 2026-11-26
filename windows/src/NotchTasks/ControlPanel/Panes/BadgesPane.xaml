@@ -36,7 +36,7 @@
     <!-- The icon selected on the board: its preview, its position, its symbol and its style. -->
     <StackPanel x:Name="Editor" Visibility="Collapsed">
       <TextBlock Style="{StaticResource SectionHeader}" Text="{l:L Selected icon}" />
-      <Border Style="{StaticResource Card}" Padding="16,14">
+      <Border Style="{StaticResource Card}" Padding="16">
         <StackPanel>
           <DockPanel>
             <Border x:Name="EditorPreview" DockPanel.Dock="Left" Width="56" Height="56" CornerRadius="12"
