@@ -385,6 +385,12 @@ public partial class WatchingPane : SettingsPane
                 Rows.Children.Add(new Separator { Margin = new Thickness(16, 0, 16, 0) });
             }
             Rows.Children.Add(BuildRow(kinds[i], home, geminiKeySet));
+            if (kinds[i] == AgentKind.Claude)
+            {
+                // Claude's plan limits: the opt-in status line, in the same card under Claude's row
+                Rows.Children.Add(new Separator { Margin = new Thickness(16, 0, 16, 0) });
+                Rows.Children.Add(BuildLimitsRow(home));
+            }
             if (!HookInstaller.CanEdit(kinds[i], home))
             {
                 _configError ??= L10n.L("Couldn't edit {0}'s settings: the file is not valid JSON.", AgentKinds.Spec(kinds[i]).Name);
@@ -495,6 +501,71 @@ public partial class WatchingPane : SettingsPane
         {
             SystemActions.OpenInTerminal(step.Command);
         }
+    }
+
+    /// Claude's "Plan limits" row: the opt-in status line that lets NotchTasks read the 5 h and 7 d limits. Off shows the note and
+    /// Turn on; ours shows On and Turn off; another status line is never replaced, so it shows only the note.
+    private UIElement BuildLimitsRow(string home)
+    {
+        var state = StatuslineInstaller.State(home);
+
+        var text = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+        text.Children.Add(new TextBlock { Text = L10n.L("Plan limits"), FontWeight = FontWeights.Medium });
+        text.Children.Add(new TextBlock
+        {
+            Style = (Style)FindResource("CardNote"),
+            Margin = new Thickness(0, 2, 0, 0),
+            TextWrapping = TextWrapping.Wrap,
+            Text = state switch
+            {
+                StatuslineState.Off => L10n.L("Show Claude's 5h and 7d limits from Claude Code's status line"),
+                StatuslineState.Ours => L10n.L("On"),
+                _ => L10n.L("Your own status line is set. NotchTasks won't replace it."),
+            },
+        });
+
+        var grid = new Grid { Margin = new Thickness(16, 10, 16, 10) };
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        Place(text, grid, 0);
+
+        if (state != StatuslineState.Other)
+        {
+            var on = state == StatuslineState.Off;
+            var button = new Button
+            {
+                Content = L10n.L(on ? "Turn on" : "Turn off"),
+                Margin = new Thickness(12, 0, 0, 0),
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+            button.Click += (_, _) => ChangeStatusline(on, home);
+            Place(button, grid, 1);
+        }
+        return grid;
+    }
+
+    /// Adds or removes NotchTasks' status line. A settings file that cannot be edited shows its error, and the rows are read
+    /// again, so the row shows the real state.
+    private void ChangeStatusline(bool on, string home)
+    {
+        try
+        {
+            if (on)
+            {
+                StatuslineInstaller.Install(AppFiles.HookExe, home);
+            }
+            else
+            {
+                StatuslineInstaller.Uninstall(home);
+            }
+            _actionError = null;
+        }
+        catch (Exception e) when (e is InvalidDataException or IOException or UnauthorizedAccessException)
+        {
+            _actionError = L10n.L("Couldn't edit {0}'s settings: {1}", AgentKinds.Spec(AgentKind.Claude).Name, e.Message);
+        }
+
+        ApplyStored();
     }
 
     /// Shows the last switch's error, else the configuration error of an agent, else nothing.

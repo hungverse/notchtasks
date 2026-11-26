@@ -459,4 +459,86 @@ public sealed class WatchingPaneTests
             }
         });
     }
+
+    /// Claude's "Plan limits" row: the row under Claude's agent row that holds the note and the button, found by its title.
+    private static Grid PlanLimitsRow(FrameworkElement pane) =>
+        Fixture.Named<StackPanel>(pane, "Rows").Children.OfType<Grid>()
+            .Single(g => g.Children.OfType<StackPanel>().Any(s => s.Children.OfType<TextBlock>().Any(t => t.Text == L10n.L("Plan limits"))));
+
+    [Fact]
+    public void PlanLimits_TurnOnWritesOurStatusLine_TurnOffRemovesIt()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            var oldClaudeDir = Environment.GetEnvironmentVariable("CLAUDE_CONFIG_DIR");
+            Environment.SetEnvironmentVariable("CLAUDE_CONFIG_DIR", null);  // the temp home's .claude, not this PC's
+            try
+            {
+                var store = StoreWith("[]");
+                var pane = NewPane(store, new FakeProcesses(), root);
+                var window = Show(pane);
+                try
+                {
+                    var settings = Path.Combine(root.Folder, "home", ".claude", "settings.json");
+                    var row = PlanLimitsRow(pane);
+                    Assert.Equal(L10n.L("Turn on"), Assert.IsType<Button>(row.Children.OfType<Button>().Single()).Content);
+
+                    Click(row.Children.OfType<Button>().Single());
+
+                    Assert.Contains("--statusline", File.ReadAllText(settings));
+                    row = PlanLimitsRow(pane);
+                    Assert.Equal(L10n.L("On"), row.Children.OfType<StackPanel>().Single().Children.OfType<TextBlock>().Last().Text);
+                    Click(row.Children.OfType<Button>().Single());
+
+                    Assert.False(File.ReadAllText(settings).Contains("statusLine", StringComparison.Ordinal));
+                }
+                finally
+                {
+                    window.Close();
+                }
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable("CLAUDE_CONFIG_DIR", oldClaudeDir);
+            }
+        });
+    }
+
+    [Fact]
+    public void PlanLimits_AnotherStatusLine_HasNoButton()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            var oldClaudeDir = Environment.GetEnvironmentVariable("CLAUDE_CONFIG_DIR");
+            Environment.SetEnvironmentVariable("CLAUDE_CONFIG_DIR", null);
+            try
+            {
+                var claudeDir = Path.Combine(root.Folder, "home", ".claude");
+                Directory.CreateDirectory(claudeDir);
+                const string before = "{\"statusLine\":{\"type\":\"command\",\"command\":\"my-line.sh\"}}";
+                File.WriteAllText(Path.Combine(claudeDir, "settings.json"), before);
+                var pane = NewPane(StoreWith("[]"), new FakeProcesses(), root);
+                var window = Show(pane);
+                try
+                {
+                    var row = PlanLimitsRow(pane);
+
+                    Assert.Empty(row.Children.OfType<Button>());
+                    Assert.Contains(row.Children.OfType<StackPanel>().Single().Children.OfType<TextBlock>(),
+                        t => t.Text == L10n.L("Your own status line is set. NotchTasks won't replace it."));
+                    Assert.Equal(before, File.ReadAllText(Path.Combine(claudeDir, "settings.json")));
+                }
+                finally
+                {
+                    window.Close();
+                }
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable("CLAUDE_CONFIG_DIR", oldClaudeDir);
+            }
+        });
+    }
 }
