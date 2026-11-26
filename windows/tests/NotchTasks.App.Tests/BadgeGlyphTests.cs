@@ -76,10 +76,11 @@ public sealed class BadgeGlyphTests
     }
 
     [Fact]
-    public void Picture_FillsTheBadge_AtTwiceTheSize_AndWinsOverText()
+    public async Task Picture_FillsTheBadge_AtTwiceTheSize_AndWinsOverText()
     {
         using var root = new TempRoot();
         var picture = BadgeMediaTests.WritePng(root.Folder, "pic.png", 400, 300);
+        await BadgeMedia.StillAsync(picture, 18);  // decoded on the background thread before the badge is drawn
 
         Sta.Run(() =>
         {
@@ -94,11 +95,14 @@ public sealed class BadgeGlyphTests
     }
 
     [Fact]
-    public void Picture_MissingFile_ShowsTheSymbolInItsPlace()
+    public async Task Picture_MissingFile_ShowsTheSymbolInItsPlace()
     {
+        const string missing = @"C:\no\such\badge.png";
+        await BadgeMedia.StillAsync(missing, 18);
+
         Sta.Run(() =>
         {
-            var badge = new JsonObject { ["image"] = @"C:\no\such\badge.png", ["symbol"] = "no.such.symbol" };
+            var badge = new JsonObject { ["image"] = missing, ["symbol"] = "no.such.symbol" };
             var glyph = Assert.IsType<Grid>(BadgeGlyph.Create(badge, 18, Colors.Gray));
 
             var fill = Assert.IsType<Border>(glyph.Children[0]);
@@ -109,39 +113,21 @@ public sealed class BadgeGlyphTests
     }
 
     [Fact]
-    public void Gif_AnimatesWithItsFrames_AndFillsTheBadgeWhenNoFillIsChosen()
+    public async Task Gif_AnimatesWithItsFrames_AndFillsTheBadgeWhenNoFillIsChosen()
     {
         using var root = new TempRoot();
         var gif = BadgeMediaTests.WriteGif(root.Folder, "cat.gif", Colors.Red, Colors.Blue);
+        await BadgeMedia.AnimationAsync(gif, null, null, 18);
 
         Sta.Run(() =>
         {
             var plain = Assert.IsType<Grid>(BadgeGlyph.Create(new JsonObject { ["image"] = gif, ["plain"] = true }, 18, Colors.Gray));
             var sprite = Assert.IsType<SpriteView>(plain.Children[1]);
             Assert.Equal(2, sprite.FrameCount);
-            Assert.False(sprite.Still);
             Assert.Equal(18, sprite.Width, precision: 6);
 
             var onFill = Assert.IsType<Grid>(BadgeGlyph.Create(new JsonObject { ["image"] = gif }, 18, Colors.Gray));
             Assert.Equal(18 * 0.78, Assert.IsType<SpriteView>(onFill.Children[1]).Width, precision: 6);
-        });
-    }
-
-    [Fact]
-    public void Gif_WithReducedMotion_ShowsTheFirstFrameAndDoesNotRun()
-    {
-        using var root = new TempRoot();
-        var gif = BadgeMediaTests.WriteGif(root.Folder, "cat.gif", Colors.Red, Colors.Blue);
-
-        Sta.Run(() =>
-        {
-            var glyph = Assert.IsType<Grid>(BadgeGlyph.Create(new JsonObject { ["image"] = gif, ["plain"] = true }, 18, Colors.Gray,
-                animate: false));
-
-            var sprite = Assert.IsType<SpriteView>(glyph.Children[1]);
-            Assert.True(sprite.Still);
-            Assert.False(sprite.Animating);
-            Assert.Equal(0, sprite.CurrentIndex);
         });
     }
 }

@@ -78,7 +78,7 @@ public partial class BadgeEditorDialog : Window
 
     private void Render()
     {
-        var preview = BadgeGlyph.Create(_badge, 40, _accent, SystemParameters.ClientAreaAnimation);
+        var preview = BadgeGlyph.Create(_badge, 40, _accent);
         preview.HorizontalAlignment = HorizontalAlignment.Center;
         preview.VerticalAlignment = VerticalAlignment.Center;
         Preview.Child = preview;

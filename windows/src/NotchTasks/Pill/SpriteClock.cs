@@ -72,9 +72,6 @@ internal static class SpriteClock
         };
     }
 
-    /// Whether the clock steps this sprite (it was added and not removed since).
-    internal static bool Has(SpriteView sprite) => Sprites.Contains(sprite);
-
     public static void Add(SpriteView sprite)
     {
         if (!Sprites.Contains(sprite))

@@ -71,7 +71,7 @@ public partial class BadgesPane : SettingsPane
     {
         var id = BadgeEdits.IdOf(badge) ?? string.Empty;
         var selected = IconSelection.BadgeId == id;
-        var glyph = BadgeGlyph.Create(badge, 22, accent, Animate);
+        var glyph = BadgeGlyph.Create(badge, 22, accent);
         glyph.HorizontalAlignment = HorizontalAlignment.Center;
         glyph.VerticalAlignment = VerticalAlignment.Center;
         var face = new Border
@@ -143,7 +143,7 @@ public partial class BadgesPane : SettingsPane
         var side = all.Where(b => BadgeEdits.RightOf(b) == right).ToList();
         var index = side.FindIndex(b => BadgeEdits.IdOf(b) == id);
 
-        var preview = BadgeGlyph.Create(badge, 40, accent, Animate);
+        var preview = BadgeGlyph.Create(badge, 40, accent);
         preview.HorizontalAlignment = HorizontalAlignment.Center;
         preview.VerticalAlignment = VerticalAlignment.Center;
         EditorPreview.Child = preview;
@@ -239,10 +239,6 @@ public partial class BadgesPane : SettingsPane
     /// The picture of the icon with this id, or null when it has none.
     private string? ImageOf(string id) =>
         Store.Badges.OfType<JsonObject>().FirstOrDefault(b => BadgeEdits.IdOf(b) == id) is { } badge ? BadgeEdits.ImageOf(badge) : null;
-
-    /// Whether badges animate: Windows animations are on and the motion is not "Minimal" (reduced). A GIF or a sprite stands still otherwise.
-    private bool Animate => SystemParameters.ClientAreaAnimation && Store.Motion != "reduced";
-
     private static SolidColorBrush Solid(Color color)
     {
         var brush = new SolidColorBrush(color);

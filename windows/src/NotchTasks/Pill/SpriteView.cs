@@ -215,19 +215,17 @@ internal static class SpriteCache
 /// One sprite on the pill (18 DIP square by default; the Icon Library draws bigger ones). It shows the frame that the shared
 /// clock (SpriteClock.EpochMs) puts at this moment, so every sprite that started at the same Sync motion moment is in step.
 /// It steps only while it is visible, and a step redraws the frame with InvalidateVisual, so no layout pass runs.
-/// A still sprite (reduced motion) is never put on the clock and shows its first frame.
+/// Animations run under reduced motion too, as the Mac's do (Animation.swift has no motion check).
 public sealed class SpriteView : FrameworkElement
 {
     private readonly SpriteSheet _sheet;
     private readonly double _size;
-    private readonly bool _still;
     private int _index;
 
-    internal SpriteView(SpriteSheet sheet, double size = 18, bool still = false)
+    internal SpriteView(SpriteSheet sheet, double size = 18)
     {
         _sheet = sheet;
         _size = size;
-        _still = still;
         Width = size;
         Height = size;
         if (sheet.Pixel)
@@ -237,10 +235,7 @@ public sealed class SpriteView : FrameworkElement
         Loaded += (_, _) =>
         {
             Step();
-            if (!_still)
-            {
-                SpriteClock.Add(this);
-            }
+            SpriteClock.Add(this);
         };
         Unloaded += (_, _) => SpriteClock.Remove(this);
         IsVisibleChanged += (_, _) => SpriteClock.Refresh();
@@ -254,14 +249,8 @@ public sealed class SpriteView : FrameworkElement
     /// The frame on screen now.
     internal int CurrentIndex => _index;
 
-    /// Whether the sprite stands still on its first frame (reduced motion).
-    internal bool Still => _still;
-
-    /// Whether the shared clock is stepping this sprite: it is loaded, and it is not still.
-    internal bool Animating => SpriteClock.Has(this);
-
     /// Milliseconds from `elapsedMs` (on the clock) to this sprite's next frame change; double.MaxValue when it does not change.
-    internal double MsUntilNextFrame(double elapsedMs) => _still ? double.MaxValue : _sheet.MsUntilNextFrame(elapsedMs);
+    internal double MsUntilNextFrame(double elapsedMs) => _sheet.MsUntilNextFrame(elapsedMs);
 
     protected override void OnRender(DrawingContext drawingContext)
     {
@@ -283,10 +272,6 @@ public sealed class SpriteView : FrameworkElement
     /// Moves to the frame of the current moment. Frame 0 falls on the epoch and every loop after it.
     internal void Step()
     {
-        if (_still)
-        {
-            return;
-        }
         var index = _sheet.IndexAt(SpriteClock.ElapsedMs());
         if (index != _index)
         {

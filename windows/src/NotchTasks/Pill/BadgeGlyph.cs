@@ -43,7 +43,6 @@ public static class BadgeGlyph
     public static int FillWings(StackPanel left, StackPanel right, JsonArray badges, Color accent, double size = 18,
         string motion = "smooth", bool animationsOn = true)
     {
-        var animate = animationsOn && motion != "reduced";  // reduced motion: a GIF or sprite stands on its first frame
         var heldLeft = Held(left);
         var heldRight = Held(right);
         var known = new HashSet<string>(heldLeft.Keys.Concat(heldRight.Keys), StringComparer.Ordinal);
@@ -63,13 +62,13 @@ public static class BadgeGlyph
             var side = sides[ReadBool(badge, "right") ? 1 : 0];
             var key = ReadString(badge, "id") ?? "#" + count.ToString(CultureInfo.InvariantCulture);
             count++;
-            var signature = badge.ToJsonString() + "|" + size.ToString(CultureInfo.InvariantCulture) + "|" + accent + "|" + (animate ? "a" : "s");
+            var signature = badge.ToJsonString() + "|" + size.ToString(CultureInfo.InvariantCulture) + "|" + accent;
             if (side.Held.TryGetValue(key, out var held) && Equals(held.GetValue(SignatureProperty), signature))
             {
                 side.Items.Add(held);  // unchanged: kept as it is
                 continue;
             }
-            var glyph = Create(badge, size, accent, animate);
+            var glyph = Create(badge, size, accent);
             glyph.Margin = new Thickness(3, 0, 3, 0);
             glyph.VerticalAlignment = VerticalAlignment.Center;
             glyph.Tag = BadgeTag;
@@ -130,11 +129,19 @@ public static class BadgeGlyph
         return held;
     }
 
-    /// The badge at `size` DIP square, without margins (the caller places it). What it shows follows the Mac's NotchBadge: an
-    /// animation (a sprite, or a GIF or spritesheet) first, then a picture, then letters, then the symbol. A picture fills the badge
-    /// and wins over letters. An animation runs unless animate is false (reduced motion), when it stands on its first frame.
-    /// Letters widen the badge into a pill, so its width follows them; the other kinds are size by size.
-    public static FrameworkElement Create(JsonObject badge, double size, Color accent, bool animate = true)
+    /// The badge at `size` DIP square, without margins (the caller places it). See Fill for what it shows.
+    public static FrameworkElement Create(JsonObject badge, double size, Color accent)
+    {
+        var grid = new Grid();
+        Fill(grid, badge, size, accent);
+        return grid;
+    }
+
+    /// Draws the badge into `grid`, replacing what it held. What it shows follows the Mac's NotchBadge: an animation (a sprite, or a
+    /// GIF or spritesheet) first, then a picture, then letters, then the symbol. A picture fills the badge and wins over letters.
+    /// A picture or GIF is decoded on a background thread: until it is ready the badge shows its fill, and when it is ready the badge
+    /// is drawn again into the same grid. Letters widen the badge into a pill, so its width follows them; the rest are size by size.
+    private static void Fill(Grid grid, JsonObject badge, double size, Color accent)
     {
         var image = BadgeEdits.ImageOf(badge);
         var animated = BadgeEdits.IsAnimated(badge);
@@ -144,33 +151,21 @@ public static class BadgeGlyph
         var ink = ColorOf(ReadString(badge, "fg")) ?? (plain ? tint : Colors.White);
         var corner = ReadString(badge, "shape") == "rounded" ? size * 0.28 : size / 2;
 
-        var (sheet, still) = Art(badge, image, animated, size);
+        var pending = new List<Task>();
+        var (sheet, still) = Art(badge, image, animated, size, pending);
         var text = image is null ? TextOf(ReadString(badge, "text")) : null;
 
-        var grid = new Grid();
+        grid.Children.Clear();
+        grid.Clip = null;
+        // letters keep the badge's height and never narrow below it: one or two letters sit in a round badge, more widen it
+        grid.Width = text is not null ? double.NaN : size;
+        grid.MinWidth = text is not null ? size : 0;
+        grid.Height = size;
         if (sheet is not null)
         {
             // an animation is clipped to the badge's shape, or to its square when it has no fill (as the Mac does)
-            grid.Width = size;
-            grid.Height = size;
             var radius = plain ? 0 : corner;
             grid.Clip = Frozen(new RectangleGeometry(new Rect(0, 0, size, size), radius, radius));
-        }
-        else if (still is not null)
-        {
-            grid.Width = size;
-            grid.Height = size;
-        }
-        else if (text is not null)
-        {
-            // letters keep the badge's height and never narrow below it: one or two letters sit in a round badge, more widen it
-            grid.MinWidth = size;
-            grid.Height = size;
-        }
-        else
-        {
-            grid.Width = size;
-            grid.Height = size;
         }
 
         // a picture is the fill: the file scaled to cover the badge and cut to its shape, as the Mac's scaledToFill draws it
@@ -188,22 +183,31 @@ public static class BadgeGlyph
         if (sheet is not null)
         {
             // on a fill the animation sits a little smaller, as the Mac draws it
-            grid.Children.Add(new SpriteView(sheet, plain ? size : size * 0.78, still: !animate)
+            grid.Children.Add(new SpriteView(sheet, plain ? size : size * 0.78)
             {
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,
             });
         }
-        else if (still is null)
+        else if (pending.Count == 0 && still is null)
         {
             grid.Children.Add(text is not null ? Letters(text, size, ink) : Content(badge, size, plain, ink));
         }
-        return grid;
+
+        if (pending.Count > 0)
+        {
+            // draw the badge again once what it waits for has been decoded (on the UI thread, into this same grid)
+            _ = Task.WhenAll(pending).ContinueWith(
+                _ => grid.Dispatcher.BeginInvoke(new Action(() => Fill(grid, badge, size, accent))),
+                TaskScheduler.Default);
+        }
     }
 
-    /// The animation or picture a badge shows: a built-in sprite; else its GIF or spritesheet when it animates; else its picture
-    /// still. Each is null when it is not there or cannot be read, and the badge then falls through to letters or the symbol.
-    private static (SpriteSheet? Sheet, ImageSource? Still) Art(JsonObject badge, string? image, bool animated, double size)
+    /// The animation or picture a badge shows: a built-in sprite; else its GIF or spritesheet when it animates (a GIF that is refused
+    /// shows the symbol, not its still); else its picture still. A decode still running is added to pending, and the result is null
+    /// for now. A missing or refused file gives null, and the badge then falls through to letters or the symbol.
+    private static (SpriteSheet? Sheet, ImageSource? Still) Art(JsonObject badge, string? image, bool animated, double size,
+        List<Task> pending)
     {
         var sprite = ReadString(badge, "sprite");
         if (sprite is not null && SpriteCache.Get(sprite) is { } builtIn)
@@ -214,11 +218,23 @@ public static class BadgeGlyph
         {
             return (null, null);
         }
-        if (animated && BadgeMedia.Animation(image, ReadInt(badge, "frames"), ReadDouble(badge, "fps"), size) is { } frames)
+        if (animated)
         {
-            return (frames, null);
+            var animation = BadgeMedia.AnimationAsync(image, ReadInt(badge, "frames"), ReadDouble(badge, "fps"), size);
+            if (!animation.IsCompleted)
+            {
+                pending.Add(animation);
+                return (null, null);
+            }
+            return (animation.Result, null);
         }
-        return (null, BadgeMedia.Still(image, size));
+        var still = BadgeMedia.StillAsync(image, size);
+        if (!still.IsCompleted)
+        {
+            pending.Add(still);
+            return (null, null);
+        }
+        return (null, still.Result);
     }
 
     /// Letters in the badge's ink. One or two letters sit centred; more get side room, so the badge widens into a pill.
