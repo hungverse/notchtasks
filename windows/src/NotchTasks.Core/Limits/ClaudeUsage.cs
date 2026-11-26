@@ -20,7 +20,8 @@ public static partial class ClaudeUsage
     [GeneratedRegex(@"resets (.+?) \(([^)]+)\)")]
     private static partial Regex ResetsRe();
 
-    [GeneratedRegex(@"^([A-Z]{3}) (\d{1,2})(?: AT (\d{1,2})(?::(\d{2}))?(AM|PM))?$")]
+    /// "NOV 3 AT 8:09PM" (the older form) and "NOV 27, 5:09AM" (the CLI's form now); a day alone is "NOV 5".
+    [GeneratedRegex(@"^([A-Z]{3}) (\d{1,2})(?:(?:,| AT) (\d{1,2})(?::(\d{2}))?(AM|PM))?$")]
     private static partial Regex WhenRe();
 
     /// Claude Code only exposes plan limits to the statusline: notch-statusline.sh saves that JSON in the config folder.

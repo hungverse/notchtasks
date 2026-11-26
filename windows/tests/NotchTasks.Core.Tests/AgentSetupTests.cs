@@ -133,4 +133,16 @@ public sealed class AgentSetupTests : IDisposable
         Assert.Contains("codex", text);
         Assert.Contains("%USERPROFILE%", text);
     }
+
+    [Fact]
+    public void Present_FindsTheBundledClaudeOfTheDesktopApp_AndNotOtherBundles()
+    {
+        var local = Path.Combine(_home, "local");
+        var dir = Path.Combine(local, "Claude-Data", "claude_pzs8sxrjxfjjc", "claude-code", "2.1.326", "d31a4581af92");
+        Directory.CreateDirectory(dir);
+        File.WriteAllText(Path.Combine(dir, "claude.exe"), "");
+
+        Assert.Equal(Path.Combine(dir, "claude.exe"), AgentSetup.FindCli("claude", _home, path: "", appData: Path.Combine(_home, "appdata"), localAppData: local));
+        Assert.Null(AgentSetup.FindCli("codex", _home, path: "", appData: Path.Combine(_home, "appdata"), localAppData: local));
+    }
 }

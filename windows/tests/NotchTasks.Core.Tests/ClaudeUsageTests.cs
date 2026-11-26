@@ -137,4 +137,74 @@ public class ClaudeUsageTests : IDisposable
         Assert.Same(status, ClaudeUsage.Now(live, at, status, at.AddMinutes(16)));
         Assert.Same(status, ClaudeUsage.Now(null, null, status, at));
     }
+
+    // The Claude Code CLI prints the reset as "Nov 27, 5:09am" (no "at"), and a day alone as "Nov 5".
+    [Fact]
+    public void ParseResetWhen_CommaFormWithTime_IsTheZonedInstant()
+    {
+        var now = new DateTimeOffset(2026, 11, 26, 12, 0, 0, TimeSpan.Zero);
+        // Ho Chi Minh is UTC+7: 5:09am on Nov 27 is 22:09 UTC on Nov 26
+        Assert.Equal(new DateTimeOffset(2026, 11, 26, 22, 9, 0, TimeSpan.Zero),
+            ClaudeUsage.ParseResetWhen("Nov 27, 5:09am", "Asia/Ho_Chi_Minh", now));
+        // 1:59pm on Dec 3 is 06:59 UTC on Dec 3
+        Assert.Equal(new DateTimeOffset(2026, 12, 3, 6, 59, 0, TimeSpan.Zero),
+            ClaudeUsage.ParseResetWhen("Dec 3, 1:59pm", "Asia/Ho_Chi_Minh", now));
+    }
+
+    [Fact]
+    public void ParseResetWhen_CommaFormHourOnly_And12AmIsMidnight()
+    {
+        var now = new DateTimeOffset(2026, 11, 26, 12, 0, 0, TimeSpan.Zero);
+        Assert.Equal(new DateTimeOffset(2026, 11, 26, 17, 0, 0, TimeSpan.Zero),
+            ClaudeUsage.ParseResetWhen("Nov 27, 12am", "Asia/Ho_Chi_Minh", now));
+        Assert.Equal(new DateTimeOffset(2026, 11, 27, 5, 0, 0, TimeSpan.Zero),
+            ClaudeUsage.ParseResetWhen("Nov 27, 12pm", "Asia/Ho_Chi_Minh", now));
+    }
+
+    [Fact]
+    public void ParseResetWhen_DayOnly_IsMidnightInTheZone()
+    {
+        var now = new DateTimeOffset(2026, 11, 3, 10, 0, 0, TimeSpan.Zero);
+        // Nov 5 at 00:00 in Ho Chi Minh is Nov 4 17:00 UTC
+        Assert.Equal(new DateTimeOffset(2026, 11, 4, 17, 0, 0, TimeSpan.Zero),
+            ClaudeUsage.ParseResetWhen("Nov 5", "Asia/Ho_Chi_Minh", now));
+    }
+
+    [Fact]
+    public void ParseResetWhen_OldFormsStillParse()
+    {
+        var now = new DateTimeOffset(2026, 11, 3, 10, 0, 0, TimeSpan.Zero);
+        Assert.Equal(new DateTimeOffset(2026, 11, 3, 13, 9, 0, TimeSpan.Zero),
+            ClaudeUsage.ParseResetWhen("Nov 3 at 8:09pm", "Asia/Ho_Chi_Minh", now));
+        Assert.Equal(new DateTimeOffset(2026, 11, 5, 6, 59, 0, TimeSpan.Zero),
+            ClaudeUsage.ParseResetWhen("Nov 5 at 1:59pm", "Asia/Ho_Chi_Minh", now));
+    }
+
+    [Fact]
+    public void ParseResetWhen_UnknownShapes_GiveNull()
+    {
+        var now = new DateTimeOffset(2026, 11, 26, 12, 0, 0, TimeSpan.Zero);
+        Assert.Null(ClaudeUsage.ParseResetWhen("Nov 27, 5:09", "Asia/Ho_Chi_Minh", now));   // no am or pm
+        Assert.Null(ClaudeUsage.ParseResetWhen("Nov 27 5:09am", "Asia/Ho_Chi_Minh", now));  // no comma and no at
+        Assert.Null(ClaudeUsage.ParseResetWhen("Nov 27, 5:09xm", "Asia/Ho_Chi_Minh", now));
+    }
+
+    /// The two lines the CLI printed on this PC after sign-in (zone Asia/Ho_Chi_Minh).
+    [Fact]
+    public void Parse_CliLinesFromSignedInPc_GiveBothWindowsWithTheirResets()
+    {
+        var usage = "You are currently using your subscription to power your Claude Code usage\n\n"
+            + "Current session: 56% used · resets Nov 27, 5:09am (Asia/Ho_Chi_Minh)\n"
+            + "Current week (all models): 34% used · resets Dec 3, 1:59pm (Asia/Ho_Chi_Minh)\n";
+
+        var w = ClaudeUsage.Parse(usage, new DateTimeOffset(2026, 11, 26, 12, 0, 0, TimeSpan.Zero));
+
+        Assert.Equal(2, w.Count);
+        Assert.Equal("5h", w[0].Label);
+        Assert.Equal(56, w[0].Used);
+        Assert.Equal(new DateTimeOffset(2026, 11, 26, 22, 9, 0, TimeSpan.Zero), w[0].Resets);
+        Assert.Equal("7d", w[1].Label);
+        Assert.Equal(34, w[1].Used);
+        Assert.Equal(new DateTimeOffset(2026, 12, 3, 6, 59, 0, TimeSpan.Zero), w[1].Resets);
+    }
 }

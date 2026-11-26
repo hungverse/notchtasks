@@ -1,4 +1,5 @@
 using System.Text.Json.Nodes;
+using NotchTasks.Services;
 
 namespace NotchTasks.Core.Asks;
 
@@ -17,7 +18,7 @@ public static class AgentSetup
     /// `localAppData` are the folders searched for the npm CLI and the desktop app; null means the real ones.
     public static bool Present(AgentKind kind, string home, string? path = null, string? appData = null, string? localAppData = null) =>
         kind == AgentKind.Claude
-        || FindCli(AgentKinds.Spec(kind).Cli, home, path, appData) is not null
+        || FindCli(AgentKinds.Spec(kind).Cli, home, path, appData, localAppData) is not null
         || (kind == AgentKind.Codex && CodexDesktopInstalled(home, localAppData));
 
     /// True when the Codex desktop app is installed: it writes ~/.codex/.desktop-created, and its package's execution alias folder
@@ -44,9 +45,10 @@ public static class AgentSetup
     }
 
     /// The full path of a CLI found on PATH or in one of the usual folders, or null. The folders are the npm global ones and
-    /// ~/.local/bin, ~/.npm-global/bin and ~/.opencode/bin. `appData` is the %APPDATA% folder to search (null: the real one);
-    /// tests pass a temp folder so they never see the machine's npm folder.
-    public static string? FindCli(string name, string home, string? path = null, string? appData = null)
+    /// ~/.local/bin, ~/.npm-global/bin and ~/.opencode/bin, then for claude the desktop apps' bundled CLIs (CliLauncher.BundledClaude).
+    /// `appData` and `localAppData` are the folders to search (null: the real ones); tests pass temp folders so they never see
+    /// the machine's npm folder or bundled CLI.
+    public static string? FindCli(string name, string home, string? path = null, string? appData = null, string? localAppData = null)
     {
         var dirs = (path ?? Environment.GetEnvironmentVariable("PATH") ?? "")
             .Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries).ToList();
@@ -70,7 +72,7 @@ public static class AgentSetup
                 }
             }
         }
-        return null;
+        return name == "claude" ? CliLauncher.BundledClaude(appData, localAppData).FirstOrDefault() : null;
     }
 
     /// True when Codex has recorded trust for our hook: a [hooks.state."...:permission_request..."] table in config.toml.

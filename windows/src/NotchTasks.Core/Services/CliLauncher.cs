@@ -25,10 +25,10 @@ public static partial class CliLauncher
 
     /// The command that runs name, or null. A .exe wins over every shim. Of the shims, a clean .cmd or .bat is the choice only
     /// when its node.exe and JS entry cannot be found. home and appData are as in AgentSetup.FindCli; path is the PATH to search
-    /// (null: this process's PATH).
-    public static CliCommand? Resolve(string name, string home, string? path = null, string? appData = null)
+    /// (null: this process's PATH). localAppData is the folder of the desktop apps' bundled CLIs (null: this user's).
+    public static CliCommand? Resolve(string name, string home, string? path = null, string? appData = null, string? localAppData = null)
     {
-        var found = Candidates(name, home, path, appData);
+        var found = Candidates(name, home, path, appData, localAppData);
         // a relative PATH entry gives a relative .exe: it is not a winner (the app must start the file it names, whatever the folder)
         var exe = found.FirstOrDefault(p => p.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) && Path.IsPathFullyQualified(p));
         if (exe is not null)
@@ -44,15 +44,16 @@ public static partial class CliLauncher
     }
 
     /// Like Resolve, but never a shim: for a call whose arguments are user text. Null when the CLI is only a shim with no node entry.
-    public static CliCommand? ResolveDirect(string name, string home, string? path = null, string? appData = null)
+    public static CliCommand? ResolveDirect(string name, string home, string? path = null, string? appData = null, string? localAppData = null)
     {
-        var command = Resolve(name, home, path, appData);
+        var command = Resolve(name, home, path, appData, localAppData);
         return command is { Kind: CliKind.Direct } ? command : null;
     }
 
     /// Every existing file called name with one of the extensions, in the search order: PATH, then the npm folder under
     /// %APPDATA%, then ~/.local/bin, ~/.npm-global/bin and ~/.opencode/bin. Extensions are tried in order within a folder.
-    public static IReadOnlyList<string> Candidates(string name, string home, string? path = null, string? appData = null)
+    /// For claude, the desktop apps' bundled CLIs come last (BundledClaude, newest first).
+    public static IReadOnlyList<string> Candidates(string name, string home, string? path = null, string? appData = null, string? localAppData = null)
     {
         var dirs = (path ?? Environment.GetEnvironmentVariable("PATH") ?? string.Empty)
             .Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries).ToList();
@@ -77,7 +78,74 @@ public static partial class CliLauncher
                 }
             }
         }
+        if (name == "claude")
+        {
+            list.AddRange(BundledClaude(appData, localAppData));
+        }
         return list;
+    }
+
+    /// The Claude CLIs the desktop apps bundle: %LOCALAPPDATA%\Claude-Data\claude_*\claude-code\<version>\<hash>\claude.exe and
+    /// %APPDATA%\Claude\claude-code\<version>\claude.exe. Newest version first (numbers compared as numbers), then the later
+    /// write. The folders are injectable: null means this user's own. A missing folder gives none.
+    public static IReadOnlyList<string> BundledClaude(string? appData = null, string? localAppData = null)
+    {
+        appData ??= Environment.GetEnvironmentVariable("APPDATA");
+        localAppData ??= Environment.GetEnvironmentVariable("LOCALAPPDATA");
+        var found = new List<(string File, string Version, DateTime Written)>();
+        if (!string.IsNullOrEmpty(localAppData))
+        {
+            foreach (var install in SubDirs(Path.Combine(localAppData, "Claude-Data"), "claude_*"))
+            {
+                foreach (var version in SubDirs(Path.Combine(install, "claude-code"), "*"))
+                {
+                    foreach (var hash in SubDirs(version, "*"))
+                    {
+                        AddBundled(found, Path.Combine(hash, "claude.exe"), version);
+                    }
+                }
+            }
+        }
+        if (!string.IsNullOrEmpty(appData))
+        {
+            foreach (var version in SubDirs(Path.Combine(appData, "Claude", "claude-code"), "*"))
+            {
+                AddBundled(found, Path.Combine(version, "claude.exe"), version);
+            }
+        }
+        return found
+            .OrderByDescending(f => Version.TryParse(f.Version, out var v) ? v : new Version(0, 0))
+            .ThenByDescending(f => f.Written)
+            .Select(f => f.File)
+            .ToList();
+    }
+
+    private static IEnumerable<string> SubDirs(string dir, string pattern)
+    {
+        try
+        {
+            return Directory.Exists(dir) ? Directory.EnumerateDirectories(dir, pattern).ToList() : Array.Empty<string>();
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            return Array.Empty<string>();
+        }
+    }
+
+    private static void AddBundled(List<(string File, string Version, DateTime Written)> found, string exe, string versionDir)
+    {
+        if (!File.Exists(exe))
+        {
+            return;
+        }
+        try
+        {
+            found.Add((exe, Path.GetFileName(versionDir), File.GetLastWriteTimeUtc(exe)));
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            // a file that cannot be read is not a CLI
+        }
     }
 
     /// True for a clean .cmd or .bat: fully qualified, existing, with none of the characters cmd.exe reads.

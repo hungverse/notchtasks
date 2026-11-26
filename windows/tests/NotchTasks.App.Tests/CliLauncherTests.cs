@@ -29,6 +29,17 @@ public sealed class CliLauncherTests
 
     private static string AppData(TempRoot root) => Path.Combine(root.Folder, "appdata");
 
+    /// A LOCALAPPDATA with no bundled Claude in it, so the machine's own desktop app is never found.
+    private static string Local(TempRoot root) => Path.Combine(root.Folder, "localappdata");
+
+    /// A bundled CLI at %LOCALAPPDATA%\Claude-Data\claude_<id>\claude-code\<version>\<hash>\claude.exe.
+    private static string Bundled(string local, string id, string version, string hash, string content = "")
+    {
+        var dir = Path.Combine(local, "Claude-Data", "claude_" + id, "claude-code", version, hash);
+        Directory.CreateDirectory(dir);
+        return Write(dir, "claude.exe", content);
+    }
+
     [Fact]
     public void Resolve_PrefersARealExe()
     {
@@ -37,7 +48,7 @@ public sealed class CliLauncherTests
         Write(dir, "claude.cmd", "@echo off\r\n");
         var exe = Write(dir, "claude.exe");
 
-        var command = CliLauncher.Resolve("claude", Home(root), dir, AppData(root));
+        var command = CliLauncher.Resolve("claude", Home(root), dir, AppData(root), Local(root));
 
         Assert.NotNull(command);
         Assert.Equal(CliKind.Direct, command!.Kind);
@@ -51,7 +62,7 @@ public sealed class CliLauncherTests
         var dir = Folder(root, "bin");
         var shim = Write(dir, "claude.cmd", "@echo off\r\n");
 
-        var command = CliLauncher.Resolve("claude", Home(root), dir, AppData(root));
+        var command = CliLauncher.Resolve("claude", Home(root), dir, AppData(root), Local(root));
 
         Assert.NotNull(command);
         Assert.Equal(CliKind.Shim, command!.Kind);
@@ -65,7 +76,7 @@ public sealed class CliLauncherTests
         var dir = Folder(root, "a&b");
         Write(dir, "claude.cmd", "@echo off\r\n");
 
-        Assert.Null(CliLauncher.Resolve("claude", Home(root), dir, AppData(root)));
+        Assert.Null(CliLauncher.Resolve("claude", Home(root), dir, AppData(root), Local(root)));
     }
 
     [Fact]
@@ -75,7 +86,7 @@ public sealed class CliLauncherTests
         var dir = Folder(root, "bin");
         Write(dir, "claude.ps1", "Write-Output 1\r\n");
 
-        Assert.Null(CliLauncher.Resolve("claude", Home(root), dir, AppData(root)));
+        Assert.Null(CliLauncher.Resolve("claude", Home(root), dir, AppData(root), Local(root)));
     }
 
     [Fact]
@@ -88,7 +99,7 @@ public sealed class CliLauncherTests
         var script = Write(Folder(root, "npm/node_modules/@openai/codex/bin"), "codex.js");
         var node = Write(dir, "node.exe");
 
-        var command = CliLauncher.ResolveDirect("codex", Home(root), dir, AppData(root));
+        var command = CliLauncher.ResolveDirect("codex", Home(root), dir, AppData(root), Local(root));
 
         Assert.NotNull(command);
         Assert.Equal(CliKind.Direct, command!.Kind);
@@ -104,7 +115,7 @@ public sealed class CliLauncherTests
         var dir = Folder(root, "npm");
         Write(dir, "codex.cmd", "@ECHO off\r\n\"%dp0%\\node_modules\\@openai\\codex\\bin\\codex.js\" %*\r\n");
 
-        Assert.Null(CliLauncher.ResolveDirect("codex", Home(root), dir, AppData(root)));
+        Assert.Null(CliLauncher.ResolveDirect("codex", Home(root), dir, AppData(root), Local(root)));
     }
 
     [Fact]
@@ -116,7 +127,7 @@ public sealed class CliLauncherTests
         Write(root.Folder, "evil.js");
         Write(dir, "node.exe");
 
-        Assert.Null(CliLauncher.ResolveDirect("codex", Home(root), dir, AppData(root)));
+        Assert.Null(CliLauncher.ResolveDirect("codex", Home(root), dir, AppData(root), Local(root)));
     }
 
     [Fact]
@@ -195,11 +206,92 @@ public sealed class CliLauncherTests
         var relative = Path.GetRelativePath(Directory.GetCurrentDirectory(), exeDir);
         Assert.False(Path.IsPathFullyQualified(relative));
 
-        var command = CliLauncher.Resolve("claude", Home(root), relative + Path.PathSeparator + shimDir, AppData(root));
+        var command = CliLauncher.Resolve("claude", Home(root), relative + Path.PathSeparator + shimDir, AppData(root), Local(root));
 
         Assert.NotNull(command);
         Assert.Equal(CliKind.Shim, command!.Kind);
         Assert.Equal(shim, command.FileName);
-        Assert.Null(CliLauncher.Resolve("claude", Home(root), relative, AppData(root)));
+        Assert.Null(CliLauncher.Resolve("claude", Home(root), relative, AppData(root), Local(root)));
+    }
+
+    [Fact]
+    public void Resolve_FindsTheBundledClaudeOfTheDesktopApp()
+    {
+        using var root = new TempRoot();
+        var exe = Bundled(Local(root), "pzs8sxrjxfjjc", "2.1.326", "d31a4581af92");
+
+        var command = CliLauncher.Resolve("claude", Home(root), "", AppData(root), Local(root));
+
+        Assert.NotNull(command);
+        Assert.Equal(CliKind.Direct, command!.Kind);
+        Assert.Equal(exe, command.FileName);
+    }
+
+    [Fact]
+    public void Resolve_FindsTheBundledClaudeInTheAppDataFolder()
+    {
+        using var root = new TempRoot();
+        var dir = Path.Combine(AppData(root), "Claude", "claude-code", "2.1.10");
+        Directory.CreateDirectory(dir);
+        var exe = Write(dir, "claude.exe");
+
+        var command = CliLauncher.Resolve("claude", Home(root), "", AppData(root), Local(root));
+
+        Assert.Equal(exe, command!.FileName);
+    }
+
+    [Fact]
+    public void Resolve_BundledVersionsCompareNumerically_NewestFirst()
+    {
+        using var root = new TempRoot();
+        var local = Local(root);
+        Bundled(local, "a", "2.1.9", "aaa");
+        var newest = Bundled(local, "a", "2.1.326", "bbb");
+        Bundled(local, "b", "2.1.100", "ccc");
+
+        var command = CliLauncher.Resolve("claude", Home(root), "", AppData(root), local);
+
+        Assert.Equal(newest, command!.FileName);
+    }
+
+    [Fact]
+    public void Resolve_SameBundledVersion_TheLaterWriteWins()
+    {
+        using var root = new TempRoot();
+        var local = Local(root);
+        var older = Bundled(local, "a", "2.1.326", "aaa");
+        var newer = Bundled(local, "a", "2.1.326", "bbb");
+        File.SetLastWriteTimeUtc(older, DateTime.UtcNow.AddDays(-2));
+        File.SetLastWriteTimeUtc(newer, DateTime.UtcNow.AddDays(-1));
+
+        var command = CliLauncher.Resolve("claude", Home(root), "", AppData(root), local);
+
+        Assert.Equal(newer, command!.FileName);
+    }
+
+    [Fact]
+    public void Resolve_PathAndLocalBinBeatTheBundledCli()
+    {
+        using var root = new TempRoot();
+        var local = Local(root);
+        Bundled(local, "a", "9.9.9", "aaa");
+        var onPath = Folder(root, "path");
+        var pathExe = Write(onPath, "claude.exe");
+
+        Assert.Equal(pathExe, CliLauncher.Resolve("claude", Home(root), onPath, AppData(root), local)!.FileName);
+
+        var localBin = Path.Combine(Home(root), ".local", "bin");
+        Directory.CreateDirectory(localBin);
+        var binExe = Write(localBin, "claude.exe");
+        Assert.Equal(binExe, CliLauncher.Resolve("claude", Home(root), "", AppData(root), local)!.FileName);
+    }
+
+    [Fact]
+    public void Resolve_OtherNamesAreNotLookedUpInTheBundledFolders()
+    {
+        using var root = new TempRoot();
+        Bundled(Local(root), "a", "2.1.326", "aaa");
+
+        Assert.Null(CliLauncher.Resolve("codex", Home(root), "", AppData(root), Local(root)));
     }
 }
