@@ -325,7 +325,7 @@ struct BrowserGuideView: View {
             .background(RoundedRectangle(cornerRadius: 10).fill(enabled ? Color.green.opacity(0.12) : Color.secondary.opacity(0.08)))
 
             HStack {
-                Button(enabled ? "Xong" : L("Later"), action: close).keyboardShortcut(.cancelAction)
+                Button(enabled ? L("Done") : L("Later"), action: close).keyboardShortcut(.cancelAction)
                 Spacer()
                 if !enabled {
                     Button { Task.detached { BrowserJS.showPlayingTab(browser) } } label: { Label(L("Open {0}", browser.name), systemImage: "arrow.up.forward.app") }

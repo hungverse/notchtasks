@@ -259,7 +259,7 @@ struct BadgeEditor: View {
     static let emoji = ["🔥", "🚀", "⚡️", "🤖", "🐱", "🐶", "💻", "☕️", "✅", "🎯", "🌟", "💡", "🛠️", "🍀", "🎧", "🧠"]
 
     enum Content: String, CaseIterable {
-        case symbol = "Biểu tượng", text = "Chữ, emoji", image = "Ảnh", motion = "Ảnh động"  // shown through L()
+        case symbol = "Symbol", text = "Text, emoji", image = "Photos", motion = "Animation"
         var icon: String {
             switch self {
             case .symbol: return "star.square.fill"
@@ -480,7 +480,7 @@ struct BadgeEditor: View {
             }
             if let reset { Button(L("Use the default icon"), action: reset) }
             Spacer()
-            Button("Xong", action: done).keyboardShortcut(.defaultAction).controlSize(.large)
+            Button(L("Done"), action: done).keyboardShortcut(.defaultAction).controlSize(.large)
         }
     }
 
@@ -778,7 +778,7 @@ struct IconStore: View {
         }
         if !settings.seenTools.isEmpty {
             Section(L("Set for a build tool")) {
-                ForEach(settings.seenTools, id: \.self) { t in Button(t) { settings.toolIcons[t] = icon; flash(e) } }
+                ForEach(settings.seenTools, id: \.self) { t in Button(L(t)) { settings.toolIcons[t] = icon; flash(e) } }
             }
         }
     }

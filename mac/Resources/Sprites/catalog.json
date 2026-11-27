@@ -5,7 +5,7 @@
     "frames" : 4,
     "id" : "px-buddy",
     "pixel" : true,
-    "title" : "Bé cam"
+    "title" : "Orange buddy"
   },
   {
     "category" : "AI",
@@ -13,7 +13,7 @@
     "frames" : 6,
     "id" : "px-spark",
     "pixel" : true,
-    "title" : "Tia sáng"
+    "title" : "Spark"
   },
   {
     "category" : "AI",
@@ -21,7 +21,7 @@
     "frames" : 4,
     "id" : "px-cloud-term",
     "pixel" : true,
-    "title" : "Mây dòng lệnh"
+    "title" : "Command cloud"
   },
   {
     "category" : "AI",
@@ -29,7 +29,7 @@
     "frames" : 4,
     "id" : "px-rocket",
     "pixel" : true,
-    "title" : "Tên lửa"
+    "title" : "Rocket"
   },
   {
     "category" : "AI",
@@ -37,7 +37,7 @@
     "frames" : 6,
     "id" : "px-astro",
     "pixel" : true,
-    "title" : "Phi hành gia"
+    "title" : "Astronaut"
   },
   {
     "category" : "AI",
@@ -45,7 +45,7 @@
     "frames" : 6,
     "id" : "px-gem",
     "pixel" : true,
-    "title" : "Sao xanh"
+    "title" : "Blue star"
   },
   {
     "category" : "AI",
@@ -53,7 +53,7 @@
     "frames" : 4,
     "id" : "px-robot",
     "pixel" : true,
-    "title" : "Robot nhỏ"
+    "title" : "Little robot"
   },
   {
     "category" : "AI",
@@ -61,90 +61,90 @@
     "frames" : 4,
     "id" : "px-think",
     "pixel" : true,
-    "title" : "Đang nghĩ"
+    "title" : "Thinking"
   },
   {
-    "category" : "Cày cuốc",
+    "category" : "Grind",
     "fps" : 8,
     "frames" : 4,
     "id" : "px-miner",
     "pixel" : true,
-    "title" : "Thợ mỏ"
+    "title" : "Miner"
   },
   {
-    "category" : "Cày cuốc",
+    "category" : "Grind",
     "fps" : 8,
     "frames" : 4,
     "id" : "px-anvil",
     "pixel" : true,
-    "title" : "Rèn sắt"
+    "title" : "Blacksmith"
   },
   {
-    "category" : "Cày cuốc",
+    "category" : "Grind",
     "fps" : 10,
     "frames" : 6,
     "id" : "px-gears",
     "pixel" : true,
-    "title" : "Bánh răng nhỏ"
+    "title" : "Little gear"
   },
   {
-    "category" : "Cày cuốc",
+    "category" : "Grind",
     "fps" : 10,
     "frames" : 4,
     "id" : "px-hamster",
     "pixel" : true,
-    "title" : "Chuột lăn bánh"
+    "title" : "Hamster wheel"
   },
   {
-    "category" : "Cày cuốc",
+    "category" : "Grind",
     "fps" : 5,
     "frames" : 4,
     "id" : "px-coffee",
     "pixel" : true,
-    "title" : "Cà phê"
+    "title" : "Coffee"
   },
   {
-    "category" : "Cày cuốc",
+    "category" : "Grind",
     "fps" : 8,
     "frames" : 8,
     "id" : "px-loading",
     "pixel" : true,
-    "title" : "Thanh tiến trình"
+    "title" : "Progress bar"
   },
   {
-    "category" : "Cày cuốc",
+    "category" : "Grind",
     "fps" : 8,
     "frames" : 4,
     "id" : "px-fire",
     "pixel" : true,
-    "title" : "Lửa trại"
+    "title" : "Campfire"
   },
   {
-    "category" : "Cày cuốc",
+    "category" : "Grind",
     "fps" : 8,
     "frames" : 4,
     "id" : "px-bug",
     "pixel" : true,
-    "title" : "Bắt bug"
+    "title" : "Bug catcher"
   },
   {
-    "category" : "Cày cuốc",
+    "category" : "Grind",
     "fps" : 10,
     "frames" : 6,
     "id" : "px-coin",
     "pixel" : true,
-    "title" : "Đồng xu"
+    "title" : "Coin"
   },
   {
-    "category" : "Dễ thương",
+    "category" : "Cute",
     "fps" : 5,
     "frames" : 6,
     "id" : "px-cat",
     "pixel" : true,
-    "title" : "Mèo"
+    "title" : "Cat"
   },
   {
-    "category" : "Dễ thương",
+    "category" : "Cute",
     "fps" : 8,
     "frames" : 6,
     "id" : "px-slime",
@@ -152,36 +152,36 @@
     "title" : "Slime"
   },
   {
-    "category" : "Dễ thương",
+    "category" : "Cute",
     "fps" : 6,
     "frames" : 4,
     "id" : "px-ghost",
     "pixel" : true,
-    "title" : "Ma nhỏ"
+    "title" : "Little ghost"
   },
   {
-    "category" : "Dễ thương",
+    "category" : "Cute",
     "fps" : 5,
     "frames" : 4,
     "id" : "px-duck",
     "pixel" : true,
-    "title" : "Vịt cao su"
+    "title" : "Rubber duck"
   },
   {
-    "category" : "Dễ thương",
+    "category" : "Cute",
     "fps" : 6,
     "frames" : 4,
     "id" : "px-heart",
     "pixel" : true,
-    "title" : "Tim đập"
+    "title" : "Heartbeat"
   },
   {
-    "category" : "Dễ thương",
+    "category" : "Cute",
     "fps" : 6,
     "frames" : 4,
     "id" : "px-penguin",
     "pixel" : true,
-    "title" : "Cánh cụt"
+    "title" : "Penguin"
   },
   {
     "category" : "Robot",
@@ -197,7 +197,7 @@
     "frames" : 24,
     "id" : "v-mecha",
     "pixel" : false,
-    "title" : "Robot chiến"
+    "title" : "Battle robot"
   },
   {
     "category" : "Anime",
@@ -213,7 +213,7 @@
     "frames" : 24,
     "id" : "v-neko",
     "pixel" : false,
-    "title" : "Mèo anime"
+    "title" : "Anime cat"
   },
   {
     "category" : "Anime",
@@ -221,7 +221,7 @@
     "frames" : 24,
     "id" : "v-kawaii-cloud",
     "pixel" : false,
-    "title" : "Mây dễ thương"
+    "title" : "Cute cloud"
   },
   {
     "category" : "AI",
@@ -229,7 +229,7 @@
     "frames" : 24,
     "id" : "v-spark",
     "pixel" : false,
-    "title" : "Tia sáng cam"
+    "title" : "Orange spark"
   },
   {
     "category" : "AI",
@@ -237,7 +237,7 @@
     "frames" : 30,
     "id" : "v-orbit",
     "pixel" : false,
-    "title" : "Quỹ đạo"
+    "title" : "Orbit"
   },
   {
     "category" : "AI",
@@ -245,7 +245,7 @@
     "frames" : 24,
     "id" : "v-twinkle",
     "pixel" : false,
-    "title" : "Lấp lánh"
+    "title" : "Sparkle"
   },
   {
     "category" : "AI",
@@ -253,7 +253,7 @@
     "frames" : 24,
     "id" : "v-neural",
     "pixel" : false,
-    "title" : "Mạng nơ-ron"
+    "title" : "Neural network"
   },
   {
     "category" : "AI",
@@ -261,47 +261,47 @@
     "frames" : 30,
     "id" : "v-typing",
     "pixel" : false,
-    "title" : "Đang gõ…"
+    "title" : "Typing…"
   },
   {
-    "category" : "Cày cuốc",
+    "category" : "Grind",
     "fps" : 15,
     "frames" : 30,
     "id" : "v-gear",
     "pixel" : false,
-    "title" : "Bánh răng"
+    "title" : "Gear"
   },
   {
-    "category" : "Cày cuốc",
+    "category" : "Grind",
     "fps" : 12,
     "frames" : 36,
     "id" : "v-hourglass",
     "pixel" : false,
-    "title" : "Đồng hồ cát"
+    "title" : "Hourglass"
   },
   {
-    "category" : "Cày cuốc",
+    "category" : "Grind",
     "fps" : 10,
     "frames" : 20,
     "id" : "v-bricks",
     "pixel" : false,
-    "title" : "Xếp gạch"
+    "title" : "Bricks"
   },
   {
-    "category" : "Dễ thương",
+    "category" : "Cute",
     "fps" : 15,
     "frames" : 30,
     "id" : "v-blob",
     "pixel" : false,
-    "title" : "Bé tròn"
+    "title" : "Round buddy"
   },
   {
-    "category" : "Dễ thương",
+    "category" : "Cute",
     "fps" : 12,
     "frames" : 24,
     "id" : "v-star-friend",
     "pixel" : false,
-    "title" : "Sao vui"
+    "title" : "Happy star"
   },
   {
     "category" : "pets",
@@ -309,7 +309,7 @@
     "frames" : 32,
     "id" : "ip-fox",
     "pixel" : true,
-    "title" : "Cáo"
+    "title" : "Fox"
   },
   {
     "category" : "pets",
@@ -317,7 +317,7 @@
     "frames" : 32,
     "id" : "ip-fox-l1",
     "pixel" : true,
-    "title" : "Cáo"
+    "title" : "Fox"
   },
   {
     "category" : "pets",
@@ -325,7 +325,7 @@
     "frames" : 32,
     "id" : "ip-fox-l2",
     "pixel" : true,
-    "title" : "Cáo"
+    "title" : "Fox"
   },
   {
     "category" : "pets",
@@ -333,7 +333,7 @@
     "frames" : 32,
     "id" : "ip-frog",
     "pixel" : true,
-    "title" : "Ếch"
+    "title" : "Frog"
   },
   {
     "category" : "pets",
@@ -341,7 +341,7 @@
     "frames" : 32,
     "id" : "ip-frog-l1",
     "pixel" : true,
-    "title" : "Ếch"
+    "title" : "Frog"
   },
   {
     "category" : "pets",
@@ -349,7 +349,7 @@
     "frames" : 32,
     "id" : "ip-frog-l2",
     "pixel" : true,
-    "title" : "Ếch"
+    "title" : "Frog"
   },
   {
     "category" : "pets",
@@ -357,7 +357,7 @@
     "frames" : 32,
     "id" : "ip-panda",
     "pixel" : true,
-    "title" : "Gấu trúc"
+    "title" : "Panda"
   },
   {
     "category" : "pets",
@@ -365,7 +365,7 @@
     "frames" : 32,
     "id" : "ip-panda-l1",
     "pixel" : true,
-    "title" : "Gấu trúc"
+    "title" : "Panda"
   },
   {
     "category" : "pets",
@@ -373,7 +373,7 @@
     "frames" : 32,
     "id" : "ip-panda-l2",
     "pixel" : true,
-    "title" : "Gấu trúc"
+    "title" : "Panda"
   },
   {
     "category" : "pets",
@@ -381,7 +381,7 @@
     "frames" : 32,
     "id" : "ip-bunny",
     "pixel" : true,
-    "title" : "Thỏ"
+    "title" : "Bunny"
   },
   {
     "category" : "pets",
@@ -389,7 +389,7 @@
     "frames" : 32,
     "id" : "ip-bunny-l1",
     "pixel" : true,
-    "title" : "Thỏ"
+    "title" : "Bunny"
   },
   {
     "category" : "pets",
@@ -397,7 +397,7 @@
     "frames" : 32,
     "id" : "ip-bunny-l2",
     "pixel" : true,
-    "title" : "Thỏ"
+    "title" : "Bunny"
   },
   {
     "category" : "pets",
@@ -405,7 +405,7 @@
     "frames" : 32,
     "id" : "ip-owl",
     "pixel" : true,
-    "title" : "Cú"
+    "title" : "Owl"
   },
   {
     "category" : "pets",
@@ -413,7 +413,7 @@
     "frames" : 32,
     "id" : "ip-owl-l1",
     "pixel" : true,
-    "title" : "Cú"
+    "title" : "Owl"
   },
   {
     "category" : "pets",
@@ -421,6 +421,6 @@
     "frames" : 32,
     "id" : "ip-owl-l2",
     "pixel" : true,
-    "title" : "Cú"
+    "title" : "Owl"
   }
 ]

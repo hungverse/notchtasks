@@ -48,14 +48,14 @@ struct Frames {
 /// The animations shipped in the app (drawn by Tools/SpriteGen.swift).
 enum SpriteLibrary {
     struct Entry: Decodable, Identifiable { let id, category: String; private let title: String; let frames: Int; let fps: Double; let pixel: Bool
-        /// Its name in the app's language (the catalog file holds the Vietnamese one: the key).
+        /// The catalog holds the English key.
         var name: String { L(title) }
     }
 
     static let dir = Bundle.main.resourceURL?.appendingPathComponent("Sprites")
     static let all: [Entry] = dir.flatMap { try? Data(contentsOf: $0.appendingPathComponent("catalog.json")) }
         .flatMap { try? JSONDecoder().decode([Entry].self, from: $0) } ?? []
-    static let categories = ["AI", "Cày cuốc", "Dễ thương", "Robot", "Anime"].filter { c in all.contains { $0.category == c } }
+    static let categories = ["AI", "Grind", "Cute", "Robot", "Anime"].filter { c in all.contains { $0.category == c } }
 
     static func entry(_ id: String) -> Entry? { all.first { $0.id == id } }
 }

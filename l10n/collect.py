@@ -11,6 +11,10 @@ for f in files:
         k = decode(m.group(1))
         if k not in found: found.append(k)
 old = json.load(open('l10n/keys.json'))
+legacy = json.load(open('l10n/legacy-vi.json'))
+invalid = [k for k in found if k not in old and (legacy.get(k, k) != k or re.search(r'[ĂăĐđƠơƯưẠ-ỹ]', k))]
+if invalid:
+    sys.exit(f'Write new translation keys in English: {invalid}')
 keys = old + [k for k in found if k not in old]
 json.dump(keys, open('l10n/keys.json', 'w'), ensure_ascii=False, indent=0)
 print(len(found), 'in code,', len(keys), 'total')

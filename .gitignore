@@ -8,3 +8,4 @@ xcuserdata/
 # AI planning notes stay local
 docs/superpowers/
 .superpowers/
+__pycache__/

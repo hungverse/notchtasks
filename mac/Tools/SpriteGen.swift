@@ -107,7 +107,7 @@ let tau = Double.pi * 2
 
 // ---------- AI agents (pixel) ----------
 
-pixel("px-buddy", "Bé cam", "AI", fps: 6, frames: 4) { f, p in
+pixel("px-buddy", "Orange buddy", "AI", fps: 6, frames: 4) { f, p in
     let O: UInt32 = 0xE8875B, D: UInt32 = 0xB85F3A
     let bob = f % 2
     p.art(["..OOOOOOOO..",
@@ -126,7 +126,7 @@ pixel("px-buddy", "Bé cam", "AI", fps: 6, frames: 4) { f, p in
     p.set(7 + (f % 2), 2 + bob, 0xFFD27A); p.set(8 - (f % 2), 1 + bob, 0xFFE9B0)
 }
 
-pixel("px-spark", "Tia sáng", "AI", fps: 8, frames: 6) { f, p in
+pixel("px-spark", "Spark", "AI", fps: 8, frames: 6) { f, p in
     let O: UInt32 = 0xE8875B, L: UInt32 = 0xF6B38F
     let phase = [0, 1, 2, 3, 2, 1][f]
     let long = 3 + phase, short = 2 + phase / 2
@@ -138,7 +138,7 @@ pixel("px-spark", "Tia sáng", "AI", fps: 8, frames: 6) { f, p in
     p.rect(7, 7, 2, 2, W)
 }
 
-pixel("px-cloud-term", "Mây dòng lệnh", "AI", fps: 4, frames: 4) { f, p in
+pixel("px-cloud-term", "Command cloud", "AI", fps: 4, frames: 4) { f, p in
     let C: UInt32 = 0xEDEFF5, S: UInt32 = 0xB7BCCB
     let bob = f < 2 ? 0 : 1
     p.art(["....CCCC........",
@@ -152,7 +152,7 @@ pixel("px-cloud-term", "Mây dòng lệnh", "AI", fps: 4, frames: 4) { f, p in
     if f % 2 == 0 { p.rect(7, 9 + bob, 4, 1, K) }
 }
 
-pixel("px-rocket", "Tên lửa", "AI", fps: 10, frames: 4) { f, p in
+pixel("px-rocket", "Rocket", "AI", fps: 10, frames: 4) { f, p in
     let B: UInt32 = 0xE9ECF5, R: UInt32 = 0x6C7BFF, Wn: UInt32 = 0x7FE3FF
     let up = f % 2
     p.art(["...BB...",
@@ -169,7 +169,7 @@ pixel("px-rocket", "Tên lửa", "AI", fps: 10, frames: 4) { f, p in
     for (x, y) in [(1, (3 + f * 3) % 14), (14, (8 + f * 4) % 14), (2, (12 + f * 2) % 14)] { p.set(x, y, 0xC9D2FF) }
 }
 
-pixel("px-astro", "Phi hành gia", "AI", fps: 5, frames: 6) { f, p in
+pixel("px-astro", "Astronaut", "AI", fps: 5, frames: 6) { f, p in
     let S: UInt32 = 0xF1F3F8, G: UInt32 = 0x2A2F45, Vz: UInt32 = 0x7FC8FF, P: UInt32 = 0xA48BFF
     let bob = [0, 0, 1, 1, 1, 0][f]
     p.art([".SSSSS.",
@@ -185,7 +185,7 @@ pixel("px-astro", "Phi hành gia", "AI", fps: 5, frames: 6) { f, p in
     for (i, (x, y)) in [(1, 2), (14, 4), (1, 12), (14, 13)].enumerated() where (f + i) % 3 != 0 { p.set(x, y, 0xFFF3B0) }
 }
 
-pixel("px-gem", "Sao xanh", "AI", fps: 8, frames: 6) { f, p in
+pixel("px-gem", "Blue star", "AI", fps: 8, frames: 6) { f, p in
     let r = [3, 4, 5, 6, 5, 4][f]
     let B: UInt32 = 0x5B8CFF, L: UInt32 = 0xB9A7FF
     for y in 0..<16 { for x in 0..<16 {
@@ -197,7 +197,7 @@ pixel("px-gem", "Sao xanh", "AI", fps: 8, frames: 6) { f, p in
     if f == 3 { p.set(13, 2, W); p.set(2, 13, W) }
 }
 
-pixel("px-robot", "Robot nhỏ", "AI", fps: 4, frames: 4) { f, p in
+pixel("px-robot", "Little robot", "AI", fps: 4, frames: 4) { f, p in
     let M: UInt32 = 0x9AA5B8, D: UInt32 = 0x5D6678, E: UInt32 = 0x5CF2C9
     p.line(8, 1, 8, 3, D); p.set(8, 0, f % 2 == 0 ? 0xFF5D5D : 0xFFB3B3)
     p.rect(3, 4, 10, 8, M); p.rect(3, 11, 10, 1, D)
@@ -208,7 +208,7 @@ pixel("px-robot", "Robot nhỏ", "AI", fps: 4, frames: 4) { f, p in
     p.rect(5, 12, 6, 3, D)
 }
 
-pixel("px-think", "Đang nghĩ", "AI", fps: 5, frames: 4) { f, p in
+pixel("px-think", "Thinking", "AI", fps: 5, frames: 4) { f, p in
     let H: UInt32 = 0xF4C9A8, Hr: UInt32 = 0x4A3A5C
     p.disc(7, 10, 4.6, H)
     p.rect(3, 5, 9, 2, Hr); p.rect(3, 6, 2, 3, Hr)
@@ -219,7 +219,7 @@ pixel("px-think", "Đang nghĩ", "AI", fps: 5, frames: 4) { f, p in
 
 // ---------- Build & grind (pixel) ----------
 
-pixel("px-miner", "Thợ mỏ", "Cày cuốc", fps: 8, frames: 4) { f, p in
+pixel("px-miner", "Miner", "Grind", fps: 8, frames: 4) { f, p in
     let Hm: UInt32 = 0xFFC83D, Sk: UInt32 = 0xF2C29B, Sh: UInt32 = 0x3C6FD1, Pn: UInt32 = 0x4A3B30, R: UInt32 = 0x8A8F9E, Rd: UInt32 = 0x5E6270
     let Wd: UInt32 = 0x8B5A2B, Mt: UInt32 = 0xC8CCD6
     p.rect(2, 3, 5, 2, Hm); p.set(7, 4, Hm); p.set(4, 2, 0xFFF3B0)
@@ -234,7 +234,7 @@ pixel("px-miner", "Thợ mỏ", "Cày cuốc", fps: 8, frames: 4) { f, p in
     }
 }
 
-pixel("px-anvil", "Rèn sắt", "Cày cuốc", fps: 8, frames: 4) { f, p in
+pixel("px-anvil", "Blacksmith", "Grind", fps: 8, frames: 4) { f, p in
     let A: UInt32 = 0x4C5466, Al: UInt32 = 0x6E778B, Hd: UInt32 = 0x8B5A2B, Hh: UInt32 = 0xB9C0CF, Hot: UInt32 = 0xFF8C42
     p.rect(2, 10, 12, 2, Al); p.rect(4, 12, 8, 1, A); p.rect(6, 13, 4, 1, A); p.rect(4, 14, 8, 2, A)
     p.rect(5, 9, 6, 1, Hot)
@@ -244,7 +244,7 @@ pixel("px-anvil", "Rèn sắt", "Cày cuốc", fps: 8, frames: 4) { f, p in
     if f == 2 { for (x, y) in [(4, 7), (3, 5), (13, 6), (14, 8), (6, 6)] { p.set(x, y, 0xFFD166) } }
 }
 
-pixel("px-gears", "Bánh răng nhỏ", "Cày cuốc", fps: 10, frames: 6) { f, p in
+pixel("px-gears", "Little gear", "Grind", fps: 10, frames: 6) { f, p in
     func gear(_ cx: Double, _ cy: Double, _ r: Double, _ teeth: Double, _ rot: Double, _ c: UInt32) {
         for y in 0..<16 { for x in 0..<16 {
             let dx = Double(x) + 0.5 - cx, dy = Double(y) + 0.5 - cy, d = hypot(dx, dy), a = atan2(dy, dx)
@@ -257,7 +257,7 @@ pixel("px-gears", "Bánh răng nhỏ", "Cày cuốc", fps: 10, frames: 6) { f, p
     gear(11.5, 11.5, 4, 6, -t * 8 / 6 + 0.3, 0xFFB347)
 }
 
-pixel("px-hamster", "Chuột lăn bánh", "Cày cuốc", fps: 10, frames: 4) { f, p in
+pixel("px-hamster", "Hamster wheel", "Grind", fps: 10, frames: 4) { f, p in
     let Wh: UInt32 = 0x8E97AA, Hm: UInt32 = 0xF0B46A, Bl: UInt32 = 0xFBE3C3
     for y in 0..<16 { for x in 0..<16 {
         let d = hypot(Double(x) + 0.5 - 8, Double(y) + 0.5 - 8)
@@ -269,7 +269,7 @@ pixel("px-hamster", "Chuột lăn bánh", "Cày cuốc", fps: 10, frames: 4) { f
     for x in (f % 2 == 0 ? [5, 9] : [6, 10]) { p.set(x, 13, 0xD9866B) }
 }
 
-pixel("px-coffee", "Cà phê", "Cày cuốc", fps: 5, frames: 4) { f, p in
+pixel("px-coffee", "Coffee", "Grind", fps: 5, frames: 4) { f, p in
     let M: UInt32 = 0xF4F1EA, C: UInt32 = 0x6B4226, Ms: UInt32 = 0xCFC8BA, Ht: UInt32 = 0xE36A6A
     p.rect(3, 8, 8, 7, M); p.rect(3, 14, 8, 1, Ms); p.rect(4, 8, 6, 1, C)
     p.rect(11, 9, 2, 1, M); p.rect(12, 10, 1, 3, M); p.rect(11, 12, 2, 1, M)
@@ -277,13 +277,13 @@ pixel("px-coffee", "Cà phê", "Cày cuốc", fps: 5, frames: 4) { f, p in
     for s in 0..<2 { for i in 0..<3 { p.set(5 + s * 3 + ((i + f + s) % 2), 6 - i - (f % 2), 0xC9CED9) } }
 }
 
-pixel("px-loading", "Thanh tiến trình", "Cày cuốc", fps: 8, frames: 8) { f, p in
+pixel("px-loading", "Progress bar", "Grind", fps: 8, frames: 8) { f, p in
     p.rect(1, 6, 14, 5, 0x3A4156); p.rect(2, 7, 12, 3, 0x22263A)
     for i in 0..<min(12, (f + 1) * 12 / 8) { p.rect(2 + i, 7, 1, 3, i % 2 == 0 ? 0x5CF2C9 : 0x3DD9AE) }
     if f == 7 { p.set(14, 4, 0xFFE066); p.set(1, 4, 0xFFE066) }
 }
 
-pixel("px-fire", "Lửa trại", "Cày cuốc", fps: 8, frames: 4) { f, p in
+pixel("px-fire", "Campfire", "Grind", fps: 8, frames: 4) { f, p in
     let rows: [[String]] = [
         ["......Y.........", ".....YY.........", ".....YOY..Y.....", "....YOOY.YY.....", "....YOROYOY.....", "...YORRROOY.....", "...YORRRROY.....", "....YORRROY....."],
         [".........Y......", "........YY......", ".....Y.YOY......", "....YY.YOOY.....", "....YOYORROY....", "...YOORRRROY....", "...YORRRRROY....", "....YORRROY....."],
@@ -293,7 +293,7 @@ pixel("px-fire", "Lửa trại", "Cày cuốc", fps: 8, frames: 4) { f, p in
     p.line(2, 13, 13, 11, 0x7A4A2A); p.line(2, 11, 13, 13, 0x8B5A2B); p.rect(3, 14, 10, 1, 0x5A3A22)
 }
 
-pixel("px-bug", "Bắt bug", "Cày cuốc", fps: 8, frames: 4) { f, p in
+pixel("px-bug", "Bug catcher", "Grind", fps: 8, frames: 4) { f, p in
     let G: UInt32 = 0x58C46A, D: UInt32 = 0x2F7A3D
     let x0 = [2, 3, 4, 3][f]
     p.disc(Double(x0) + 4.5, 10.5, 3.6, G); p.line(x0 + 4, 7, x0 + 4, 14, D)
@@ -304,7 +304,7 @@ pixel("px-bug", "Bắt bug", "Cày cuốc", fps: 8, frames: 4) { f, p in
     p.line(mx - 2, 6, mx - 4, 8, 0x8B5A2B)
 }
 
-pixel("px-coin", "Đồng xu", "Cày cuốc", fps: 10, frames: 6) { f, p in
+pixel("px-coin", "Coin", "Grind", fps: 10, frames: 6) { f, p in
     let w = [6, 5, 3, 1, 3, 5][f]
     let Y: UInt32 = 0xFFC83D, Dk: UInt32 = 0xD99A1E
     for y in 3..<13 {
@@ -318,7 +318,7 @@ pixel("px-coin", "Đồng xu", "Cày cuốc", fps: 10, frames: 6) { f, p in
 
 // ---------- Cute (pixel) ----------
 
-pixel("px-cat", "Mèo", "Dễ thương", fps: 5, frames: 6) { f, p in
+pixel("px-cat", "Cat", "Cute", fps: 5, frames: 6) { f, p in
     let C: UInt32 = 0xF2A65A, Cd: UInt32 = 0xC97A35, Pk: UInt32 = 0xFF9EAA
     p.art(["C....C", "CC..CC", "CCCCCC", "CCCCCC", "CCCCCC", ".CCCC."], 3, 3, ["C": C])
     p.set(3, 4, Pk); p.set(8, 4, Pk)
@@ -329,7 +329,7 @@ pixel("px-cat", "Mèo", "Dễ thương", fps: 5, frames: 6) { f, p in
     for (x, y) in tail[[0, 1, 2, 1, 0, 1][f]] { p.set(x, y, Cd) }
 }
 
-pixel("px-slime", "Slime", "Dễ thương", fps: 8, frames: 6) { f, p in
+pixel("px-slime", "Slime", "Cute", fps: 8, frames: 6) { f, p in
     let G: UInt32 = 0x6FE0A4, L: UInt32 = 0xB8F5D3, D: UInt32 = 0x2FA86B
     let (wd, ht, lift) = [(12, 6, 0), (10, 8, 1), (8, 10, 4), (9, 9, 5), (10, 8, 2), (13, 5, 0)][f]
     let top = 15 - ht - lift, left = 8 - wd / 2
@@ -339,7 +339,7 @@ pixel("px-slime", "Slime", "Dễ thương", fps: 8, frames: 6) { f, p in
     if lift > 0 { p.rect(5, 15, 6, 1, 0x2A2F45) }
 }
 
-pixel("px-ghost", "Ma nhỏ", "Dễ thương", fps: 6, frames: 4) { f, p in
+pixel("px-ghost", "Little ghost", "Cute", fps: 6, frames: 4) { f, p in
     let Gh: UInt32 = 0xF3F0FF
     let bob = [0, 1, 1, 0][f]
     p.art(["..GGGG..", ".GGGGGG.", "GGGGGGGG", "GGGGGGGG", "GGGGGGGG", "GGGGGGGG", "GGGGGGGG", "GGGGGGGG"], 4, 2 + bob, ["G": Gh])
@@ -348,7 +348,7 @@ pixel("px-ghost", "Ma nhỏ", "Dễ thương", fps: 6, frames: 4) { f, p in
     p.outline(0x7C6FB0)
 }
 
-pixel("px-duck", "Vịt cao su", "Dễ thương", fps: 5, frames: 4) { f, p in
+pixel("px-duck", "Rubber duck", "Cute", fps: 5, frames: 4) { f, p in
     let Y: UInt32 = 0xFFD43B, O: UInt32 = 0xFF8C1A, Wt: UInt32 = 0x6EC6FF, Wd: UInt32 = 0x3A9BE0
     let bob = [0, 1, 1, 0][f]
     p.art(["..YYY....", ".YYYYY...", ".YKYYYOO.", ".YYYYYOO.", "..YYYY...", "YYYYYYYYY", "YYYYYYYYY", ".YYYYYYY."], 3, 4 + bob, ["Y": Y, "O": O, "K": K])
@@ -356,7 +356,7 @@ pixel("px-duck", "Vịt cao su", "Dễ thương", fps: 5, frames: 4) { f, p in
     for x in 0..<16 where (x + f) % 4 == 0 { p.set(x, 12, Wd) }
 }
 
-pixel("px-heart", "Tim đập", "Dễ thương", fps: 6, frames: 4) { f, p in
+pixel("px-heart", "Heartbeat", "Cute", fps: 6, frames: 4) { f, p in
     let big = f == 1
     let R: UInt32 = 0xFF4D6D, L: UInt32 = 0xFF9FB2
     let art = big ? [".RR...RR.", "RRRR.RRRR", "RRRRRRRRR", "RRRRRRRRR", ".RRRRRRR.", "..RRRRR..", "...RRR...", "....R...."]
@@ -366,7 +366,7 @@ pixel("px-heart", "Tim đập", "Dễ thương", fps: 6, frames: 4) { f, p in
     p.outline(0x8E1B33)
 }
 
-pixel("px-penguin", "Cánh cụt", "Dễ thương", fps: 6, frames: 4) { f, p in
+pixel("px-penguin", "Penguin", "Cute", fps: 6, frames: 4) { f, p in
     let B: UInt32 = 0x2A2F45, Wt: UInt32 = 0xF4F6FB, O: UInt32 = 0xFFA931
     let tilt = [0, 1, 0, -1][f]
     p.art(["..BBBB..", ".BBBBBB.", "BBWWWWBB", "BWKWWKWB", "BWWOOWWB", "BWWWWWWB", "BWWWWWWB", ".BWWWWB.", "..BBBB.."], 4 + tilt, 2, ["B": B, "W": Wt, "K": K, "O": O])
@@ -390,7 +390,7 @@ vec("v-robot", "Robot", "Robot", fps: 12, frames: 24) { t, c in
     c.fillRound(34, 10 + bob, 28, 8, 4, rgb(0x9AA5B8))
 }
 
-vec("v-mecha", "Robot chiến", "Robot", fps: 12, frames: 24) { t, c in
+vec("v-mecha", "Battle robot", "Robot", fps: 12, frames: 24) { t, c in
     let glow = 0.5 + 0.5 * sin(t * tau * 2)
     c.setFillColor(rgb(0x3A4156))
     c.move(to: CGPoint(x: 20, y: 30)); c.addLine(to: CGPoint(x: 76, y: 30)); c.addLine(to: CGPoint(x: 84, y: 60)); c.addLine(to: CGPoint(x: 66, y: 82))
@@ -423,7 +423,7 @@ vec("v-chibi", "Chibi", "Anime", fps: 12, frames: 24) { t, c in
     c.strokeLine([CGPoint(x: 44, y: 22 + bob), CGPoint(x: 48, y: 19 + bob), CGPoint(x: 52, y: 22 + bob)], rgb(0x8A4A4A), 2.5)
 }
 
-vec("v-neko", "Mèo anime", "Anime", fps: 12, frames: 24) { t, c in
+vec("v-neko", "Anime cat", "Anime", fps: 12, frames: 24) { t, c in
     let ear = t < 0.5 ? sin(t * tau * 2) * 4 : 0
     c.setFillColor(rgb(0xF3F0FF))
     c.move(to: CGPoint(x: 18, y: 58)); c.addLine(to: CGPoint(x: 22 - ear, y: 88)); c.addLine(to: CGPoint(x: 42, y: 70)); c.fillPath()
@@ -440,7 +440,7 @@ vec("v-neko", "Mèo anime", "Anime", fps: 12, frames: 24) { t, c in
     c.fillEllipse(20, 26, 12, 6, rgb(0xFF8FA3, 0.55)); c.fillEllipse(64, 26, 12, 6, rgb(0xFF8FA3, 0.55))
 }
 
-vec("v-kawaii-cloud", "Mây dễ thương", "Anime", fps: 12, frames: 24) { t, c in
+vec("v-kawaii-cloud", "Cute cloud", "Anime", fps: 12, frames: 24) { t, c in
     let bob = sin(t * tau) * 3
     for (x, y, r) in [(30.0, 46.0, 18.0), (50, 56, 22), (68, 46, 17), (48, 40, 20)] { c.fillCircle(x, y + bob, r, rgb(W)) }
     let blink = (0.6...0.68).contains(t)
@@ -451,7 +451,7 @@ vec("v-kawaii-cloud", "Mây dễ thương", "Anime", fps: 12, frames: 24) { t, c
     c.fillEllipse(44, 18 - drop * 14 + bob, 5, 7, rgb(0x7FC8FF, 1 - drop))
 }
 
-vec("v-spark", "Tia sáng cam", "AI", fps: 12, frames: 24) { t, c in
+vec("v-spark", "Orange spark", "AI", fps: 12, frames: 24) { t, c in
     let pulse = 1 + sin(t * tau) * 0.12
     c.translateBy(x: 48, y: 48); c.rotate(by: t * tau / 5)
     for i in 0..<10 {
@@ -463,7 +463,7 @@ vec("v-spark", "Tia sáng cam", "AI", fps: 12, frames: 24) { t, c in
     c.fillCircle(0, 0, 9 * pulse, rgb(0xF0A07E))
 }
 
-vec("v-orbit", "Quỹ đạo", "AI", fps: 15, frames: 30) { t, c in
+vec("v-orbit", "Orbit", "AI", fps: 15, frames: 30) { t, c in
     let bob = sin(t * tau) * 2
     c.fillCircle(48, 48 + bob, 20, rgb(0x6C7BFF))
     c.fillCircle(42, 54 + bob, 7, rgb(0x9AA6FF))
@@ -474,7 +474,7 @@ vec("v-orbit", "Quỹ đạo", "AI", fps: 15, frames: 30) { t, c in
     for (i, (x, y)) in [(12.0, 80.0), (84.0, 70.0), (76.0, 14.0)].enumerated() { c.star(x, y, 4, 1.5, 4, 0, rgb(W, 0.4 + 0.6 * abs(sin((t + Double(i) / 3) * tau)))) }
 }
 
-vec("v-twinkle", "Lấp lánh", "AI", fps: 12, frames: 24) { t, c in
+vec("v-twinkle", "Sparkle", "AI", fps: 12, frames: 24) { t, c in
     for (i, (x, y, s)) in [(48.0, 48.0, 34.0), (22.0, 74.0, 12.0), (76.0, 22.0, 14.0)].enumerated() {
         let k = 0.75 + 0.25 * sin((t + Double(i) * 0.33) * tau)
         c.star(x, y, s * k, s * k * 0.28, 4, .pi / 2, rgb(i == 0 ? 0x7C9CFF : 0xC6B2FF))
@@ -482,7 +482,7 @@ vec("v-twinkle", "Lấp lánh", "AI", fps: 12, frames: 24) { t, c in
     }
 }
 
-vec("v-neural", "Mạng nơ-ron", "AI", fps: 12, frames: 24) { t, c in
+vec("v-neural", "Neural network", "AI", fps: 12, frames: 24) { t, c in
     let nodes: [(Double, Double)] = [(18, 70), (18, 26), (48, 82), (48, 48), (48, 14), (78, 64), (78, 30)]
     let links = [(0, 2), (0, 3), (1, 3), (1, 4), (2, 5), (3, 5), (3, 6), (4, 6)]
     for (k, (a, b)) in links.enumerated() {
@@ -492,7 +492,7 @@ vec("v-neural", "Mạng nơ-ron", "AI", fps: 12, frames: 24) { t, c in
     for (i, n) in nodes.enumerated() { c.fillCircle(n.0, n.1, 7 + 2 * max(0, sin((t * 2 - Double(i) / 7) * tau)), rgb(i % 2 == 0 ? 0x7C9CFF : 0xB9A7FF)) }
 }
 
-vec("v-typing", "Đang gõ…", "AI", fps: 15, frames: 30) { t, c in
+vec("v-typing", "Typing…", "AI", fps: 15, frames: 30) { t, c in
     c.fillRound(6, 22, 84, 52, 26, rgb(0x2E3347))
     for i in 0..<3 {
         let lift = max(0, sin((t - Double(i) * 0.15) * tau)) * 10
@@ -500,7 +500,7 @@ vec("v-typing", "Đang gõ…", "AI", fps: 15, frames: 30) { t, c in
     }
 }
 
-vec("v-gear", "Bánh răng", "Cày cuốc", fps: 15, frames: 30) { t, c in
+vec("v-gear", "Gear", "Grind", fps: 15, frames: 30) { t, c in
     func gear(_ cx: Double, _ cy: Double, _ r: Double, _ n: Int, _ rot: Double, _ col: UInt32) {
         c.saveGState(); c.translateBy(x: cx, y: cy); c.rotate(by: rot)
         for i in 0..<n { c.saveGState(); c.rotate(by: Double(i) / Double(n) * tau); c.fillRound(-r * 0.16, r * 0.7, r * 0.32, r * 0.42, 3, rgb(col)); c.restoreGState() }
@@ -511,7 +511,7 @@ vec("v-gear", "Bánh răng", "Cày cuốc", fps: 15, frames: 30) { t, c in
     gear(72, 72, 18, 8, -t * tau / 8 + 0.2, 0xFFB347)
 }
 
-vec("v-hourglass", "Đồng hồ cát", "Cày cuốc", fps: 12, frames: 36) { t, c in
+vec("v-hourglass", "Hourglass", "Grind", fps: 12, frames: 36) { t, c in
     let flip = t > 0.85 ? (t - 0.85) / 0.15 : 0
     c.translateBy(x: 48, y: 48); c.rotate(by: flip * .pi)
     let sand = min(t / 0.85, 1)
@@ -526,7 +526,7 @@ vec("v-hourglass", "Đồng hồ cát", "Cày cuốc", fps: 12, frames: 36) { t,
     if sand < 1 { c.fillRound(-1.2, -36, 2.4, 36, 1.2, rgb(0xFFC857)) }
 }
 
-vec("v-bricks", "Xếp gạch", "Cày cuốc", fps: 10, frames: 20) { t, c in
+vec("v-bricks", "Bricks", "Grind", fps: 10, frames: 20) { t, c in
     let placed = Int(t * 6)
     let spots: [(Double, Double)] = [(14, 12), (50, 12), (32, 30), (68, 30), (14, 48), (50, 48)]
     for (i, s) in spots.enumerated() where i < placed { c.fillRound(s.0, s.1, 32, 16, 3, rgb(i % 2 == 0 ? 0xE0734F : 0xC95F3E)) }
@@ -537,7 +537,7 @@ vec("v-bricks", "Xếp gạch", "Cày cuốc", fps: 10, frames: 20) { t, c in
     }
 }
 
-vec("v-blob", "Bé tròn", "Dễ thương", fps: 15, frames: 30) { t, c in
+vec("v-blob", "Round buddy", "Cute", fps: 15, frames: 30) { t, c in
     let s = sin(t * tau)
     let w = 60 + s * 6, h = 50 - s * 6
     c.fillEllipse(48 - w / 2, 18, w, h, rgb(0xFF9EC7))
@@ -550,7 +550,7 @@ vec("v-blob", "Bé tròn", "Dễ thương", fps: 15, frames: 30) { t, c in
     c.strokeLine([CGPoint(x: 45, y: 18 + h * 0.34), CGPoint(x: 48, y: 15 + h * 0.34), CGPoint(x: 51, y: 18 + h * 0.34)], rgb(0x4A2A3A), 2.5)
 }
 
-vec("v-star-friend", "Sao vui", "Dễ thương", fps: 12, frames: 24) { t, c in
+vec("v-star-friend", "Happy star", "Cute", fps: 12, frames: 24) { t, c in
     c.translateBy(x: 48, y: 46); c.rotate(by: sin(t * tau) * 0.12)
     c.star(0, 0, 40, 18, 5, .pi / 2, rgb(0xFFD43B))
     c.star(0, 0, 32, 14, 5, .pi / 2, rgb(0xFFE36E))
@@ -864,11 +864,11 @@ func petFrame(_ k: PetLook, look: Int, pose: Int, f: Int, _ p: Pix) {
 func pet(_ id: String, _ title: String, _ look: PetLook) {
     phone(id, title, "pets", fps: 4, frames: 96, side: 40) { n, p in petFrame(look, look: n / 32, pose: n / 4 % 8, f: n % 4, p) }
 }
-pet("ip-fox", "Cáo", PetLook(kind: .fox, base: 0xF28C38, belly: 0xFFF4E8, accent: 0xFFE9D2))
-pet("ip-frog", "Ếch", PetLook(kind: .frog, base: 0x6CC24A, belly: 0xE4F7B8, accent: 0x6CC24A))
-pet("ip-panda", "Gấu trúc", PetLook(kind: .panda, base: 0xF4F4F6, belly: 0xFFFFFF, accent: 0x2B2B33))
-pet("ip-bunny", "Thỏ", PetLook(kind: .bunny, base: 0xFFF2F6, belly: 0xFFFFFF, accent: 0xFFB0C6))
-pet("ip-owl", "Cú", PetLook(kind: .owl, base: 0xA8744A, belly: 0xF1D9B5, accent: 0xF0A030))
+pet("ip-fox", "Fox", PetLook(kind: .fox, base: 0xF28C38, belly: 0xFFF4E8, accent: 0xFFE9D2))
+pet("ip-frog", "Frog", PetLook(kind: .frog, base: 0x6CC24A, belly: 0xE4F7B8, accent: 0x6CC24A))
+pet("ip-panda", "Panda", PetLook(kind: .panda, base: 0xF4F4F6, belly: 0xFFFFFF, accent: 0x2B2B33))
+pet("ip-bunny", "Bunny", PetLook(kind: .bunny, base: 0xFFF2F6, belly: 0xFFFFFF, accent: 0xFFB0C6))
+pet("ip-owl", "Owl", PetLook(kind: .owl, base: 0xA8744A, belly: 0xF1D9B5, accent: 0xF0A030))
 
 let phoneSprites = Array(sprites[macCount...])
 sprites.removeLast(sprites.count - macCount)

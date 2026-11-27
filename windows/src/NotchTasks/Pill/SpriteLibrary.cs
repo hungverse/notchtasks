@@ -13,7 +13,7 @@ public sealed record SpriteEntry(string Id, string Category, string Title)
 public static class SpriteLibrary
 {
     /// The categories of the library, in the Mac's order. Their names are the keys of the Mac's texts.
-    public static IReadOnlyList<string> Categories { get; } = ["AI", "Cày cuốc", "Dễ thương", "Robot", "Anime"];
+    public static IReadOnlyList<string> Categories { get; } = ["AI", "Grind", "Cute", "Robot", "Anime"];
 
     /// Every catalog sprite in the catalog's order.
     public static IReadOnlyList<SpriteEntry> All { get; } =
