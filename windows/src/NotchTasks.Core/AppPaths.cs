@@ -22,6 +22,9 @@ public static class AppPaths
 
     public static string PidFile => Path.Combine(DataDir, "app.pid");
 
+    /// Where the visitor came from, written by install.ps1 (the site link's ?src=); read once for first_launch.
+    public static string InstallSourceFile => Path.Combine(DataDir, "install-src");
+
     private static string DefaultRoot()
     {
         var appData = Environment.GetEnvironmentVariable("APPDATA");

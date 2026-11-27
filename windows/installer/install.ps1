@@ -19,6 +19,17 @@ $ProgressPreference = 'SilentlyContinue'  # Invoke-WebRequest is many times slow
   $hash = (Get-FileHash $setup -Algorithm SHA256).Hash.ToLower()
   if ($hash -ne $feed.sha256.ToLower()) { Remove-Item $setup -Force; throw 'The download does not match the published checksum.' }
 
+  # where the visitor came from (the site adds $env:NT_SRC when its link had ?src=); kept for the app's first launch only
+  $src = ("$env:NT_SRC".ToLower() -replace '[^a-z0-9_-]', '')
+  if ($src) {
+    $dataDir = Join-Path $env:APPDATA 'NotchTasks'
+    $srcFile = Join-Path $dataDir 'install-src'
+    if (-not (Test-Path $srcFile)) {
+      New-Item -ItemType Directory -Force -Path $dataDir | Out-Null
+      Set-Content -LiteralPath $srcFile -Value $src.Substring(0, [Math]::Min(20, $src.Length)) -NoNewline
+    }
+  }
+
   # a running copy is replaced: close it first so the new one is the one that opens
   Get-Process NotchTasks -ErrorAction SilentlyContinue | Stop-Process -Force
   Write-Host 'Installing...'

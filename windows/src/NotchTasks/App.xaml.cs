@@ -210,7 +210,7 @@ public partial class App : System.Windows.Application
         Analytics = new Track(gaSecret, typeof(App).Assembly.GetName().Version?.ToString(3) ?? "", DateTimeOffset.Now,
             () => !settings.AnalyticsOff, key => settings.Get<string>(key), (key, value) => settings.Set(key, JsonValue.Create(value)),
             SendAnalytics, Later);
-        Analytics.Once("first_launch");
+        Analytics.Once("first_launch", InstallSource() is { } src ? new Dictionary<string, object> { ["src"] = src } : null);
 
         var store = new AskStore(AppPaths.AsksDir);
         store.MarkAppRunning(Environment.ProcessId);
@@ -283,6 +283,25 @@ public partial class App : System.Windows.Application
         }
         _instance?.Dispose();
         base.OnExit(e);
+    }
+
+    /// The channel the install came from (install.ps1 writes it), or null. Letters, digits, - and _ only, 20 at most.
+    private static string? InstallSource()
+    {
+        try
+        {
+            var raw = File.ReadAllText(AppPaths.InstallSourceFile).Trim().ToLowerInvariant();
+            var src = new string(raw.Where(c => c is (>= 'a' and <= 'z') or (>= '0' and <= '9') or '-' or '_').Take(20).ToArray());
+            return src.Length > 0 ? src : null;
+        }
+        catch (IOException)
+        {
+            return null;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return null;
+        }
     }
 
     private static readonly HttpClient AnalyticsHttp = new() { Timeout = TimeSpan.FromSeconds(15) };

@@ -41,7 +41,10 @@ final class ClosureMenuItem: NSMenuItem {
     private var bag: Set<AnyCancellable> = []
 
     func applicationDidFinishLaunching(_ n: Notification) {
-        Track.once("first_launch")
+        // the channel the install came from: install.sh saves the site link's ?src= (letters, digits, - and _)
+        let src = String((UserDefaults.standard.string(forKey: "install.src") ?? "").lowercased()
+            .filter { $0.isASCII && ($0.isLetter || $0.isNumber || $0 == "-" || $0 == "_") }.prefix(20))
+        Track.once("first_launch", src.isEmpty ? [:] : ["src": src])
         Updater.removeLeftoversAtLaunch()
         NotificationCenter.default.addObserver(self, selector: #selector(languageChanged), name: L10n.changed, object: nil)
         panel = NotchPanel(contentRect: .zero, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
