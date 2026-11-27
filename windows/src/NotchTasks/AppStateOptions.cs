@@ -36,6 +36,7 @@ namespace NotchTasks;
 /// fakes, so no test touches the audio or the display).
 /// ClaudeHost is the Plan limits setup's host: the CLI lookup, the `-p /usage` run and the installer and sign-in windows (null: this
 /// PC's; a test passes a fake, so no test starts a process).
+/// Demo makes the demo run's state (`NotchTasks.exe --demo`): no module source starts, and an answer is not written to the asks folder.
 public sealed record AppStateOptions(
     string? DownloadsFolder = null,
     NetworkReaders? Network = null,
@@ -61,7 +62,8 @@ public sealed record AppStateOptions(
     ICalendarOpener? Calendar = null,
     Func<IOutputDevices>? Outputs = null,
     Func<IBrightness>? Brightness = null,
-    IClaudeSetupHost? ClaudeHost = null)
+    IClaudeSetupHost? ClaudeHost = null,
+    bool Demo = false)
 {
     /// This PC's readers: the options the app runs with (the same as passing none).
     public static AppStateOptions Production { get; } = new();

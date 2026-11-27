@@ -38,6 +38,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
     private const string AskTint = "#FF9F0A";
 
     private readonly Dispatcher _dispatcher;
+    private readonly bool _demo;  // the demo run: no source starts, and an answer is not written (AppStateOptions.Demo)
     private readonly AskStore _store;
     private readonly AskTracker _tracker = new();
     private readonly ModuleHost _host;
@@ -75,6 +76,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
     public AppState(SettingsStore settings, AskStore store, AppStateOptions? options = null)
     {
         var o = options ?? AppStateOptions.Production;
+        _demo = o.Demo;
         Settings = settings;
         _store = store;
         _dispatcher = Dispatcher.CurrentDispatcher;
@@ -137,6 +139,9 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
     }
 
     public SettingsStore Settings { get; }
+
+    /// True in the demo run: the state is driven by the demo's timeline, and no module source runs.
+    public bool IsDemo => _demo;
 
     /// The app's self-update: its check, offer and install. The app starts it (Start) once it is up; the Control Panel's footer shows it.
     public UpdateService Updates { get; }
@@ -404,7 +409,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
     /// be written, the ask stays in the list so the user can try again, and the failure is logged.
     public void Answer(string askId, AskReply reply)
     {
-        if (!IsCodexAsk(askId))
+        if (!IsCodexAsk(askId) && !_demo)
         {
             try
             {
@@ -612,6 +617,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         ICalendarOpener calendar,
         Func<IOutputDevices> outputs,
         Func<IBrightness> brightness) =>
+        _demo ? new Dictionary<string, IModuleSource>(StringComparer.Ordinal) :  // the demo run starts no source: its state is driven by the demo
         new Dictionary<string, IModuleSource>(StringComparer.Ordinal)
         {
             ["timer"] = new TimerSource(Timer, _clock),
@@ -683,6 +689,9 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
 
     /// The artwork image of a media key, or null when it is not cached (the last eight keys are).
     public System.Windows.Media.ImageSource? MediaArt(string key) => _mediaArt.Get(key);
+
+    /// Puts an artwork image in the cache under a key, as the media source does for a session's art. The demo run draws its art in code.
+    public void PutMediaArt(string key, System.Windows.Media.ImageSource art) => _mediaArt.Put(key, art);
 
     /// A media key from the card or the chip. A toggle flips the card's play state at once (the Mac's optimistic toggle); the
     /// command then goes to the session, and SMTC's next event reads the real state.
@@ -856,7 +865,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
     /// The mirror closes with the pill: no camera runs while the pill is closed.
     public void PillOpened(bool open)
     {
-        if (!_disposed)
+        if (!_disposed && !_demo)  // the demo run has no source to sample for
         {
             _healthSource.PillOpened(open);
             _thermalSource.PillOpened(open);
