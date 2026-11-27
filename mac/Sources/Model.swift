@@ -502,20 +502,31 @@ import AVFoundation
 
     // MARK: Agent asks
 
+    /// The guide's "Try it now": a pretend ask from Claude, answered on the notch like a real one but sent nowhere.
+    private var demoAsks: [AgentAsk] = []
+
+    func showDemoAsk() {
+        demoAsks.append(AgentAsk(id: "demo|" + UUID().uuidString, pid: getpid(), session: "my-app", tool: "Bash",
+                                 summary: "git push origin main", questions: [], at: Date(), agent: .claude))
+        Track.event("demo_ask")
+        refreshAsks()
+    }
+
     /// Picks up asks from the hook, drops ones answered in Claude itself. Off: Claude asks as usual.
     func refreshAsks() {
-        let found = AgentAsks.pending() + codexQuestions()
+        let waiting = AgentAsks.pending() + codexQuestions()
         guard settings.on(.agents) else {
-            found.forEach { AgentAsks.send(.pass, to: $0) }
+            waiting.forEach { AgentAsks.send(.pass, to: $0) }
             if !asks.isEmpty { asks = [] }
             return
         }
+        let found = waiting + demoAsks
         let fresh = found.filter { f in !asks.contains { $0.id == f.id } }
         let gone = Set(asks.map(\.id)).subtracting(found.map(\.id))
         if found != asks { asks = found }
         if !gone.isEmpty { dropAskToasts(gone) }
         for a in fresh {
-            Track.once("first_ask_shown", ["agent": a.kind.rawValue])
+            if !a.id.hasPrefix("demo|") { Track.once("first_ask_shown", ["agent": a.kind.rawValue]) }
             announce(Toast(symbol: a.isQuestion ? "questionmark.bubble.fill" : "hand.raised.fill", tint: .orange,
                            title: a.kind.name + (a.isQuestion ? L(" is asking") : L(" needs your approval")),
                            subtitle: a.session + " · " + (a.isQuestion ? a.summary : "\(a.action): \(a.summary)"),
@@ -539,6 +550,14 @@ import AVFoundation
 
     /// `remote`: the answer came from a phone (Sync.swift), which is counted as remote_answer instead.
     func reply(_ a: AgentAsk, _ r: AskReply, remote: Bool = false) {
+        if a.id.hasPrefix("demo|") {
+            Track.event("demo_ask_answered")
+            demoAsks.removeAll { $0.id == a.id }
+            asks.removeAll { $0.id == a.id }
+            dropAskToasts([a.id])
+            if asks.isEmpty { expanded = false }
+            return
+        }
         Track.event("ask_reply")
         if r != .pass && !remote { Track.once("first_ask_answered", ["agent": a.kind.rawValue]) }
         if a.id.hasPrefix("codex|") {

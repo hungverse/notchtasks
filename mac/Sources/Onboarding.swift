@@ -44,6 +44,7 @@ struct OnboardingView: View {
     @State private var page = 0
     @State private var asksOn = Dictionary(uniqueKeysWithValues: AgentKind.allCases.map { ($0, AgentAsks.installed($0)) })
     @State private var asksError: String?
+    @State private var soundPack = SoundPack.all[0].name
     private let lastPage = OnboardingGuide.pages.count - 1
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 3)
 
@@ -231,6 +232,21 @@ struct OnboardingView: View {
     var ready: some View {
         VStack(alignment: .leading, spacing: 12) {
             header(L("You're all set"), L("Three things to remember:"))
+            HStack(spacing: 12) {
+                Image(systemName: "hand.raised.fill").font(.system(size: 15)).foregroundStyle(.orange)
+                    .frame(width: 32, height: 32).background(Circle().fill(Color.orange.opacity(0.15)))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(L("Try it now")).font(.subheadline.weight(.semibold))
+                    Text(L("See how a question from your agent looks on the notch.")).font(.caption).foregroundStyle(.secondary)
+                }
+                Spacer()
+                Picker(L("Sounds"), selection: $soundPack) {
+                    ForEach(SoundPack.all, id: \.name) { Text($0.name).tag($0.name) }
+                }
+                .labelsHidden().fixedSize()
+                .onChange(of: soundPack) { _, name in settings.applyPack(name); Sounds.play(.agentAsk) }
+                Button(L("Try it now")) { model.showDemoAsk() }.buttonStyle(.borderedProminent).tint(.orange)
+            }.settingsCard()
             step(["cursorarrow.rays"], L("Opening the notch"), L("Point at the notch at the top of the screen."))
             step(["gearshape", "power"], L("Control Panel"), L("The Control Panel and Quit buttons are at the bottom right of the open notch."))
             step(["menubar.rectangle"], L("Menu bar icon"), L("The menu bar icon also opens the Control Panel when enabled."))
