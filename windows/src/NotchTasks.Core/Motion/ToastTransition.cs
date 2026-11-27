@@ -43,18 +43,38 @@ public static class ToastTransition
         _ => Array.Empty<ToastStep>(),
     };
 
-    /// The time from the start of a spring to its rise point: the first time the curve reaches RisesAt.
-    public static TimeSpan RiseTime(SpringCurve curve)
+    /// The share of a shrinking shape's way to its target at which its old content starts to fade (the mirror of RisesAt).
+    public const double SheddingAt = 0.55;
+
+    /// The steps of a shrink from a shown toast (to a smaller toast, or to the closed pill): the shape moves at once, its old content
+    /// stays until the shape has gone SheddingAt of its way and then fades (OldOut), and the new content is shown once the old is gone.
+    public static IReadOnlyList<ToastStep> PlanShrink(bool newShown) =>
+        newShown
+            ? new[] { ToastStep.Morph, ToastStep.FadeOutOld, ToastStep.ShowNew, ToastStep.FadeInNew }
+            : new[] { ToastStep.Morph, ToastStep.FadeOutOld };
+
+    /// Whether a change of shape is a shrink: the target's area is smaller than the shape's on screen now.
+    public static bool IsShrink(double width, double height, double targetWidth, double targetHeight) =>
+        targetWidth * targetHeight < width * height;
+
+    /// The time from the start of a spring to the first moment it reaches a share of its way (0 to 1), scanned in 1 ms steps.
+    public static TimeSpan TimeTo(SpringCurve curve, double share)
     {
         for (var t = TimeSpan.Zero; t < TimeSpan.FromSeconds(curve.Settle); t += TimeSpan.FromMilliseconds(1))
         {
-            if (curve.At(t.TotalSeconds) >= RisesAt)
+            if (curve.At(t.TotalSeconds) >= share)
             {
                 return t;
             }
         }
         return TimeSpan.FromSeconds(curve.Settle);
     }
+
+    /// The time from the start of a spring to its rise point: the first time the curve reaches RisesAt.
+    public static TimeSpan RiseTime(SpringCurve curve) => TimeTo(curve, RisesAt);
+
+    /// When a shrink's old content is gone: the spring reaches SheddingAt, and the content takes OldOut to fade.
+    public static TimeSpan OldGoneInShrink(SpringCurve curve) => TimeTo(curve, SheddingAt) + OldOut;
 
     /// How long after the new content is shown (showNew, from the change's start) its own rise must wait, so it begins at the shape's
     /// rise point (morphStart + RiseTime). Zero when that point is already past.

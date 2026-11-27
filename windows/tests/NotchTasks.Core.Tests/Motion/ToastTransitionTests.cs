@@ -83,4 +83,36 @@ public sealed class ToastTransitionTests
         Assert.True(curve.At(rise.TotalSeconds) >= ToastTransition.RisesAt);
         Assert.True(curve.At(rise.TotalSeconds - 0.002) < ToastTransition.RisesAt);
     }
+
+    [Fact]
+    public void Shrink_MorphsAtOnce_AndTheOldContentStaysUntilFiftyFivePercent()
+    {
+        Assert.Equal(0.55, ToastTransition.SheddingAt);
+        Assert.Equal(new[] { ToastStep.Morph, ToastStep.FadeOutOld, ToastStep.ShowNew, ToastStep.FadeInNew }, ToastTransition.PlanShrink(newShown: true));
+        Assert.Equal(new[] { ToastStep.Morph, ToastStep.FadeOutOld }, ToastTransition.PlanShrink(newShown: false));
+    }
+
+    [Theory]
+    [InlineData("smooth")]
+    [InlineData("bouncy")]
+    [InlineData("snappy")]
+    public void Shrink_OldContentIsGoneAfterTheShapePassesFiftyFivePercent_AndTheNewRisesAtOnce(string motion)
+    {
+        var curve = SpringCurve.For(motion, opening: false, animationsOn: true);
+        var shed = ToastTransition.TimeTo(curve, ToastTransition.SheddingAt);
+        var gone = ToastTransition.OldGoneInShrink(curve);
+
+        Assert.Equal(shed + ToastTransition.OldOut, gone);
+        // The new content's rise (its spring at 45%) is already past once the old is gone: it rises at the old's end.
+        Assert.Equal(TimeSpan.Zero, ToastTransition.RisePause(curve, TimeSpan.Zero, gone));
+    }
+
+    [Fact]
+    public void IsShrink_WhenTheTargetIsSmallerOnScreen()
+    {
+        Assert.True(ToastTransition.IsShrink(520, 76, 340, 66));   // ask to done
+        Assert.True(ToastTransition.IsShrink(340, 66, 200, 32));   // toast to closed
+        Assert.False(ToastTransition.IsShrink(200, 32, 340, 66));  // closed to toast
+        Assert.False(ToastTransition.IsShrink(340, 66, 520, 76));  // toast to a larger ask
+    }
 }

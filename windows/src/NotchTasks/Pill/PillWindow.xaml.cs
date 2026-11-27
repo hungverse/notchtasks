@@ -797,6 +797,11 @@ public partial class PillWindow : Window
             }
             return;
         }
+        if (ShrinksTo(target))
+        {
+            RunShrink(target, change);
+            return;
+        }
         FadeToastContent(0, ToastTransition.OldOut);
         After(ToastTransition.MorphLead, change, () => MorphToast(target, change));
         if (target is not null)
@@ -807,6 +812,50 @@ public partial class PillWindow : Window
                 RiseNewToast(morphStart: ToastTransition.MorphLead, showNew: ToastTransition.OldOut);
             });
         }
+    }
+
+    /// Whether a change to the target (a toast, or the closed pill) shrinks the shape on screen now.
+    private bool ShrinksTo(Toast? target)
+    {
+        var current = _shape.Rect;
+        if (target is null)
+        {
+            var closed = Target(Mode.Closed);
+            return ToastTransition.IsShrink(current.Width, current.Height, closed.Width, closed.Height);
+        }
+        var ask = target.AskId is { } askId ? _state.Asks.FirstOrDefault(a => a.Id == askId) : null;
+        var size = ToastView.SizeOf(target, _state.Settings.ToastStyle, ask, _state.Processes);
+        return ToastTransition.IsShrink(current.Width, current.Height, size.Width, size.Height);
+    }
+
+    /// The closed wings' delay (Animate starts their fade-in this late): set for a shrink to the closed pill, so they come back once the
+    /// closing toast's content is gone and never over it.
+    private TimeSpan _closedChipsDelay = TimeSpan.Zero;
+
+    /// A shrink (ToastTransition.PlanShrink): the shape moves at once. The old content stays until the shape has gone SheddingAt of its way,
+    /// then fades over OldOut, and the new content is shown when the old is gone. The content is clipped to the shape as it shrinks
+    /// (PillContent.Clip), and never resized.
+    private void RunShrink(Toast? target, int change)
+    {
+        var curve = SpringCurve.For(_state.Settings.Motion, opening: false, SystemParameters.ClientAreaAnimation);
+        var shed = ToastTransition.TimeTo(curve, ToastTransition.SheddingAt);
+        var gone = ToastTransition.OldGoneInShrink(curve);
+        _closedChipsDelay = target is null ? gone : TimeSpan.Zero;
+        MorphToast(target, change);  // the shape starts to move now (Animate reads _closedChipsDelay)
+        _closedChipsDelay = TimeSpan.Zero;
+        var fade = new DoubleAnimation(0, ToastTransition.OldOut) { BeginTime = shed, FillBehavior = FillBehavior.HoldEnd };
+        if (target is not null)
+        {
+            fade.Completed += (_, _) =>
+            {
+                if (change == _toastChange)
+                {
+                    ShowNewToast(target);
+                    RiseNewToast(morphStart: TimeSpan.Zero, showNew: gone);
+                }
+            };
+        }
+        ToastBox.BeginAnimation(OpacityProperty, fade);
     }
 
     /// Springs the shape to the target of a change: the new toast's size (measured on its own, before its content is shown in the pill),
@@ -966,7 +1015,20 @@ public partial class PillWindow : Window
             }
             else
             {
-                Fade(TopRow, OpacityProperty, 1, duration, fade);
+                // The closed wings come in once the closing toast's content is gone (a shrink to closed sets _closedChipsDelay): they
+                // start at 0 and wait, so they never show over that content.
+                var delay = mode == Mode.Closed ? _closedChipsDelay : TimeSpan.Zero;
+                if (delay > TimeSpan.Zero)
+                {
+                    TopRow.BeginAnimation(OpacityProperty, null);
+                    TopRow.Opacity = 0;
+                }
+                TopRow.BeginAnimation(OpacityProperty, new DoubleAnimation(1, duration)
+                {
+                    BeginTime = delay,
+                    EasingFunction = new SpringEase(fade),
+                    FillBehavior = FillBehavior.HoldEnd,
+                });
             }
             // The card blurs only while it closes, and the blur is attached only while it moves: an open (and reduced motion) fades on
             // opacity alone, so no effect pass runs for it.
