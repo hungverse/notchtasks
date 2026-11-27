@@ -312,7 +312,7 @@ public partial class SoundsPane : SettingsPane
     private void ShowDialogMessage(string caption, string text) =>
         MessageBox.Show(Window.GetWindow(this), text, caption, MessageBoxButton.OK, MessageBoxImage.Warning);
 
-    private static JsonObject MapJson(IReadOnlyDictionary<string, string> map)
+    internal static JsonObject MapJson(IReadOnlyDictionary<string, string> map)
     {
         var json = new JsonObject();
         foreach (var (id, sound) in map)

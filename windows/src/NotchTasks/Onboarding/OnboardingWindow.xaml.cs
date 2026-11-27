@@ -1,6 +1,7 @@
 using System.IO;
 using System.Text.Json.Nodes;
 using System.Windows;
+using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Media;
 using NotchTasks.ControlPanel;
@@ -176,11 +177,91 @@ public partial class OnboardingWindow : Window
             Margin = new Thickness(0, 0, 0, 12),
             Text = L10n.L("Three things to remember:"),
         });
+        panel.Children.Add(TryNow());
         panel.Children.Add(Step([""], L10n.L("Opening the pill"), L10n.L("Point at the pill at the top of the screen.")));
         panel.Children.Add(Step(["", ""], L10n.L("Control Panel"),
             L10n.L("The Control Panel and Quit buttons are at the bottom right of the open pill.")));
         panel.Children.Add(Step([""], L10n.L("Tray icon"), L10n.L("The tray icon also opens the Control Panel.")));
         return panel;
+    }
+
+    /// The "Try it now" card: a pretend ask on the pill, and the sound pack to hear it with. A pack is applied as the Sound pane
+    /// applies one, and its agentAsk sound plays once it is chosen.
+    private UIElement TryNow()
+    {
+        var packs = new ComboBox
+        {
+            ItemsSource = ChoiceItems.SoundPacks,
+            DisplayMemberPath = "Title",
+            SelectedIndex = 0,
+            Width = 140,
+            Margin = new Thickness(8, 0, 0, 0),
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        AutomationProperties.SetName(packs, L10n.L("Sounds"));
+        packs.SelectionChanged += (_, _) =>
+        {
+            if (packs.SelectedItem is not Choice choice)
+            {
+                return;
+            }
+            var pack = NotchTasks.Core.Sounds.SoundPacks.All.First(p => p.Name == choice.Value);
+            try
+            {
+                Settings.Set("soundMap", SoundsPane.MapJson(pack.Map));
+            }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+            {
+                ErrorLog.Write(new IOException("NotchTasks: could not save soundMap", e));
+            }
+            Sounds.PlayName(pack.Map["agentAsk"]);
+        };
+
+        var button = new Button
+        {
+            Style = (Style)FindResource("PrimaryButton"),
+            Content = L10n.L("Try it now"),
+            Margin = new Thickness(8, 0, 0, 0),
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        button.Click += (_, _) => _state.ShowDemoAsk();
+
+        var hand = FluentGlyph.Named("hand", 15);
+        hand.Foreground = HexColor.Brush("#FF9F0A");
+        var tile = new Border
+        {
+            Width = 32,
+            Height = 32,
+            CornerRadius = new CornerRadius(16),
+            Margin = new Thickness(0, 0, 12, 0),
+            Background = new SolidColorBrush(Color.FromArgb(0x26, 0xFF, 0x9F, 0x0A)),
+            Child = hand,
+        };
+
+        var words = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+        words.Children.Add(new TextBlock { Text = L10n.L("Try it now"), FontWeight = FontWeights.SemiBold });
+        words.Children.Add(new TextBlock
+        {
+            Style = (Style)FindResource("CardNote"),
+            Margin = new Thickness(0, 2, 0, 0),
+            Text = L10n.L("See how a question from your agent looks on the notch."),
+        });
+
+        var row = new DockPanel { LastChildFill = true };
+        DockPanel.SetDock(tile, Dock.Left);
+        DockPanel.SetDock(button, Dock.Right);  // as on the Mac: text, then the pack, then the button at the right
+        DockPanel.SetDock(packs, Dock.Right);
+        row.Children.Add(tile);
+        row.Children.Add(button);
+        row.Children.Add(packs);
+        row.Children.Add(words);
+        return new Border
+        {
+            Style = (Style)FindResource("Card"),
+            Padding = new Thickness(16, 12, 16, 12),
+            Margin = new Thickness(0, 0, 0, 8),
+            Child = row,
+        };
     }
 
     /// A card with one line of text.

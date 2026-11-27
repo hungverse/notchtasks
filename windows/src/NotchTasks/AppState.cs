@@ -61,6 +61,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
     /// The last list the watcher gave (SyncAsks), and Codex's questions from the agents source (SetCodexAsks).
     private IReadOnlyList<AgentAsk> _watched = Array.Empty<AgentAsk>();
     private IReadOnlyList<AgentAsk> _codexAsks = Array.Empty<AgentAsk>();
+    private readonly List<AgentAsk> _demoAsks = new();  // the guide's "Try it now" asks (ShowDemoAsk)
     /// The Codex questions answered in this session (the Mac's answeredCodex): they stay gone while the agents module cycles.
     private readonly HashSet<string> _answeredCodex = new(StringComparer.Ordinal);
     private readonly ICodexCli _codex;
@@ -318,6 +319,9 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
     /// Raised when Thermal changes: the header follows it.
     public event Action? ThermalChanged;
 
+    /// A demo ask was answered and no ask is left: the pill closes (the Mac's expanded = false).
+    public event Action? CollapseRequested;
+
     /// Raised when only the load changed (a meter tick): the header follows it, and the rest of the notch is not rebuilt.
     public event Action? LoadChanged;
 
@@ -413,6 +417,23 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
     public void Answer(string askId, AskReply reply, bool remote)
     {
         var ask = Asks.FirstOrDefault(a => a.Id == askId);
+        if (IsDemoAsk(askId))
+        {
+            // The pretend ask leaves the pill like a real one, but nothing is written for it and only its own event counts.
+            App.Analytics?.Event("demo_ask_answered");
+            _demoAsks.RemoveAll(a => a.Id == askId);
+            if (ask is not null)
+            {
+                Asks.Remove(ask);
+            }
+            Toasts.DropAsks(new HashSet<string>(new[] { askId }, StringComparer.Ordinal), DateTimeOffset.Now);
+            Publish();
+            if (Asks.Count == 0)
+            {
+                CollapseRequested?.Invoke();
+            }
+            return;
+        }
         if (!IsCodexAsk(askId) && !_demo)
         {
             try
@@ -525,6 +546,22 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
     /// reply) only takes it off the pill.
     private static bool IsCodexAsk(string askId) => askId.StartsWith("codex|", StringComparison.Ordinal);
 
+    /// The guide's pretend ask. It is answered like a real one, but nothing is written for it and it is never passed to the hook.
+    private static bool IsDemoAsk(string askId) => askId.StartsWith("demo|", StringComparison.Ordinal);
+
+    /// The guide's "Try it now": a pretend ask from Claude, shown exactly like a real one (SyncAsks merges it in while agents are on).
+    public void ShowDemoAsk()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+        _demoAsks.Add(new AgentAsk("demo|" + Guid.NewGuid(), Environment.ProcessId, "my-app", "Bash", "git push origin main",
+            Array.Empty<AskQuestion>(), DateTimeOffset.Now, "claude"));
+        App.Analytics?.Event("demo_ask");
+        SyncAsks(_watched);
+    }
+
     /// Brings Asks in line with the watcher's list: drops the asks that are gone (and their toasts), and inserts the new
     /// ones at their place in the list, so Asks stays oldest first. Each new ask is announced: its agentAsk sound plays
     /// and its toast queues.
@@ -535,8 +572,10 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
             return;
         }
         _watched = list;
-        var visible = _tracker.Filter(list.Concat(_codexAsks.Where(a => !_answeredCodex.Contains(a.Id))).OrderBy(a => a.At).ToList());
         var agentsOn = ActiveModules(Settings).Contains("agents");
+        var demo = agentsOn ? _demoAsks : Enumerable.Empty<AgentAsk>();  // with agents off they stay out, and so are never passed
+        var visible = _tracker.Filter(list.Concat(_codexAsks.Where(a => !_answeredCodex.Contains(a.Id))).Concat(demo)
+            .OrderBy(a => a.At).ToList());
         if (!agentsOn)
         {
             PassAsks(visible);
@@ -564,7 +603,10 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
                 continue;
             }
             Asks.Insert(Math.Min(i, Asks.Count), visible[i]);
-            App.Analytics?.Once("first_ask_shown", new Dictionary<string, object> { ["agent"] = visible[i].Agent });
+            if (!IsDemoAsk(visible[i].Id))
+            {
+                App.Analytics?.Once("first_ask_shown", new Dictionary<string, object> { ["agent"] = visible[i].Agent });
+            }
             Announce(AskToast(visible[i], Settings.Items));
         }
         Publish();

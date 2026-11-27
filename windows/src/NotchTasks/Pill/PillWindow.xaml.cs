@@ -260,6 +260,7 @@ public partial class PillWindow : Window
         _state.LevelChanged += SyncLevel;  // a volume or brightness bar shows or hides
         _state.LoadChanged += SyncHeader;  // a load tick moves the meters only
         _state.ThermalChanged += SyncHeader;  // a temperature reading moves the header's temperature only
+        _state.CollapseRequested += ClosePill;
         _state.Toasts.Changed += OnToastsChanged;
         _state.Updates.Changed += OnUpdatesChanged;
         SystemEvents.DisplaySettingsChanged += OnDisplaySettingsChanged;
@@ -1657,6 +1658,7 @@ public partial class PillWindow : Window
         _state.LevelChanged -= SyncLevel;
         _state.LoadChanged -= SyncHeader;
         _state.ThermalChanged -= SyncHeader;
+        _state.CollapseRequested -= ClosePill;
         _state.Toasts.Changed -= OnToastsChanged;
         _state.Updates.Changed -= OnUpdatesChanged;
         L10n.Changed -= OnLanguageChanged;
