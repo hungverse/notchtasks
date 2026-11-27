@@ -73,12 +73,12 @@ public sealed class UpdateManifestTests
     public void LaunchText_HasATranslationInEveryLanguage()
     {
         var root = AppContext.BaseDirectory;
-        while (root is not null && !File.Exists(Path.Combine(root, "electron", "l10n", "windows.json")))
+        while (root is not null && !File.Exists(Path.Combine(root, "windows", "l10n", "windows.json")))
         {
             root = Path.GetDirectoryName(root);
         }
         Assert.NotNull(root);
-        var table = JsonNode.Parse(File.ReadAllText(Path.Combine(root!, "electron", "l10n", "windows.json")))!.AsObject();
+        var table = JsonNode.Parse(File.ReadAllText(Path.Combine(root!, "windows", "l10n", "windows.json")))!.AsObject();
 
         foreach (var (code, _) in L10n.Languages.Where(l => l.Code != "en"))
         {

@@ -44,7 +44,7 @@ public sealed class HookExeTests : IDisposable
         })!;
         File.WriteAllText(Path.Combine(root, "app.pid"), app.Id.ToString());
         var asks = Path.Combine(root, "Asks");
-        var payload = File.ReadAllText(Path.Combine(AsksFixtures.RepoRoot(), "electron", "test", "fixtures", "agents", "claude-bash.json"));
+        var payload = File.ReadAllText(Path.Combine(AsksFixtures.RepoRoot(), "windows", "tests", "fixtures", "agents", "claude-bash.json"));
 
         var exe = Path.Combine(AppContext.BaseDirectory, "NotchTasksHook.exe");
         var start = new ProcessStartInfo(exe, "--hook claude")

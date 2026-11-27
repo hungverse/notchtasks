@@ -202,7 +202,6 @@ dotnet test windows/NotchTasks.sln   # Windows tests
 | [`mac/`](mac) | The Mac app: Swift, AppKit and SwiftUI |
 | [`windows/`](windows) | The Windows app: C#, WPF on .NET 10 ([release steps](windows/installer/README.md)) |
 | [`l10n/`](l10n) | Translations; run `python3 l10n/build.py` after editing a table |
-| [`electron/`](electron) | The Linux app, paused for now |
 
 ## License
 

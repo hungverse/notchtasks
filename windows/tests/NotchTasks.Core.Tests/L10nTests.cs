@@ -152,7 +152,7 @@ public sealed class L10nTests
     [Fact]
     public void WindowsOverlay_FillsKeyMissingFromMacTable()
     {
-        // "Nothing here yet." is in electron/l10n/windows.json (vi) but not in mac/Sources/l10n-vi.json.
+        // "Nothing here yet." is in windows/l10n/windows.json (vi) but not in mac/Sources/l10n-vi.json.
         var folder = Path.Combine(Path.GetTempPath(), "nt-l10n-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(folder);
         try
@@ -161,7 +161,7 @@ public sealed class L10nTests
             {
                 File.Copy(file, Path.Combine(folder, Path.GetFileName(file)));
             }
-            File.Copy(Path.Combine(RepoRoot(), "electron", "l10n", "windows.json"), Path.Combine(folder, "windows.json"));
+            File.Copy(Path.Combine(RepoRoot(), "windows", "l10n", "windows.json"), Path.Combine(folder, "windows.json"));
 
             L10n.Init(folder, "vi");
 
@@ -185,7 +185,7 @@ public sealed class L10nTests
             {
                 File.Copy(file, Path.Combine(folder, Path.GetFileName(file)));
             }
-            File.Copy(Path.Combine(RepoRoot(), "electron", "l10n", "windows.json"), Path.Combine(folder, "windows.json"));
+            File.Copy(Path.Combine(RepoRoot(), "windows", "l10n", "windows.json"), Path.Combine(folder, "windows.json"));
 
             foreach (var (code, _) in L10n.Languages.Where(language => language.Code != "en"))
             {
@@ -202,7 +202,7 @@ public sealed class L10nTests
     }
 
     // Every key the Windows build passes to L10n.L since 6eb2a5a (Tasks 1-12), plus the module titles the pill and the
-    // Modules pane show. Each one needs a text in every language: in the Mac table, or in electron/l10n/windows.json.
+    // Modules pane show. Each one needs a text in every language: in the Mac table, or in windows/l10n/windows.json.
     private static readonly string[] Phase3aKeys =
     [
         " · Mic muted", "%.1f GB free", "Allow", "Back online", "Camera on", "Charging",
@@ -224,7 +224,7 @@ public sealed class L10nTests
     [Fact]
     public void Phase3aKeys_ExistInEveryLanguage()
     {
-        var overlayFile = Path.Combine(RepoRoot(), "electron", "l10n", "windows.json");
+        var overlayFile = Path.Combine(RepoRoot(), "windows", "l10n", "windows.json");
         var missing = new List<string>();
         var placeholders = new List<string>();
         foreach (var (code, _) in L10n.Languages.Where(language => language.Code != "en"))
@@ -249,14 +249,14 @@ public sealed class L10nTests
     }
 
     // Phase 9's calendar card: the Join button, and the hint when the calendar store cannot be opened. Each one needs a text in every
-    // language, in the Mac table or in electron/l10n/windows.json.
+    // language, in the Mac table or in windows/l10n/windows.json.
     private static readonly string[] Phase9Keys =
     [
         "Join", "Calendar can't be opened. Check Settings > Privacy & security > Calendar.",
     ];
 
     // The Windows-only texts of the profile and badge dialogs, the picture and GIF file filters, and the Overview's report note. They
-    // have no Mac text, so each one needs its text in electron/l10n/windows.json, in every language.
+    // have no Mac text, so each one needs its text in windows/l10n/windows.json, in every language.
     private static readonly string[] FinalReviewKeys =
     [
         "Couldn't export the profile", "Couldn't import the profile", "This file isn't a NotchTasks profile.",
@@ -267,7 +267,7 @@ public sealed class L10nTests
     [Fact]
     public void FinalReviewKeys_ExistInEveryLanguage()
     {
-        var overlayFile = Path.Combine(RepoRoot(), "electron", "l10n", "windows.json");
+        var overlayFile = Path.Combine(RepoRoot(), "windows", "l10n", "windows.json");
         var missing = new List<string>();
         var placeholders = new List<string>();
         foreach (var (code, _) in L10n.Languages.Where(language => language.Code != "en"))
@@ -293,7 +293,7 @@ public sealed class L10nTests
     [Fact]
     public void Phase9Keys_ExistInEveryLanguage()
     {
-        var overlayFile = Path.Combine(RepoRoot(), "electron", "l10n", "windows.json");
+        var overlayFile = Path.Combine(RepoRoot(), "windows", "l10n", "windows.json");
         var missing = new List<string>();
         foreach (var (code, _) in L10n.Languages.Where(language => language.Code != "en"))
         {
@@ -311,7 +311,7 @@ public sealed class L10nTests
     }
 
     // The first line of the Temperatures, Appearance, Behavior and Sound panes: each pane opens with a description line in the
-    // PaneNote style. These are Windows-only texts, so each one needs its text in electron/l10n/windows.json, in every language.
+    // PaneNote style. These are Windows-only texts, so each one needs its text in windows/l10n/windows.json, in every language.
     private static readonly string[] PaneDescriptionKeys =
     [
         "Temperatures read by the optional helper.", "How the notch and its alerts look.",
@@ -321,7 +321,7 @@ public sealed class L10nTests
     [Fact]
     public void PaneDescriptionKeys_ExistInEveryLanguage()
     {
-        var overlayFile = Path.Combine(RepoRoot(), "electron", "l10n", "windows.json");
+        var overlayFile = Path.Combine(RepoRoot(), "windows", "l10n", "windows.json");
         var missing = new List<string>();
         foreach (var (code, _) in L10n.Languages.Where(language => language.Code != "en"))
         {
@@ -361,7 +361,7 @@ public sealed class L10nTests
     [Fact]
     public void Phase3bKeys_ExistInEveryLanguage()
     {
-        var overlayFile = Path.Combine(RepoRoot(), "electron", "l10n", "windows.json");
+        var overlayFile = Path.Combine(RepoRoot(), "windows", "l10n", "windows.json");
         var missing = new List<string>();
         var placeholders = new List<string>();
         foreach (var (code, _) in L10n.Languages.Where(language => language.Code != "en"))
@@ -402,7 +402,7 @@ public sealed class L10nTests
     [Fact]
     public void Phase3dKeys_ExistInEveryLanguage()
     {
-        var overlayFile = Path.Combine(RepoRoot(), "electron", "l10n", "windows.json");
+        var overlayFile = Path.Combine(RepoRoot(), "windows", "l10n", "windows.json");
         var missing = new List<string>();
         var placeholders = new List<string>();
         foreach (var (code, _) in L10n.Languages.Where(language => language.Code != "en"))
@@ -439,7 +439,7 @@ public sealed class L10nTests
     [Fact]
     public void PlanLimitsKeys_ExistInEveryLanguage()
     {
-        var overlayFile = Path.Combine(RepoRoot(), "electron", "l10n", "windows.json");
+        var overlayFile = Path.Combine(RepoRoot(), "windows", "l10n", "windows.json");
         var missing = new List<string>();
         foreach (var (code, _) in L10n.Languages.Where(language => language.Code != "en"))
         {
@@ -479,7 +479,7 @@ public sealed class L10nTests
     }
 
     // Task 11's heat toast and Temperatures pane: the Mac's texts, and the Windows texts of the helper's rows and the pane.
-    // Each one needs a text in every language, in the Mac table or in electron/l10n/windows.json.
+    // Each one needs a text in every language, in the Mac table or in windows/l10n/windows.json.
     private static readonly string[] Phase11Keys =
     [
         "Computer is warm", "Computer is very hot", "{0} is working hard", "Consider closing heavy apps", "See apps",
@@ -492,7 +492,7 @@ public sealed class L10nTests
     [Fact]
     public void Phase11Keys_ExistInEveryLanguage()
     {
-        var overlayFile = Path.Combine(RepoRoot(), "electron", "l10n", "windows.json");
+        var overlayFile = Path.Combine(RepoRoot(), "windows", "l10n", "windows.json");
         var missing = new List<string>();
         foreach (var (code, _) in L10n.Languages.Where(language => language.Code != "en"))
         {
@@ -521,7 +521,7 @@ public sealed class L10nTests
             {
                 File.Copy(file, Path.Combine(folder, Path.GetFileName(file)));
             }
-            File.Copy(Path.Combine(RepoRoot(), "electron", "l10n", "windows.json"), Path.Combine(folder, "windows.json"));
+            File.Copy(Path.Combine(RepoRoot(), "windows", "l10n", "windows.json"), Path.Combine(folder, "windows.json"));
 
             foreach (var (code, _) in L10n.Languages.Where(language => language.Code != "en"))
             {
@@ -550,9 +550,9 @@ public sealed class L10nTests
             {
                 File.Copy(file, Path.Combine(folder, Path.GetFileName(file)));
             }
-            File.Copy(Path.Combine(RepoRoot(), "electron", "l10n", "windows.json"), Path.Combine(folder, "windows.json"));
+            File.Copy(Path.Combine(RepoRoot(), "windows", "l10n", "windows.json"), Path.Combine(folder, "windows.json"));
 
-            var overlayFile = Path.Combine(RepoRoot(), "electron", "l10n", "windows.json");
+            var overlayFile = Path.Combine(RepoRoot(), "windows", "l10n", "windows.json");
             foreach (var (code, _) in L10n.Languages.Where(language => language.Code != "en"))
             {
                 var mac = ReadStrings(Path.Combine(MacSources(), $"l10n-{code}.json"));

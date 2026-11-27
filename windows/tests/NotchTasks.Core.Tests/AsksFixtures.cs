@@ -9,17 +9,17 @@ internal static class AsksFixtures
     public static string RepoRoot()
     {
         var dir = AppContext.BaseDirectory;
-        while (dir is not null && !Directory.Exists(Path.Combine(dir, "electron", "test", "fixtures", "agents")))
+        while (dir is not null && !Directory.Exists(Path.Combine(dir, "windows", "tests", "fixtures", "agents")))
         {
             dir = Path.GetDirectoryName(dir);
         }
-        return dir ?? throw new InvalidOperationException("The repo root with electron/test/fixtures/agents was not found.");
+        return dir ?? throw new InvalidOperationException("The repo root with windows/tests/fixtures/agents was not found.");
     }
 
     /// One agent payload, parsed fresh (tests may change it).
     public static JsonObject Fixture(string name)
     {
-        var path = Path.Combine(RepoRoot(), "electron", "test", "fixtures", "agents", name + ".json");
+        var path = Path.Combine(RepoRoot(), "windows", "tests", "fixtures", "agents", name + ".json");
         return (JsonObject)JsonNode.Parse(File.ReadAllText(path))!;
     }
 

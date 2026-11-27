@@ -5,7 +5,7 @@ name: windows
 on:
   push:
     branches: [main, windows-native]
-    paths: ["windows/**", "mac/Sources/l10n-*.json", "mac/Resources/Sprites/**", "electron/l10n/**", ".github/workflows/windows.yml"]
+    paths: ["windows/**", "mac/Sources/l10n-*.json", "mac/Resources/Sprites/**", ".github/workflows/windows.yml"]
   workflow_dispatch:
 
 jobs:

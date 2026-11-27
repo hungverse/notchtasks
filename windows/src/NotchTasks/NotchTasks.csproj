@@ -52,7 +52,7 @@
   <ItemGroup>
     <Content Include="..\..\..\mac\Resources\Sprites\**" Link="Sprites\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\..\..\mac\Sources\l10n-*.json" Link="l10n\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\..\..\electron\l10n\windows.json" Link="l10n\windows.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\l10n\windows.json" Link="l10n\windows.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
