@@ -174,6 +174,10 @@ public partial class PillWindow : Window
         // The gear opens the Control Panel and closes the pill; the power button quits (as the tray's Quit does).
         Bar.ControlPanelRequested += () =>
         {
+            if (_state.IsDemo)
+            {
+                return;  // the demo run has no Control Panel: its settings are not the user's
+            }
             ClosePill();
             ControlPanelWindow.Show(_state);
         };
@@ -278,8 +282,33 @@ public partial class PillWindow : Window
         var displayState = Win32.GuidConsoleDisplayState;
         Win32.RegisterPowerSettingNotification(_hwnd, ref displayState, 0);  // a failed registration only loses the display pause
         Place();
+        if (_state.IsDemo)
+        {
+            // The demo run's pill is driven by its timeline, not by the pointer: it never takes clicks, and nothing polls the pointer.
+            SetClickThrough(true);
+            return;
+        }
         _pollTimer.Start();
     }
+
+    /// The demo run's open and close (DemoSession): the pill opens or closes as the timeline says, with no pointer involved.
+    internal void DemoSetOpen(bool open)
+    {
+        if (open)
+        {
+            OpenPill();
+        }
+        else
+        {
+            ClosePill();
+        }
+    }
+
+    /// The demo run's Allow hold (DemoSession): the ask toast's Allow button is drawn pressed, or released.
+    internal void DemoPressAllow(bool pressed) => ToastBox.SetAllowPressed(pressed);
+
+    /// The monitor's DPI over 96 for this window, for the demo's frame capture.
+    internal double DpiScale => Scale;
 
     private nint WndProc(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled)
     {
@@ -549,7 +578,10 @@ public partial class PillWindow : Window
         Animate(Mode.Open);
         ApplyAppearance();
         SyncLevel();  // the open pill takes over the level bar (the Mac shows the sections instead)
-        _closeTimer.Start();
+        if (!_state.IsDemo)
+        {
+            _closeTimer.Start();  // the demo run's pill closes by its timeline, not by the pointer's leaving
+        }
         // Only a real open plays: a toast or an open already under way does not reach here (the guard above). The Mac plays it on expanded.
         PlayEvent("open");
         // The work that is not drawn (the shelf's files, the wait ticks, the sensors and the load) comes after the open's first frame.
@@ -715,7 +747,7 @@ public partial class PillWindow : Window
     private void SyncToast()
     {
         var current = _state.Toasts.Current;
-        _toastTimer.IsEnabled = current is not null;
+        _toastTimer.IsEnabled = current is not null && !_state.IsDemo;  // the demo's toasts leave by its timeline
         var target = _open ? null : current;
         if (ReferenceEquals(target, _shownToast))
         {

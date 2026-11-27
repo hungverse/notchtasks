@@ -117,6 +117,15 @@ public partial class ToastView : UserControl
 
     /// The tint symbol drawn on the right of a toast that has an item (Mac: the symbol beside the icon, which tells the toast's kind).
     /// Null for a toast with no item.
+    /// Draws the Allow button pressed, or released: a little smaller and dimmer, as a press does. Only the demo run calls it (its
+    /// timeline holds Allow down); the toast's own buttons press as the system presses them.
+    internal void SetAllowPressed(bool pressed)
+    {
+        AllowButton.RenderTransformOrigin = new Point(0.5, 0.5);
+        AllowButton.RenderTransform = pressed ? new ScaleTransform(0.94, 0.94) : Transform.Identity;
+        AllowButton.Opacity = pressed ? 0.7 : 1;
+    }
+
     public static FrameworkElement? TrailOf(Toast t, Brush tint, double size) =>
         t.Icon is null ? null : GlyphOf(t.Glyph, tint, size);
 

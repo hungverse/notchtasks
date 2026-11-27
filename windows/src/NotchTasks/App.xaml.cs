@@ -3,12 +3,15 @@ using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Threading;
 using NotchTasks.ControlPanel;
 using NotchTasks.Core;
 using NotchTasks.Core.Asks;
+using NotchTasks.Core.Demo;
 using NotchTasks.Core.Settings;
 using NotchTasks.Core.Sync;
 using NotchTasks.Core.Updates;
+using NotchTasks.Demo;
 using NotchTasks.Onboarding;
 using NotchTasks.Pill;
 using NotchTasks.Services;
@@ -24,6 +27,7 @@ public partial class App : System.Windows.Application
     private Tray? _tray;
     private PillWindow? _pill;
     private bool _primary;
+    private DispatcherTimer? _demoTimer;  // the demo run's clock: it plays the timeline while the app runs
 
     /// The running app.
     public static App Instance => (App)Current;
@@ -65,6 +69,12 @@ public partial class App : System.Windows.Application
             Shutdown(0);
             return;
         }
+        // `--demo` is a run of its own, for the README's recording: no single instance, tray, hooks, sync, update check or autostart.
+        if (e.Args.Contains("--demo"))
+        {
+            StartDemo(Environment.GetEnvironmentVariable("NT_FRAMES"));
+            return;
+        }
         // The app's identity before any window or toast: Windows reads the AUMID from the process, so the toasts and the taskbar button
         // belong to the installed app (the installer's shortcut carries the same id).
         AppIdentity.Apply();
@@ -98,6 +108,42 @@ public partial class App : System.Windows.Application
             ErrorLog.Write(ex);
             Shutdown(1);
         }
+    }
+
+    /// The demo run: the pill with the made-up state of DemoSession, and nothing else of the app. Its data folder is a temp folder of its
+    /// own, so no file under the user's data folder is read or written, and the settings are the defaults in memory. Without NT_FRAMES
+    /// the pill runs its timeline until it is quit. With NT_FRAMES=<folder> one loop is captured to that folder (DemoCapture), then the app exits.
+    private void StartDemo(string? framesFolder)
+    {
+        _primary = true;  // the exit path closes the pill and the state, as a normal run does
+        AppPaths.Root = Path.Combine(Path.GetTempPath(), "NotchTasks.Demo", Guid.NewGuid().ToString("N"));
+        DispatcherUnhandledException += (_, args) =>
+        {
+            ErrorLog.Write(args.Exception);
+            args.Handled = true;
+        };
+        L10n.Init(Path.Combine(AppContext.BaseDirectory, "l10n"), string.Empty);
+
+        var state = DemoSession.NewState();
+        _state = state;
+        _pill = new PillWindow(state);
+        var session = new DemoSession(state, _pill.DemoSetOpen, _pill.DemoPressAllow);
+        session.Start(DateTimeOffset.Now);
+        _pill.Show();
+
+        if (!string.IsNullOrWhiteSpace(framesFolder))
+        {
+            var content = (FrameworkElement)_pill.Content;
+            DemoCapture.Run(content, framesFolder, DemoTimeline.FrameCount, DemoTimeline.Fps,
+                time => session.Tick(time, DateTimeOffset.Now), _pill.DpiScale);
+            Shutdown(0);
+            return;
+        }
+        var clock = Stopwatch.StartNew();
+        var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(100) };
+        timer.Tick += (_, _) => session.Tick(clock.Elapsed, DateTimeOffset.Now);
+        timer.Start();
+        _demoTimer = timer;
     }
 
     /// The installer's `--quit`: asks the running app to quit and waits up to 5 s for it. Never throws, so the process always exits 0
@@ -210,6 +256,7 @@ public partial class App : System.Windows.Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        _demoTimer?.Stop();
         if (_primary)
         {
             _pill?.Close();
