@@ -29,7 +29,7 @@ cat > "$OUT/ExportOptions.plist" <<EOF
 EOF
 
 xcodebuild -project NotchTasks.xcodeproj -scheme "$SCHEME" -archivePath "$OUT/NotchTasks.xcarchive" \
-  DEVELOPMENT_TEAM="$TEAM" -allowProvisioningUpdates archive
+  DEVELOPMENT_TEAM="$TEAM" NT_GA_SECRET="${NT_GA_SECRET:-$(cat ~/.notchtasks/ga-secret 2>/dev/null || true)}" -allowProvisioningUpdates archive
 xcodebuild -exportArchive -archivePath "$OUT/NotchTasks.xcarchive" -exportPath "$OUT" \
   -exportOptionsPlist "$OUT/ExportOptions.plist" -allowProvisioningUpdates
 

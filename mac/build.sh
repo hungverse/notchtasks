@@ -6,7 +6,7 @@ APP=build/NotchTasks.app
 rm -rf "$APP"
 # Same project Xcode opens (NotchTasks.xcodeproj); signed below so local installs keep one stable identity
 xcodebuild -project NotchTasks.xcodeproj -scheme NotchTasks -configuration Release -derivedDataPath build/DerivedData \
-  CODE_SIGNING_ALLOWED=NO -quiet build
+  CODE_SIGNING_ALLOWED=NO NT_GA_SECRET="${NT_GA_SECRET:-$(cat ~/.notchtasks/ga-secret 2>/dev/null || true)}" -quiet build
 cp -R build/DerivedData/Build/Products/Release/NotchTasks.app "$APP"
 # A real identity keeps the signature stable across builds. Ad-hoc ("-") signs by content hash, so macOS sees every
 # build as a new app and drops Calendar/Accessibility grants. Override with SIGN_ID=<hash>.

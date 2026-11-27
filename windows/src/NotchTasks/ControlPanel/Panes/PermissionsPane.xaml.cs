@@ -379,6 +379,7 @@ public partial class PermissionsPane : SettingsPane
             if (on)
             {
                 HookInstaller.Install(kind, AppFiles.HookExe, AppFiles.Home);
+                App.Analytics?.Event("agent_hook_on", new Dictionary<string, object> { ["agent"] = kind.Id() });
             }
             else
             {

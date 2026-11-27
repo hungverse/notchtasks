@@ -1,11 +1,17 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
+using System.Net.Http;
+using System.Reflection;
+using System.Text;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
 using NotchTasks.ControlPanel;
 using NotchTasks.Core;
+using NotchTasks.Core.Analytics;
 using NotchTasks.Core.Asks;
 using NotchTasks.Core.Demo;
 using NotchTasks.Core.Settings;
@@ -39,6 +45,9 @@ public partial class App : System.Windows.Application
     /// the windows close. A window that closes with the app reads it: the first-run guide then stays unfinished, and the pill is
     /// not shown on the way out. Dispatcher.HasShutdownStarted is not enough: it is still false while the windows close.
     public static bool Quitting { get; set; }
+
+    /// Usage statistics. Set at start-up: null before it, and in the demo run, which sends nothing.
+    public static Track? Analytics { get; private set; }
 
     /// Quits the app. Quitting goes up first, so the windows that close with the app see it.
     public static void Quit()
@@ -196,6 +205,12 @@ public partial class App : System.Windows.Application
             }
         };
         Sounds.Attach(settings);
+        // The secret comes from the build (csproj GaSecret); without one, nothing is sent.
+        var gaSecret = typeof(App).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>().FirstOrDefault(a => a.Key == "GaSecret")?.Value ?? "";
+        Analytics = new Track(gaSecret, typeof(App).Assembly.GetName().Version?.ToString(3) ?? "", DateTimeOffset.Now,
+            () => !settings.AnalyticsOff, key => settings.Get<string>(key), (key, value) => settings.Set(key, JsonValue.Create(value)),
+            SendAnalytics, Later);
+        Analytics.Once("first_launch");
 
         var store = new AskStore(AppPaths.AsksDir);
         store.MarkAppRunning(Environment.ProcessId);
@@ -257,6 +272,7 @@ public partial class App : System.Windows.Application
     protected override void OnExit(ExitEventArgs e)
     {
         _demoTimer?.Stop();
+        Analytics?.Flush().Wait(TimeSpan.FromSeconds(2));
         if (_primary)
         {
             _pill?.Close();
@@ -267,6 +283,26 @@ public partial class App : System.Windows.Application
         }
         _instance?.Dispose();
         base.OnExit(e);
+    }
+
+    private static readonly HttpClient AnalyticsHttp = new() { Timeout = TimeSpan.FromSeconds(15) };
+
+    /// Track's POST. The reply is not read: Google answers the same whatever the events were.
+    private static async Task SendAnalytics(string url, string body)
+    {
+        using var reply = await AnalyticsHttp.PostAsync(url, new StringContent(body, Encoding.UTF8, "application/json")).ConfigureAwait(false);
+    }
+
+    /// Track's one-shot timer, on the UI thread (events are raised there).
+    private static void Later(TimeSpan delay, Action action)
+    {
+        var timer = new DispatcherTimer { Interval = delay };
+        timer.Tick += (_, _) =>
+        {
+            timer.Stop();
+            action();
+        };
+        timer.Start();
     }
 
     /// Moves agents' hooks from the old Electron exe to NotchTasksHook.exe, and our Claude status line to this exe when the

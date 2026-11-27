@@ -99,7 +99,17 @@ enum SyncBox {
     nonisolated static var macName: String { Host.current().localizedName ?? "Mac" }
 
     @Published private(set) var group: SyncGroup? = SyncKeychain.load()
-    @Published private(set) var phones: [String: String] = [:]  // uid → phone name
+    @Published private(set) var phones: [String: String] = [:] {  // uid → phone name
+        didSet {
+            // phones seen before are remembered, so a restart or a list that failed to load is not a new pairing
+            var seen = Set(UserDefaults.standard.stringArray(forKey: "analytics.phones.seen") ?? [])
+            let fresh = Set(phones.keys).subtracting(seen)
+            guard !fresh.isEmpty else { return }
+            seen.formUnion(fresh)
+            UserDefaults.standard.set(Array(seen), forKey: "analytics.phones.seen")
+            Track.event("phone_paired", ["phones": phones.count])
+        }
+    }
     @Published var problem: String?
 
     /// Same Wi-Fi: the phone talks to the Mac directly, and Firebase is used only when it is away.
@@ -468,7 +478,8 @@ enum SyncBox {
             return
         }
         guard let model, let ask = model.asks.first(where: { $0.id == a.ask }) else { return }
-        model.reply(ask, a.reply)
+        Track.event("remote_answer", ["agent": ask.kind.rawValue])
+        model.reply(ask, a.reply, remote: true)
         publish()
     }
 

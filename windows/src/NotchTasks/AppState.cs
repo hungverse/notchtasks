@@ -407,8 +407,12 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
 
     /// Writes the answer for an ask, then removes the ask from Asks at once, and its toast with it. When the reply cannot
     /// be written, the ask stays in the list so the user can try again, and the failure is logged.
-    public void Answer(string askId, AskReply reply)
+    public void Answer(string askId, AskReply reply) => Answer(askId, reply, remote: false);
+
+    /// `remote`: the answer came from a phone, which is counted as remote_answer instead of first_ask_answered.
+    public void Answer(string askId, AskReply reply, bool remote)
     {
+        var ask = Asks.FirstOrDefault(a => a.Id == askId);
         if (!IsCodexAsk(askId) && !_demo)
         {
             try
@@ -420,6 +424,10 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
                 ErrorLog.Write(new IOException($"NotchTasks: could not write the reply for ask {askId}", e));
                 return;
             }
+        }
+        if (ask is not null)
+        {
+            TrackAnswer(ask, reply, remote);
         }
         if (IsCodexAsk(askId))
         {
@@ -438,6 +446,20 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         }
         Toasts.DropAsks(new HashSet<string>(new[] { askId }, StringComparer.Ordinal), DateTimeOffset.Now);
         Publish();
+    }
+
+    private static void TrackAnswer(AgentAsk ask, AskReply reply, bool remote)
+    {
+        var agent = new Dictionary<string, object> { ["agent"] = ask.Agent };
+        App.Analytics?.Event("ask_reply", agent);
+        if (remote)
+        {
+            App.Analytics?.Event("remote_answer", agent);
+        }
+        else if (reply.Kind is ReplyKinds.Allow or ReplyKinds.Deny or ReplyKinds.Answers)
+        {
+            App.Analytics?.Once("first_ask_answered", agent);
+        }
     }
 
     /// Codex's questions (the agents source's list). They are merged into Asks by SyncAsks, keyed by their ids, so an answered
@@ -542,6 +564,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
                 continue;
             }
             Asks.Insert(Math.Min(i, Asks.Count), visible[i]);
+            App.Analytics?.Once("first_ask_shown", new Dictionary<string, object> { ["agent"] = visible[i].Agent });
             Announce(AskToast(visible[i], Settings.Items));
         }
         Publish();

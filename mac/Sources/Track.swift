@@ -7,8 +7,14 @@ import Foundation
     static let optOutKey = "analytics.off"
     /// From Google Analytics › Admin › Data streams › the web stream (measurement ID) › Measurement Protocol API secrets.
     /// Empty: nothing is sent.
-    static let measurementID = ""
-    static let apiSecret = ""
+    static let measurementID = "G-H9RD7VRTDS"
+    /// Not in the repo: build.sh and scripts/release.sh pass it as NT_GA_SECRET into Info.plist. Unset ($( left
+    /// unexpanded) or empty: nothing is sent.
+    private static let apiSecret: String = {
+        let s = (Bundle.main.object(forInfoDictionaryKey: "NTAnalyticsSecret") as? String ?? "").trimmingCharacters(in: .whitespaces)
+        return s.hasPrefix("$(") ? "" : s
+    }()
+    private static let appVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
 
     static var enabled: Bool {
         get { !UserDefaults.standard.bool(forKey: optOutKey) }
@@ -25,12 +31,22 @@ import Foundation
     private static let session = Int(Date().timeIntervalSince1970)
     private static var queue: [[String: Any]] = []
 
-    static func event(_ name: String, _ params: [String: Any] = [:]) {
-        guard enabled, !measurementID.isEmpty, ProcessInfo.processInfo.environment["CI_SELFTEST"] == nil else { return }
-        queue.append(["name": name, "params": params.merging(["session_id": session, "engagement_time_msec": 1]) { a, _ in a }])
+    /// false when nothing was queued (off, not configured, or a self-test run).
+    @discardableResult static func event(_ name: String, _ params: [String: Any] = [:]) -> Bool {
+        guard enabled, !measurementID.isEmpty, !apiSecret.isEmpty, ProcessInfo.processInfo.environment["CI_SELFTEST"] == nil else { return false }
+        let all = params.merging(["session_id": session, "engagement_time_msec": 1, "platform": "mac", "app_version": appVersion]) { a, _ in a }
+        queue.append(["name": name, "params": all])
         // one request a minute at most (the protocol takes 25 events per request)
         if queue.count >= 25 { flush() }
         else if queue.count == 1 { DispatchQueue.main.asyncAfter(deadline: .now() + 60) { flush() } }
+        return true
+    }
+
+    /// Once per install: marked sent only when the event was queued, so a disabled Mac still gets it later.
+    static func once(_ name: String, _ params: [String: Any] = [:]) {
+        let key = "analytics.once.\(name)"
+        guard !UserDefaults.standard.bool(forKey: key), event(name, params) else { return }
+        UserDefaults.standard.set(true, forKey: key)
     }
 
     static func screen(_ name: String) { event("screen_view", ["screen_name": name]) }

@@ -286,6 +286,7 @@ public partial class OverviewPane : SettingsPane
         try
         {
             HookInstaller.Install(kind, AppFiles.HookExe, AppFiles.Home);
+            App.Analytics?.Event("agent_hook_on", new Dictionary<string, object> { ["agent"] = kind.Id() });
             _actionError = null;
         }
         catch (Exception e) when (e is InvalidDataException or IOException or UnauthorizedAccessException)

@@ -40,6 +40,7 @@ public sealed class SyncBridge : IAsyncDisposable
     private readonly Dispatcher _dispatcher;
     private readonly IDisposable[] _owned;
     private SyncState _state;
+    private HashSet<string>? _seenPhones;  // phones seen since start: only a phone never seen before counts as phone_paired
     private bool _running;
     private bool _disposed;
 
@@ -59,6 +60,16 @@ public sealed class SyncBridge : IAsyncDisposable
         hub.StateChanged += state => Post(() =>
         {
             var becamePaired = state.Paired && !_state.Paired;
+            // The first state is the baseline (the phones loaded at start-up are not new). A list that failed to load
+            // and came back holds only phones already seen, so it is not a pairing either.
+            if (_seenPhones is null)
+            {
+                _seenPhones = new HashSet<string>(state.Phones.Keys, StringComparer.Ordinal);
+            }
+            else if (state.Phones.Keys.Count(uid => _seenPhones.Add(uid)) > 0)
+            {
+                App.Analytics?.Event("phone_paired", new Dictionary<string, object> { ["phones"] = state.Phones.Count });
+            }
             _state = state;
             Changed?.Invoke();
             if (becamePaired)
@@ -245,7 +256,7 @@ public sealed class SyncBridge : IAsyncDisposable
         }
         if (a.Ask.Length > 0 && _app.Asks.Any(ask => ask.Id == a.Ask))
         {
-            _app.Answer(a.Ask, a.Reply);
+            _app.Answer(a.Ask, a.Reply, remote: true);
         }
     }
 

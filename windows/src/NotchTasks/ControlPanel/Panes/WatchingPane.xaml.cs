@@ -500,6 +500,7 @@ public partial class WatchingPane : SettingsPane
             if (on)
             {
                 HookInstaller.Install(kind, AppFiles.HookExe, home);
+                App.Analytics?.Event("agent_hook_on", new Dictionary<string, object> { ["agent"] = kind.Id() });
             }
             else
             {

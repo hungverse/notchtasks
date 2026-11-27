@@ -47,7 +47,8 @@ $versionProperty = "-p:Version=$Version"
 
 function Invoke-Dotnet {
     param([string[]]$Arguments)
-    Write-Host "> dotnet $($Arguments -join ' ')"
+    $shown = $Arguments | ForEach-Object { if ($_ -like '-p:GaSecret=*') { '-p:GaSecret=<hidden>' } else { $_ } }
+    Write-Host "> dotnet $($shown -join ' ')"
     & dotnet @Arguments
     if ($LASTEXITCODE -ne 0) {
         throw "dotnet $($Arguments[0]) failed with exit code $LASTEXITCODE"
@@ -89,8 +90,17 @@ Write-Host "NotchTasks $Version -> $Out"
 if (Test-Path -LiteralPath $stage) { Remove-Item -LiteralPath $stage -Recurse -Force }
 New-Item -ItemType Directory -Path $stage -Force | Out-Null
 
+# The Google Analytics API secret, for the app only (never printed). Without one the app sends no statistics.
+$gaSecret = $env:NT_GA_SECRET
+if (-not $gaSecret) {
+    $gaSecretFile = Join-Path $env:USERPROFILE '.notchtasks\ga-secret'
+    if (Test-Path -LiteralPath $gaSecretFile -PathType Leaf) { $gaSecret = (Get-Content -Raw -LiteralPath $gaSecretFile).Trim() }
+}
+
 # 1. The app (framework-only parts come from its own publish; the helper files it publishes are replaced below).
-Invoke-Dotnet @('publish', $appProj, '-c', 'Release', '-r', 'win-x64', '--self-contained', $versionProperty, '-o', $stage)
+$appArgs = @('publish', $appProj, '-c', 'Release', '-r', 'win-x64', '--self-contained', $versionProperty, '-o', $stage)
+if ($gaSecret) { $appArgs += "-p:GaSecret=$gaSecret" }
+Invoke-Dotnet $appArgs
 
 # 2. The sensors helper, self-contained, into the same stage.
 Invoke-Dotnet @('publish', $sensorsProj, '-c', 'Release', '-r', 'win-x64', '--self-contained', $versionProperty, '-o', $stage)

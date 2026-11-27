@@ -22,6 +22,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- The Google Analytics API secret (Track.cs reads it from here). Empty unless the installer passes it: nothing is sent. -->
+    <AssemblyMetadata Include="GaSecret" Value="$(GaSecret)" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Resource Include="Assets\NotchTasks.ico" />
   </ItemGroup>
 

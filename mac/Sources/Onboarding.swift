@@ -182,7 +182,7 @@ struct OnboardingView: View {
                         Text(kind.name).font(.body.weight(.medium))
                         Spacer()
                         Toggle(L("Answer agents on the notch"), isOn: Binding(get: { asksOn[kind] ?? false }, set: { on in
-                            do { try AgentAsks.setInstalled(on, kind); asksError = nil }
+                            do { try AgentAsks.setInstalled(on, kind); asksError = nil; if on { Track.event("agent_hook_on", ["agent": kind.rawValue]) } }
                             catch { asksError = L("Couldn't edit {0}'s settings: {1}", kind.name, error.localizedDescription) }
                             asksOn[kind] = AgentAsks.installed(kind)
                             if on, asksOn[kind] == true, let setup = kind.setupStep { AgentAsks.openInTerminal(setup.command) }

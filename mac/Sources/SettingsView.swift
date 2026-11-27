@@ -112,7 +112,7 @@ struct WatchListView: View {
                                 Label(L("Ready"), systemImage: "checkmark.circle.fill").font(.caption).foregroundStyle(.green)
                             }
                             Toggle("", isOn: Binding(get: { asksOn[k] ?? false }, set: { on in
-                                do { try AgentAsks.setInstalled(on, k); asksError = nil }
+                                do { try AgentAsks.setInstalled(on, k); asksError = nil; if on { Track.event("agent_hook_on", ["agent": k.rawValue]) } }
                                 catch { asksError = L("Couldn't edit {0}'s settings: {1}", k.name, error.localizedDescription) }
                                 asksOn[k] = AgentAsks.installed(k)
                                 // just switched on and one step is left: go straight to it

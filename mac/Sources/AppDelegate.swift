@@ -41,6 +41,7 @@ final class ClosureMenuItem: NSMenuItem {
     private var bag: Set<AnyCancellable> = []
 
     func applicationDidFinishLaunching(_ n: Notification) {
+        Track.once("first_launch")
         Updater.removeLeftoversAtLaunch()
         NotificationCenter.default.addObserver(self, selector: #selector(languageChanged), name: L10n.changed, object: nil)
         panel = NotchPanel(contentRect: .zero, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)

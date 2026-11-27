@@ -515,6 +515,7 @@ import AVFoundation
         if found != asks { asks = found }
         if !gone.isEmpty { dropAskToasts(gone) }
         for a in fresh {
+            Track.once("first_ask_shown", ["agent": a.kind.rawValue])
             announce(Toast(symbol: a.isQuestion ? "questionmark.bubble.fill" : "hand.raised.fill", tint: .orange,
                            title: a.kind.name + (a.isQuestion ? L(" is asking") : L(" needs your approval")),
                            subtitle: a.session + " · " + (a.isQuestion ? a.summary : "\(a.action): \(a.summary)"),
@@ -536,8 +537,10 @@ import AVFoundation
         }
     }
 
-    func reply(_ a: AgentAsk, _ r: AskReply) {
+    /// `remote`: the answer came from a phone (Sync.swift), which is counted as remote_answer instead.
+    func reply(_ a: AgentAsk, _ r: AskReply, remote: Bool = false) {
         Track.event("ask_reply")
+        if r != .pass && !remote { Track.once("first_ask_answered", ["agent": a.kind.rawValue]) }
         if a.id.hasPrefix("codex|") {
             answeredCodex.insert(a.id)
             let parts = a.id.split(separator: "|")
