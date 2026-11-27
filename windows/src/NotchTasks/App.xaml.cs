@@ -135,7 +135,7 @@ public partial class App : System.Windows.Application
         {
             var content = (FrameworkElement)_pill.Content;
             DemoCapture.Run(content, framesFolder, DemoTimeline.FrameCount, DemoTimeline.Fps,
-                time => session.Tick(time, DateTimeOffset.Now), _pill.DpiScale);
+                time => session.Tick(time, DateTimeOffset.Now), _pill.DpiScale * 2);  // 2x the monitor's scale: the sharp copy
             Shutdown(0);
             return;
         }
