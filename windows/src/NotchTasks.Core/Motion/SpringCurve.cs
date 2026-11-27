@@ -9,12 +9,16 @@ public sealed record SpringCurve(double Response, double Damping)
     private const double ScanLimit = 10;
 
     private double? _settle;
+    private double? _peak;
 
     /// True for the easeInOut curve (Response is its duration).
     public bool EaseInOut { get; init; }
 
     /// Seconds until the curve stays within 0.1 % of 1. For the ease-in-out curve this is the duration. Scanned once, then cached.
     public double Settle => _settle ??= EaseInOut ? Response : ScanSettle();
+
+    /// The largest value the curve reaches before it settles: 1 for a curve that does not overshoot, above 1 for a spring. Scanned once.
+    public double Peak => _peak ??= ScanPeak();
 
     /// The curve value at time t seconds: a spring overshoots above 1; the ease-in-out curve stays in [0, 1].
     /// Returns exactly 1 from Settle on.
@@ -58,6 +62,17 @@ public sealed record SpringCurve(double Response, double Damping)
             return 1 - decay * (Math.Cos(omegaD * t) + Damping * omega / omegaD * Math.Sin(omegaD * t));
         }
         return 1 - Math.Exp(-omega * t) * (1 + omega * t);
+    }
+
+    private double ScanPeak()
+    {
+        var peak = 1.0;
+        var end = Settle;
+        for (var t = 0.0; t <= end; t += ScanStep)
+        {
+            peak = Math.Max(peak, Raw(t));
+        }
+        return peak;
     }
 
     private double ScanSettle()

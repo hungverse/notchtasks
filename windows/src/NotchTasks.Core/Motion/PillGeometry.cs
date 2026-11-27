@@ -17,8 +17,24 @@ public static class PillGeometry
     /// The ask toast width: max(200 + 300, 520).
     public static double AskToastWidth { get; } = Math.Max(ClosedWidth + 300, OpenWidth);
 
-    /// The width of the pill's layout: every shape is centred in it, and it never changes while the pill moves.
-    public static double LayoutWidth { get; } = Math.Max(OpenWidth, AskToastWidth);
+    /// The largest overshoot any motion setting reaches past its target, as a share of the target (0.073 for the bouncy grow): the peak
+    /// of each spring, opening and closing. A shape is drawn this far past its target at the peak, so the layout keeps this room.
+    public static double PeakOvershoot { get; } =
+        new[] { "smooth", "bouncy", "snappy", "reduced" }
+            .SelectMany(motion => new[] { true, false }.Select(opening => SpringCurve.For(motion, opening, animationsOn: true).Peak - 1))
+            .Max();
+
+    /// The width of the pill's layout: every shape is centred in it, and it never changes while the pill moves. It holds the widest
+    /// shape (the open pill, or the ask toast, whichever is wider) at its peak overshoot, on both sides, with the glow's reach.
+    public static double LayoutWidth { get; } =
+        Math.Ceiling(Math.Max(OpenWidth, AskToastWidth) * (1 + PeakOvershoot) + 2 * GlowReach);
+
+    /// The height of the pill's layout below TopRoom: the tallest shape (MaxOpenHeight) at its peak overshoot.
+    public static double LayoutHeight { get; } = Math.Ceiling(MaxOpenHeight * (1 + PeakOvershoot));
+
+    /// The room above the pill's shape inside the window: the glow's reach, so no pixel of the shape touches the window's top edge.
+    /// The window is placed TopRoom higher than the pill's island top, so the pill stays where it was on screen.
+    public const double TopRoom = 12;
 
     /// The corner radius of the ask toast.
     public const double AskToastRadius = 24;
@@ -58,22 +74,23 @@ public static class PillGeometry
     /// is added to.
     public const double GlowReach = 10;
 
-    /// The room the window keeps round the layout on the sides and at the bottom (not the top, which is the screen's edge). The
-    /// bouncy open overshoots its target by 7.3 % (SpringCurve), up to 36 DIP for a 488 DIP grow; with the glow's reach and the
-    /// ring's half stroke that is 47 DIP, so 48 holds every step of every motion (the test checks it).
+    /// The room the window keeps round the layout on the sides and at the bottom. The layout already holds the overshoot (LayoutWidth,
+    /// LayoutHeight), so this room is the glow's and the ring's: the glow's 10 DIP and the ring's half stroke fit in it.
     public const double HostMargin = 48;
 
-    /// The window: the layout with HostMargin round it on both sides, and HostMargin under the open height. It is never resized.
+    /// The window: the layout with HostMargin on both sides and under it, and TopRoom above the shape. It is never resized.
     public static double WindowWidth => LayoutWidth + 2 * HostMargin;
-    public static double WindowHeight => MaxOpenHeight + HostMargin;
+    public static double WindowHeight => TopRoom + LayoutHeight + HostMargin;
 
-    /// Top centre of the work area, in whole device pixels, IslandTop below its top. The size is the window's DIP size times the DPI scale.
+    /// Top centre of the work area, in whole device pixels. The pill's shape sits IslandTop below the work area's top, and the window
+    /// starts TopRoom above the shape, so the window's top is (IslandTop - TopRoom) from the work area's. The size is the window's DIP
+    /// size times the DPI scale.
     public static (int X, int Y, int W, int H) Place((int X, int Y, int W, int H) workAreaPx, double windowWidthDip, double windowHeightDip, double scale)
     {
         var w = (int)Math.Round(windowWidthDip * scale, MidpointRounding.AwayFromZero);
         var h = (int)Math.Round(windowHeightDip * scale, MidpointRounding.AwayFromZero);
         var x = workAreaPx.X + (workAreaPx.W - w) / 2;
-        var y = workAreaPx.Y + (int)Math.Round(IslandTop * scale, MidpointRounding.AwayFromZero);
+        var y = workAreaPx.Y + (int)Math.Round((IslandTop - TopRoom) * scale, MidpointRounding.AwayFromZero);
         return (x, y, w, h);
     }
 }

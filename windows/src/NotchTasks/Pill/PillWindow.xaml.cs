@@ -146,18 +146,23 @@ public partial class PillWindow : Window
         SectionList.SizeChanged += (_, _) => OnBodySizeChanged();
         EmptyNote.SizeChanged += (_, _) => OnBodySizeChanged();
 
-        // The layout is sized once: the shape's paths and the clip draw the shared rectangle inside it.
+        // The layout is sized once: the shape's paths and the clip draw the shared rectangle inside it. The layout starts TopRoom below the
+        // window's top, so the glow above the shape is inside the window, and every layer is LayoutWidth x LayoutHeight, which holds the
+        // widest shape at its peak overshoot (PillGeometry). Nothing is clipped at the layout's edge.
+        var top = new Thickness(0, PillGeometry.TopRoom, 0, 0);
         PillShape.Width = PillGeometry.LayoutWidth;
-        PillShape.Height = PillGeometry.MaxOpenHeight;
+        PillShape.Height = PillGeometry.LayoutHeight;
+        PillShape.Margin = top;
         foreach (var layer in new[] { ShapeFill, Tint, GlowRing })
         {
             layer.Width = PillGeometry.LayoutWidth;
-            layer.Height = PillGeometry.MaxOpenHeight;
+            layer.Height = PillGeometry.LayoutHeight;
         }
         foreach (var layer in new[] { ShadowShape, GlowBacking })
         {
             layer.Width = PillGeometry.LayoutWidth;
-            layer.Height = PillGeometry.MaxOpenHeight;
+            layer.Height = PillGeometry.LayoutHeight;
+            layer.Margin = top;
             layer.Data = _shape;
         }
         ShapeFill.Data = _shape;
@@ -746,19 +751,87 @@ public partial class PillWindow : Window
         }
         var wasShowing = _shownToast is not null;
         _shownToast = target;
-        if (target is not null)
+        var change = ++_toastChange;
+        if (_open)
         {
-            var ask = target.AskId is { } askId ? _state.Asks.FirstOrDefault(a => a.Id == askId) : null;
-            ToastBox.Show(target, _state.Settings.ToastStyle, ask, _state.Settings.Motion, _state.Processes);
-            // Topmost is asserted again when a toast shows, as OpenPill does; the window itself never activates.
-            Win32.SetWindowPos(_hwnd, Win32.HwndTopmost, 0, 0, 0, 0, Win32.SWP_NOMOVE | Win32.SWP_NOSIZE | Win32.SWP_NOACTIVATE);
-            Animate(Mode.Toast);
+            // The open pill takes the toast's place at once: its content goes, and OpenPill opens the shape. A change under way is dropped.
+            _toastStepping = false;
+            ToastBox.BeginAnimation(OpacityProperty, null);
+            ToastBox.Opacity = 0;
+            if (wasShowing)
+            {
+                Animate(SteadyMode());  // a level bar still up keeps the shape a toast-sized one
+            }
+            ApplyAppearance();
+            return;
         }
-        else if (wasShowing)
-        {
-            Animate(SteadyMode());  // a level bar still up keeps the shape a toast-sized one
-        }
+        // The Mac's order (ToastTransition): the old content fades out completely, then the shape moves, then the new content fades in.
+        // Two contents are never on screen together, and the shape never shrinks round content that is still there.
+        _toastStepping = true;
+        RunToastSteps(ToastTransition.Plan(wasShowing, target is not null), 0, target, change);
         ApplyAppearance();
+    }
+
+    /// How long the old toast's content takes to fade out before the shape moves, and the new one's to fade in after it (the Mac's).
+    private static readonly TimeSpan ToastContentOut = TimeSpan.FromMilliseconds(120);
+    private static readonly TimeSpan ToastContentIn = TimeSpan.FromMilliseconds(150);
+
+    /// The number of toast changes so far. A step that finishes after a later change began does nothing.
+    private int _toastChange;
+
+    /// True while a toast change's steps run (from the fade-out to the shape's move): the closed pill is not retargeted meanwhile, so
+    /// the shape does not shrink past the content before it has faded.
+    private bool _toastStepping;
+
+    /// Runs the steps of a toast change from step i on, each after the one before has finished. A change that a later one has
+    /// replaced (change != _toastChange) stops where it is.
+    private void RunToastSteps(IReadOnlyList<ToastStep> steps, int i, Toast? target, int change)
+    {
+        if (change != _toastChange)
+        {
+            return;
+        }
+        if (i >= steps.Count)
+        {
+            _toastStepping = false;  // the change is done: the closed pill may be retargeted again
+            return;
+        }
+        var next = i + 1;
+        switch (steps[i])
+        {
+            case ToastStep.FadeOutOld:
+                FadeToastContent(0, ToastContentOut, () => RunToastSteps(steps, next, target, change));
+                break;
+            case ToastStep.ShowNew:
+                // The new content is laid out at opacity 0: the shape is sized to it, and it rises after the shape has moved.
+                ToastBox.BeginAnimation(OpacityProperty, null);
+                ToastBox.Opacity = 0;
+                var ask = target?.AskId is { } askId ? _state.Asks.FirstOrDefault(a => a.Id == askId) : null;
+                ToastBox.Show(target!, _state.Settings.ToastStyle, ask, _state.Settings.Motion, _state.Processes);
+                // Topmost is asserted again when a toast shows, as OpenPill does; the window itself never activates.
+                Win32.SetWindowPos(_hwnd, Win32.HwndTopmost, 0, 0, 0, 0, Win32.SWP_NOMOVE | Win32.SWP_NOSIZE | Win32.SWP_NOACTIVATE);
+                RunToastSteps(steps, next, target, change);
+                break;
+            case ToastStep.Morph:
+                // Closed when there is no toast (a level bar still up keeps it toast-sized, as before).
+                Animate(target is null ? SteadyMode() : Mode.Toast, () => RunToastSteps(steps, next, target, change));
+                break;
+            case ToastStep.FadeInNew:
+                _toastStepping = false;  // the shape has moved: only the content is left to rise
+                FadeToastContent(1, ToastContentIn, null);
+                break;
+        }
+    }
+
+    /// Fades the toast's content to an opacity over a duration, and runs done once it has got there.
+    private void FadeToastContent(double to, TimeSpan duration, Action? done)
+    {
+        var animation = new DoubleAnimation(to, duration) { FillBehavior = FillBehavior.HoldEnd };
+        if (done is not null)
+        {
+            animation.Completed += (_, _) => done();
+        }
+        ToastBox.BeginAnimation(OpacityProperty, animation);
     }
 
     /// The toast timer: the queue moves on when the toast's time is up and the pointer has been off the pill (Toasts.Tick).
@@ -785,7 +858,8 @@ public partial class PillWindow : Window
     /// The Mac's spring for the shape, towards the size of the mode. The card and the toast fade and the top row fades
     /// out behind a toast, over min(Settle, 0.35 s); the card un-blurs when it shows, and only opacity moves when reduced.
     /// A call for the target the shape already has does nothing.
-    private void Animate(Mode mode)
+    /// settled runs once the shape has reached the target (at once when it is there already): a toast's new content rises then.
+    private void Animate(Mode mode, Action? settled = null)
     {
         var settings = _state.Settings;
         var animationsOn = SystemParameters.ClientAreaAnimation;
@@ -797,6 +871,7 @@ public partial class PillWindow : Window
         {
             // The shape already springs to this target: a repeat (an ask, then the sections it changed) does not restart it.
             ReevaluateClickThrough();
+            settled?.Invoke();
             return;
         }
         // The grow curve (bounce) when the shape opens or grows, the settle curve (no bounce) when it shrinks: as the Mac's
@@ -845,7 +920,7 @@ public partial class PillWindow : Window
         if (changesMode)
         {
             Fade(CardLayer, OpacityProperty, mode == Mode.Open ? 1 : 0, duration, fade);
-            Fade(ToastBox, OpacityProperty, mode == Mode.Toast && !_levelShown ? 1 : 0, duration, fade);
+            // The toast's content is not faded here: its own steps (SyncToast) fade it out before the shape moves and in after.
             Fade(LevelBox, OpacityProperty, mode == Mode.Toast && _levelShown ? 1 : 0, duration, fade);
             Fade(TopRow, OpacityProperty, mode == Mode.Toast ? 0 : 1, duration, fade);
             // The card blurs only while it closes, and the blur is attached only while it moves: an open (and reduced motion) fades on
@@ -893,6 +968,7 @@ public partial class PillWindow : Window
                         Animate(Mode.Open);
                     }
                 }
+                settled?.Invoke();
             }
         }
 
@@ -987,9 +1063,9 @@ public partial class PillWindow : Window
     /// shapes are their own, and a closed pill is retargeted when they close.
     private void RetargetClosed()
     {
-        if (_open || ShowingOverlay)
+        if (_open || ShowingOverlay || _toastStepping)
         {
-            return;
+            return;  // a toast's steps move the shape themselves: its content fades out before the shape goes closed
         }
         Animate(Mode.Closed);
     }

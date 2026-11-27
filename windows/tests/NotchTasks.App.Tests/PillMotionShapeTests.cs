@@ -43,7 +43,7 @@ public sealed class PillMotionShapeTests
                 Assert.Equal(before, mid);
                 Assert.Equal(before, after);
                 Assert.Equal(PillGeometry.LayoutWidth, after.ActualWidth);
-                Assert.Equal(PillGeometry.MaxOpenHeight, after.ActualHeight);
+                Assert.Equal(PillGeometry.LayoutHeight, after.ActualHeight);
             }
             finally
             {

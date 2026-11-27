@@ -134,8 +134,7 @@ public partial class ToastView : UserControl
     /// icon of the toast's item (an app's icon, or the agent's process); null reads none.
     public void Show(Toast t, string style, AgentAsk? ask, string motion, IProcessReader? processes = null)
     {
-        // A toast that replaces one on screen cross-fades: the old content is kept as a picture, over the new, and fades out.
-        var previous = _toast is null ? null : Snapshot();
+        // The content is replaced at once: the pill fades the old content out before it calls this, so two contents are never shown together.
         _toast = t;
         _ask = ask;
         var look = LookOf(t, style);
@@ -211,44 +210,6 @@ public partial class ToastView : UserControl
         HideButton.ToolTip = L10n.L("Hide alert");
         // The content's new size is laid out now: the pill measures the toast's height right after this call.
         UpdateLayout();
-        if (previous is not null)
-        {
-            CrossFade(previous, motion);
-        }
-    }
-
-    /// The toast's content as it is on screen now, as a picture. Null when the toast is not shown (there is nothing to fade from).
-    private RenderTargetBitmap? Snapshot()
-    {
-        if (!IsVisible || Root.ActualWidth <= 0 || Root.ActualHeight <= 0)
-        {
-            return null;
-        }
-        var dpi = VisualTreeHelper.GetDpi(this);
-        var bitmap = new RenderTargetBitmap(
-            (int)Math.Ceiling(Root.ActualWidth * dpi.DpiScaleX),
-            (int)Math.Ceiling(Root.ActualHeight * dpi.DpiScaleY),
-            dpi.PixelsPerInchX,
-            dpi.PixelsPerInchY,
-            PixelFormats.Pbgra32);
-        bitmap.Render(Root);
-        bitmap.Freeze();
-        return bitmap;
-    }
-
-    /// The old content fades out over the new, which is already in place: a cross-fade over PillMotion.Fade. Composited, as a picture.
-    private void CrossFade(RenderTargetBitmap from, string motion)
-    {
-        var overlay = new Image { Source = from, Stretch = Stretch.Fill, IsHitTestVisible = false, Focusable = false };
-        Root.Children.Add(overlay);
-        var duration = PillMotion.Fade(motion, SystemParameters.ClientAreaAnimation);
-        var animation = new DoubleAnimation(1, 0, duration)
-        {
-            EasingFunction = PillMotion.Ease(duration),
-            FillBehavior = FillBehavior.HoldEnd,
-        };
-        animation.Completed += (_, _) => Root.Children.Remove(overlay);
-        overlay.BeginAnimation(OpacityProperty, animation);
     }
 
     /// The side column of a compact toast: 52 for a compact toast, 170 for a title in the compact style.

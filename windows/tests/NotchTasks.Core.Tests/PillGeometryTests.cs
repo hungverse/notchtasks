@@ -14,15 +14,18 @@ public sealed class PillGeometryTests
         Assert.Equal(700, w);
         Assert.Equal(525, h);
         Assert.Equal((1920 - 700) / 2, x);
-        Assert.Equal(5, y); // IslandTop 4 DIP at 125%
+        // The shape's top is IslandTop (4 DIP) below the work area at 125%; the window starts TopRoom (12 DIP) above the shape.
+        Assert.Equal(-10, y);       // (4 - 12) DIP at 125%
+        Assert.Equal(5, y + 15);    // the shape's top: 4 DIP at 125%, 12 DIP (15 px) below the window's
     }
 
     [Fact]
-    public void Place_FloatsIslandTopBelowWorkArea()
+    public void Place_PutsTheShapeIslandTopBelowWorkArea()
     {
         var (_, y, _, _) = PillGeometry.Place((0, 0, 1920, 1032), 560, 420, 1.0);
 
-        Assert.Equal(4, y);
+        Assert.Equal(PillGeometry.IslandTop - PillGeometry.TopRoom, y);
+        Assert.Equal(PillGeometry.IslandTop, y + PillGeometry.TopRoom);
     }
 
     [Fact]
@@ -33,7 +36,7 @@ public sealed class PillGeometryTests
         Assert.Equal(560, w);
         Assert.Equal(420, h);
         Assert.Equal(100 + (1001 - 560) / 2, x);
-        Assert.Equal(40 + 4, y);
+        Assert.Equal(40 + PillGeometry.IslandTop - PillGeometry.TopRoom, y);
     }
 
     [Fact]
