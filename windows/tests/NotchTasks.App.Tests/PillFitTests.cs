@@ -39,7 +39,9 @@ public sealed class PillFitTests
                 Assert.Equal(16, badge.Width);  // the compact icon size, as the Mac's iconSize
                 // The badge oozes in (its transform moves it until the ooze ends), so the centre is read once that is done.
                 PumpFrame();
-                Fixture.PumpUntil(() => badge.Opacity == 1 && ((TranslateTransform)((TransformGroup)badge.RenderTransform!).Children[1]).X == 0);
+                // with animations off (as on a CI runner) there is no ooze, and no transform group to wait on
+                Fixture.PumpUntil(() => badge.Opacity == 1
+                    && (badge.RenderTransform is not TransformGroup g || ((TranslateTransform)g.Children[1]).X == 0));
                 Arrange(pill);
                 var shape = Fixture.Named<FrameworkElement>(pill, "PillShape");
                 var centre = badge.TransformToAncestor(shape).Transform(new Point(badge.ActualWidth / 2, badge.ActualHeight / 2));

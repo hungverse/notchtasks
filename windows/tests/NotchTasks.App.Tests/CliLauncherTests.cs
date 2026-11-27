@@ -199,19 +199,28 @@ public sealed class CliLauncherTests
     public void Resolve_ARelativeExe_IsNotAWinner_AndAFullyQualifiedShimIsUsed()
     {
         using var root = new TempRoot();
-        var exeDir = Folder(root, "relexe");
-        Write(exeDir, "claude.exe");
-        var shimDir = Folder(root, "shim");
-        var shim = Write(shimDir, "claude.cmd", "@echo off\r\n");
-        var relative = Path.GetRelativePath(Directory.GetCurrentDirectory(), exeDir);
-        Assert.False(Path.IsPathFullyQualified(relative));
+        // the relative folder sits under the current directory, so it is relative even when the temp folder is on
+        // another drive (a CI runner: temp on C:, the checkout on D:)
+        var relative = "relexe-" + Guid.NewGuid().ToString("N");
+        var exeDir = Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), relative)).FullName;
+        try
+        {
+            Write(exeDir, "claude.exe");
+            var shimDir = Folder(root, "shim");
+            var shim = Write(shimDir, "claude.cmd", "@echo off\r\n");
+            Assert.False(Path.IsPathFullyQualified(relative));
 
-        var command = CliLauncher.Resolve("claude", Home(root), relative + Path.PathSeparator + shimDir, AppData(root), Local(root));
+            var command = CliLauncher.Resolve("claude", Home(root), relative + Path.PathSeparator + shimDir, AppData(root), Local(root));
 
-        Assert.NotNull(command);
-        Assert.Equal(CliKind.Shim, command!.Kind);
-        Assert.Equal(shim, command.FileName);
-        Assert.Null(CliLauncher.Resolve("claude", Home(root), relative, AppData(root), Local(root)));
+            Assert.NotNull(command);
+            Assert.Equal(CliKind.Shim, command!.Kind);
+            Assert.Equal(shim, command.FileName);
+            Assert.Null(CliLauncher.Resolve("claude", Home(root), relative, AppData(root), Local(root)));
+        }
+        finally
+        {
+            Directory.Delete(exeDir, recursive: true);
+        }
     }
 
     [Fact]

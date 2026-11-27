@@ -155,7 +155,8 @@ public sealed class ControlPanelWindowTests
                 {
                     Fixture.Call(window, "SelectPane", pane);
                     window.UpdateLayout();
-                    Assert.Equal(760, ((FrameworkElement)host.Content).ActualWidth, 0.5);
+                    // a screen narrower than 1400 (a CI runner) shrinks the window: then the column fills what is left
+                    Assert.Equal(Math.Min(760, host.ActualWidth), ((FrameworkElement)host.Content).ActualWidth, 0.5);
                 }
             }
             finally
