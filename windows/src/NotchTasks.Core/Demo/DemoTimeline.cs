@@ -18,8 +18,7 @@ public sealed record DemoFrame(bool AskPending, bool AllowPressed, DemoToast Toa
 /// 0 s      the closed pill: the Claude and Codex icons, and the build "npm run build" running.
 /// 2 s      the ask toast grows out: "Claude needs your approval", "web-shop · Run command: git push origin main", Deny and Allow.
 /// 5 s      Allow is pressed and held for 0.4 s.
-/// 5.4 s    the ask leaves; the pill shrinks back to the closed size for 0.6 s (the app's own animation, between two toasts).
-/// 6 s      the green done toast grows out: "Pushed to origin/main · web-shop".
+/// 5.4 s    the ask's toast morphs straight into the green done toast: "Pushed to origin/main · web-shop" (no closed pill between).
 /// 8 s      the done toast shrinks back; the build reads "npm run build · Done" (its chip leaves the closed pill).
 /// 10 s     the device toast: "AirPods Pro connected", "L 100% · R 98% · Case 62%".
 /// 13 s     the device toast shrinks back to the closed pill, until the loop restarts at 16 s.
@@ -55,12 +54,9 @@ public static class DemoTimeline
         {
             return new DemoFrame(AskPending: true, AllowPressed: true, Toast: DemoToast.Ask, BuildDone: false);
         }
-        if (s < 6)
-        {
-            return new DemoFrame(AskPending: false, AllowPressed: false, Toast: DemoToast.None, BuildDone: false);
-        }
         if (s < 8)
         {
+            // The ask's toast morphs straight into the done toast: no closed pill between them.
             return new DemoFrame(AskPending: false, AllowPressed: false, Toast: DemoToast.Pushed, BuildDone: false);
         }
         if (s < 10)

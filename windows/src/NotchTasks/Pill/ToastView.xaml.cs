@@ -126,6 +126,16 @@ public partial class ToastView : UserControl
         AllowButton.Opacity = pressed ? 0.7 : 1;
     }
 
+    /// The size a toast takes in a style, measured on a view of its own (not in the pill): the pill springs to it before the toast's
+    /// content is shown in the pill. The width and the corner radius are the view's, as in the pill.
+    public static (double Width, double Height, double Radius) SizeOf(Toast t, string style, AgentAsk? ask, IProcessReader? processes)
+    {
+        var view = new ToastView();
+        view.Show(t, style, ask, "bouncy", processes);
+        view.Measure(new Size(view.Width, double.PositiveInfinity));
+        return (view.Width, view.DesiredSize.Height, view.ShapeRadius);
+    }
+
     public static FrameworkElement? TrailOf(Toast t, Brush tint, double size) =>
         t.Icon is null ? null : GlyphOf(t.Glyph, tint, size);
 

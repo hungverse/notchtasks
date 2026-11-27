@@ -121,7 +121,6 @@ public sealed class DemoSession
     /// always has a closed gap between two toasts, so the pill shrinks and grows through its own animation).
     private void ShowToast(DemoToast kind, DateTimeOffset now)
     {
-        _state.Toasts.Clear();
         var toast = kind switch
         {
             DemoToast.Ask => _askToast,
@@ -129,9 +128,18 @@ public sealed class DemoSession
             DemoToast.Charge => _chargeToast,
             _ => null,
         };
-        if (toast is not null)
+        if (toast is null)
         {
-            _state.Toasts.Enqueue(toast, now);
+            _state.Toasts.Clear();
+            return;
+        }
+        // A toast that replaces one on screen is queued first and the shown one is dismissed after it: the pill sees one change (toast to
+        // toast), as the app's own queue makes it. Clearing first would show the closed pill for a moment between the two.
+        var shown = _state.Toasts.Current;
+        _state.Toasts.Enqueue(toast, now);
+        if (shown is not null)
+        {
+            _state.Toasts.Dismiss(now);
         }
     }
 

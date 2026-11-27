@@ -195,7 +195,8 @@ public sealed class DemoSessionTests
             session.Tick(TimeSpan.FromSeconds(5.4), Now);
             Assert.False(stage.Pressed);
             Assert.Empty(state.Asks);
-            Assert.Null(state.Toasts.Current);  // the closed gap between the two toasts
+            // The done toast takes the ask's place at once: the queue shows one toast, the next, with no closed pill between them.
+            Assert.Equal("Pushed to origin/main · web-shop", state.Toasts.Current!.Title);
 
             session.Tick(TimeSpan.FromSeconds(6), Now);
             Assert.Equal("Pushed to origin/main · web-shop", state.Toasts.Current!.Title);

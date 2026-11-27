@@ -539,7 +539,8 @@ public static class ChipView
             }
             if (isNew)
             {
-                PillMotion.Ooze(element, leftWing: !rightWing, motion, animationsOn);
+                // A new chip takes its own slot at once and fades in there: an ooze would move it over its neighbour's count (the "11").
+                PillMotion.Enter(element, scale: false, motion, animationsOn);
             }
         }
     }

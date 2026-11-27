@@ -44,16 +44,18 @@ public sealed class DemoTimelineTests
         Assert.True(At(5).AskPending);
         Assert.True(At(5.39).AllowPressed);
 
+        // The ask's toast morphs straight into the done toast: the done toast is up at once, with no closed pill between them.
         var after = At(5.4);
         Assert.False(after.AllowPressed);
         Assert.False(after.AskPending);
-        Assert.Equal(DemoToast.None, after.Toast);
+        Assert.Equal(DemoToast.Pushed, after.Toast);
     }
 
     [Fact]
-    public void SixSeconds_GrowsTheDoneToast_AfterTheClosedGap()
+    public void TheDoneToast_FollowsTheAskWithNoClosedFrame()
     {
-        Assert.Equal(DemoToast.None, At(5.99).Toast);
+        Assert.Equal(DemoToast.Ask, At(5.39).Toast);
+        Assert.Equal(DemoToast.Pushed, At(5.4).Toast);
         Assert.Equal(DemoToast.Pushed, At(6).Toast);
         Assert.False(At(6).AskPending);
     }
