@@ -284,8 +284,8 @@ public partial class PillWindow : Window
         Place();
         if (_state.IsDemo)
         {
-            // The demo run's pill is driven by its timeline, not by the pointer: it never takes clicks, and nothing polls the pointer.
-            SetClickThrough(true);
+            // The demo run's pill is driven by its timeline, not by the pointer: nothing polls the pointer. Clicks outside the pill still
+            // pass through (WM_NCHITTEST), and the pill's own buttons, such as the power button that quits, still work.
             return;
         }
         _pollTimer.Start();
