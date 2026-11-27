@@ -35,6 +35,9 @@ jobs:
 
       - name: Installer
         shell: pwsh
+        # the Google Analytics API secret (repo secret); empty on forks, so their builds send no statistics
+        env:
+          NT_GA_SECRET: ${{ secrets.NT_GA_SECRET }}
         run: pwsh windows/installer/build.ps1
 
       # The hook shipped here is the Native AOT build (this runner has MSVC), which the unit tests never run. Both commands run the

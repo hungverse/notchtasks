@@ -6,7 +6,7 @@
     <RootNamespace>NotchTasks</RootNamespace>
     <AssemblyName>NotchTasks</AssemblyName>
     <!-- The version the self-update compares: 3.0.0 is build 30000 (UpdateRules.BuildOf), as the feed numbers it. -->
-    <Version>3.0.0</Version>
+    <Version>3.0.1</Version>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <!-- Windows SDK target: the app uses WinRT (SMTC, devices, camera, share). Core, the hook and the sensors stay net10.0-windows. -->
     <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
