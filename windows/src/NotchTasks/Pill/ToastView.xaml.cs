@@ -209,6 +209,8 @@ public partial class ToastView : UserControl
         ActionButton.Content = action ?? string.Empty;
         ActionButton.Visibility = VisibleIf(action is not null);
         HideButton.ToolTip = L10n.L("Hide alert");
+        // The content's new size is laid out now: the pill measures the toast's height right after this call.
+        UpdateLayout();
         if (previous is not null)
         {
             CrossFade(previous, motion);
