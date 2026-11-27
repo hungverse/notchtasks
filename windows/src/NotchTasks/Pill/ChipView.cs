@@ -57,6 +57,7 @@ public static class ChipView
         DateTimeOffset now, bool lead, bool trail, IProcessReader? processes = null, IReadOnlyDictionary<string, JsonObject>? toolIcons = null,
         Func<string, ImageSource?>? art = null, double leadSize = 18, bool animate = false)
     {
+        // The margins are set by SpaceChips once the wing's order is known: 3 DIP at a wing's edge, 2 DIP toward a neighbouring chip.
         var panel = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(3, 0, 3, 0) };
         if (lead && Lead(chip, leadSize, accent, moduleColors, processes, toolIcons, art, animate) is { } leadElement)
         {
@@ -378,7 +379,25 @@ public static class ChipView
         }
         Reconcile(left, leftPanels, rightWing: false, motion, animationsOn, removed);
         Reconcile(right, rightPanels, rightWing: true, motion, animationsOn, removed);
+        SpaceChips(left);
+        SpaceChips(right);
         return chips.Count;
+    }
+
+    /// Sets each chip's end margins by its neighbours: 3 DIP toward a wing's edge or a badge, 2 DIP toward a neighbouring chip, so two
+    /// adjacent chips are 4 DIP apart and two counts never read as one number ("11"). An exiting chip is no neighbour.
+    private static void SpaceChips(StackPanel wing)
+    {
+        var children = wing.Children.OfType<FrameworkElement>().ToList();
+        bool IsChip(int i) => i >= 0 && i < children.Count && children[i].Tag is ChipTag && !PillMotion.IsExiting(children[i]);
+        for (var i = 0; i < children.Count; i++)
+        {
+            if (children[i].Tag is not ChipTag || children[i] is not StackPanel panel)
+            {
+                continue;
+            }
+            panel.Margin = new Thickness(IsChip(i - 1) ? 2 : 3, 0, IsChip(i + 1) ? 2 : 3, 0);
+        }
     }
 
     /// A chip's place in a fill: its key, its panel (a held one when the content is unchanged), and its content signature (null when

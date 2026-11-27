@@ -72,7 +72,8 @@ public sealed class PillFitTests
                 Settle(pill);
                 Arrange(pill);
 
-                // The left wing is the badge alone; the right wing is the chip. Each wing's ink is its width less its own end margins (3 DIP).
+                // The left wing is the badge alone; the right wing is the chip. Each wing's ink is its width less its own end margins (3 DIP
+                // each: the wing's 1 DIP and the chip's 2 DIP).
                 var leftInk = Fixture.Named<StackPanel>(pill, "LeftWing").DesiredSize.Width - 3 - 3;
                 var rightInk = Fixture.Named<StackPanel>(pill, "RightWing").DesiredSize.Width - 3 - 3;
                 var padding = PillGeometry.ClosedPadding(PillGeometry.IconSizeFor(state.Settings.Size));

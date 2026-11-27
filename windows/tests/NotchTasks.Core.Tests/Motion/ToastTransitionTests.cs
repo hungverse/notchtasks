@@ -4,7 +4,8 @@ using Xunit;
 namespace NotchTasks.Core.Tests.Motion;
 
 /// The timing of a toast change: the old content fades out in 80 ms with the shape starting 40 ms in, the new content rises as the
-/// shape passes 75% of its way, and a shape larger than the closed pill is never left without content for more than a frame.
+/// shape is 45% of its way (or the old content is gone, whichever is later), and a shape larger than the closed pill is never left
+/// without content for more than a frame.
 public sealed class ToastTransitionTests
 {
     [Fact]
@@ -40,7 +41,7 @@ public sealed class ToastTransitionTests
         Assert.Equal(TimeSpan.FromMilliseconds(40), ToastTransition.MorphLead);
         Assert.Equal(TimeSpan.FromMilliseconds(120), ToastTransition.NewIn);
         Assert.True(ToastTransition.MorphLead < ToastTransition.OldOut);
-        Assert.Equal(0.75, ToastTransition.RisesAt);
+        Assert.Equal(0.45, ToastTransition.RisesAt);
     }
 
     [Theory]
@@ -50,13 +51,15 @@ public sealed class ToastTransitionTests
     [InlineData("bouncy", false)]
     [InlineData("snappy", true)]
     [InlineData("snappy", false)]
-    public void TheNewContentRisesAfterTheOldIsGone_ForEveryMotion(string motion, bool opening)
+    public void TheNewContentRisesAtTheLaterOfOldGoneAndTheSpringAt45Percent_ForEveryMotion(string motion, bool opening)
     {
         var curve = SpringCurve.For(motion, opening, animationsOn: true);
-        var rise = ToastTransition.MorphLead + ToastTransition.RiseTime(curve);
+        var springAt45 = ToastTransition.MorphLead + ToastTransition.RiseTime(curve);
+        var later = springAt45 > ToastTransition.OldOut ? springAt45 : ToastTransition.OldOut;
 
-        // The new content starts once the old is gone (its rise is at or after OldOut), so the two are never both visible.
-        Assert.True(rise >= ToastTransition.OldOut, $"{motion} opening={opening}: the new rises at {rise.TotalMilliseconds:0} ms, before the old is gone");
+        // The new content's rise is the later of the two, so it is never visible while the old content still is.
+        Assert.Equal(later, ToastTransition.OldOut + ToastTransition.RisePause(curve, ToastTransition.MorphLead, ToastTransition.OldOut));
+        Assert.True(later >= ToastTransition.OldOut);
     }
 
     [Fact]

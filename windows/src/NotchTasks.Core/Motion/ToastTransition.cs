@@ -13,7 +13,7 @@ public enum ToastStep
     /// The new content is shown, laid out at opacity 0, once the old content is gone.
     ShowNew,
 
-    /// The new content's opacity rises to 1 (NewIn long), starting when the shape's spring reaches RisesAt of its way.
+    /// The new content's opacity rises to 1 (NewIn long), starting at the later of the old content being gone and the spring's RisesAt.
     FadeInNew,
 }
 
@@ -29,8 +29,8 @@ public static class ToastTransition
     /// How long the new content takes to rise.
     public static readonly TimeSpan NewIn = TimeSpan.FromMilliseconds(120);
 
-    /// The share of the shape's way to its target at which the new content starts to rise.
-    public const double RisesAt = 0.75;
+    /// The share of the shape's way to its target at which the new content starts to rise (or the old content is gone, if that is later).
+    public const double RisesAt = 0.45;
 
     /// The steps from the shown toast (oldShown: a toast's content is on screen) to the next one (newShown: a toast is to show).
     /// Nothing to change gives no steps. Between two toasts the old content leaves and the shape moves straight to the new size: the
