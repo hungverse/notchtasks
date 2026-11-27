@@ -8,13 +8,13 @@
 
 [Website](https://notchtasks.web.app) · [Download for macOS](https://notchtasks.web.app/assets/NotchTasks.dmg) · [Download for Windows](https://notchtasks.web.app/assets/NotchTasks-Setup.exe) · [iPhone](https://apps.apple.com/us/app/notchtasks-ai-agent-remote/id6831539007) · [Android](https://play.google.com/store/apps/details?id=com.notchtasks.android)
 
-<img src=".github/assets/pill-windows.gif" width="760" alt="NotchTasks on Windows: the pill opens with music, Claude and Codex at work with their plan limits, then Claude asks to run git push and the push is allowed" />
-
-<sub>Windows 10 and 11: a floating pill at the top of the screen</sub>
-
 <img src=".github/assets/notch-macos.gif" width="760" alt="NotchTasks in the MacBook notch: animated icons, a build running, Claude asking to run git push, then charging and AirPods" />
 
 <sub>macOS: grows out of the notch</sub>
+
+<img src=".github/assets/pill-windows.gif" width="760" alt="NotchTasks on Windows: a floating pill with a build running, Claude asking to run git push and the push allowed, then AirPods connected" />
+
+<sub>Windows 10 and 11: a floating pill at the top of the screen</sub>
 
 </div>
 
