@@ -1,3 +1,4 @@
+using System.Text.Json.Nodes;
 using System.Windows.Media;
 using NotchTasks.Core;
 using NotchTasks.Core.Agents;
@@ -47,7 +48,9 @@ public sealed class DemoSession
             Demo = true,
             Notifier = options?.Notifier ?? new NullNotifier(),
         };
-        return new AppState(SettingsStore.InMemory(), new AskStore(AppPaths.AsksDir), o);
+        var settings = SettingsStore.InMemory();
+        settings.Set("disabled", new JsonArray());  // the focus timer is off by default; the demo shows it, so it is on here (in memory only)
+        return new AppState(settings, new AskStore(AppPaths.AsksDir), o);
     }
 
     /// The state the demo's pill opens with: the agents, the build row, the now playing session, the limits and the focus timer.

@@ -182,6 +182,8 @@ public sealed class DemoSessionTests
             Assert.NotNull(state.Timer.State);
             var timer = state.Timer.State!;
             Assert.Equal(TimeSpan.FromSeconds(18 * 60 + 42), timer.End - Now);
+            // The timer's module is on in the demo, whatever the defaults say (the default list turns it off).
+            Assert.Contains("timer", state.Snapshot.ActiveModules);
         });
     }
 
