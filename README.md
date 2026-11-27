@@ -15,6 +15,7 @@ When one needs permission, you allow it right there, without hunting for the ter
 [![Android](https://img.shields.io/badge/Google%20Play-Android-34A853?style=flat-square&logo=googleplay&logoColor=white)](https://play.google.com/store/apps/details?id=com.notchtasks.android)
 ![Free](https://img.shields.io/badge/price-free-FF9F0A?style=flat-square)
 ![No account](https://img.shields.io/badge/account-none-8E8E93?style=flat-square)
+[![MIT license](https://img.shields.io/badge/license-MIT-30D158?style=flat-square)](LICENSE)
 
 **[Website](https://notchtasks.web.app)** · **[Install](#install)** · **[Phone app](#phone-app)** · **[Questions](#questions)**
 
@@ -205,7 +206,7 @@ dotnet test windows/NotchTasks.sln   # Windows tests
 
 ## License
 
-Not chosen yet: all rights reserved for now. The NotchTasks name and icon are not part of any code license.
+[MIT](LICENSE). The NotchTasks name and icon are not covered by it: please use your own for a fork. Third-party parts keep their own licenses ([Fluent System Icons](windows/src/NotchTasks/Resources/Fonts/LICENSE), MIT).
 
 <div align="center">
 <br />
