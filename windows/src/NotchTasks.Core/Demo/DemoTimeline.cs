@@ -9,23 +9,27 @@ public enum DemoToast
     Charge,
 }
 
-/// What the demo shows at one moment: whether the pill is open, whether the Claude ask waits, whether its Allow button is held
-/// down, and which toast is up.
-public sealed record DemoFrame(bool PillOpen, bool AskPending, bool AllowPressed, DemoToast Toast);
+/// What the demo shows at one moment: whether the Claude ask waits, whether its Allow button is held down, which toast is up (at most
+/// one), and whether the build row has finished.
+public sealed record DemoFrame(bool AskPending, bool AllowPressed, DemoToast Toast, bool BuildDone);
 
-/// The scripted timeline of `NotchTasks.exe --demo`, in a loop of 14 s. Pure: the app drives its state from the frame at a time.
-/// 0 s     the closed pill (the agents' icon is on the left wing).
-/// 1.5 s   the pill opens: the Now Playing card, the agents with their limits, the build row and the focus timer.
-/// 6 s     the pill closes, and the Claude ask drops as a toast (Deny, Allow).
-/// 9 s     Allow is held down; 9.4 s the ask leaves and the done toast shows ("Pushed to origin/main").
-/// 11 s    the closed pill with the device toast ("AirPods Pro · 80%"), until the loop restarts at 14 s.
+/// The scripted timeline of `NotchTasks.exe --demo`, in a loop of 16 s, the same story as the Mac's GIF. The pill never opens its card
+/// stack: it is the closed pill, with a toast growing out of it and shrinking back.
+/// 0 s      the closed pill: the Claude and Codex icons, and the build "npm run build" running.
+/// 2 s      the ask toast grows out: "Claude needs your approval", "web-shop · Run command: git push origin main", Deny and Allow.
+/// 5 s      Allow is pressed and held for 0.4 s.
+/// 5.4 s    the ask leaves; the pill shrinks back to the closed size for 0.6 s (the app's own animation, between two toasts).
+/// 6 s      the green done toast grows out: "Pushed to origin/main · web-shop".
+/// 8 s      the done toast shrinks back; the build reads "npm run build · Done" (its chip leaves the closed pill).
+/// 10 s     the device toast: "AirPods Pro connected", "L 100% · R 98% · Case 62%".
+/// 13 s     the device toast shrinks back to the closed pill, until the loop restarts at 16 s.
 public static class DemoTimeline
 {
     /// The length of one loop.
-    public static readonly TimeSpan Loop = TimeSpan.FromSeconds(14);
+    public static readonly TimeSpan Loop = TimeSpan.FromSeconds(16);
 
     /// The frames per second of a captured loop.
-    public const int Fps = 12;
+    public const int Fps = 15;
 
     /// The frames of one captured loop: Loop at Fps.
     public static int FrameCount => (int)(Loop.TotalSeconds * Fps);
@@ -39,26 +43,34 @@ public static class DemoTimeline
             s += Loop.TotalSeconds;
         }
 
-        if (s < 1.5)
+        if (s < 2)
         {
-            return new DemoFrame(PillOpen: false, AskPending: false, AllowPressed: false, Toast: DemoToast.None);
+            return new DemoFrame(AskPending: false, AllowPressed: false, Toast: DemoToast.None, BuildDone: false);
+        }
+        if (s < 5)
+        {
+            return new DemoFrame(AskPending: true, AllowPressed: false, Toast: DemoToast.Ask, BuildDone: false);
+        }
+        if (s < 5.4)
+        {
+            return new DemoFrame(AskPending: true, AllowPressed: true, Toast: DemoToast.Ask, BuildDone: false);
         }
         if (s < 6)
         {
-            return new DemoFrame(PillOpen: true, AskPending: false, AllowPressed: false, Toast: DemoToast.None);
+            return new DemoFrame(AskPending: false, AllowPressed: false, Toast: DemoToast.None, BuildDone: false);
         }
-        if (s < 9)
+        if (s < 8)
         {
-            return new DemoFrame(PillOpen: false, AskPending: true, AllowPressed: false, Toast: DemoToast.Ask);
+            return new DemoFrame(AskPending: false, AllowPressed: false, Toast: DemoToast.Pushed, BuildDone: false);
         }
-        if (s < 9.4)
+        if (s < 10)
         {
-            return new DemoFrame(PillOpen: false, AskPending: true, AllowPressed: true, Toast: DemoToast.Ask);
+            return new DemoFrame(AskPending: false, AllowPressed: false, Toast: DemoToast.None, BuildDone: true);
         }
-        if (s < 11)
+        if (s < 13)
         {
-            return new DemoFrame(PillOpen: false, AskPending: false, AllowPressed: false, Toast: DemoToast.Pushed);
+            return new DemoFrame(AskPending: false, AllowPressed: false, Toast: DemoToast.Charge, BuildDone: true);
         }
-        return new DemoFrame(PillOpen: false, AskPending: false, AllowPressed: false, Toast: DemoToast.Charge);
+        return new DemoFrame(AskPending: false, AllowPressed: false, Toast: DemoToast.None, BuildDone: true);
     }
 }

@@ -291,19 +291,6 @@ public partial class PillWindow : Window
         _pollTimer.Start();
     }
 
-    /// The demo run's open and close (DemoSession): the pill opens or closes as the timeline says, with no pointer involved.
-    internal void DemoSetOpen(bool open)
-    {
-        if (open)
-        {
-            OpenPill();
-        }
-        else
-        {
-            ClosePill();
-        }
-    }
-
     /// The demo run's Allow hold (DemoSession): the ask toast's Allow button is drawn pressed, or released.
     internal void DemoPressAllow(bool pressed) => ToastBox.SetAllowPressed(pressed);
 
@@ -479,6 +466,10 @@ public partial class PillWindow : Window
 
     private void OnPillClick(object? sender, System.Windows.Input.MouseButtonEventArgs e)
     {
+        if (_state.IsDemo)
+        {
+            return;  // the demo run's card stack does not open: its pill is the timeline's
+        }
         if (!_open && _shownToast is null && _state.Settings.ExpandMode == "click")
         {
             OpenPill();

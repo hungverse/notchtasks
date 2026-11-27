@@ -9,76 +9,93 @@ public sealed class DemoTimelineTests
     private static DemoFrame At(double seconds) => DemoTimeline.At(TimeSpan.FromSeconds(seconds));
 
     [Fact]
-    public void Loop_IsFourteenSeconds_AtTwelveFrames_ARate()
+    public void Loop_IsSixteenSeconds_AtFifteenFrames_AFrameCountOf240()
     {
-        Assert.Equal(TimeSpan.FromSeconds(14), DemoTimeline.Loop);
-        Assert.Equal(12, DemoTimeline.Fps);
-        Assert.Equal(168, DemoTimeline.FrameCount);
+        Assert.Equal(TimeSpan.FromSeconds(16), DemoTimeline.Loop);
+        Assert.Equal(15, DemoTimeline.Fps);
+        Assert.Equal(240, DemoTimeline.FrameCount);
     }
 
     [Fact]
-    public void ZeroSeconds_IsAClosedPillWithNothingToShow()
+    public void ZeroSeconds_IsTheClosedPill_WithTheBuildRunning()
     {
         var frame = At(0);
 
-        Assert.False(frame.PillOpen);
         Assert.False(frame.AskPending);
         Assert.False(frame.AllowPressed);
         Assert.Equal(DemoToast.None, frame.Toast);
+        Assert.False(frame.BuildDone);
     }
 
     [Fact]
-    public void OneAndAHalfSeconds_OpensThePill()
+    public void TwoSeconds_GrowsTheAskToast_AndItWaits()
     {
-        Assert.False(At(1.49).PillOpen);
-        Assert.True(At(1.5).PillOpen);
-        Assert.True(At(5.9).PillOpen);
-        Assert.Equal(DemoToast.None, At(5.9).Toast);
+        Assert.Equal(DemoToast.None, At(1.99).Toast);
+        Assert.Equal(DemoToast.Ask, At(2).Toast);
+        Assert.True(At(2).AskPending);
+        Assert.False(At(2).AllowPressed);
     }
 
     [Fact]
-    public void SixSeconds_ClosesThePill_AndAnAskDrops()
+    public void FiveSeconds_HoldsAllowForFourTenths_ThenTheAskLeaves()
     {
-        var frame = At(6);
+        Assert.False(At(4.99).AllowPressed);
+        Assert.True(At(5).AllowPressed);
+        Assert.True(At(5).AskPending);
+        Assert.True(At(5.39).AllowPressed);
 
-        Assert.False(frame.PillOpen);
-        Assert.True(frame.AskPending);
-        Assert.Equal(DemoToast.Ask, frame.Toast);
-        Assert.False(frame.AllowPressed);
+        var after = At(5.4);
+        Assert.False(after.AllowPressed);
+        Assert.False(after.AskPending);
+        Assert.Equal(DemoToast.None, after.Toast);
     }
 
     [Fact]
-    public void NineSeconds_PressesAllow_AndTheDoneToastFollowsAfterTheHold()
+    public void SixSeconds_GrowsTheDoneToast_AfterTheClosedGap()
     {
-        Assert.False(At(8.99).AllowPressed);
-
-        var pressed = At(9);
-        Assert.True(pressed.AllowPressed);
-        Assert.True(pressed.AskPending);
-        Assert.Equal(DemoToast.Ask, pressed.Toast);
-
-        var done = At(9.4);
-        Assert.False(done.AllowPressed);
-        Assert.False(done.AskPending);
-        Assert.Equal(DemoToast.Pushed, done.Toast);
+        Assert.Equal(DemoToast.None, At(5.99).Toast);
+        Assert.Equal(DemoToast.Pushed, At(6).Toast);
+        Assert.False(At(6).AskPending);
     }
 
     [Fact]
-    public void ElevenSeconds_ShowsTheDeviceToast_WithTheClosedPill()
+    public void EightSeconds_ShrinksTheDoneToast_AndTheBuildIsDone()
     {
-        var frame = At(11);
+        Assert.Equal(DemoToast.Pushed, At(7.99).Toast);
+        Assert.False(At(7.99).BuildDone);
 
-        Assert.False(frame.PillOpen);
-        Assert.False(frame.AskPending);
-        Assert.Equal(DemoToast.Charge, frame.Toast);
+        var closed = At(8);
+        Assert.Equal(DemoToast.None, closed.Toast);
+        Assert.True(closed.BuildDone);
     }
 
     [Fact]
-    public void TheLoop_RestartsAtFourteenSeconds()
+    public void TenSeconds_GrowsTheDeviceToast_ThenItShrinksAtThirteen()
     {
-        Assert.Equal(At(0), At(14));
-        Assert.Equal(At(1.5), At(15.5));
-        Assert.Equal(At(9), DemoTimeline.At(TimeSpan.FromSeconds(23)));
-        Assert.Equal(At(0), DemoTimeline.At(TimeSpan.FromSeconds(-14)));
+        Assert.Equal(DemoToast.None, At(9.99).Toast);
+        Assert.Equal(DemoToast.Charge, At(10).Toast);
+        Assert.Equal(DemoToast.Charge, At(12.99).Toast);
+        Assert.Equal(DemoToast.None, At(13).Toast);
+    }
+
+    [Fact]
+    public void EveryFrame_ShowsAtMostOneToast_AndNoCardStack()
+    {
+        // DemoFrame has no pill-open state at all: the card stack never opens. One toast at a time is the Toast value.
+        for (var i = 0; i < DemoTimeline.FrameCount; i++)
+        {
+            var frame = DemoTimeline.At(TimeSpan.FromSeconds(i / (double)DemoTimeline.Fps));
+            Assert.InRange((int)frame.Toast, 0, 3);
+            Assert.False(frame.AllowPressed && frame.Toast != DemoToast.Ask);
+        }
+    }
+
+    [Fact]
+    public void TheLoop_RestartsAtSixteenSeconds()
+    {
+        Assert.Equal(At(0), At(16));
+        Assert.Equal(At(2), At(18));
+        Assert.Equal(At(5.2), DemoTimeline.At(TimeSpan.FromSeconds(21.2)));
+        Assert.Equal(At(0), DemoTimeline.At(TimeSpan.FromSeconds(-16)));
     }
 }

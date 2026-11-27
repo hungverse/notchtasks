@@ -690,9 +690,6 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
     /// The artwork image of a media key, or null when it is not cached (the last eight keys are).
     public System.Windows.Media.ImageSource? MediaArt(string key) => _mediaArt.Get(key);
 
-    /// Puts an artwork image in the cache under a key, as the media source does for a session's art. The demo run draws its art in code.
-    public void PutMediaArt(string key, System.Windows.Media.ImageSource art) => _mediaArt.Put(key, art);
-
     /// A media key from the card or the chip. A toggle flips the card's play state at once (the Mac's optimistic toggle); the
     /// command then goes to the session, and SMTC's next event reads the real state.
     public void MediaControl(MediaCommand command)

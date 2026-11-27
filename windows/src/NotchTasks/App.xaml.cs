@@ -127,7 +127,7 @@ public partial class App : System.Windows.Application
         var state = DemoSession.NewState();
         _state = state;
         _pill = new PillWindow(state);
-        var session = new DemoSession(state, _pill.DemoSetOpen, _pill.DemoPressAllow);
+        var session = new DemoSession(state, _pill.DemoPressAllow);
         session.Start(DateTimeOffset.Now);
         _pill.Show();
 
