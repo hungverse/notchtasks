@@ -51,7 +51,7 @@ public sealed class SettingsStore : INotifyPropertyChanged, IDisposable
         ["open"] = "", ["close"] = "",
     };
 
-    private readonly string _file;
+    private readonly string? _file;  // null for an in-memory store (InMemory): nothing is read, watched or written
     private readonly object _gate = new();
     private JsonObject _root = new();
     private string? _lastSeenText;  // text last written by this store or read from the file; a watcher event that reads back the same text is ignored
@@ -62,7 +62,7 @@ public sealed class SettingsStore : INotifyPropertyChanged, IDisposable
     private IReadOnlyList<WatchItem>? _defaultItems;  // made on first read when the file has no valid list; guarded by _gate
     private IReadOnlyList<WatchItem>? _items;         // the parsed watch list, kept until _root changes; null = parse again; guarded by _gate
 
-    private SettingsStore(string file)
+    private SettingsStore(string? file)
     {
         _file = file;
     }
@@ -80,6 +80,10 @@ public sealed class SettingsStore : INotifyPropertyChanged, IDisposable
         store.StartWatching();
         return store;
     }
+
+    /// The defaults in memory, with no file at all (the demo run): nothing is read, watched or created on disk. A change made to it
+    /// is kept in memory and raises Changed as usual, and is lost when the store is disposed.
+    public static SettingsStore InMemory() => new(null);
 
     public T? Get<T>(string key) => TryGet(key, out T? value) ? value : default;
 
@@ -122,7 +126,10 @@ public sealed class SettingsStore : INotifyPropertyChanged, IDisposable
                 next[key] = value?.DeepClone();
             }
             var text = next.ToJsonString(WriteOptions);
-            AtomicFile.WriteAllText(_file, text);
+            if (_file is not null)
+            {
+                AtomicFile.WriteAllText(_file, text);
+            }
             _root = next;
             _lastSeenText = text;
             _corrupt = false;
@@ -135,6 +142,10 @@ public sealed class SettingsStore : INotifyPropertyChanged, IDisposable
     /// changed; a missing file changes nothing. Throws IOException, and changes nothing, while the file is locked.
     private IReadOnlyList<string> SyncFromDisk()
     {
+        if (_file is null)
+        {
+            return Array.Empty<string>();
+        }
         string? text;
         try
         {
@@ -185,8 +196,11 @@ public sealed class SettingsStore : INotifyPropertyChanged, IDisposable
             var text = _root.ToJsonString(WriteOptions);
             try
             {
-                AtomicFile.WriteAllText(_file, text);
-                _lastSeenText = text;
+                if (_file is not null)
+                {
+                    AtomicFile.WriteAllText(_file, text);
+                    _lastSeenText = text;
+                }
             }
             catch (Exception e) when (e is IOException or UnauthorizedAccessException)
             {
@@ -686,6 +700,10 @@ public sealed class SettingsStore : INotifyPropertyChanged, IDisposable
 
     private void LoadInitial()
     {
+        if (_file is null)
+        {
+            return;
+        }
         string? text;
         try
         {
@@ -716,6 +734,10 @@ public sealed class SettingsStore : INotifyPropertyChanged, IDisposable
 
     private void StartWatching()
     {
+        if (_file is null)
+        {
+            return;  // an in-memory store has no file to watch
+        }
         var dir = Path.GetDirectoryName(_file)!;
         Directory.CreateDirectory(dir);
         _debounce = new Timer(_ => OnDebounced(), null, Timeout.Infinite, Timeout.Infinite);
@@ -778,7 +800,7 @@ public sealed class SettingsStore : INotifyPropertyChanged, IDisposable
     /// The corrupt file is renamed to settings.json.corrupt, replacing an older one.
     private void MoveCorruptAside()
     {
-        if (File.Exists(_file))
+        if (_file is not null && File.Exists(_file))
         {
             File.Move(_file, _file + ".corrupt", overwrite: true);
         }

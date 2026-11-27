@@ -345,6 +345,24 @@ public sealed class SettingsStoreTests : IDisposable
         Assert.Equal("glow", reloaded.Background);
     }
 
+    [Fact]
+    public void InMemory_GivesDefaults_KeepsChangesInMemory_AndWritesNoFile()
+    {
+        using var store = SettingsStore.InMemory();
+        var raised = new List<IReadOnlyCollection<string>>();
+        store.Changed += keys => raised.Add(keys);
+
+        Assert.True(store.SystemLoad);
+        Assert.Equal(80, store.LimitWarn);
+
+        store.Set("systemLoad", JsonValue.Create(false));
+
+        Assert.False(store.SystemLoad);
+        Assert.Single(raised);
+        Assert.Empty(Directory.GetFiles(_dir));
+        Assert.False(File.Exists(_file));
+    }
+
     [Theory]
     [InlineData("auto", "#00F5D4", "#123456", "#123456")]
     [InlineData("auto", "#00F5D4", null, "#0A84FF")]
