@@ -24,6 +24,8 @@ Output: `out\NotchTasks-<version>-win-x64-setup.exe` (git-ignored), with the sta
 # optional: -Notes notes.json   ({ "en": "...", "ja": "..." })
 ```
 
+4. Publish `install.ps1` (this folder) as `https://notchtasks.web.app/install.ps1`: it reads `version-win.json`, checks the SHA-256 and runs the setup with `/VERYSILENT`. The Electron build's script ran `/S`, which Inno Setup does not know.
+
 The version and build come from the installer's product version (build = major*10000 + minor*100 + patch). minOS is `10.0.19045`. `build.ps1 -Version` also stamps NotchTasks.dll with that version, so the installed app reports the same build the feed offers (the build fails if it does not).
 
 ## Upgrading and uninstalling
