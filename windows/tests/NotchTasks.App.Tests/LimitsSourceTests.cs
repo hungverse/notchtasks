@@ -62,13 +62,17 @@ public sealed class LimitsSourceTests
 
     private static readonly WatchItem ClaudeItem = new("claude", "Claude", WatchKind.Claude);
 
+    /// The instant the source reads as "now". The fixture's reset (Nov 27, 5:09am in Ho Chi Minh) is Nov 26 22:09 UTC, so this instant is
+    /// before it and the 5 h window is still ahead. Pinned, the test does not depend on the day it runs.
+    private static readonly DateTimeOffset Pinned = new(2026, 11, 26, 12, 0, 0, TimeSpan.Zero);
+
     /// A temp home whose statusline says the 5 h window is 42 % used, and the readers that use it.
     private static LimitReaders Readers(TempRoot root, IClaudeCli cli)
     {
         var home = Path.Combine(root.Folder, "home");
         var claudeDir = Path.Combine(home, ".claude");
         Directory.CreateDirectory(claudeDir);
-        var resets = DateTimeOffset.UtcNow.ToUnixTimeSeconds() + 3600;
+        var resets = Pinned.ToUnixTimeSeconds() + 3600;
         File.WriteAllText(Path.Combine(claudeDir, "notchtasks-status.json"),
             $"{{\"rate_limits\":{{\"five_hour\":{{\"used_percentage\":42,\"resets_at\":{resets}}}}}}}");
         return new LimitReaders(new Fixture.NoHttp(), cli, home, claudeDir);
@@ -83,7 +87,7 @@ public sealed class LimitsSourceTests
             new AgentReaders(new Fixture.NoProcesses(), new Fixture.NoSqlite(), new Fixture.NoHttp(), _ => null, readers.Home, readers.ClaudeDir),
             () => { }, _ => { });
         var setup = new ClaudeLimitsSetupRunner(new ClaudeLimitsSetupRunnerTests.FakeHost(), status);
-        return (new LimitsSource(module, settings, readers, agents, publish, giveUp, setup), module);
+        return (new LimitsSource(module, settings, readers, agents, publish, giveUp, setup, () => Pinned), module);
     }
 
     [Fact]

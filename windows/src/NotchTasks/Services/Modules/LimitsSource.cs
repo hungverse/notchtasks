@@ -36,6 +36,7 @@ public sealed class LimitsSource : IModuleSource
     private readonly CodexScanner _codex;
     private readonly AntigravityLimits _antigravity;
     private readonly ClaudeLimitsSetupRunner? _setup;
+    private readonly Func<DateTimeOffset> _clock;  // the time every read and recompose uses (UTC now, or a test's fixed instant)
     private DateTimeOffset _nextRecheck = DateTimeOffset.MinValue;
     private bool _rechecking;
     private readonly DispatcherTimer _timer = new() { Interval = TickEvery };
@@ -54,7 +55,8 @@ public sealed class LimitsSource : IModuleSource
 
     /// agents is the agents source whose Codex scanner this shares. cliGiveUp is how long the CLI may take before the statusline
     /// stands in (30 s; a test passes less). setup gives the status each CLI reply lands in, and the one-minute re-check while the
-    /// sign-in or the CLI is not known to be good; when null there is neither.
+    /// sign-in or the CLI is not known to be good; when null there is neither. clock is the time the source reads (null: UTC now);
+    /// a test passes a fixed instant, so the reset times in its fixtures are read against a known day.
     public LimitsSource(
         LimitsModule module,
         SettingsStore settings,
@@ -62,8 +64,10 @@ public sealed class LimitsSource : IModuleSource
         AgentsSource agents,
         Action publish,
         TimeSpan? cliGiveUp = null,
-        ClaudeLimitsSetupRunner? setup = null)
+        ClaudeLimitsSetupRunner? setup = null,
+        Func<DateTimeOffset>? clock = null)
     {
+        _clock = clock ?? (() => DateTimeOffset.UtcNow);
         _setup = setup;
         _module = module;
         _settings = settings;
@@ -98,7 +102,7 @@ public sealed class LimitsSource : IModuleSource
         _live = null;
         _ownCodex = null;
         _antigravityLimits = null;
-        _module.Update(new LimitInputs(false, false, false, false, null, null, null, _settings.LimitWarn), DateTimeOffset.UtcNow);
+        _module.Update(new LimitInputs(false, false, false, false, null, null, null, _settings.LimitWarn), _clock());
     }
 
     /// The Claude opt-in changed. On: the CLI runs now, not at its next 30 min. Off: the CLI's reading is forgotten, so the
@@ -129,7 +133,7 @@ public sealed class LimitsSource : IModuleSource
             return;
         }
         Sync();
-        Compose(DateTimeOffset.UtcNow);
+        Compose(_clock());
     }
 
     private void Sync()
@@ -155,7 +159,7 @@ public sealed class LimitsSource : IModuleSource
         {
             return;
         }
-        var now = DateTimeOffset.UtcNow;
+        var now = _clock();
         var items = _settings.Items;
         var claudeOn = items.Any(i => i.Enabled && i.Kind == WatchKind.Claude);
         var codexOn = items.Any(i => i.Enabled && i.Kind == WatchKind.Codex);
@@ -235,7 +239,7 @@ public sealed class LimitsSource : IModuleSource
             {
                 _statusline = claude ? reading.Statusline : null;
                 _ownCodex = ownCodex ? reading.Codex : null;
-                Compose(DateTimeOffset.UtcNow);
+                Compose(_clock());
             }
         }
         catch (Exception e)
@@ -263,22 +267,22 @@ public sealed class LimitsSource : IModuleSource
             if (await Task.WhenAny(call, Task.Delay(_cliGiveUp)).ConfigureAwait(true) != call && _started && generation == _generation)
             {
                 cts.Cancel();
-                Compose(DateTimeOffset.UtcNow);
+                Compose(_clock());
             }
             var text = await call.ConfigureAwait(true);
             if (text is not null && _started && generation == _generation && _settings.ClaudeLimits)
             {
-                _setup?.Status.Record(text, DateTimeOffset.UtcNow);
-                var windows = ClaudeUsage.Parse(text, DateTimeOffset.UtcNow);
+                _setup?.Status.Record(text, _clock());
+                var windows = ClaudeUsage.Parse(text, _clock());
                 if (windows.Count > 0)
                 {
                     _live = windows;
-                    _liveAt = DateTimeOffset.UtcNow;
+                    _liveAt = _clock();
                 }
             }
             if (_started && generation == _generation)
             {
-                Compose(DateTimeOffset.UtcNow);
+                Compose(_clock());
             }
         }
         catch (Exception e)
@@ -315,7 +319,7 @@ public sealed class LimitsSource : IModuleSource
             if (_started && generation == _generation)
             {
                 _antigravityLimits = found;
-                Compose(DateTimeOffset.UtcNow);
+                Compose(_clock());
             }
         }
         catch (Exception e)
