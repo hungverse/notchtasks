@@ -16,14 +16,21 @@ public enum SensorMode
 
     /// Not elevated, from the installer: when this user has a sign-in helper, one UAC prompt runs UninstallLogon for them.
     UninstallOwn,
+
+    /// Installs the PawnIO driver the CPU sensors need (the step alone; a serve or an install-logon may run it first, as --install-pawnio).
+    InstallPawnIO,
 }
 
 /// A parsed command line of the helper.
-public sealed record SensorCommand(SensorMode Mode, string? Sid, int? Parent);
+/// InstallPawnIO: the PawnIO step runs first, in this same elevated process (only for Serve and InstallLogon).
+public sealed record SensorCommand(SensorMode Mode, string? Sid, int? Parent, bool InstallPawnIO = false);
 
 /// The helper's command lines: the app and the task build them with these, and the helper parses them with Parse.
 public static class SensorArgs
 {
+    /// The command line that runs the PawnIO step first, then the given command (a serve or an install-logon).
+    public static string WithPawnIO(string arguments) => "--install-pawnio " + arguments;
+
     /// --serve [--parent pid] --user sid
     public static string Serve(string sid, int? parent) =>
         "--serve" + (parent is { } pid ? $" --parent {pid}" : string.Empty) + $" --user {sid}";
@@ -43,6 +50,15 @@ public static class SensorArgs
         if (args.Length == 0)
         {
             return null;
+        }
+        if (args[0] == "--install-pawnio")
+        {
+            if (args.Length == 1)
+            {
+                return new SensorCommand(SensorMode.InstallPawnIO, null, null);
+            }
+            var chained = Parse(args[1..]);
+            return chained is { Mode: SensorMode.Serve or SensorMode.InstallLogon } ? chained with { InstallPawnIO = true } : null;
         }
         switch (args[0])
         {
