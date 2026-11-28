@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Security.AccessControl;
 using System.Security.Principal;
 using System.Text;
+using NotchTasks.Core.Modules;
 using NotchTasks.Core.Sensors;
 
 namespace NotchTasksSensors;
@@ -21,9 +22,8 @@ internal static class SensorInstaller
     /// Installs this user's sign-in helper: the files (unless another user's helper runs from them), this user's task (as SYSTEM,
     /// at this user's logon), the marker, then a start of the task. Any failure undoes what this install created. With no zones
     /// there is nothing to install, so this process serves once (the app then learns there are no zones).
-    public static async Task<int> InstallLogonAsync(string sid, int? parent)
+    public static async Task<int> InstallLogonAsync(string sid, int? parent, IThermalReader reader)
     {
-        var reader = new WmiThermalReader();
         if (reader.Read().Count == 0)
         {
             return await SensorHost.ServeAsync(sid, parent, reader);

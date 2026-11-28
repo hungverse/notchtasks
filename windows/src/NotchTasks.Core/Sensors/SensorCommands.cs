@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace NotchTasks.Core.Sensors;
 
 /// What the helper exe is asked to do.
@@ -174,6 +176,15 @@ public static class SensorFiles
     {
         "System.Management.dll",
         "System.CodeDom.dll",
+        // LibreHardwareMonitorLib (the CPU and GPU sensors) and the libraries its NuGet package references.
+        "LibreHardwareMonitorLib.dll",
+        "HidSharp.dll",
+        "DiskInfoToolkit.dll",
+        "RAMSPDToolkit-NDD.dll",
+        "Mono.Posix.NETStandard.dll",
+        "System.IO.Ports.dll",
+        "System.Threading.AccessControl.dll",
+        "System.IO.FileSystem.AccessControl.dll",
     };
 
     /// The runtime-specific assemblies folder (copied whole, with its paths).
@@ -216,7 +227,70 @@ public static class SensorFiles
                 copied.Add(relative);
             }
         }
+        // The helper is self-contained: its runtime and the libraries it references (the hardware library among them) are the files its
+        // deps file lists. Without them the copy in Program Files cannot start.
+        foreach (var name in DeclaredFiles(Path.Combine(sourceDir, DepsName)).Order(StringComparer.Ordinal))
+        {
+            var from = Path.Combine(sourceDir, name);
+            if (copied.Contains(name) || !File.Exists(from))
+            {
+                continue;
+            }
+            File.Copy(from, Path.Combine(targetDir, name), overwrite: true);
+            copied.Add(name);
+        }
         return copied;
+    }
+
+    /// The deps file the helper's build writes beside it.
+    public const string DepsName = "NotchTasksSensors.deps.json";
+
+    /// The file names the deps file lists: the runtime and native assets of every target, by file name (a package's asset is copied
+    /// to the publish folder under its name). Empty when the file is missing or is not a deps file.
+    public static IReadOnlySet<string> DeclaredFiles(string depsPath)
+    {
+        var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (!File.Exists(depsPath))
+        {
+            return names;
+        }
+        try
+        {
+            using var document = JsonDocument.Parse(File.ReadAllBytes(depsPath));
+            if (!document.RootElement.TryGetProperty("targets", out var targets) || targets.ValueKind != JsonValueKind.Object)
+            {
+                return names;
+            }
+            foreach (var target in targets.EnumerateObject())
+            {
+                if (target.Value.ValueKind != JsonValueKind.Object)
+                {
+                    continue;
+                }
+                foreach (var library in target.Value.EnumerateObject())
+                {
+                    if (library.Value.ValueKind != JsonValueKind.Object)
+                    {
+                        continue;
+                    }
+                    foreach (var kind in new[] { "runtime", "native" })
+                    {
+                        if (library.Value.TryGetProperty(kind, out var assets) && assets.ValueKind == JsonValueKind.Object)
+                        {
+                            foreach (var asset in assets.EnumerateObject())
+                            {
+                                names.Add(Path.GetFileName(asset.Name));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        catch (JsonException)
+        {
+            names.Clear();
+        }
+        return names;
     }
 }
 

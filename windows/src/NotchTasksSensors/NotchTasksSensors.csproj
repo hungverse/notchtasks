@@ -15,9 +15,19 @@
     <ProjectReference Include="..\NotchTasks.Core\NotchTasks.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- The helper's pure parts (the sensor choice, the PawnIO step) are tested in the helper's test project. -->
+    <InternalsVisibleTo Include="NotchTasksSensors.Tests" />
+  </ItemGroup>
+
   <!-- WMI (root\WMI, the thermal zones). The helper and the app (its brightness feed) reference it: never Core. -->
   <ItemGroup>
-    <PackageReference Include="System.Management" Version="10.0.0" />
+    <PackageReference Include="System.Management" Version="10.0.2" />
+  </ItemGroup>
+
+  <!-- The CPU and GPU temperatures (MPL-2.0, see installer\THIRD-PARTY-NOTICES.txt). It reads them through the PawnIO driver. -->
+  <ItemGroup>
+    <PackageReference Include="LibreHardwareMonitorLib" Version="0.9.6" />
   </ItemGroup>
 
 </Project>

@@ -59,6 +59,55 @@ public sealed class SensorInstallTests : IDisposable
     }
 
     [Fact]
+    public void CopyFiles_CopiesTheFilesTheDepsFileLists()
+    {
+        var source = Path.Combine(_dir, "self");
+        var target = Path.Combine(_dir, "self-dst");
+        Directory.CreateDirectory(source);
+        foreach (var name in new[] { "NotchTasksSensors.exe", "NotchTasksSensors.dll", "NotchTasksSensors.runtimeconfig.json", "NotchTasks.Core.dll" })
+        {
+            File.WriteAllText(Path.Combine(source, name), name);
+        }
+        // The deps file: the runtime pack's native file, a package's managed file under lib\, and one it does not list (not copied).
+        File.WriteAllText(Path.Combine(source, "NotchTasksSensors.deps.json"), """
+            {
+              "targets": {
+                ".NETCoreApp,Version=v10.0/win-x64": {
+                  "LibreHardwareMonitorLib/0.9.6": {
+                    "runtime": { "runtimes/win-x64/lib/net10.0/LibreHardwareMonitorLib.dll": {} },
+                    "native": { "runtimes/win-x64/native/MonoPosixHelper.dll": {} }
+                  },
+                  "Microsoft.NETCore.App/10.0.0": { "native": { "hostpolicy.dll": {} } }
+                }
+              }
+            }
+            """);
+        File.WriteAllText(Path.Combine(source, "LibreHardwareMonitorLib.dll"), "lhm");
+        File.WriteAllText(Path.Combine(source, "MonoPosixHelper.dll"), "mono");
+        File.WriteAllText(Path.Combine(source, "hostpolicy.dll"), "host");
+        File.WriteAllText(Path.Combine(source, "unlisted.dll"), "app");
+
+        var copied = SensorFiles.CopyFrom(source, target);
+
+        Assert.Contains("LibreHardwareMonitorLib.dll", copied);
+        Assert.Contains("MonoPosixHelper.dll", copied);
+        Assert.Contains("hostpolicy.dll", copied);
+        Assert.True(File.Exists(Path.Combine(target, "hostpolicy.dll")));
+        Assert.False(File.Exists(Path.Combine(target, "unlisted.dll")));
+    }
+
+    [Fact]
+    public void DeclaredFiles_IsEmptyForAMissingOrBrokenDepsFile()
+    {
+        Assert.Empty(SensorFiles.DeclaredFiles(Path.Combine(_dir, "missing.json")));
+
+        var broken = Path.Combine(_dir, "broken.json");
+        File.WriteAllText(broken, "not json");
+
+        Assert.Empty(SensorFiles.DeclaredFiles(broken));
+    }
+
+    [Fact]
     public void CopyFiles_WithoutTheExe_Throws()
     {
         var source = Path.Combine(_dir, "empty");
