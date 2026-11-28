@@ -33,7 +33,10 @@ $ProgressPreference = 'SilentlyContinue'  # Invoke-WebRequest is many times slow
   # a running copy is replaced: close it first so the new one is the one that opens
   Get-Process NotchTasks -ErrorAction SilentlyContinue | Stop-Process -Force
   Write-Host 'Installing...'
-  Start-Process $setup -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/NOCANCEL' -Wait
+  # -Wait would also wait for the app the setup starts at its end (it stays open), so only the setup's own exit is awaited here
+  $p = Start-Process $setup -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/NOCANCEL' -PassThru
+  $p.WaitForExit()
+  if ($p.ExitCode -ne 0) { throw "Setup failed with exit code $($p.ExitCode)." }
   Remove-Item $setup -Force -ErrorAction SilentlyContinue
 
   $exe = Join-Path $env:LOCALAPPDATA 'Programs\NotchTasks\NotchTasks.exe'
