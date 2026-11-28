@@ -39,8 +39,8 @@ internal sealed class NoHardwareSource : IHardwareSource
 internal static class HardwareSensorChoice
 {
     /// The reading names the app shows: the CPU package and the GPU core.
-    public const string CpuName = "CPU";
-    public const string GpuName = "GPU";
+    public const string CpuName = Thermals.CpuName;
+    public const string GpuName = Thermals.GpuName;
 
     /// The CPU temperature. AMD's Tctl/Tdie first, then Intel's "CPU Package", then the hottest "Core" sensor. Null when none has a value.
     public static ThermalReading? Cpu(IReadOnlyList<HardwareSnapshot> items)

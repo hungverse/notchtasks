@@ -10,6 +10,25 @@ public static class Thermals
     private const double MinCelsius = 5;
     private const double MaxCelsius = 120;
 
+    /// The helper's reading names for the CPU package and the GPU core. The header prefers the CPU one (see Headline).
+    public const string CpuName = "CPU";
+    public const string GpuName = "GPU";
+
+    /// The reading the header and the heat check show: the helper's CPU reading when it is plausible, else the hottest plausible reading
+    /// (Hottest). Null when none is plausible.
+    public static ThermalReading? Headline(IEnumerable<ThermalReading> readings)
+    {
+        var list = readings.ToList();
+        foreach (var reading in list)
+        {
+            if (reading.Name == CpuName && IsPlausible(reading))
+            {
+                return reading;
+            }
+        }
+        return Hottest(list);
+    }
+
     /// The hottest reading between 5 and 120 C (both included). Readings outside that range are dropped as implausible.
     /// Null when none is left.
     public static ThermalReading? Hottest(IEnumerable<ThermalReading> readings)
