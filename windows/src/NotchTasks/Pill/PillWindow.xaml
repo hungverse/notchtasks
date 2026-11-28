@@ -96,7 +96,8 @@
           <!-- The open pill: the sections (the agents' cards, and the others), or the placeholder when none has anything.
                Hit-testable only while open. -->
           <!-- Its height is set per open (Animate), and it sits at the top below the top row, so the quick bar at its bottom is the shape's. -->
-          <Grid x:Name="CardLayer" Margin="0,32,0,0" VerticalAlignment="Top" Opacity="0" Visibility="Hidden" IsHitTestVisible="False">
+          <!-- The card layer is the open shape's width (PillGeometry.OpenWidth, centred), so every row is measured from the shape's edges. -->
+          <Grid x:Name="CardLayer" Width="520" Margin="0,32,0,0" HorizontalAlignment="Center" VerticalAlignment="Top" Opacity="0" Visibility="Hidden" IsHitTestVisible="False">
             <!-- The header: the summary at the left, in grey (Mac expandedView). -->
             <TextBlock x:Name="HeaderSummary" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="16,8,0,0"
                        FontSize="11" FontWeight="SemiBold" Foreground="Gray" />
@@ -111,19 +112,21 @@
               <TextBlock x:Name="TempText" FontSize="11" FontWeight="SemiBold" Margin="4,0,0,0" VerticalAlignment="Center"
                          Typography.NumeralAlignment="Tabular" />
             </StackPanel>
-            <!-- The bottom 32 DIP are kept for the quick bar, so the sections never sit under its buttons; the top 26 for the header. -->
-            <ScrollViewer x:Name="SectionScroll" Width="520" HorizontalAlignment="Center" VerticalAlignment="Stretch"
-                          Margin="0,26,0,32" Padding="10" Background="Transparent" BorderThickness="0"
+            <!-- The sections keep 16 DIP at each side of the shape (the Mac's body padding). The bottom 38 DIP are kept for the quick bar
+                 (its 26 DIP and the 12 DIP below it), so the sections never sit under its buttons; the top 26 for the header. -->
+            <ScrollViewer x:Name="SectionScroll" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                          Margin="0,26,0,38" Padding="16,10" Background="Transparent" BorderThickness="0"
                           HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
               <StackPanel x:Name="SectionList" />
             </ScrollViewer>
             <!-- The body when no section has anything: "Nothing running", grey and centred, as the Mac's expandedView. It keeps the
                  sections' margins, so the open height counts them the same way. Its text shows only with no badge or chip. -->
-            <Border x:Name="EmptyNote" Margin="0,26,0,32" VerticalAlignment="Top" HorizontalAlignment="Stretch">
+            <Border x:Name="EmptyNote" Margin="16,26,16,38" VerticalAlignment="Top" HorizontalAlignment="Stretch">
               <TextBlock x:Name="EmptyText" Foreground="Gray" FontSize="12" TextAlignment="Center" TextWrapping="Wrap" />
             </Border>
             <!-- The quick bar of the open pill, bottom: the timers, then the Control Panel (gear) and Quit (power). -->
-            <pill:QuickBar x:Name="Bar" VerticalAlignment="Bottom" Margin="12,0,12,6" />
+            <!-- 16 DIP at the sides and 12 DIP below, as the Mac's body padding: the bar's corners stay clear of the shape's 28 DIP radius. -->
+            <pill:QuickBar x:Name="Bar" VerticalAlignment="Bottom" Margin="16,0,16,12" />
           </Grid>
         </Grid>
         <!-- The toast: the pill's top shape while a toast shows. Hit-testable only while it shows. -->

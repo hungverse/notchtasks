@@ -242,8 +242,8 @@ public sealed class PillWindowTests
                 SettleOpen(pill);
 
                 Assert.Equal(Visibility.Collapsed, Fixture.Named<TextBlock>(pill, "EmptyText").Visibility);
-                // Only the top row (32), the header strip (26) and the quick bar's margin (32) remain.
-                Assert.Equal(PillGeometry.ClosedHeight + 26 + 32, Fixture.Field<double>(pill, "_targetHeight"));
+                // Only the top row (32), the header strip (26) and the quick bar's 38 (its 26 DIP and the 12 DIP below it) remain.
+                Assert.Equal(PillGeometry.ClosedHeight + 26 + 38, Fixture.Field<double>(pill, "_targetHeight"));
             }
             finally
             {
@@ -394,8 +394,9 @@ public sealed class PillWindowTests
                 state.Publish();
                 Fixture.Call(pill, "OpenPill");
 
-                // The top row (32) + the scroll's 26 DIP header margin + the 50 content + its 10 DIP padding on each side + the 32 DIP quick bar margin.
-                Assert.Equal(32.0 + 26 + 50 + 20 + 32, Fixture.Field<double>(pill, "_targetHeight"));
+                // The top row (32) + the scroll's 26 DIP header margin + the 50 content + its 10 DIP padding on each side + the 38 DIP
+                // quick bar margin (the bar's 26 DIP and the 12 DIP below it).
+                Assert.Equal(32.0 + 26 + 50 + 20 + 38, Fixture.Field<double>(pill, "_targetHeight"));
             }
             finally
             {

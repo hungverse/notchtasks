@@ -1217,7 +1217,7 @@ public partial class PillWindow : Window
     }
 
     /// The open pill's height: the top row, then the body (the sections, or the "Nothing running" note when none has anything),
-    /// up to MaxOpenHeight. The body's DesiredSize holds its own margins (the 26 DIP header above, the 32 DIP quick bar below)
+    /// up to MaxOpenHeight. The body's DesiredSize holds its own margins (the 26 DIP header above, the 38 DIP below: the quick bar's 26 and its 12)
     /// and its padding, so they are counted once, here. It is measured again only after the sections changed or changed size
     /// (see the constructor and SyncSections); a publish that leaves them as they are reuses the last height.
     private double OpenHeight()
