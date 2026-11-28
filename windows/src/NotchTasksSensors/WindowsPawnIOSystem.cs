@@ -3,39 +3,49 @@ using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
+using NotchTasks.Core.Sensors;
 
 namespace NotchTasksSensors;
 
-/// The real machine for the PawnIO step: the service controller, PATH, Process, the GitHub release and WinVerifyTrust.
+/// The real machine for the PawnIO step: the service check (sc.exe), the winget package folder, Process, the GitHub release, the locked
+/// download and WinVerifyTrust. It never searches PATH or the user's own folders for a program it runs.
 internal sealed class WindowsPawnIOSystem : IPawnIOSystem
 {
     private const string ReleaseUrl = "https://api.github.com/repos/namazso/PawnIO.Setup/releases/latest";
     private const string SetupAsset = "PawnIO_setup.exe";
+    private const string MicrosoftOrganization = "O=Microsoft Corporation";
     private static readonly TimeSpan DownloadTimeout = TimeSpan.FromMinutes(2);
 
     /// sc query: exit 0 when the service is registered, 1060 when it is not.
     public bool ServiceExists(string name) => Run(Path.Combine(Environment.SystemDirectory, "sc.exe"), "query " + name) == 0;
 
-    public bool HasProgram(string fileName)
+    /// The winget of the Windows package in %ProgramFiles%\WindowsApps (admin-only), the newest version. Null when that folder has none.
+    public string? FindWinget()
     {
-        var path = Environment.GetEnvironmentVariable("PATH") ?? string.Empty;
-        foreach (var folder in path.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries))
+        var root = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "WindowsApps");
+        try
         {
-            try
+            var folders = Directory.EnumerateDirectories(root, "Microsoft.DesktopAppInstaller_*")
+                .Select(path => Path.GetFileName(path) ?? string.Empty)
+                .ToList();
+            var newest = PawnIOInstaller.NewestWingetFolder(folders);
+            if (newest is null)
             {
-                if (File.Exists(Path.Combine(folder.Trim('"'), fileName)))
-                {
-                    return true;
-                }
+                return null;
             }
-            catch (ArgumentException)
-            {
-                // A PATH entry with characters a path cannot hold is skipped.
-            }
+            var exe = Path.Combine(root, newest, "winget.exe");
+            return File.Exists(exe) ? exe : null;
         }
-        return false;
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            return null;
+        }
     }
+
+    /// Valid Authenticode, and the signer is Microsoft Corporation (its certificate's O field).
+    public bool IsMicrosoftSigned(string path) => HasValidSignature(path) && SignerIsMicrosoft(path);
 
     public int Run(string fileName, string arguments)
     {
@@ -60,8 +70,8 @@ internal sealed class WindowsPawnIOSystem : IPawnIOSystem
         }
     }
 
-    /// The setup asset of the latest PawnIO.Setup release, over HTTPS, into a new temporary file. Any failure gives null.
-    public async Task<string?> DownloadSetupAsync(CancellationToken ct)
+    /// The setup asset of the latest PawnIO.Setup release, over HTTPS, written to a new temporary file and held locked. Any failure gives null.
+    public async Task<IPawnIOSetupFile?> DownloadSetupAsync(CancellationToken ct)
     {
         try
         {
@@ -80,12 +90,8 @@ internal sealed class WindowsPawnIOSystem : IPawnIOSystem
             var path = Path.Combine(Path.GetTempPath(), "PawnIO_setup-" + Guid.NewGuid().ToString("N") + ".exe");
             using var response = await http.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead, ct);
             response.EnsureSuccessStatusCode();
-            await using (var source = await response.Content.ReadAsStreamAsync(ct))
-            await using (var target = File.Create(path))
-            {
-                await source.CopyToAsync(target, ct);
-            }
-            return path;
+            await using var source = await response.Content.ReadAsStreamAsync(ct);
+            return await LockedSetupFile.CreateAsync(path, source, ct);
         }
         catch (Exception e) when (e is HttpRequestException or TaskCanceledException or IOException or JsonException or InvalidOperationException
                                   or UnauthorizedAccessException)
@@ -151,15 +157,20 @@ internal sealed class WindowsPawnIOSystem : IPawnIOSystem
         }
     }
 
-    public void Discard(string path)
+    /// True when the signer's certificate subject has O=Microsoft Corporation. Unsigned files give false.
+    private static bool SignerIsMicrosoft(string path)
     {
         try
         {
-            File.Delete(path);
+            // The signer certificate of an Authenticode signature is read from the file itself; X509CertificateLoader has no such entry point.
+#pragma warning disable SYSLIB0057
+            using var signer = new X509Certificate2(X509Certificate.CreateFromSignedFile(path));
+#pragma warning restore SYSLIB0057
+            return signer.Subject.Split(',').Select(part => part.Trim()).Contains(MicrosoftOrganization, StringComparer.Ordinal);
         }
-        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        catch (System.Security.Cryptography.CryptographicException)
         {
-            // A file that stays in the temporary folder is not worth failing the step.
+            return false;
         }
     }
 
