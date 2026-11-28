@@ -968,6 +968,11 @@ public partial class PillWindow : Window
         LastCurveOpening = opening;
         FrameLog.Begin(mode.ToString());
 
+        // Finish runs the settled callback of the last move only. A move this one replaces runs its own now, so a toast's stepping is
+        // not left on when a level bar or a new target took the shape.
+        var superseded = _pendingSettled;
+        _pendingSettled = settled;
+        superseded?.Invoke();
         var token = ++_animation;
         // The card, the toast and the top row fade and blur only when the shape changes mode; a width change while closed does not.
         var changesMode = _targetMode != mode;
@@ -1076,7 +1081,12 @@ public partial class PillWindow : Window
                         Animate(Mode.Open);
                     }
                 }
+                _pendingSettled = null;
                 settled?.Invoke();
+                if (_closedStale)
+                {
+                    RetargetClosed();  // a wing changed while the move was on: the closed pill follows it now, if it may
+                }
             }
         }
 
@@ -1157,6 +1167,9 @@ public partial class PillWindow : Window
     /// other wing and its gap), and the outer margin. Measured now, so the closed pill follows what the wing holds.
     private static (double Ink, double Outer) WingInk(StackPanel wing, bool rightWing)
     {
+        // A chip whose text changed in place (its panel kept, its content moved in) is not measured by Measure alone: the wing still
+        // reports the old width, so the layout is brought up to date first.
+        wing.UpdateLayout();
         wing.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
         var items = wing.Children.OfType<FrameworkElement>().ToList();
         if (items.Count == 0)
@@ -1170,15 +1183,25 @@ public partial class PillWindow : Window
     }
 
     /// The closed pill springs to the width its content measures now. Nothing changes while it is open or a toast shows: those
-    /// shapes are their own, and a closed pill is retargeted when they close.
+    /// shapes are their own, and a closed pill is retargeted when they close. A change that came meanwhile is kept (_closedStale) and
+    /// applied when the pill is closed and no toast is stepping (Finish).
     private void RetargetClosed()
     {
         if (_open || ShowingOverlay || _toastStepping)
         {
-            return;  // a toast's steps move the shape themselves: its content fades out before the shape goes closed
+            // a toast's steps move the shape themselves: its content fades out before the shape goes closed
+            _closedStale = true;
+            return;
         }
+        _closedStale = false;
         Animate(Mode.Closed);
     }
+
+    /// True when a wing changed while RetargetClosed was held back: the closed pill springs to the wings once it may.
+    private bool _closedStale;
+
+    /// The settled callback of the move under way (Animate): run when it finishes, or when a later move replaces it.
+    private Action? _pendingSettled;
 
     /// Whether the pill has something to show: it is open, a toast shows, a badge or a chip is in a wing, or an ask waits. Without it the
     /// pill is invisible and only its ClosedWidth hover strip is live.
