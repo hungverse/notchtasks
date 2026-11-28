@@ -1,21 +1,51 @@
 using System.Globalization;
 using System.Management;
+using System.Runtime.InteropServices;
 using NotchTasks.Core.Modules;
 using NotchTasks.Core.Sensors;
 
 namespace NotchTasksSensors;
 
-/// The thermal zones from WMI (root\WMI, MSAcpi_ThermalZoneTemperature). Needs administrator. A failed query throws, so the
-/// helper answers nothing; an empty result means the PC reports no zones.
+/// The thermal zones from WMI (root\WMI, MSAcpi_ThermalZoneTemperature). Needs administrator. A failed query gives no zones (it is
+/// reported once, see HelperLog): on boards whose ACPI zones answer "Not supported" the helper reads nothing from here and the other reader
+/// answers. An empty result means the PC reports no zones.
 internal sealed class WmiThermalReader : IThermalReader
 {
     private const string Scope = @"root\WMI";
     private const string Query = "SELECT InstanceName, CurrentTemperature FROM MSAcpi_ThermalZoneTemperature";
 
+    private readonly Func<IEnumerable<(string zone, int tenths)>> _query;
+
+    /// The reader over the real WMI query.
+    public WmiThermalReader()
+        : this(QueryZones)
+    {
+    }
+
+    /// The reader over a query (the tests pass a fake that throws, or gives zones).
+    internal WmiThermalReader(Func<IEnumerable<(string zone, int tenths)>> query)
+    {
+        _query = query;
+    }
+
     public IReadOnlyList<ThermalReading> Read()
     {
+        try
+        {
+            return Thermals.FromKelvinTenths(_query());
+        }
+        catch (Exception e) when (e is ManagementException or COMException or TimeoutException or UnauthorizedAccessException
+                                  or InvalidCastException or OverflowException or FormatException)
+        {
+            HelperLog.Once(e);
+            return Array.Empty<ThermalReading>();
+        }
+    }
+
+    /// The zones now. A query that hangs gives up after 2 s (a ManagementException, a timeout).
+    private static IEnumerable<(string zone, int tenths)> QueryZones()
+    {
         var zones = new List<(string zone, int tenths)>();
-        // A query that hangs gives up after 2 s: the helper then answers nothing, and the app keeps what it has.
         using var searcher = new ManagementObjectSearcher(
             new ManagementScope(Scope),
             new ObjectQuery(Query),
@@ -34,6 +64,6 @@ internal sealed class WmiThermalReader : IThermalReader
                 zones.Add((name, (int)Math.Clamp(tenths, 0, int.MaxValue)));
             }
         }
-        return Thermals.FromKelvinTenths(zones);
+        return zones;
     }
 }

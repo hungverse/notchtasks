@@ -21,32 +21,86 @@ internal static class SensorInstaller
 
     /// Installs this user's sign-in helper: the files (unless another user's helper runs from them), this user's task (as SYSTEM,
     /// at this user's logon), the marker, then a start of the task. Any failure undoes what this install created. With no zones
-    /// there is nothing to install, so this process serves once (the app then learns there are no zones).
-    public static async Task<int> InstallLogonAsync(string sid, int? parent, IThermalReader reader)
+    /// there is nothing to install, so this process serves once (the app then learns there are no zones). A failed read of the zones
+    /// does not stop the install: the task's copy answers whatever its own reader gives.
+    public static Task<int> InstallLogonAsync(string sid, int? parent, IThermalReader reader) =>
+        InstallLogonAsync(sid, parent, reader, new RealInstallSystem());
+
+    /// The install over the given machine (the tests pass a fake).
+    internal static async Task<int> InstallLogonAsync(string sid, int? parent, IThermalReader reader, IInstallSystem system)
     {
-        if (reader.Read().Count == 0)
+        if (HasNoZones(reader))
         {
             return await SensorHost.ServeAsync(sid, parent, reader);
         }
 
-        var target = TargetFolder;
-        var folderExisted = Directory.Exists(target);
+        var target = system.TargetFolder;
+        var folderExisted = system.FolderExisted(target);
         var taskRegistered = false;
         var markerWritten = false;
         try
         {
-            EnsureInheritedFolder(target);
+            system.EnsureFolder(target);
             // A reinstall for the same user: end this user's running copy (session 0, as SYSTEM) before its files are replaced.
-            if (TaskExists(SensorNames.TaskName(sid)))
+            if (system.TaskExists(SensorNames.TaskName(sid)))
             {
-                RunSchtasksCode("/End", "/TN", SensorNames.TaskName(sid));  // "not running" is fine
+                system.EndTask(SensorNames.TaskName(sid));  // "not running" is fine
             }
-            SignalStopAndWait(sid);  // this user's helper releases its files; the Global stop event reaches it from session 0
-            if (!OtherHelpersRunning(target, sid))
+            system.SignalStopAndWait(sid);  // this user's helper releases its files; the Global stop event reaches it from session 0
+            if (!system.OtherHelpersRunning(target, sid))
             {
-                CopyWhenFree(AppContext.BaseDirectory, target);
+                system.CopyFiles(target);
             }
+            system.RegisterTask(sid, target, parent);
+            taskRegistered = true;
+            system.WriteMarker(sid);
+            markerWritten = true;
+            system.RunTask(sid);  // starts the copy as SYSTEM, the same way logon will
+            return 0;
+        }
+        catch (Exception e)
+        {
+            HelperLog.Once(e);
+            system.Rollback(sid, target, folderExisted, taskRegistered, markerWritten);
+            return 1;
+        }
+    }
 
+    /// True when the reader gives no zones. A read that fails is reported and is not "no zones": the install goes on.
+    private static bool HasNoZones(IThermalReader reader)
+    {
+        try
+        {
+            return reader.Read().Count == 0;
+        }
+        catch (Exception e) when (e is not OutOfMemoryException)
+        {
+            HelperLog.Once(e);
+            return false;
+        }
+    }
+
+    /// The machine as the install uses it: the folders, the tasks (schtasks), the stop event, the files and the marker.
+    private sealed class RealInstallSystem : IInstallSystem
+    {
+        public string TargetFolder => SensorInstaller.TargetFolder;
+
+        public bool FolderExisted(string target) => Directory.Exists(target);
+
+        public void EnsureFolder(string target) => EnsureInheritedFolder(target);
+
+        public bool TaskExists(string taskName) => SensorInstaller.TaskExists(taskName);
+
+        public void EndTask(string taskName) => RunSchtasksCode("/End", "/TN", taskName);
+
+        public void SignalStopAndWait(string sid) => SensorInstaller.SignalStopAndWait(sid);
+
+        public bool OtherHelpersRunning(string target, string sid) => SensorInstaller.OtherHelpersRunning(target, sid);
+
+        public void CopyFiles(string target) => CopyWhenFree(AppContext.BaseDirectory, target);
+
+        public void RegisterTask(string sid, string target, int? parent)
+        {
             // The XML sits in the admin-only folder, so no user can change the task definition between writing and registering.
             var xmlPath = Path.Combine(target, sid + ".task.xml");
             var exePath = Path.Combine(target, SensorNames.ExeName);
@@ -54,24 +108,19 @@ internal static class SensorInstaller
             try
             {
                 RunSchtasks("/Create", "/TN", SensorNames.TaskName(sid), "/XML", xmlPath, "/F");
-                taskRegistered = true;
             }
             finally
             {
                 File.Delete(xmlPath);
             }
+        }
 
-            File.WriteAllText(SensorNames.MarkerPath(sid), string.Empty);
-            markerWritten = true;
-            RunSchtasks("/Run", "/TN", SensorNames.TaskName(sid));  // starts the copy as SYSTEM, the same way logon will
-            return 0;
-        }
-        catch (Exception e)
-        {
-            HelperLog.Once(e);
-            Rollback(sid, target, folderExisted, taskRegistered, markerWritten);
-            return 1;
-        }
+        public void WriteMarker(string sid) => File.WriteAllText(SensorNames.MarkerPath(sid), string.Empty);
+
+        public void RunTask(string sid) => RunSchtasks("/Run", "/TN", SensorNames.TaskName(sid));
+
+        public void Rollback(string sid, string target, bool folderExisted, bool taskRegistered, bool markerWritten) =>
+            SensorInstaller.Rollback(sid, target, folderExisted, taskRegistered, markerWritten);
     }
 
     /// Removes this user's sign-in helper through the tested sequence (SensorUninstall.Run). Exit code 0 when the task and the

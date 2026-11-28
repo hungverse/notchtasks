@@ -38,6 +38,13 @@ public sealed class HardwareThermalReaderTests
         }
     }
 
+    private sealed class NoSink : IFailureSink
+    {
+        public void Report(Exception error, int eventId)
+        {
+        }
+    }
+
     private sealed class ThrowingFallback : IThermalReader
     {
         public IReadOnlyList<ThermalReading> Read() => throw new InvalidOperationException("WMI");
@@ -106,11 +113,36 @@ public sealed class HardwareThermalReaderTests
     }
 
     [Fact]
-    public void FallbackThatFails_Throws()
+    public void FallbackThatFails_GivesNoZones_AndNeverEndsTheRead()
     {
+        HelperLog.Sink = new NoSink();
         var reader = new HardwareThermalReader(new NoHardwareSource(), new ThrowingFallback());
 
-        Assert.Throws<InvalidOperationException>(() => reader.Read());
+        Assert.Empty(reader.Read());
+    }
+
+    [Fact]
+    public void NoCpu_AndAFallbackThatFails_StillGivesTheGpuReading()
+    {
+        HelperLog.Sink = new NoSink();
+        var hardware = new FakeHardware
+        {
+            Items = [new HardwareSnapshot(HardwareKind.Gpu, [new TemperatureSensor("GPU Core", 55)])],
+        };
+        var reader = new HardwareThermalReader(hardware, new ThrowingFallback());
+
+        Assert.Equal([new ThermalReading("GPU", 55)], reader.Read());
+    }
+
+    [Fact]
+    public void CpuPresent_DoesNotAskTheFallback()
+    {
+        HelperLog.Sink = new NoSink();
+        var hardware = new FakeHardware { Items = [Cpu("CPU Package", 58)] };
+        var fallback = new FakeFallback { Zones = [new ThermalReading("\\_TZ.TZ00", 28)] };
+
+        Assert.Equal([new ThermalReading("CPU", 58)], new HardwareThermalReader(hardware, fallback).Read());
+        Assert.Equal(0, fallback.Reads);
     }
 
     [Fact]
