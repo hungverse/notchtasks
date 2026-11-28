@@ -24,6 +24,9 @@ public sealed class SensorHelperTests
         public string? LastArguments;
         public Exception? Throws;
 
+        /// The process the launch gives back (null: no process, as in a test with no UAC).
+        public Process? Started;
+
         /// When set, the launch (the UAC prompt) is pending until the test completes it.
         public TaskCompletionSource<Process?>? Pending;
 
@@ -35,7 +38,7 @@ public sealed class SensorHelperTests
             {
                 return Task.FromException<Process?>(Throws);
             }
-            return Pending?.Task ?? Task.FromResult<Process?>(null);
+            return Pending?.Task ?? Task.FromResult(Started);
         }
     }
 
@@ -273,6 +276,25 @@ public sealed class SensorHelperTests
         await turnOn;
 
         Assert.Equal(HelperState.On, helper.State);
+    }
+
+    [Fact]
+    public async Task TurnOn_HelperExitsWithCode1_BeforeAnswering_IsFailed_LogsTheCode_AndClearsTheSettings()
+    {
+        using var root = new TempRoot();
+        using var settings = SettingsStore.Load(AppPaths.SettingsFile);
+        var (helper, launcher, pipe, _) = NewHelper(settings);
+        // A helper process that ends at once with exit code 1 (an ordinary process: the launch's stand-in, no UAC)
+        launcher.Started = Process.Start(new ProcessStartInfo("cmd.exe", "/c exit 1") { UseShellExecute = false, CreateNoWindow = true })!;
+        pipe.Answer = null;
+
+        await helper.TurnOnAsync(atSignIn: false);
+
+        Assert.Equal(HelperState.Failed, helper.State);
+        Assert.False(settings.SensorHelper);
+        Assert.False(settings.SensorHelperAtSignIn);
+        var log = File.ReadAllText(ErrorLog.FileOverride!);
+        Assert.Contains("NotchTasks: the temperature helper exited with code 1 before answering.", log);
     }
 
     [Fact]

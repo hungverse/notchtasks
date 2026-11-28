@@ -8,6 +8,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using NotchTasks.Core;
 using NotchTasks.Core.Asks;
+using NotchTasks.Core.Modules;
 using NotchTasks.Core.Permissions;
 using NotchTasks.Core.Settings;
 using NotchTasks.Services;
@@ -27,14 +28,18 @@ public partial class PermissionsPane : SettingsPane
 
     private readonly IRegistry _registry = new RegistryAccess();
     private readonly SensorHelper _helper;
+    private readonly IThermalCounter _counter;
     private PermissionFacts? _facts;
     private int _probe;
     private DateTime _firewallProbedAt = DateTime.MinValue;
+    private bool _counterOn;  // the thermal counter reads here: the Temperatures row reads without administrator (see ReadCounterAsync)
 
-    /// The pane for the settings store and the temperature helper (its state fills the Temperatures row).
-    public PermissionsPane(SettingsStore store, SensorHelper helper) : base(store)
+    /// The pane for the settings store, the temperature helper (its state fills the Temperatures row) and the thermal counter (which
+    /// fills it too, when it reads here).
+    public PermissionsPane(SettingsStore store, SensorHelper helper, IThermalCounter counter) : base(store)
     {
         _helper = helper;
+        _counter = counter;
         InitializeComponent();
         Loaded += (_, _) =>
         {
@@ -44,6 +49,19 @@ public partial class PermissionsPane : SettingsPane
         };
         Unloaded += (_, _) => _helper.StateChanged -= OnHelperChanged;
         RefreshButton.Click += (_, _) => Refresh(firewall: true);
+    }
+
+    /// Reads the thermal counter once, off the UI thread. The row changes when the answer differs from what the pane shows.
+    private async Task ReadCounterAsync()
+    {
+        var zones = await _counter.ReadAsync();
+        var on = Thermals.Plausible(zones).Count > 0;
+        if (!IsLoaded || on == _counterOn)
+        {
+            return;
+        }
+        _counterOn = on;
+        Refresh(firewall: false);
     }
 
     /// The helper turned on, off or declined: the row follows it while the pane shows.
@@ -67,6 +85,7 @@ public partial class PermissionsPane : SettingsPane
             _firewallProbedAt = DateTime.UtcNow;
             _ = ReadFirewallAsync(++_probe);
         }
+        _ = ReadCounterAsync();  // the counter's answer changes the row only when it differs (ReadCounterAsync)
     }
 
     private async Task ReadFirewallAsync(int probe)
@@ -124,31 +143,37 @@ public partial class PermissionsPane : SettingsPane
         }
     }
 
-    /// The Temperatures row's state, as the row's tile and label show it: on is granted, starting is checking, the rest are not granted.
-    private PermState TemperatureState() => _helper.State switch
+    /// The Temperatures row's state, as the row's tile and label show it: the counter's reading or the helper's On is granted, starting
+    /// is checking, the rest are not granted.
+    private PermState TemperatureState() => _counterOn ? PermState.Granted : _helper.State switch
     {
         HelperState.On => PermState.Granted,
         HelperState.Starting => PermState.Checking,
         _ => PermState.NotAsked,
     };
 
-    /// The Temperatures row: the standard row, then its own line. The line says why (declined, paused, unavailable) and holds the
-    /// buttons: Turn on (with the sign-in check box), Try again, or Turn off. Nothing starts without one of these clicks.
+    /// The Temperatures row: the standard row, then its own line. The counter's reading needs no button: the row says it reads without
+    /// administrator. Otherwise the line says why (declined, paused, failed, unavailable) and holds the buttons: Turn on (with the sign-in
+    /// check box), Try again, or Turn off. Nothing starts without one of these clicks.
     private UIElement BuildTemperatureRow(PermItem item)
     {
         var stack = new StackPanel();
-        stack.Children.Add(BuildRow(item, _helper.State switch
-        {
-            HelperState.On => L10n.L("On"),
-            _ => null,
-        }));
+        stack.Children.Add(BuildRow(item, _counterOn
+            ? L10n.L("Read without administrator")
+            : _helper.State switch
+            {
+                HelperState.On => L10n.L("On"),
+                _ => null,
+            }));
 
         // Under the row's text: the tile (30) and its gap (12) and the row's padding (10) are the indent.
         var line = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(52, 0, 10, 10) };
-        string? message = _helper.State switch
+        // The counter's readings need no helper row: its message and buttons are left out while it reads.
+        string? message = _counterOn ? null : _helper.State switch
         {
             HelperState.Declined => L10n.L("Not turned on: administrator was not allowed"),
             HelperState.Paused => L10n.L("Turn on again to read temperatures this session"),
+            HelperState.Failed => L10n.L("The temperature helper did not start"),
             HelperState.Unavailable => L10n.L("This PC does not report temperatures"),
             _ => null,
         };
@@ -165,20 +190,31 @@ public partial class PermissionsPane : SettingsPane
             VerticalAlignment = VerticalAlignment.Center,
             Margin = new Thickness(0, 0, 12, 0),
         };
-        switch (_helper.State)
+        if (_counterOn)
         {
-            case HelperState.Off:
-                line.Children.Add(signIn);
-                line.Children.Add(ActionButton(L10n.L("Turn on"), primary: true, () => TurnOnFromClick(signIn.IsChecked == true)));
-                break;
-            case HelperState.Declined:
-            case HelperState.Paused:
-                line.Children.Add(signIn);
-                line.Children.Add(ActionButton(L10n.L("Try again"), primary: false, () => TurnOnFromClick(signIn.IsChecked == true)));
-                break;
-            case HelperState.On:
+            if (_helper.State == HelperState.On)
+            {
                 line.Children.Add(ActionButton(L10n.L("Turn off"), primary: false, TurnOffFromClick));
-                break;
+            }
+        }
+        else
+        {
+            switch (_helper.State)
+            {
+                case HelperState.Off:
+                    line.Children.Add(signIn);
+                    line.Children.Add(ActionButton(L10n.L("Turn on"), primary: true, () => TurnOnFromClick(signIn.IsChecked == true)));
+                    break;
+                case HelperState.Declined:
+                case HelperState.Paused:
+                case HelperState.Failed:
+                    line.Children.Add(signIn);
+                    line.Children.Add(ActionButton(L10n.L("Try again"), primary: false, () => TurnOnFromClick(signIn.IsChecked == true)));
+                    break;
+                case HelperState.On:
+                    line.Children.Add(ActionButton(L10n.L("Turn off"), primary: false, TurnOffFromClick));
+                    break;
+            }
         }
 
         // The sign-in helper is installed (its marker is there) in any state: Turn off is offered, so an orphaned task can be removed.

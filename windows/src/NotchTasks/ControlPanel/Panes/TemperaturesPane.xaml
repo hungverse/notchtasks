@@ -19,6 +19,8 @@
       </StackPanel>
     </Border>
 
+    <!-- Shown while the readings come from the thermal counter (no administrator, no helper): the helper's card is not shown then. -->
+    <TextBlock x:Name="CounterNote" Style="{StaticResource PaneNote}" Margin="0,0,0,8" Visibility="Collapsed" TextWrapping="Wrap" />
     <!-- The hottest reading, in its tint: the header's number, with its zone's name. -->
     <Border x:Name="HottestCard" Style="{StaticResource Card}" Padding="16" Visibility="Collapsed">
       <Grid>

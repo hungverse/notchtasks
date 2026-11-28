@@ -94,9 +94,10 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         Health = new HealthModule(this);
         _healthSource = new HealthSource(Health, PublishLoad, settings, o.Health);
         Helper = o.Helper ?? SensorHelper.Create(settings);
-        _thermalSource = new ThermalSource(settings, Helper, PublishThermal);
+        ThermalCounter = o.ThermalCounter ?? new WmiThermalCounter();
+        _thermalSource = new ThermalSource(settings, Helper, ThermalCounter, PublishThermal);
         Heat = new HeatModule(this);
-        _heatSource = new HeatSource(Heat, Helper, TopWorkingTool);
+        _heatSource = new HeatSource(Heat, Helper, ThermalCounter, TopWorkingTool);
         Agents = new AgentsModule(this);
         Media = new MediaModule();
         LimitsModule = new LimitsModule(this);
@@ -301,10 +302,15 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
     /// The temperature helper (Windows only, off by default). Its state drives the Permissions row and the header's reading.
     public SensorHelper Helper { get; }
 
+    /// The thermal counter: the temperatures a normal user can read (no administrator). The header, the heat toast and the
+    /// Temperatures and Permissions panes read it first.
+    public IThermalCounter ThermalCounter { get; }
+
     /// The Plan limits setup (the Watching pane's Allow, Install and Sign in) and the sign-in status the limits source records.
     public ClaudeLimitsSetupRunner ClaudeSetup { get; }
 
-    /// The heat toast's levels (the Mac's thermalChanged). Its source (HeatSource) runs with the health module while the helper is On.
+    /// The heat toast's levels (the Mac's thermalChanged). Its source (HeatSource) runs with the health module while the counter reads
+    /// here or the helper is On.
     public HeatModule Heat { get; }
 
     /// The tool of the first working job on the pill, as the heat toast names it: the title's part before " · ". Null when none works.

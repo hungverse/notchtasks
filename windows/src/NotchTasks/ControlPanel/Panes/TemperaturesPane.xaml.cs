@@ -12,25 +12,30 @@ using NotchTasks.Services;
 
 namespace NotchTasks.ControlPanel.Panes;
 
-/// The Temperatures pane (the Mac's Fans & temperature without the fans). Read-only: it shows the temperature helper's zones, the
-/// hottest first, with the hottest in its tint at the top. While the helper is not On, it says why and offers the one opt-in
-/// (the Permissions pane's Turn on, with the sign-in check box); nothing is read then. While the pane is shown and the helper is On,
-/// it reads the zones every 2 s, and the timer stops when the pane is hidden.
+/// The Temperatures pane (the Mac's Fans & temperature without the fans). Read-only: it shows the zones, the hottest first, with the
+/// hottest in its tint at the top. The zones come from the thermal counter when it reads here (no administrator; the pane says so and
+/// offers no button). Otherwise they come from the temperature helper: while the helper is not On, the pane says why and offers the one
+/// opt-in (the Permissions pane's Turn on, with the sign-in check box); nothing is read from the helper then. While the pane is shown,
+/// the zones are read every 2 s (while the counter or the helper gives them), and the timer stops when the pane is hidden.
 public partial class TemperaturesPane : UserControl
 {
     private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(2);
 
     private readonly SettingsStore _store;
     private readonly SensorHelper _helper;
+    private readonly IThermalCounter _counter;
     private readonly DispatcherTimer _poll;
     private bool _reading;
+    private bool _counterReads;  // the counter gave a plausible reading at its last read: the pane reads without administrator
     private IReadOnlyList<ThermalReading> _readings = Array.Empty<ThermalReading>();
 
-    /// The pane for the settings store (the sign-in check box's stored value) and the temperature helper. It is read only while it is shown.
-    public TemperaturesPane(SettingsStore store, SensorHelper helper)
+    /// The pane for the settings store (the sign-in check box's stored value), the temperature helper and the thermal counter. It is read
+    /// only while it is shown.
+    public TemperaturesPane(SettingsStore store, SensorHelper helper, IThermalCounter counter)
     {
         _store = store;
         _helper = helper;
+        _counter = counter;
         InitializeComponent();
         _poll = new DispatcherTimer { Interval = PollInterval };
         _poll.Tick += (_, _) => _ = ReadAsync();
@@ -47,6 +52,7 @@ public partial class TemperaturesPane : UserControl
     private void ApplyTexts()
     {
         SignInCheck.Content = L10n.L("Start with Windows without asking again");
+        CounterNote.Text = L10n.L("Read without administrator");
     }
 
     private void OnLoaded(object sender, RoutedEventArgs e)
@@ -54,12 +60,8 @@ public partial class TemperaturesPane : UserControl
         _helper.StateChanged += OnHelperChanged;
         L10n.Changed += OnLanguageChanged;
         ApplyTexts();
-        if (_helper.State == HelperState.On)
-        {
-            _poll.Start();
-            _ = ReadAsync();
-        }
         Render();
+        _ = ReadAsync();  // the counter first: it says whether the pane reads without administrator
     }
 
     private void OnPaneHidden(object sender, RoutedEventArgs e)
@@ -69,20 +71,15 @@ public partial class TemperaturesPane : UserControl
         _poll.Stop();
     }
 
-    /// The helper turned on, off or declined: the pane follows it while it shows. Off, the readings are dropped.
+    /// The helper turned on, off or declined: the pane follows it while it shows. Off, the helper's readings are dropped.
     private void OnHelperChanged()
     {
-        if (_helper.State == HelperState.On)
+        if (_helper.State != HelperState.On)
         {
-            _poll.Start();
-            _ = ReadAsync();
-        }
-        else
-        {
-            _poll.Stop();
             _readings = Array.Empty<ThermalReading>();
         }
         Render();
+        _ = ReadAsync();
     }
 
     private void OnLanguageChanged()
@@ -91,23 +88,38 @@ public partial class TemperaturesPane : UserControl
         Render();
     }
 
-    /// Reads the zones once. One read at a time; a read that ends after the helper stopped, or after the pane hid, changes nothing.
+    /// Reads the zones once: the counter, and the helper when the counter gives no plausible reading and the helper is On. One read at a
+    /// time; a read that ends after the pane hid changes nothing. The timer runs while either source gives zones.
     private async Task ReadAsync()
     {
-        if (_reading || _helper.State != HelperState.On)
+        if (_reading)
         {
             return;
         }
         _reading = true;
         try
         {
-            var readings = await _helper.ReadAsync();
-            if (!IsLoaded || _helper.State != HelperState.On)
+            var counter = await _counter.ReadAsync();
+            var counterReads = Thermals.Plausible(counter).Count > 0;
+            var fromHelper = !counterReads && _helper.State == HelperState.On
+                ? await _helper.ReadAsync()
+                : Array.Empty<ThermalReading>();
+            if (!IsLoaded)
             {
                 return;
             }
-            _readings = readings;
-            RenderReadings();
+            _counterReads = counterReads;
+            _readings = counterReads ? counter : fromHelper;
+            var reading = counterReads || _helper.State == HelperState.On;
+            if (reading && !_poll.IsEnabled)
+            {
+                _poll.Start();
+            }
+            else if (!reading)
+            {
+                _poll.Stop();
+            }
+            Render();
         }
         finally
         {
@@ -129,10 +141,12 @@ public partial class TemperaturesPane : UserControl
         Render();
     }
 
-    /// Shows the help card while the helper is not On, and the readings while it is.
+    /// Shows the readings while a source gives them (the counter, or the helper when On), and the help card otherwise. The counter's
+    /// readings need no button: the card is not shown then.
     private void Render()
     {
-        var on = _helper.State == HelperState.On;
+        var on = _counterReads || _helper.State == HelperState.On;
+        CounterNote.Visibility = VisibleIf(_counterReads);
         HelperCard.Visibility = on ? Visibility.Collapsed : Visibility.Visible;
         HottestCard.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
         SensorsCaps.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
@@ -148,6 +162,7 @@ public partial class TemperaturesPane : UserControl
             HelperState.Off => (null, L10n.L("Turn on"), true),
             HelperState.Declined => (L10n.L("Not turned on: administrator was not allowed"), L10n.L("Try again"), true),
             HelperState.Paused => (L10n.L("Turn on again to read temperatures this session"), L10n.L("Try again"), true),
+            HelperState.Failed => (L10n.L("The temperature helper did not start"), L10n.L("Try again"), true),
             HelperState.Unavailable => (L10n.L("This PC does not report temperatures"), null, false),
             HelperState.Starting => (L10n.L("Checking…"), null, false),
             _ => (null, null, false),

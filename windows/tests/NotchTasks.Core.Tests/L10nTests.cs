@@ -318,6 +318,33 @@ public sealed class L10nTests
         "How the notch opens and when it alerts you.", "The sounds that play when a task finishes or needs you.",
     ];
 
+    // The Temperatures and Permissions rows' texts for the thermal counter and the helper's failed start: Windows-only, so each one
+    // needs its text in windows/l10n/windows.json, in every language.
+    private static readonly string[] TemperatureCounterKeys =
+    [
+        "Read without administrator", "The temperature helper did not start",
+    ];
+
+    [Fact]
+    public void TemperatureCounterKeys_ExistInEveryLanguage()
+    {
+        var overlayFile = Path.Combine(RepoRoot(), "windows", "l10n", "windows.json");
+        var missing = new List<string>();
+        foreach (var (code, _) in L10n.Languages.Where(language => language.Code != "en"))
+        {
+            var mac = ReadStrings(Path.Combine(MacSources(), $"l10n-{code}.json"));
+            var windows = ReadOverlay(overlayFile, code);
+            foreach (var key in TemperatureCounterKeys)
+            {
+                if (!mac.ContainsKey(key) && !windows.ContainsKey(key))
+                {
+                    missing.Add($"{code}: {key}");
+                }
+            }
+        }
+        Assert.Empty(missing);
+    }
+
     [Fact]
     public void PaneDescriptionKeys_ExistInEveryLanguage()
     {

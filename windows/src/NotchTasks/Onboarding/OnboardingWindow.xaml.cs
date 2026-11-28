@@ -99,7 +99,7 @@ public partial class OnboardingWindow : Window
         0 => Welcome(),
         1 => Pane(page, () => new ModulesPane(Settings)),
         2 => Pane(page, () => new WatchingPane(Settings, _state.Processes, AppFiles.Home, setup: _state.ClaudeSetup)),
-        3 => Pane(page, () => new PermissionsPane(Settings, _state.Helper)),
+        3 => Pane(page, () => new PermissionsPane(Settings, _state.Helper, _state.ThermalCounter)),
         4 => Phone(),
         _ => Ready(),
     };

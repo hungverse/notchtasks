@@ -202,7 +202,14 @@ internal static class Fixture
         Brightness: () => new NoBrightness(),
         Camera: () => new NoCamera(),
         Update: new UpdateClient(new NoFeed()),
-        Notifier: new NoNotifier());
+        Notifier: new NoNotifier(),
+        ThermalCounter: new NoThermalCounter());
+
+    /// The thermal counter with no zones: the counter reads nothing, so the header and the panes show only what a test sets up.
+    public sealed class NoThermalCounter : IThermalCounter
+    {
+        public Task<IReadOnlyList<ThermalReading>> ReadAsync() => Task.FromResult<IReadOnlyList<ThermalReading>>(Array.Empty<ThermalReading>());
+    }
 
     /// The update feed with no network: every request answers 404, so a check finds no update.
     public sealed class NoFeed : HttpMessageHandler

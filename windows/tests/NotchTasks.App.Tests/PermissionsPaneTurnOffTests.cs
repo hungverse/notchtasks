@@ -60,7 +60,7 @@ public sealed class PermissionsPaneTurnOffTests
             var helper = new SensorHelper(settings, new NoLaunch(), new NoPipe(), new NoStop(), "NotchTasksSensors.exe", Sid, 1,
                 path => marker && path == markerPath);
             Fixture.Call(helper, "SetState", state);
-            var pane = new PermissionsPane(settings, helper);
+            var pane = new PermissionsPane(settings, helper, new Fixture.NoThermalCounter());
             var window = new Window { Content = pane };
             try
             {

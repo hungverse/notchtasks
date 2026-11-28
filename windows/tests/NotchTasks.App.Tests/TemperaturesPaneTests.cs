@@ -68,8 +68,18 @@ public sealed class TemperaturesPaneTests
         }
     }
 
-    /// A helper in the given state over a fake pipe with these readings, and a pane for it.
-    private static (SensorHelper Helper, TemperaturesPane Pane) NewPane(HelperState state, IReadOnlyList<ThermalReading>? readings, bool marker = false)
+    /// The thermal counter with fixed zones (the counter reads here when they are plausible).
+    private sealed class FakeCounter : IThermalCounter
+    {
+        public IReadOnlyList<ThermalReading> Zones { get; set; } = Array.Empty<ThermalReading>();
+
+        public Task<IReadOnlyList<ThermalReading>> ReadAsync() => Task.FromResult(Zones);
+    }
+
+    /// A helper in the given state over a fake pipe with these readings, and a pane for it. The counter reads nothing unless `counter`
+    /// is given.
+    private static (SensorHelper Helper, TemperaturesPane Pane) NewPane(HelperState state, IReadOnlyList<ThermalReading>? readings, bool marker = false,
+        IReadOnlyList<ThermalReading>? counter = null)
     {
         var settings = SettingsStore.Load(AppPaths.SettingsFile);
         var pipe = new FakePipe { Answer = readings };
@@ -77,7 +87,8 @@ public sealed class TemperaturesPaneTests
         var helper = new SensorHelper(settings, new NoLaunch(), pipe, new NoStop(), "NotchTasksSensors.exe", Sid, 1,
             path => marker && path == markerPath);
         Fixture.Call(helper, "SetState", state);
-        return (helper, new TemperaturesPane(settings, helper));
+        var thermalCounter = new FakeCounter { Zones = counter ?? Array.Empty<ThermalReading>() };
+        return (helper, new TemperaturesPane(settings, helper, thermalCounter));
     }
 
     /// Shows the pane off screen (its Loaded runs, so an On helper is read) and lays it out.
@@ -93,6 +104,7 @@ public sealed class TemperaturesPaneTests
     [InlineData(HelperState.Off, "Turn on")]
     [InlineData(HelperState.Declined, "Try again")]
     [InlineData(HelperState.Paused, "Try again")]
+    [InlineData(HelperState.Failed, "Try again")]
     public void HelperNotOn_ExplainsAndOffersTheOptIn(HelperState state, string button)
     {
         Sta.Run(() =>
@@ -257,6 +269,75 @@ public sealed class TemperaturesPaneTests
             try
             {
                 Assert.Equal("Sensors (2)", Fixture.Named<TextBlock>(pane, "SensorsCaps").Text);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    [Fact]
+    public void CounterReadings_ShowWithTheHelperOff_AndOfferNoTurnOn()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            var (helper, pane) = NewPane(HelperState.Off, null, counter: new[] { new ThermalReading("\\_TZ.TZ00", 27.85) });
+            var window = Show(pane);
+            try
+            {
+                Fixture.PumpUntil(() => Fixture.Named<Border>(pane, "SensorsCard").Visibility == Visibility.Visible);
+                Assert.Equal(HelperState.Off, helper.State);  // the helper is not used: the counter reads
+                Assert.Equal(Visibility.Visible, Fixture.Named<TextBlock>(pane, "CounterNote").Visibility);
+                Assert.Equal(L10n.L("Read without administrator"), Fixture.Named<TextBlock>(pane, "CounterNote").Text);
+                Assert.Equal(Visibility.Collapsed, Fixture.Named<Border>(pane, "HelperCard").Visibility);
+                Assert.False(Fixture.Named<Button>(pane, "TurnOnButton").IsVisible);  // its card is collapsed: no button shows
+                Assert.Equal("28°", Fixture.Named<TextBlock>(pane, "HottestValue").Text);
+                Assert.Equal("\\_TZ.TZ00", Fixture.Named<TextBlock>(pane, "HottestName").Text);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    [Fact]
+    public void NoCounterReadings_HelperOn_ShowsTheHelpersReadings()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            var (_, pane) = NewPane(HelperState.On, new[] { new ThermalReading("TZ00", 55) });
+            var window = Show(pane);
+            try
+            {
+                Fixture.PumpUntil(() => Fixture.Named<Border>(pane, "SensorsCard").Visibility == Visibility.Visible);
+                Assert.Equal(Visibility.Collapsed, Fixture.Named<TextBlock>(pane, "CounterNote").Visibility);
+                Assert.Equal("55°", Fixture.Named<TextBlock>(pane, "HottestValue").Text);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    [Fact]
+    public void NoCounterReadings_HelperOff_ShowsNothing()
+    {
+        Sta.Run(() =>
+        {
+            using var root = new TempRoot();
+            var (_, pane) = NewPane(HelperState.Off, new[] { new ThermalReading("TZ00", 55) });
+            var window = Show(pane);
+            try
+            {
+                Assert.Equal(Visibility.Collapsed, Fixture.Named<TextBlock>(pane, "CounterNote").Visibility);
+                Assert.Equal(Visibility.Collapsed, Fixture.Named<Border>(pane, "SensorsCard").Visibility);
+                Assert.Equal(Visibility.Collapsed, Fixture.Named<Border>(pane, "HottestCard").Visibility);
+                Assert.Equal(Visibility.Visible, Fixture.Named<Border>(pane, "HelperCard").Visibility);
             }
             finally
             {

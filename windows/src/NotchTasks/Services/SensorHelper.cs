@@ -14,7 +14,8 @@ namespace NotchTasks.Services;
 
 /// Where the temperature helper stands. Off: not wanted. Starting: asked, not answered yet. On: answering. Declined: the user
 /// cancelled the UAC prompt (never asked again by itself). Unavailable: the PC reports no thermal zone. Paused: wanted, but not
-/// started at this app start (it needs a UAC click, so the app waits for one).
+/// started at this app start (it needs a UAC click, so the app waits for one). Failed: Turn on started the helper, and it neither
+/// answered nor kept running (the log says why); the row offers Try again.
 public enum HelperState
 {
     Off,
@@ -23,6 +24,7 @@ public enum HelperState
     Declined,
     Unavailable,
     Paused,
+    Failed,
 }
 
 /// Starts a program elevated (UAC), or fails with Win32Exception 1223 when the prompt is cancelled. Only the user's clicks in the
@@ -197,7 +199,8 @@ public sealed class SensorHelper
 
     /// Turns the feature on, from the user's click. atSignIn adds the logon task (one UAC prompt for both). A cancelled prompt
     /// is Declined: the setting goes false, and nothing is retried. Waits up to 45 s for the helper to answer. After a timeout the
-    /// marker is checked before anything is cleared: an installed task is kept, shown as Paused with Try again.
+    /// marker is checked before anything is cleared: an installed task is kept, shown as Paused with Try again. A helper that exits
+    /// before answering ends the wait at once and is Failed (see NoAnswer).
     public async Task TurnOnAsync(bool atSignIn)
     {
         if (_busy || State is HelperState.On or HelperState.Starting)
@@ -214,9 +217,10 @@ public sealed class SensorHelper
             var arguments = atSignIn
                 ? SensorArgs.InstallLogon(_sid, _appPid)
                 : SensorArgs.Serve(_sid, _appPid);
+            Process? started;
             try
             {
-                using var started = await _launcher.RunAsAsync(_helperExe, arguments);
+                started = await _launcher.RunAsAsync(_helperExe, arguments);
             }
             catch (Win32Exception e) when (e.NativeErrorCode == 1223)
             {
@@ -233,24 +237,49 @@ public sealed class SensorHelper
                 return;
             }
 
-            var answer = await WaitForAnswerAsync();
-            if (answer is null)
+            // The started process is kept until the answer or the timeout: its exit code says why no answer came.
+            try
             {
-                if (HasSignInTask)
+                var answer = await WaitForAnswerAsync(started);
+                if (answer is null)
                 {
-                    SetState(HelperState.Paused);  // installed but slow to answer: keep it, the row offers Try again and Turn off
+                    NoAnswer(started);
                     return;
                 }
-                ClearSettings();
-                SetState(HelperState.Off);
-                return;
+                Settle(answer, fromUser: true);
             }
-            Settle(answer, fromUser: true);
+            finally
+            {
+                started?.Dispose();
+            }
         }
         finally
         {
             _busy = false;
         }
+    }
+
+    /// The helper gave no answer. A process that already exited is logged with its exit code, and a process still running is logged as
+    /// slow. The failure is not a silent Off: the row says the helper did not start, with Try again. The settings are cleared, unless
+    /// the logon task is installed and the helper is only slow (then it is kept, shown as Paused with Try again and Turn off).
+    private void NoAnswer(Process? started)
+    {
+        var exited = started is not null && started.HasExited;
+        if (exited)
+        {
+            ErrorLog.Write(new InvalidOperationException($"NotchTasks: the temperature helper exited with code {started!.ExitCode} before answering."));
+        }
+        else
+        {
+            ErrorLog.Write(new InvalidOperationException("NotchTasks: the temperature helper did not answer in 45 s."));
+        }
+        if (!exited && HasSignInTask)
+        {
+            SetState(HelperState.Paused);  // installed but slow to answer: keep it, the row offers Try again and Turn off
+            return;
+        }
+        ClearSettings();
+        SetState(HelperState.Failed);
     }
 
     /// Turns the feature off, from the user's click. When this user's marker exists, one UAC prompt removes the task, the marker
@@ -336,8 +365,9 @@ public sealed class SensorHelper
         }
     }
 
-    /// Waits for the helper's first answer after a start (through the UAC prompt and the install).
-    private async Task<IReadOnlyList<ThermalReading>?> WaitForAnswerAsync()
+    /// Waits for the helper's first answer after a start (through the UAC prompt and the install). The wait ends at once when the
+    /// started process has exited: the helper runs until it stops, so an exit means no answer is coming.
+    private async Task<IReadOnlyList<ThermalReading>?> WaitForAnswerAsync(Process? started)
     {
         for (var attempt = 0; attempt < AnswerTries; attempt++)
         {
@@ -345,6 +375,10 @@ public sealed class SensorHelper
             if (answer is not null)
             {
                 return answer;
+            }
+            if (started is not null && started.HasExited)
+            {
+                return null;
             }
             await Task.Delay(AnswerEvery);
         }
