@@ -28,6 +28,8 @@
   <!-- The CPU and GPU temperatures (MPL-2.0, see installer\THIRD-PARTY-NOTICES.txt). It reads them through the PawnIO driver. -->
   <ItemGroup>
     <PackageReference Include="LibreHardwareMonitorLib" Version="0.9.6" />
+    <!-- The failure report in the Application event log (the helper is elevated, so it may create the source). Same 10.0.2 as System.Management. -->
+    <PackageReference Include="System.Diagnostics.EventLog" Version="10.0.2" />
   </ItemGroup>
 
 </Project>
