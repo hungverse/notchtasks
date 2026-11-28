@@ -176,8 +176,8 @@ public sealed class TemperaturesPaneTests
             using var root = new TempRoot();
             var (_, pane) = NewPane(HelperState.On, new[]
             {
-                new ThermalReading("TZ00", 55),
-                new ThermalReading("CPU Package", 71.5),
+                new ThermalReading("GPU", 55),
+                new ThermalReading("CPU", 71.5),
                 new ThermalReading("Bogus", 130),
             });
             var window = Show(pane);
@@ -192,11 +192,11 @@ public sealed class TemperaturesPaneTests
                 Assert.Equal(2, grids.Count);  // the implausible 130 C is dropped
                 var row = grids[0];  // a SettingRow: 32 DIP of controls between 8 DIP of margin above and below: 48 DIP in all
                 Assert.Equal(48, row.ActualHeight + row.Margin.Top + row.Margin.Bottom, 0);
-                Assert.Contains("CPU Package", TextsOf(grids[0]));
-                Assert.Contains("TZ00", TextsOf(grids[1]));
+                Assert.Contains("CPU", TextsOf(grids[0]));
+                Assert.Contains("GPU", TextsOf(grids[1]));
 
                 Assert.Equal("72°", Fixture.Named<TextBlock>(pane, "HottestValue").Text);
-                Assert.Equal("CPU Package", Fixture.Named<TextBlock>(pane, "HottestName").Text);
+                Assert.Equal("CPU", Fixture.Named<TextBlock>(pane, "HottestName").Text);
             }
             finally
             {
@@ -261,8 +261,8 @@ public sealed class TemperaturesPaneTests
             using var root = new TempRoot();
             var (_, pane) = NewPane(HelperState.On, new[]
             {
-                new ThermalReading("TZ00", 55),
-                new ThermalReading("CPU Package", 71.5),
+                new ThermalReading("GPU", 55),
+                new ThermalReading("CPU", 71.5),
                 new ThermalReading("Bogus", 130),
             });
             var window = Show(pane);
@@ -309,7 +309,7 @@ public sealed class TemperaturesPaneTests
         Sta.Run(() =>
         {
             using var root = new TempRoot();
-            var (_, pane) = NewPane(HelperState.On, new[] { new ThermalReading("TZ00", 55) });
+            var (_, pane) = NewPane(HelperState.On, new[] { new ThermalReading("CPU", 55) });
             var window = Show(pane);
             try
             {

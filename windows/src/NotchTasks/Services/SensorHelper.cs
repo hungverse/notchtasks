@@ -136,7 +136,7 @@ public sealed class SensorHelper
     private static readonly TimeSpan StartEvery = TimeSpan.FromSeconds(2);
     private const int StartTries = 5;
     private static readonly TimeSpan AnswerEvery = TimeSpan.FromMilliseconds(500);
-    private const int AnswerTries = 90;  // 45 s: the install (copy, task, start) takes a while
+    private const int AnswerTries = 240;  // 120 s: the PawnIO step (winget or the download), then the install (copy, task, start)
 
     private readonly SettingsStore _settings;
     private readonly IProcessLauncher _launcher;
@@ -147,6 +147,7 @@ public sealed class SensorHelper
     private readonly int _appPid;
     private readonly Func<string, bool> _fileExists;
     private bool _busy;
+    private readonly FixedZoneRule _zones = new();  // the helper's ACPI zones (its WMI fallback), judged as the counter's are
 
     /// The helper for this user. helperExe is the helper next to the app; sid names the pipe, the stop event and the marker; appPid
     /// is the --parent the helper watches. fileExists tells whether a file is there (tests pass a fake; null is File.Exists).
@@ -198,7 +199,7 @@ public sealed class SensorHelper
     }
 
     /// Turns the feature on, from the user's click. atSignIn adds the logon task (one UAC prompt for both). A cancelled prompt
-    /// is Declined: the setting goes false, and nothing is retried. Waits up to 45 s for the helper to answer. After a timeout the
+    /// is Declined: the setting goes false, and nothing is retried. Waits up to 120 s for the helper to answer (the PawnIO step can take a while). After a timeout the
     /// marker is checked before anything is cleared: an installed task is kept, shown as Paused with Try again. A helper that exits
     /// before answering ends the wait at once and is Failed (see NoAnswer).
     public async Task TurnOnAsync(bool atSignIn)
@@ -214,9 +215,10 @@ public sealed class SensorHelper
             SaveFlag("sensorHelperAtSignIn", atSignIn);
             SetState(HelperState.Starting);
 
+            // The helper runs the PawnIO step first, in the same elevated process: one UAC prompt covers the driver and the serve.
             var arguments = atSignIn
-                ? SensorArgs.InstallLogon(_sid, _appPid)
-                : SensorArgs.Serve(_sid, _appPid);
+                ? SensorArgs.WithPawnIO(SensorArgs.InstallLogon(_sid, _appPid))
+                : SensorArgs.WithPawnIO(SensorArgs.Serve(_sid, _appPid));
             Process? started;
             try
             {
@@ -267,11 +269,11 @@ public sealed class SensorHelper
         var exited = started is not null && started.HasExited;
         if (exited)
         {
-            ErrorLog.Write(new InvalidOperationException($"NotchTasks: the temperature helper exited with code {started!.ExitCode} before answering."));
+            ErrorLog.Write(new InvalidOperationException($"NotchTasks: the temperature helper exited with code {started!.ExitCode} before answering: {ExitReason(started.ExitCode)}"));
         }
         else
         {
-            ErrorLog.Write(new InvalidOperationException("NotchTasks: the temperature helper did not answer in 45 s."));
+            ErrorLog.Write(new InvalidOperationException("NotchTasks: the temperature helper did not answer in 120 s."));
         }
         if (!exited && HasSignInTask)
         {
@@ -281,6 +283,11 @@ public sealed class SensorHelper
         ClearSettings();
         SetState(HelperState.Failed);
     }
+
+    /// The readable reason for an exit code. The PawnIO step's codes (PawnIOExit) say what failed; other codes are shown as they are.
+    internal static string ExitReason(int code) => code is >= PawnIOExit.WingetFailed and <= PawnIOExit.ServiceMissing
+        ? PawnIOExit.Message(code)
+        : $"exit code {code}";
 
     /// Turns the feature off, from the user's click. When this user's marker exists, one UAC prompt removes the task, the marker
     /// and the copy (when no other user needs it). A cancelled prompt, or a failed removal, changes nothing. Without the marker, the
@@ -339,7 +346,20 @@ public sealed class SensorHelper
         {
             return Array.Empty<ThermalReading>();
         }
-        return await _pipe.QueryAsync(CancellationToken.None) ?? Array.Empty<ThermalReading>();
+        var answer = await _pipe.QueryAsync(CancellationToken.None) ?? Array.Empty<ThermalReading>();
+        return Guarded(answer);
+    }
+
+    /// The helper's CPU and GPU readings pass as they are. Any other zone (the WMI fallback's ACPI zones) goes through the fixed-value rule
+    /// the counter's zones go through: a zone that never moves is a BIOS value, and is not shown.
+    private IReadOnlyList<ThermalReading> Guarded(IReadOnlyList<ThermalReading> answer)
+    {
+        var named = answer.Where(reading => reading.Name is Thermals.CpuName or Thermals.GpuName);
+        var zones = answer.Where(reading => reading.Name is not (Thermals.CpuName or Thermals.GpuName)).ToList();
+        lock (_zones)
+        {
+            return named.Concat(_zones.Apply(zones)).ToList();
+        }
     }
 
     /// The probe at the app's start, with the marker present: a few quick tries, since the logon helper may still be starting.

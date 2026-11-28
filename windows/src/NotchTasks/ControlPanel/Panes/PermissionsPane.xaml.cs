@@ -29,17 +29,20 @@ public partial class PermissionsPane : SettingsPane
     private readonly IRegistry _registry = new RegistryAccess();
     private readonly SensorHelper _helper;
     private readonly IThermalCounter _counter;
+    private readonly Func<DependencyObject, bool> _consent;
     private PermissionFacts? _facts;
     private int _probe;
     private DateTime _firewallProbedAt = DateTime.MinValue;
     private bool _counterOn;  // the thermal counter reads here: the Temperatures row reads without administrator (see ReadCounterAsync)
 
     /// The pane for the settings store, the temperature helper (its state fills the Temperatures row) and the thermal counter (which
-    /// fills it too, when it reads here).
-    public PermissionsPane(SettingsStore store, SensorHelper helper, IThermalCounter counter) : base(store)
+    /// fills it too, when it reads here). consent asks the Turn on confirmation (tests pass their own); Cancel starts nothing.
+    public PermissionsPane(SettingsStore store, SensorHelper helper, IThermalCounter counter, Func<DependencyObject, bool>? consent = null)
+        : base(store)
     {
         _helper = helper;
         _counter = counter;
+        _consent = consent ?? TemperatureConsent.Ask;
         InitializeComponent();
         Loaded += (_, _) =>
         {
@@ -158,13 +161,13 @@ public partial class PermissionsPane : SettingsPane
     private UIElement BuildTemperatureRow(PermItem item)
     {
         var stack = new StackPanel();
-        stack.Children.Add(BuildRow(item, _counterOn
-            ? L10n.L("Read without administrator")
-            : _helper.State switch
-            {
-                HelperState.On => L10n.L("On"),
-                _ => null,
-            }));
+        stack.Children.Add(BuildRow(item, _helper.State switch
+        {
+            HelperState.On => L10n.L("On"),
+            _ when _counterOn => L10n.L("Read without administrator"),
+            HelperState.Off or HelperState.Declined or HelperState.Paused or HelperState.Failed => L10n.L("Needs administrator"),
+            _ => null,
+        }));
 
         // Under the row's text: the tile (30) and its gap (12) and the row's padding (10) are the indent.
         var line = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(52, 0, 10, 10) };
@@ -237,6 +240,10 @@ public partial class PermissionsPane : SettingsPane
     /// The user clicked Turn on or Try again. The helper asks UAC once; a cancelled prompt is Declined and nothing else happens.
     private async void TurnOnFromClick(bool atSignIn)
     {
+        if (!_consent(this))
+        {
+            return;  // Cancel: nothing starts
+        }
         try
         {
             await _helper.TurnOnAsync(atSignIn);

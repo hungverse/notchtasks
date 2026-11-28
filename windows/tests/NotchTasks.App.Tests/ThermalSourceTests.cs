@@ -98,7 +98,7 @@ public sealed class ThermalSourceTests
             using var root = new TempRoot();
             File.WriteAllText(AppPaths.SettingsFile, "{\"sensorHelper\": true}");
             using var settings = SettingsStore.Load(AppPaths.SettingsFile);
-            var pipe = new FakePipe { Answer = new[] { new ThermalReading("TZ00", 55) } };
+            var pipe = new FakePipe { Answer = new[] { new ThermalReading("CPU", 55) } };
             var helper = NewHelper(settings, pipe, on: true);
             var counter = new FakeCounter();
             var published = new List<ThermalReading?>();
@@ -109,7 +109,7 @@ public sealed class ThermalSourceTests
                 source.PillOpened(true);
                 Fixture.PumpUntil(() => published.Count > 0);
 
-                Assert.Equal("TZ00", published[0]!.Value.Name);
+                Assert.Equal("CPU", published[0]!.Value.Name);
                 Assert.True(pipe.Calls > 0);
                 Assert.True(counter.Reads > 0);  // the counter is read first
             }

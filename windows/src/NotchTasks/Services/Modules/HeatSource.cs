@@ -3,10 +3,9 @@ using NotchTasks.Core.Modules;
 
 namespace NotchTasks.Services.Modules;
 
-/// The heat toast's feed (Mac: thermalChanged, Model.swift). It runs with the health module, and asks for the hottest reading every 30 s,
-/// with the pill open or closed: the thermal counter first (no administrator), the temperature helper when the counter gives no
-/// plausible reading and the helper is On. It runs only while the counter reads here or the helper is On, so a PC with neither does no
-/// work for it. Each reading is judged by the HeatModule, which keeps the crossing levels across stops; topTool names the working tool
+/// The heat toast's feed (Mac: thermalChanged, Model.swift). It runs with the health module, and asks every 30 s, with the pill open or
+/// closed: the thermal counter (no administrator), and while the helper is On its readings come first (their CPU reading when there is
+/// one). It runs only while the counter reads here or the helper is On, so a PC with neither does no work for it. Each reading is judged by the HeatModule, which keeps the crossing levels across stops; topTool names the working tool
 /// for the toast's subtitle.
 public sealed class HeatSource : IModuleSource, IDisposable
 {
@@ -92,18 +91,23 @@ public sealed class HeatSource : IModuleSource, IDisposable
         {
             var zones = await _counter.ReadAsync();
             _counterReads = Thermals.Plausible(zones).Count > 0;
-            if (!_counterReads)
+            if (_helper.State == HelperState.On)
             {
-                if (_helper.State != HelperState.On)
+                // The helper's readings are the real ones: they win whenever it gives a plausible one.
+                var fromHelper = await _helper.ReadAsync();
+                if (Thermals.Plausible(fromHelper).Count > 0)
                 {
-                    SettingsChanged();  // no counter reading and no helper: nothing to judge, and the timer stops
-                    return;
+                    zones = fromHelper;
                 }
-                zones = await _helper.ReadAsync();
+            }
+            if (!_counterReads && _helper.State != HelperState.On)
+            {
+                SettingsChanged();  // no counter reading and no helper: nothing to judge, and the timer stops
+                return;
             }
             if (Active)
             {
-                _module.Judge(Thermals.Hottest(zones), _topTool());
+                _module.Judge(Thermals.Headline(zones), _topTool());
             }
         }
         finally

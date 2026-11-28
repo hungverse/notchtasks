@@ -5,10 +5,10 @@ using NotchTasks.Core.Settings;
 namespace NotchTasks.Services.Modules;
 
 /// The header's temperature feed. It asks every 2 s, and only while the pill is open, SystemLoad is on and the health module runs (the
-/// source is started with it). It reads the thermal counter first (no administrator); the helper is asked only when the counter gives
-/// no plausible reading, and only while the sensorHelper setting is on and the helper is On. Each answer goes through Thermals.Hottest;
-/// a change of the shown degrees or the zone is published, and nothing else is. Stopping, closing the pill or turning a gate off
-/// publishes no reading, so the header shows nothing.
+/// source is started with it). It reads the thermal counter (no administrator), and while the helper is On (and the sensorHelper setting
+/// is on) the helper's readings come first: its CPU reading when it gives one. Each answer goes through Thermals.Headline; a change of the
+/// shown degrees or the zone is published, and nothing else is. Stopping, closing the pill or turning a gate off publishes no reading, so
+/// the header shows nothing.
 public sealed class ThermalSource : IModuleSource, IDisposable
 {
     private static readonly TimeSpan Every = TimeSpan.FromSeconds(2);
@@ -110,11 +110,16 @@ public sealed class ThermalSource : IModuleSource, IDisposable
         {
             var zones = await _counter.ReadAsync();
             _counterReads = Thermals.Plausible(zones).Count > 0;
-            if (!_counterReads && HelperAnswers)
+            if (HelperAnswers)
             {
-                zones = await _helper.ReadAsync();
+                // The helper's readings are the real ones: they win whenever it gives a plausible one.
+                var fromHelper = await _helper.ReadAsync();
+                if (Thermals.Plausible(fromHelper).Count > 0)
+                {
+                    zones = fromHelper;
+                }
             }
-            var hottest = Thermals.Hottest(zones);
+            var hottest = Thermals.Headline(zones);
             if (Active)
             {
                 Publish(hottest);

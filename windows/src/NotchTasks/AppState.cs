@@ -94,7 +94,7 @@ public sealed class AppState : INotifyPropertyChanged, IDisposable, IAnnouncer
         Health = new HealthModule(this);
         _healthSource = new HealthSource(Health, PublishLoad, settings, o.Health);
         Helper = o.Helper ?? SensorHelper.Create(settings);
-        ThermalCounter = o.ThermalCounter ?? new WmiThermalCounter();
+        ThermalCounter = o.ThermalCounter ?? new FixedZoneCounter(new WmiThermalCounter());
         _thermalSource = new ThermalSource(settings, Helper, ThermalCounter, PublishThermal);
         Heat = new HeatModule(this);
         _heatSource = new HeatSource(Heat, Helper, ThermalCounter, TopWorkingTool);

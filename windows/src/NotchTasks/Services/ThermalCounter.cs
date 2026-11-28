@@ -14,6 +14,28 @@ public interface IThermalCounter
     Task<IReadOnlyList<ThermalReading>> ReadAsync();
 }
 
+/// The counter with the fixed-value rule (FixedZoneRule): a zone that holds one value for its first 10 reads is a BIOS value, and is not
+/// returned. The header, the heat check and the panes share one instance, so their reads count together.
+public sealed class FixedZoneCounter : IThermalCounter
+{
+    private readonly IThermalCounter _inner;
+    private readonly FixedZoneRule _rule = new();
+
+    public FixedZoneCounter(IThermalCounter inner)
+    {
+        _inner = inner;
+    }
+
+    public async Task<IReadOnlyList<ThermalReading>> ReadAsync()
+    {
+        var zones = await _inner.ReadAsync();
+        lock (_rule)
+        {
+            return _rule.Apply(zones);
+        }
+    }
+}
+
 /// The real counter: Win32_PerfFormattedData_Counters_ThermalZoneInformation (root\cimv2). Its HighPrecisionTemperature is in tenths
 /// of a kelvin, the same data as the elevated helper's MSAcpi_ThermalZoneTemperature, and a normal user may read it.
 public sealed class WmiThermalCounter : IThermalCounter

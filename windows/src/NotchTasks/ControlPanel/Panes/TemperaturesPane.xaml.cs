@@ -24,18 +24,20 @@ public partial class TemperaturesPane : UserControl
     private readonly SettingsStore _store;
     private readonly SensorHelper _helper;
     private readonly IThermalCounter _counter;
+    private readonly Func<DependencyObject, bool> _consent;
     private readonly DispatcherTimer _poll;
     private bool _reading;
     private bool _counterReads;  // the counter gave a plausible reading at its last read: the pane reads without administrator
     private IReadOnlyList<ThermalReading> _readings = Array.Empty<ThermalReading>();
 
     /// The pane for the settings store (the sign-in check box's stored value), the temperature helper and the thermal counter. It is read
-    /// only while it is shown.
-    public TemperaturesPane(SettingsStore store, SensorHelper helper, IThermalCounter counter)
+    /// only while it is shown. consent asks the Turn on confirmation (tests pass their own); Cancel starts nothing.
+    public TemperaturesPane(SettingsStore store, SensorHelper helper, IThermalCounter counter, Func<DependencyObject, bool>? consent = null)
     {
         _store = store;
         _helper = helper;
         _counter = counter;
+        _consent = consent ?? TemperatureConsent.Ask;
         InitializeComponent();
         _poll = new DispatcherTimer { Interval = PollInterval };
         _poll.Tick += (_, _) => _ = ReadAsync();
@@ -101,15 +103,15 @@ public partial class TemperaturesPane : UserControl
         {
             var counter = await _counter.ReadAsync();
             var counterReads = Thermals.Plausible(counter).Count > 0;
-            var fromHelper = !counterReads && _helper.State == HelperState.On
-                ? await _helper.ReadAsync()
-                : Array.Empty<ThermalReading>();
+            var fromHelper = _helper.State == HelperState.On ? await _helper.ReadAsync() : Array.Empty<ThermalReading>();
             if (!IsLoaded)
             {
                 return;
             }
+            // The helper's readings come first while it is On (its CPU reading); the counter's otherwise.
+            var helperReads = Thermals.Plausible(fromHelper).Count > 0;
             _counterReads = counterReads;
-            _readings = counterReads ? counter : fromHelper;
+            _readings = helperReads ? fromHelper : counter;
             var reading = counterReads || _helper.State == HelperState.On;
             if (reading && !_poll.IsEnabled)
             {
@@ -130,6 +132,10 @@ public partial class TemperaturesPane : UserControl
     /// The opt-in as the Permissions pane offers it: Turn on from Off, Try again from Declined or Paused. Nothing else starts it.
     private async void TurnOnFromClick(bool atSignIn)
     {
+        if (!_consent(this))
+        {
+            return;  // Cancel: nothing starts
+        }
         try
         {
             await _helper.TurnOnAsync(atSignIn);
@@ -146,7 +152,7 @@ public partial class TemperaturesPane : UserControl
     private void Render()
     {
         var on = _counterReads || _helper.State == HelperState.On;
-        CounterNote.Visibility = VisibleIf(_counterReads);
+        CounterNote.Visibility = VisibleIf(_counterReads && _helper.State != HelperState.On);
         HelperCard.Visibility = on ? Visibility.Collapsed : Visibility.Visible;
         HottestCard.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
         SensorsCaps.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
@@ -159,7 +165,7 @@ public partial class TemperaturesPane : UserControl
 
         (string? title, string? button, bool signIn) = _helper.State switch
         {
-            HelperState.Off => (null, L10n.L("Turn on"), true),
+            HelperState.Off => (L10n.L("CPU temperature") + " · " + L10n.L("Needs administrator"), L10n.L("Turn on"), true),
             HelperState.Declined => (L10n.L("Not turned on: administrator was not allowed"), L10n.L("Try again"), true),
             HelperState.Paused => (L10n.L("Turn on again to read temperatures this session"), L10n.L("Try again"), true),
             HelperState.Failed => (L10n.L("The temperature helper did not start"), L10n.L("Try again"), true),

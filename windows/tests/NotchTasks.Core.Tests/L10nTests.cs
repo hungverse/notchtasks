@@ -595,4 +595,33 @@ public sealed class L10nTests
             Directory.Delete(folder, recursive: true);
         }
     }
+
+    // The CPU temperature: the Turn on confirmation and the row's text (the Permissions and Temperatures panes). Each needs a text in
+    // every language, in windows's overlay or the Mac table.
+    private static readonly string[] CpuTemperatureKeys =
+    [
+        "CPU temperature", "Needs administrator", "Show the real CPU temperature?",
+        "NotchTasks will install the PawnIO driver (signed, from pawnio.eu) and run a small helper with administrator rights to read the CPU and GPU temperatures. Windows will ask once.",
+        "Allow", "Cancel", "Try again", "Turn on",
+    ];
+
+    [Fact]
+    public void CpuTemperatureKeys_ExistInEveryLanguage()
+    {
+        var overlayFile = Path.Combine(RepoRoot(), "windows", "l10n", "windows.json");
+        var missing = new List<string>();
+        foreach (var (code, _) in L10n.Languages.Where(language => language.Code != "en"))
+        {
+            var mac = ReadStrings(Path.Combine(MacSources(), $"l10n-{code}.json"));
+            var windows = ReadOverlay(overlayFile, code);
+            foreach (var key in CpuTemperatureKeys)
+            {
+                if (!mac.ContainsKey(key) && !windows.ContainsKey(key))
+                {
+                    missing.Add($"{code}: {key}");
+                }
+            }
+        }
+        Assert.Empty(missing);
+    }
 }

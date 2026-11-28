@@ -1,5 +1,9 @@
 {
  "vi": {
+  "CPU temperature": "Nhiệt độ CPU",
+  "Needs administrator": "Cần quyền quản trị viên",
+  "Show the real CPU temperature?": "Hiện nhiệt độ CPU thật?",
+  "NotchTasks will install the PawnIO driver (signed, from pawnio.eu) and run a small helper with administrator rights to read the CPU and GPU temperatures. Windows will ask once.": "NotchTasks sẽ cài trình điều khiển PawnIO (đã ký số, từ pawnio.eu) và chạy một trình trợ giúp nhỏ với quyền quản trị viên để đọc nhiệt độ CPU và GPU. Windows sẽ hỏi một lần.",
   "Temperatures read by the optional helper.": "Nhiệt độ do trình trợ giúp tùy chọn đọc.",
   "How the notch and its alerts look.": "Notch và các thông báo của nó trông như thế nào.",
   "How the notch opens and when it alerts you.": "Notch mở ra như thế nào, và khi nào nó báo cho bạn.",
@@ -133,6 +137,10 @@
   "Sign in to Claude Code once": "Đăng nhập Claude Code một lần"
  },
  "zh-Hans": {
+  "CPU temperature": "CPU 温度",
+  "Needs administrator": "需要管理员权限",
+  "Show the real CPU temperature?": "显示真实的 CPU 温度？",
+  "NotchTasks will install the PawnIO driver (signed, from pawnio.eu) and run a small helper with administrator rights to read the CPU and GPU temperatures. Windows will ask once.": "NotchTasks 将安装 PawnIO 驱动程序（已签名，来自 pawnio.eu），并以管理员权限运行一个小型辅助程序，以读取 CPU 和 GPU 温度。Windows 只会询问一次。",
   "Temperatures read by the optional helper.": "温度由可选的辅助程序读取。",
   "How the notch and its alerts look.": "刘海及其提醒的外观。",
   "How the notch opens and when it alerts you.": "刘海如何展开，以及何时提醒你。",
@@ -266,6 +274,10 @@
   "Sign in to Claude Code once": "请登录一次 Claude Code"
  },
  "zh-Hant": {
+  "CPU temperature": "CPU 溫度",
+  "Needs administrator": "需要系統管理員權限",
+  "Show the real CPU temperature?": "顯示真實的 CPU 溫度？",
+  "NotchTasks will install the PawnIO driver (signed, from pawnio.eu) and run a small helper with administrator rights to read the CPU and GPU temperatures. Windows will ask once.": "NotchTasks 將安裝 PawnIO 驅動程式（已簽署，來自 pawnio.eu），並以系統管理員權限執行一個小型輔助程式，以讀取 CPU 和 GPU 溫度。Windows 只會詢問一次。",
   "Temperatures read by the optional helper.": "溫度由可選的輔助程式讀取。",
   "How the notch and its alerts look.": "瀏海及其提醒的外觀。",
   "How the notch opens and when it alerts you.": "瀏海如何展開，以及何時提醒你。",
@@ -399,6 +411,10 @@
   "Sign in to Claude Code once": "請登入 Claude Code 一次"
  },
  "ja": {
+  "CPU temperature": "CPU の温度",
+  "Needs administrator": "管理者権限が必要",
+  "Show the real CPU temperature?": "実際の CPU 温度を表示しますか？",
+  "NotchTasks will install the PawnIO driver (signed, from pawnio.eu) and run a small helper with administrator rights to read the CPU and GPU temperatures. Windows will ask once.": "NotchTasks は PawnIO ドライバー（署名済み、pawnio.eu から）をインストールし、CPU と GPU の温度を読み取るために管理者権限で小さなヘルパーを実行します。Windows の確認は一度だけ表示されます。",
   "Temperatures read by the optional helper.": "温度は任意のヘルパーが読み取ります。",
   "How the notch and its alerts look.": "ノッチとその通知の見た目です。",
   "How the notch opens and when it alerts you.": "ノッチの開き方と、通知するタイミングです。",
@@ -532,6 +548,10 @@
   "Sign in to Claude Code once": "Claude Code に一度サインインしてください"
  },
  "ko": {
+  "CPU temperature": "CPU 온도",
+  "Needs administrator": "관리자 권한 필요",
+  "Show the real CPU temperature?": "실제 CPU 온도를 표시할까요?",
+  "NotchTasks will install the PawnIO driver (signed, from pawnio.eu) and run a small helper with administrator rights to read the CPU and GPU temperatures. Windows will ask once.": "NotchTasks는 CPU와 GPU 온도를 읽기 위해 PawnIO 드라이버(서명됨, pawnio.eu 제공)를 설치하고 관리자 권한으로 작은 도우미를 실행합니다. Windows는 한 번만 묻습니다.",
   "Temperatures read by the optional helper.": "온도는 선택 도우미가 읽습니다.",
   "How the notch and its alerts look.": "노치와 알림의 모양입니다.",
   "How the notch opens and when it alerts you.": "노치가 열리는 방식과 알림을 보내는 시점입니다.",
@@ -665,6 +685,10 @@
   "Sign in to Claude Code once": "Claude Code에 한 번 로그인하세요"
  },
  "es": {
+  "CPU temperature": "Temperatura de la CPU",
+  "Needs administrator": "Necesita permisos de administrador",
+  "Show the real CPU temperature?": "¿Mostrar la temperatura real de la CPU?",
+  "NotchTasks will install the PawnIO driver (signed, from pawnio.eu) and run a small helper with administrator rights to read the CPU and GPU temperatures. Windows will ask once.": "NotchTasks instalará el controlador PawnIO (firmado, de pawnio.eu) y ejecutará un pequeño asistente con permisos de administrador para leer las temperaturas de la CPU y la GPU. Windows preguntará una vez.",
   "Temperatures read by the optional helper.": "Las temperaturas las lee el asistente opcional.",
   "How the notch and its alerts look.": "Cómo se ven la muesca y sus alertas.",
   "How the notch opens and when it alerts you.": "Cómo se abre la muesca y cuándo te avisa.",
@@ -798,6 +822,10 @@
   "Sign in to Claude Code once": "Inicia sesión en Claude Code una vez"
  },
  "fr": {
+  "CPU temperature": "Température du processeur",
+  "Needs administrator": "Nécessite les droits administrateur",
+  "Show the real CPU temperature?": "Afficher la vraie température du processeur ?",
+  "NotchTasks will install the PawnIO driver (signed, from pawnio.eu) and run a small helper with administrator rights to read the CPU and GPU temperatures. Windows will ask once.": "NotchTasks installera le pilote PawnIO (signé, depuis pawnio.eu) et exécutera une petite aide avec les droits administrateur pour lire les températures du processeur et du GPU. Windows ne demandera qu’une fois.",
   "Temperatures read by the optional helper.": "Les températures sont lues par l'assistant facultatif.",
   "How the notch and its alerts look.": "L'aspect de l'encoche et de ses alertes.",
   "How the notch opens and when it alerts you.": "Comment l'encoche s'ouvre, et quand elle vous prévient.",
@@ -931,6 +959,10 @@
   "Sign in to Claude Code once": "Connectez-vous une fois à Claude Code"
  },
  "de": {
+  "CPU temperature": "CPU-Temperatur",
+  "Needs administrator": "Benötigt Administratorrechte",
+  "Show the real CPU temperature?": "Echte CPU-Temperatur anzeigen?",
+  "NotchTasks will install the PawnIO driver (signed, from pawnio.eu) and run a small helper with administrator rights to read the CPU and GPU temperatures. Windows will ask once.": "NotchTasks installiert den PawnIO-Treiber (signiert, von pawnio.eu) und startet einen kleinen Helfer mit Administratorrechten, um die CPU- und GPU-Temperaturen auszulesen. Windows fragt einmal nach.",
   "Temperatures read by the optional helper.": "Temperaturen liest der optionale Helfer.",
   "How the notch and its alerts look.": "Aussehen der Notch und ihrer Hinweise.",
   "How the notch opens and when it alerts you.": "Wie sich die Notch öffnet und wann sie dich benachrichtigt.",
@@ -1064,6 +1096,10 @@
   "Sign in to Claude Code once": "Melde dich einmal bei Claude Code an"
  },
  "pt-BR": {
+  "CPU temperature": "Temperatura da CPU",
+  "Needs administrator": "Precisa de permissão de administrador",
+  "Show the real CPU temperature?": "Mostrar a temperatura real da CPU?",
+  "NotchTasks will install the PawnIO driver (signed, from pawnio.eu) and run a small helper with administrator rights to read the CPU and GPU temperatures. Windows will ask once.": "O NotchTasks vai instalar o driver PawnIO (assinado, de pawnio.eu) e executar um pequeno auxiliar com permissão de administrador para ler as temperaturas da CPU e da GPU. O Windows vai perguntar uma vez.",
   "Temperatures read by the optional helper.": "As temperaturas são lidas pelo auxiliar opcional.",
   "How the notch and its alerts look.": "Como o notch e seus alertas aparecem.",
   "How the notch opens and when it alerts you.": "Como o notch abre e quando avisa você.",
@@ -1197,6 +1233,10 @@
   "Sign in to Claude Code once": "Entre no Claude Code uma vez"
  },
  "it": {
+  "CPU temperature": "Temperatura della CPU",
+  "Needs administrator": "Richiede privilegi di amministratore",
+  "Show the real CPU temperature?": "Mostrare la vera temperatura della CPU?",
+  "NotchTasks will install the PawnIO driver (signed, from pawnio.eu) and run a small helper with administrator rights to read the CPU and GPU temperatures. Windows will ask once.": "NotchTasks installerà il driver PawnIO (firmato, da pawnio.eu) ed eseguirà un piccolo assistente con privilegi di amministratore per leggere le temperature di CPU e GPU. Windows lo chiederà una volta.",
   "Temperatures read by the optional helper.": "Le temperature sono lette dall'helper facoltativo.",
   "How the notch and its alerts look.": "Come appaiono la tacca e i suoi avvisi.",
   "How the notch opens and when it alerts you.": "Come si apre la tacca e quando ti avvisa.",
@@ -1330,6 +1370,10 @@
   "Sign in to Claude Code once": "Accedi a Claude Code una volta"
  },
  "ru": {
+  "CPU temperature": "Температура процессора",
+  "Needs administrator": "Нужны права администратора",
+  "Show the real CPU temperature?": "Показывать реальную температуру процессора?",
+  "NotchTasks will install the PawnIO driver (signed, from pawnio.eu) and run a small helper with administrator rights to read the CPU and GPU temperatures. Windows will ask once.": "NotchTasks установит драйвер PawnIO (подписанный, с pawnio.eu) и запустит небольшой помощник с правами администратора, чтобы считывать температуры процессора и видеокарты. Windows спросит один раз.",
   "Temperatures read by the optional helper.": "Температуру считывает необязательный помощник.",
   "How the notch and its alerts look.": "Как выглядят вырез и его оповещения.",
   "How the notch opens and when it alerts you.": "Как открывается вырез и когда он вас оповещает.",
@@ -1463,6 +1507,10 @@
   "Sign in to Claude Code once": "Войдите в Claude Code один раз"
  },
  "id": {
+  "CPU temperature": "Suhu CPU",
+  "Needs administrator": "Perlu hak administrator",
+  "Show the real CPU temperature?": "Tampilkan suhu CPU yang sebenarnya?",
+  "NotchTasks will install the PawnIO driver (signed, from pawnio.eu) and run a small helper with administrator rights to read the CPU and GPU temperatures. Windows will ask once.": "NotchTasks akan memasang driver PawnIO (ditandatangani, dari pawnio.eu) dan menjalankan pembantu kecil dengan hak administrator untuk membaca suhu CPU dan GPU. Windows akan bertanya sekali.",
   "Temperatures read by the optional helper.": "Suhu dibaca oleh pembantu opsional.",
   "How the notch and its alerts look.": "Tampilan notch dan peringatannya.",
   "How the notch opens and when it alerts you.": "Cara notch terbuka, dan kapan ia memberi tahu Anda.",
@@ -1596,6 +1644,10 @@
   "Sign in to Claude Code once": "Masuk ke Claude Code sekali"
  },
  "th": {
+  "CPU temperature": "อุณหภูมิ CPU",
+  "Needs administrator": "ต้องใช้สิทธิ์ผู้ดูแลระบบ",
+  "Show the real CPU temperature?": "แสดงอุณหภูมิ CPU จริงหรือไม่",
+  "NotchTasks will install the PawnIO driver (signed, from pawnio.eu) and run a small helper with administrator rights to read the CPU and GPU temperatures. Windows will ask once.": "NotchTasks จะติดตั้งไดรเวอร์ PawnIO (ลงนามแล้ว จาก pawnio.eu) และเรียกใช้ตัวช่วยขนาดเล็กด้วยสิทธิ์ผู้ดูแลระบบเพื่ออ่านอุณหภูมิ CPU และ GPU Windows จะถามเพียงครั้งเดียว",
   "Temperatures read by the optional helper.": "อ่านอุณหภูมิโดยตัวช่วยที่เป็นทางเลือก",
   "How the notch and its alerts look.": "หน้าตาของ notch และการแจ้งเตือน",
   "How the notch opens and when it alerts you.": "วิธีที่ notch เปิดขึ้น และเวลาที่แจ้งเตือนคุณ",
@@ -1729,6 +1781,10 @@
   "Sign in to Claude Code once": "ลงชื่อเข้าใช้ Claude Code หนึ่งครั้ง"
  },
  "tr": {
+  "CPU temperature": "İşlemci sıcaklığı",
+  "Needs administrator": "Yönetici izni gerekir",
+  "Show the real CPU temperature?": "Gerçek işlemci sıcaklığı gösterilsin mi?",
+  "NotchTasks will install the PawnIO driver (signed, from pawnio.eu) and run a small helper with administrator rights to read the CPU and GPU temperatures. Windows will ask once.": "NotchTasks, CPU ve GPU sıcaklıklarını okumak için PawnIO sürücüsünü (imzalı, pawnio.eu'dan) kuracak ve yönetici haklarıyla küçük bir yardımcı çalıştıracak. Windows bir kez soracak.",
   "Temperatures read by the optional helper.": "Sıcaklıklar isteğe bağlı yardımcı tarafından okunur.",
   "How the notch and its alerts look.": "Çentiğin ve uyarılarının görünümü.",
   "How the notch opens and when it alerts you.": "Çentiğin nasıl açıldığı ve ne zaman uyardığı.",
@@ -1862,6 +1918,10 @@
   "Sign in to Claude Code once": "Claude Code'da bir kez oturum açın"
  },
  "hi": {
+  "CPU temperature": "CPU तापमान",
+  "Needs administrator": "व्यवस्थापक अनुमति चाहिए",
+  "Show the real CPU temperature?": "असली CPU तापमान दिखाएं?",
+  "NotchTasks will install the PawnIO driver (signed, from pawnio.eu) and run a small helper with administrator rights to read the CPU and GPU temperatures. Windows will ask once.": "NotchTasks PawnIO ड्राइवर (हस्ताक्षरित, pawnio.eu से) इंस्टॉल करेगा और CPU व GPU के तापमान पढ़ने के लिए व्यवस्थापक अधिकारों के साथ एक छोटा हेल्पर चलाएगा। Windows एक बार पूछेगा।",
   "Temperatures read by the optional helper.": "तापमान वैकल्पिक सहायक द्वारा पढ़े जाते हैं।",
   "How the notch and its alerts look.": "नॉच और उसकी सूचनाएँ कैसी दिखती हैं।",
   "How the notch opens and when it alerts you.": "नॉच कैसे खुलता है, और कब आपको सूचित करता है।",

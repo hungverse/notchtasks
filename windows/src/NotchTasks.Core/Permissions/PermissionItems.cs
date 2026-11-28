@@ -86,7 +86,7 @@ public static class PermissionItems
             new("camera", L("Camera mirror"), L("Check the camera before joining a meeting"), CameraIcon, CameraModules,
                 Consent(facts.CameraAllowed), Filled: true),
         };
-        items.Add(new PermItem(TemperaturesId, L("Temperatures"),
+        items.Add(new PermItem(TemperaturesId, L("CPU temperature"),
             L("Optional. Reading temperatures on Windows needs administrator, so a small helper runs with administrator rights only if you turn this on."),
             TemperatureIcon, NoModules, facts.Temperatures));
         if (FirewallRowShown)

@@ -205,7 +205,7 @@ public sealed class SensorHelperTests
         Assert.Equal(HelperState.On, helper.State);
         Assert.True(settings.SensorHelper);
         Assert.Equal(1, launcher.Calls);
-        Assert.Equal($"--serve --parent {AppPid} --user {Sid}", launcher.LastArguments);
+        Assert.Equal($"--install-pawnio --serve --parent {AppPid} --user {Sid}", launcher.LastArguments);
     }
 
     [Fact]
@@ -221,7 +221,7 @@ public sealed class SensorHelperTests
         Assert.Equal(HelperState.On, helper.State);
         Assert.True(settings.SensorHelperAtSignIn);
         Assert.Equal(1, launcher.Calls);
-        Assert.Equal($"--install-logon {Sid} --parent {AppPid}", launcher.LastArguments);
+        Assert.Equal($"--install-pawnio --install-logon {Sid} --parent {AppPid}", launcher.LastArguments);
     }
 
     [Fact]
@@ -294,7 +294,7 @@ public sealed class SensorHelperTests
         Assert.False(settings.SensorHelper);
         Assert.False(settings.SensorHelperAtSignIn);
         var log = File.ReadAllText(ErrorLog.FileOverride!);
-        Assert.Contains("NotchTasks: the temperature helper exited with code 1 before answering.", log);
+        Assert.Contains("NotchTasks: the temperature helper exited with code 1 before answering", log);
     }
 
     [Fact]
